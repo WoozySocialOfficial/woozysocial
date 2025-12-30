@@ -37,6 +37,7 @@ export const ComposeContent = () => {
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [lastSaved, setLastSaved] = useState(null);
   const autoSaveTimerRef = useRef(null);
+  const isSavingRef = useRef(false); // Lock to prevent concurrent saves
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [engagementScore, setEngagementScore] = useState(0);
@@ -108,12 +109,24 @@ export const ComposeContent = () => {
 
         // Load media preview
         if (draft.media_urls && draft.media_urls.length > 0) {
-          setMediaPreview(draft.media_urls[0]);
-          const url = draft.media_urls[0].toLowerCase();
+          const mediaUrl = draft.media_urls[0];
+          setMediaPreview(mediaUrl);
+
+          // Determine media type
+          const url = mediaUrl.toLowerCase();
           if (url.includes('video') || url.endsWith('.mp4') || url.endsWith('.mov')) {
             setMediaType('video');
           } else {
             setMediaType('image');
+          }
+
+          // If it's a data URL, we need to convert it back to a File object for upload
+          if (mediaUrl.startsWith('data:')) {
+            convertDataUrlToFile(mediaUrl).then(file => {
+              if (file) {
+                setPost(prev => ({ ...prev, media: file }));
+              }
+            });
           }
         }
 
@@ -147,15 +160,36 @@ export const ComposeContent = () => {
     }
   }, []); // Run once on mount
 
+  // Helper function to convert data URL back to File object
+  const convertDataUrlToFile = async (dataUrl) => {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const filename = `draft-media-${Date.now()}.${blob.type.split('/')[1]}`;
+      return new File([blob], filename, { type: blob.type });
+    } catch (error) {
+      console.error("Error converting data URL to file:", error);
+      return null;
+    }
+  };
+
   // Auto-save draft functionality
   const saveDraft = useCallback(async () => {
     if (!user) return;
+
+    // Prevent concurrent saves
+    if (isSavingRef.current) {
+      console.log("Save already in progress, skipping...");
+      return;
+    }
 
     // Don't save if there's no content
     const selectedPlatforms = Object.keys(networks).filter(key => networks[key]);
     if (!post.text && !mediaPreview && selectedPlatforms.length === 0) {
       return;
     }
+
+    isSavingRef.current = true;
 
     try {
       const draftData = {
@@ -191,6 +225,8 @@ export const ComposeContent = () => {
       setLastSaved(new Date());
     } catch (error) {
       console.error("Error saving draft:", error);
+    } finally {
+      isSavingRef.current = false;
     }
   }, [user, post.text, mediaPreview, networks, scheduledDate, currentDraftId]);
 
@@ -885,9 +921,16 @@ export const ComposeContent = () => {
     const formData = new FormData();
     formData.append("text", post.text);
     formData.append("userId", user.id);
+
+    // Handle media: either a new file upload or existing URL from draft
     if (post.media) {
+      // New file upload
       formData.append("media", post.media);
+    } else if (mediaPreview && typeof mediaPreview === 'string' && mediaPreview.startsWith('http')) {
+      // Existing media URL from draft - send as mediaUrl
+      formData.append("mediaUrl", mediaPreview);
     }
+
     formData.append("networks", JSON.stringify(networks));
     if (scheduledDate) {
       formData.append("scheduledDate", scheduledDate.toISOString());

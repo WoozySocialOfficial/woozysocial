@@ -80,7 +80,7 @@ async function uploadMediaToAyrshare(file) {
 
 app.post("/api/post", upload.single("media"), async (req, res) => {
   try {
-    const { text, networks, scheduledDate, userId } = req.body;
+    const { text, networks, scheduledDate, userId, mediaUrl } = req.body;
     const media = req.file;
 
     // Get user's profile key from database, or fall back to env variable
@@ -107,7 +107,9 @@ app.post("/api/post", upload.single("media"), async (req, res) => {
       postData.scheduleDate = Math.floor(new Date(scheduledDate).getTime() / 1000);
     }
 
+    // Handle media: either a new upload or existing URL from draft
     if (media) {
+      // New file upload - upload to Ayrshare
       try {
         const mediaUrl = await uploadMediaToAyrshare(media);
         postData.mediaUrls = [mediaUrl];
@@ -124,6 +126,16 @@ app.post("/api/post", upload.single("media"), async (req, res) => {
           error: "Failed to upload media",
           details: error.response?.data || error.message
         });
+      }
+    } else if (mediaUrl) {
+      // Existing media URL from draft - use it directly
+      postData.mediaUrls = [mediaUrl];
+
+      // For video URLs, add videoOptions if needed
+      if (mediaUrl.toLowerCase().includes('video') || mediaUrl.match(/\.(mp4|mov|avi|webm)$/i)) {
+        postData.videoOptions = {
+          title: text?.substring(0, 100) || 'Video Post',
+        };
       }
     }
 

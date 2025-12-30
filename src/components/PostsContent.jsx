@@ -53,19 +53,31 @@ export const PostsContent = () => {
         if (!response.ok) throw new Error("Failed to fetch post history");
 
         const data = await response.json();
+        console.log("Ayrshare history response:", JSON.stringify(data, null, 2));
+
+        // Ayrshare returns posts in 'history' array, not 'posts'
+        const allPosts = data.history || [];
+
+        // Log all posts with their status values
+        if (allPosts.length > 0) {
+          console.log("All post statuses:", allPosts.map(p => ({
+            id: p.id,
+            status: p.status,
+            platforms: p.platforms
+          })));
+        }
 
         // Filter based on tab
         let filteredPosts = [];
         if (activeTab === "scheduled") {
-          filteredPosts = (data.posts || []).filter(post => post.status === "scheduled");
+          filteredPosts = allPosts.filter(post => post.status === "scheduled");
         } else if (activeTab === "history") {
-          filteredPosts = (data.posts || []).filter(post =>
-            post.status === "success" || post.status === "posted"
-          );
+          filteredPosts = allPosts.filter(post => post.status === "success");
         } else if (activeTab === "failed") {
-          filteredPosts = (data.posts || []).filter(post => post.status === "error");
+          filteredPosts = allPosts.filter(post => post.status === "error");
         }
 
+        console.log(`Filtered posts for ${activeTab}:`, filteredPosts);
         setPosts(filteredPosts);
       }
     } catch (error) {
