@@ -10,6 +10,14 @@ import { MainContent } from "./components/layout/MainContent";
 import { DashboardContent } from "./components/DashboardContent";
 import { ComposeContent } from "./components/ComposeContent";
 import { PostsContent } from "./components/PostsContent";
+import { BrandProfileContent } from "./components/BrandProfileContent";
+import { ScheduleContent } from "./components/ScheduleContent";
+import { AssetsContent } from "./components/AssetsContent";
+import { SocialInboxContent } from "./components/SocialInboxContent";
+import { AutomationContent } from "./components/AutomationContent";
+import { SocialsContent } from "./components/SocialsContent";
+import { TeamContent } from "./components/TeamContent";
+import { SettingsContent } from "./components/SettingsContent";
 import "./App.css";
 
 function App() {
@@ -33,10 +41,16 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<DashboardContent />} />
+                      <Route path="/brand-profile" element={<BrandProfileContent />} />
                       <Route path="/compose" element={<ComposeContent />} />
+                      <Route path="/schedule" element={<ScheduleContent />} />
                       <Route path="/posts" element={<PostsContent />} />
-                      <Route path="/team" element={<div>Team Page - Coming Soon</div>} />
-                      <Route path="/settings" element={<div>Settings Page - Coming Soon</div>} />
+                      <Route path="/assets" element={<AssetsContent />} />
+                      <Route path="/social-inbox" element={<SocialInboxContent />} />
+                      <Route path="/automation" element={<AutomationContent />} />
+                      <Route path="/socials" element={<SocialsContent />} />
+                      <Route path="/team" element={<TeamContent />} />
+                      <Route path="/settings" element={<SettingsContent />} />
                     </Routes>
                   </MainContent>
                 </div>

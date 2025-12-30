@@ -399,6 +399,77 @@ app.post("/api/create-user-profile", async (req, res) => {
   }
 });
 
+// Endpoint to get analytics and best posting times
+app.get("/api/analytics/best-time", async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    // Get user's profile key from database, or fall back to env variable
+    let profileKey = env.AYRSHARE_PROFILE_KEY;
+    if (userId) {
+      const userProfileKey = await getUserProfileKey(userId);
+      if (userProfileKey) {
+        profileKey = userProfileKey;
+      }
+    }
+
+    // Get analytics from Ayrshare
+    const response = await axios.get(`${BASE_AYRSHARE}/analytics/post`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
+        "Profile-Key": profileKey
+      },
+      params: {
+        lastDays: 30 // Get last 30 days of data
+      }
+    });
+
+    // Analyze post times and engagement to find best times
+    const posts = response.data.posts || [];
+    const hourlyEngagement = {};
+
+    posts.forEach(post => {
+      if (post.created && post.likes !== undefined) {
+        const date = new Date(post.created);
+        const hour = date.getHours();
+
+        if (!hourlyEngagement[hour]) {
+          hourlyEngagement[hour] = { totalEngagement: 0, count: 0 };
+        }
+
+        const engagement = (post.likes || 0) + (post.comments || 0) + (post.shares || 0);
+        hourlyEngagement[hour].totalEngagement += engagement;
+        hourlyEngagement[hour].count += 1;
+      }
+    });
+
+    // Calculate average engagement per hour
+    const bestHours = Object.keys(hourlyEngagement)
+      .map(hour => ({
+        hour: parseInt(hour),
+        avgEngagement: hourlyEngagement[hour].totalEngagement / hourlyEngagement[hour].count
+      }))
+      .sort((a, b) => b.avgEngagement - a.avgEngagement)
+      .slice(0, 3); // Top 3 hours
+
+    res.json({
+      bestHours,
+      totalPosts: posts.length,
+      hasData: posts.length > 0
+    });
+  } catch (error) {
+    console.error(
+      "Error fetching analytics:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({
+      error: "Failed to fetch analytics",
+      hasData: false
+    });
+  }
+});
+
 const PORT = env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -39,6 +39,9 @@ export const ComposeContent = () => {
   const autoSaveTimerRef = useRef(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [engagementScore, setEngagementScore] = useState(0);
+  const [bestPostingTime, setBestPostingTime] = useState("2:00 PM");
+  const [hasRealData, setHasRealData] = useState(false);
 
   // Fetch connected accounts from Ayrshare on component mount
   useEffect(() => {
@@ -57,6 +60,35 @@ export const ComposeContent = () => {
       }
     };
     fetchAccounts();
+  }, [user]);
+
+  // Fetch real analytics data for best posting time
+  useEffect(() => {
+    const fetchBestTime = async () => {
+      if (!user) return;
+
+      try {
+        const res = await fetch(`${baseURL}/api/analytics/best-time?userId=${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasData && data.bestHours && data.bestHours.length > 0) {
+            const bestHour = data.bestHours[0].hour;
+            const period = bestHour >= 12 ? 'PM' : 'AM';
+            const displayHour = bestHour > 12 ? bestHour - 12 : (bestHour === 0 ? 12 : bestHour);
+            setBestPostingTime(`${displayHour}:00 ${period}`);
+            setHasRealData(true);
+            console.log("Best posting time from analytics:", `${displayHour}:00 ${period}`);
+          } else {
+            console.log("No analytics data available, using default times");
+            setHasRealData(false);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching analytics:", err);
+        setHasRealData(false);
+      }
+    };
+    fetchBestTime();
   }, [user]);
 
   // Load draft from sessionStorage if coming from Posts page
@@ -193,6 +225,66 @@ export const ComposeContent = () => {
       saveDraft();
     };
   }, [saveDraft]);
+
+  // Calculate engagement score based on post content
+  useEffect(() => {
+    const calculateEngagementScore = () => {
+      let score = 0;
+      const text = post.text || "";
+      const textLength = text.length;
+
+      // Text length score (max 30 points)
+      // Optimal: 100-150 characters
+      if (textLength >= 100 && textLength <= 150) {
+        score += 30;
+      } else if (textLength >= 50 && textLength < 100) {
+        score += 20;
+      } else if (textLength > 150 && textLength <= 200) {
+        score += 20;
+      } else if (textLength > 0 && textLength < 50) {
+        score += 10;
+      } else if (textLength > 200) {
+        score += 15;
+      }
+
+      // Hashtag count score (max 25 points)
+      const hashtagCount = (text.match(/#\w+/g) || []).length;
+      if (hashtagCount >= 5 && hashtagCount <= 10) {
+        score += 25;
+      } else if (hashtagCount >= 3 && hashtagCount < 5) {
+        score += 20;
+      } else if (hashtagCount > 10 && hashtagCount <= 15) {
+        score += 15;
+      } else if (hashtagCount > 0 && hashtagCount < 3) {
+        score += 10;
+      }
+
+      // Media presence score (max 20 points)
+      if (mediaPreview) {
+        score += 20;
+      }
+
+      // Platform selection score (max 15 points)
+      const selectedPlatforms = Object.values(networks).filter(v => v).length;
+      if (selectedPlatforms >= 2 && selectedPlatforms <= 4) {
+        score += 15;
+      } else if (selectedPlatforms === 1) {
+        score += 10;
+      } else if (selectedPlatforms > 4) {
+        score += 8;
+      }
+
+      // Call-to-action score (max 10 points)
+      const hasCallToAction = /\b(click|link|check|visit|shop|buy|learn|sign up|join|follow|subscribe)\b/i.test(text);
+      if (hasCallToAction) {
+        score += 10;
+      }
+
+      setEngagementScore(Math.min(score, 100));
+    };
+
+    calculateEngagementScore();
+  }, [post.text, mediaPreview, networks]);
 
   // Map Ayrshare platform names to our internal names
   const platformNameMap = {
@@ -869,6 +961,58 @@ export const ComposeContent = () => {
     }
   };
 
+  // Calculate best posting time based on real analytics or selected platforms
+  const getBestPostingTime = () => {
+    // If we have real analytics data, use it
+    if (hasRealData) {
+      return bestPostingTime;
+    }
+
+    // Otherwise, fall back to platform-specific optimal times
+    const selectedPlatformNames = Object.keys(networks).filter(key => networks[key]);
+
+    // Platform-specific optimal times (industry averages)
+    const platformTimes = {
+      instagram: "11:00 AM - 1:00 PM",
+      facebook: "1:00 PM - 3:00 PM",
+      twitter: "12:00 PM - 1:00 PM",
+      linkedin: "10:00 AM - 12:00 PM",
+      tiktok: "6:00 PM - 9:00 PM",
+      youtube: "2:00 PM - 4:00 PM",
+      pinterest: "8:00 PM - 11:00 PM",
+      threads: "12:00 PM - 1:00 PM"
+    };
+
+    if (selectedPlatformNames.length === 0) {
+      return "2:00 PM";
+    }
+
+    // Return the time for the first selected platform
+    const firstPlatform = selectedPlatformNames[0];
+    return platformTimes[firstPlatform] || "2:00 PM";
+  };
+
+  // Get hashtag count from post text
+  const getHashtagCount = () => {
+    const text = post.text || "";
+    const hashtags = text.match(/#\w+/g) || [];
+    return hashtags.length;
+  };
+
+  // Get color based on engagement score
+  const getScoreColor = () => {
+    if (engagementScore >= 80) return "#10b981"; // Green
+    if (engagementScore >= 60) return "#f59e0b"; // Orange
+    if (engagementScore >= 40) return "#f97316"; // Dark orange
+    return "#ef4444"; // Red
+  };
+
+  // Calculate stroke offset for circular progress
+  const getStrokeOffset = () => {
+    const circumference = 2 * Math.PI * 50;
+    return circumference - (engagementScore / 100) * circumference;
+  };
+
   return (
     <div className="compose-content">
       {/* Top Row - Create Post and Socials */}
@@ -1001,18 +1145,81 @@ export const ComposeContent = () => {
           </div>
         </div>
 
-        {/* Right - Comments */}
-        <div className="compose-comments">
-          <h3 className="comments-title">Comment</h3>
-          <div className="comments-container">
-            <div className="comments-empty">
-              <p>No comments yet.</p>
+        {/* Right - Performance Prediction */}
+        <div className="compose-prediction">
+          <div className="prediction-header-section">
+            <h3 className="prediction-title">Performance Prediction</h3>
+          </div>
+          <div className="prediction-container">
+            {/* Engagement Score Circle */}
+            <div className="engagement-score">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="none"
+                  stroke={getScoreColor()}
+                  strokeWidth="10"
+                  strokeDasharray="314"
+                  strokeDashoffset={getStrokeOffset()}
+                  transform="rotate(-90 60 60)"
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+                />
+                <text
+                  x="60"
+                  y="70"
+                  textAnchor="middle"
+                  fontSize="36"
+                  fontWeight="bold"
+                  fill={getScoreColor()}
+                >
+                  {engagementScore}
+                </text>
+              </svg>
+              <p className="score-label">Engagement Score</p>
             </div>
-            <div className="comment-input-wrapper">
-              <textarea
-                className="comment-input"
-                placeholder="Type a comment..."
-              />
+
+            {/* Prediction Details */}
+            <div className="prediction-details">
+              <div className="prediction-item">
+                <span className="prediction-icon">🕐</span>
+                <div className="prediction-info">
+                  <span className="prediction-label">
+                    Best time: {hasRealData ? "📊" : "📈"}
+                  </span>
+                  <span className="prediction-value">{getBestPostingTime()}</span>
+                  {hasRealData && (
+                    <span style={{ fontSize: '10px', color: '#10b981' }}>
+                      Based on your analytics
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="prediction-item">
+                <span className="prediction-icon">#</span>
+                <div className="prediction-info">
+                  <span className="prediction-label">Hashtags:</span>
+                  <span className="prediction-value">{getHashtagCount()} / 5-10</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="quick-actions">
+              <h4 className="quick-actions-title">⚡ Quick Actions</h4>
+              <button className="quick-action-btn">🔥 Trending Hashtags</button>
+              <button className="quick-action-btn">♻️ Recycle Top Post</button>
             </div>
           </div>
         </div>

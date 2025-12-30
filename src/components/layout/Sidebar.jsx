@@ -7,8 +7,14 @@ export const Sidebar = () => {
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard" },
+    { name: "Brand Profile", path: "/brand-profile" },
     { name: "Compose", path: "/compose" },
+    { name: "Schedule", path: "/schedule" },
     { name: "Posts", path: "/posts" },
+    { name: "Assets", path: "/assets" },
+    { name: "Social Inbox", path: "/social-inbox" },
+    { name: "Automation", path: "/automation" },
+    { name: "Socials", path: "/socials" },
     { name: "Team", path: "/team" },
     { name: "Settings", path: "/settings" }
   ];
@@ -19,6 +25,10 @@ export const Sidebar = () => {
         <div className="sidebar-logo">
           <div className="sidebar-logo-text">[LOGO]</div>
         </div>
+
+        <Link to="/compose" className="add-post-button">
+          +Add Post
+        </Link>
 
         <div className="sidebar-menu">
           {menuItems.map((item, index) => (
