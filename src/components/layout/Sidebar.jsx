@@ -13,8 +13,6 @@ export const Sidebar = () => {
     { name: "Posts", path: "/posts" },
     { name: "Assets", path: "/assets" },
     { name: "Social Inbox", path: "/social-inbox" },
-    { name: "Automation", path: "/automation" },
-    { name: "Socials", path: "/socials" },
     { name: "Team", path: "/team" },
     { name: "Settings", path: "/settings" }
   ];
