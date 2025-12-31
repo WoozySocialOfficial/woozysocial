@@ -1034,7 +1034,28 @@ export const ComposeContent = () => {
 
     formData.append("networks", JSON.stringify(networks));
     if (scheduledDate) {
-      formData.append("scheduledDate", scheduledDate.toISOString());
+      // Ensure the scheduled date is in the future
+      const now = new Date();
+      const scheduledTime = new Date(scheduledDate);
+
+      if (scheduledTime <= now) {
+        toast({
+          title: "Invalid schedule time",
+          description: "Please select a time in the future.",
+          status: "error",
+          duration: 3000,
+          isClosable: true
+        });
+        setIsPosting(false);
+        return;
+      }
+
+      console.log("Scheduling post:");
+      console.log("  Current time:", now.toISOString());
+      console.log("  Scheduled time:", scheduledTime.toISOString());
+      console.log("  Time difference (minutes):", (scheduledTime - now) / 1000 / 60);
+
+      formData.append("scheduledDate", scheduledTime.toISOString());
     }
 
     try {
@@ -1456,7 +1477,7 @@ export const ComposeContent = () => {
               selected={tempScheduledDate}
               onChange={handleDateSelect}
               showTimeSelect
-              timeIntervals={1}
+              timeIntervals={15}
               dateFormat="Pp"
               minDate={new Date()}
               inline

@@ -102,9 +102,37 @@ app.post("/api/post", upload.single("media"), async (req, res) => {
     };
 
     if (scheduledDate) {
-      // Ayrshare accepts ISO 8601 format or Unix timestamp
-      // Using Unix timestamp (seconds since epoch)
-      postData.scheduleDate = Math.floor(new Date(scheduledDate).getTime() / 1000);
+      // Ayrshare requires Unix timestamp in SECONDS (not milliseconds)
+      const dateObj = new Date(scheduledDate);
+      const timestampSeconds = Math.floor(dateObj.getTime() / 1000);
+      const currentTimeSeconds = Math.floor(Date.now() / 1000);
+      const secondsUntilPost = timestampSeconds - currentTimeSeconds;
+
+      console.log("=== SCHEDULING DEBUG ===");
+      console.log("Schedule Date Input (ISO):", scheduledDate);
+      console.log("Schedule Date Object:", dateObj.toISOString());
+      console.log("Schedule Date Timestamp (seconds):", timestampSeconds);
+      console.log("Current Time (seconds):", currentTimeSeconds);
+      console.log("Time until post (seconds):", secondsUntilPost);
+      console.log("Time until post (minutes):", (secondsUntilPost / 60).toFixed(2));
+      console.log("Is in future?:", secondsUntilPost > 0);
+
+      // Validate that the time is in the future
+      if (secondsUntilPost <= 0) {
+        console.error("ERROR: Scheduled time is in the past!");
+        return res.status(400).json({
+          error: "Scheduled time must be in the future",
+          details: `Time difference: ${secondsUntilPost} seconds (must be positive)`
+        });
+      }
+
+      // Ayrshare requires at least 10 minutes in the future for some platforms
+      if (secondsUntilPost < 60) {
+        console.warn("WARNING: Scheduled time is less than 1 minute in future");
+      }
+
+      postData.scheduleDate = timestampSeconds;
+      console.log("=== END SCHEDULING DEBUG ===");
     }
 
     // Handle media: either a new upload or existing URL from draft
@@ -425,59 +453,84 @@ app.get("/api/analytics/best-time", async (req, res) => {
       }
     }
 
-    // Get analytics from Ayrshare
-    const response = await axios.get(`${BASE_AYRSHARE}/analytics/post`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
-        "Profile-Key": profileKey
-      },
-      params: {
-        lastDays: 30 // Get last 30 days of data
-      }
-    });
-
-    // Analyze post times and engagement to find best times
-    const posts = response.data.posts || [];
-    const hourlyEngagement = {};
-
-    posts.forEach(post => {
-      if (post.created && post.likes !== undefined) {
-        const date = new Date(post.created);
-        const hour = date.getHours();
-
-        if (!hourlyEngagement[hour]) {
-          hourlyEngagement[hour] = { totalEngagement: 0, count: 0 };
+    // Try to get analytics from Ayrshare - note: this requires a paid plan
+    try {
+      const response = await axios.get(`${BASE_AYRSHARE}/analytics/post`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
+          "Profile-Key": profileKey
+        },
+        params: {
+          lastDays: 30 // Get last 30 days of data
         }
+      });
 
-        const engagement = (post.likes || 0) + (post.comments || 0) + (post.shares || 0);
-        hourlyEngagement[hour].totalEngagement += engagement;
-        hourlyEngagement[hour].count += 1;
-      }
-    });
+      // Analyze post times and engagement to find best times
+      const posts = response.data.posts || [];
+      const hourlyEngagement = {};
 
-    // Calculate average engagement per hour
-    const bestHours = Object.keys(hourlyEngagement)
-      .map(hour => ({
-        hour: parseInt(hour),
-        avgEngagement: hourlyEngagement[hour].totalEngagement / hourlyEngagement[hour].count
-      }))
-      .sort((a, b) => b.avgEngagement - a.avgEngagement)
-      .slice(0, 3); // Top 3 hours
+      posts.forEach(post => {
+        if (post.created && post.likes !== undefined) {
+          const date = new Date(post.created);
+          const hour = date.getHours();
 
-    res.json({
-      bestHours,
-      totalPosts: posts.length,
-      hasData: posts.length > 0
-    });
+          if (!hourlyEngagement[hour]) {
+            hourlyEngagement[hour] = { totalEngagement: 0, count: 0 };
+          }
+
+          const engagement = (post.likes || 0) + (post.comments || 0) + (post.shares || 0);
+          hourlyEngagement[hour].totalEngagement += engagement;
+          hourlyEngagement[hour].count += 1;
+        }
+      });
+
+      // Calculate average engagement per hour
+      const bestHours = Object.keys(hourlyEngagement)
+        .map(hour => ({
+          hour: parseInt(hour),
+          avgEngagement: hourlyEngagement[hour].totalEngagement / hourlyEngagement[hour].count
+        }))
+        .sort((a, b) => b.avgEngagement - a.avgEngagement)
+        .slice(0, 3); // Top 3 hours
+
+      res.json({
+        bestHours,
+        totalPosts: posts.length,
+        hasData: posts.length > 0
+      });
+    } catch (apiError) {
+      // Analytics API might not be available on free tier
+      console.log("Analytics API not available (may require paid plan):", apiError.response?.status);
+
+      // Return default best times based on general social media research
+      res.json({
+        bestHours: [
+          { hour: 9, avgEngagement: 0 },  // 9 AM
+          { hour: 13, avgEngagement: 0 }, // 1 PM
+          { hour: 18, avgEngagement: 0 }  // 6 PM
+        ],
+        totalPosts: 0,
+        hasData: false,
+        isDefault: true
+      });
+    }
   } catch (error) {
     console.error(
-      "Error fetching analytics:",
-      error.response?.data || error.message
+      "Error in best-time endpoint:",
+      error.message
     );
-    res.status(500).json({
-      error: "Failed to fetch analytics",
-      hasData: false
+
+    // Return default times even on error
+    res.json({
+      bestHours: [
+        { hour: 9, avgEngagement: 0 },
+        { hour: 13, avgEngagement: 0 },
+        { hour: 18, avgEngagement: 0 }
+      ],
+      totalPosts: 0,
+      hasData: false,
+      isDefault: true
     });
   }
 });
