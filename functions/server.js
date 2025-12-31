@@ -341,17 +341,18 @@ app.get("/api/user-accounts", async (req, res) => {
 
     const { displayNames } = response.data;
 
+    console.log(`[DIAGNOSTIC] Ayrshare response displayNames:`, displayNames);
+
     // Handle case where user has no connected accounts
     if (!displayNames || !Array.isArray(displayNames)) {
-      return res.json({ activeSocialAccounts: [] });
+      return res.json({ accounts: [] });
     }
 
-    const accountsWithUrls = displayNames.map((account) => ({
-      name: account.platform,
-      profileUrl: account.profileUrl
-    }));
+    // Extract just the platform names for the frontend
+    const platformNames = displayNames.map((account) => account.platform);
+    console.log(`[DIAGNOSTIC] Returning platform names:`, platformNames);
 
-    res.json({ activeSocialAccounts: accountsWithUrls });
+    res.json({ accounts: platformNames });
   } catch (error) {
     console.error(
       "Error fetching user accounts:",
@@ -574,7 +575,7 @@ app.post("/api/generate-post", async (req, res) => {
       systemPrompt += `\n\nOptimize for these platforms: ${platforms.join(', ')}`;
     }
 
-    systemPrompt += `\n\nGenerate 3 variations of the post. Keep posts concise and engaging. Include relevant hashtags.`;
+    systemPrompt += `\n\nGenerate 3 short variations. Separate each with "---" on a new line. Be concise. Include hashtags.`;
 
     // Call OpenAI API
     const openaiResponse = await axios.post(
@@ -585,8 +586,8 @@ app.post("/api/generate-post", async (req, res) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.8,
-        max_tokens: 500
+        temperature: 0.7,
+        max_tokens: 350
       },
       {
         headers: {
@@ -598,8 +599,21 @@ app.post("/api/generate-post", async (req, res) => {
 
     const generatedText = openaiResponse.data.choices[0].message.content;
 
-    // Split variations if the AI provided multiple
-    const variations = generatedText.split(/\n\n(?=\d+\.|\*\*Variation|\*Variation)/).filter(v => v.trim());
+    // Split variations using the --- delimiter
+    let variations = generatedText.split(/\n---\n|\n\n---\n\n/).map(v => v.trim()).filter(v => v.length > 0);
+
+    // Fallback: if splitting didn't work, try other common patterns
+    if (variations.length === 1) {
+      variations = generatedText.split(/\n\n(?=\d+\.|\*\*Variation|\*Variation)/).map(v => v.trim()).filter(v => v.length > 0);
+    }
+
+    // If still only one variation, split by double line breaks as last resort
+    if (variations.length === 1) {
+      const parts = generatedText.split(/\n\n+/).map(v => v.trim()).filter(v => v.length > 20);
+      if (parts.length >= 3) {
+        variations = parts.slice(0, 3);
+      }
+    }
 
     res.json({
       success: true,
