@@ -170,6 +170,47 @@
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
 }
 
+.post-icon.facebook {
+  background-color: #1877F2;
+}
+
+.post-icon.twitter {
+  background-color: #000000;
+}
+
+.post-icon.linkedin {
+  background-color: #0A66C2;
+}
+
+.post-icon.tiktok {
+  background-color: #000000;
+}
+
+.post-icon.youtube {
+  background-color: #FF0000;
+}
+
+.post-icon.pinterest {
+  background-color: #BD081C;
+}
+
+.post-icon.reddit {
+  background-color: #FF4500;
+}
+
+.post-icon.telegram {
+  background-color: #0088cc;
+}
+
+.post-icon.bluesky {
+  background-color: #1185FE;
+}
+
+.post-icon.snapchat {
+  background-color: #FFFC00;
+  color: #000 !important;
+}
+
 .post-content {
   flex: 1;
   display: flex;
@@ -211,6 +252,7 @@
 .dashboard-right {
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
 .social-accounts-section {
@@ -234,11 +276,18 @@
   padding: 12px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .social-account-item:hover {
   background-color: #e9ecef;
+}
+
+.social-account-item.clickable:hover {
+  background-color: #fff9e6;
+  border: 1px solid #FFC801;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 200, 1, 0.2);
 }
 
 .account-info {
@@ -290,6 +339,29 @@
 .status-badge.active {
   background-color: #e8f5e9;
   color: #2e7d32;
+}
+
+.connect-button {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #FFC801;
+  color: #000000;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connect-button:hover:not(:disabled) {
+  background-color: #e6b400;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(255, 200, 1, 0.3);
+}
+
+.connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Responsive */
