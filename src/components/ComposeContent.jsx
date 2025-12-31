@@ -40,9 +40,15 @@ export const ComposeContent = () => {
   const isSavingRef = useRef(false); // Lock to prevent concurrent saves
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isAiOpen, onOpen: onAiOpen, onClose: onAiClose } = useDisclosure();
   const [engagementScore, setEngagementScore] = useState(0);
   const [bestPostingTime, setBestPostingTime] = useState("2:00 PM");
   const [hasRealData, setHasRealData] = useState(false);
+
+  // AI Generation state
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiVariations, setAiVariations] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Fetch connected accounts from Ayrshare on component mount
   useEffect(() => {
@@ -1099,6 +1105,74 @@ export const ComposeContent = () => {
     }
   };
 
+  // AI Post Generation
+  const handleGenerateWithAI = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to use AI generation",
+        status: "error",
+        duration: 3000,
+        isClosable: true
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const selectedPlatforms = Object.keys(networks).filter(key => networks[key]);
+
+      const response = await fetch(`${baseURL}/api/generate-post`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          prompt: aiPrompt,
+          platforms: selectedPlatforms
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate post");
+      }
+
+      const data = await response.json();
+      setAiVariations(data.variations || []);
+
+      if (!data.brandProfileUsed) {
+        toast({
+          title: "Tip",
+          description: "Complete your Brand Profile for better AI suggestions!",
+          status: "info",
+          duration: 4000,
+          isClosable: true
+        });
+      }
+    } catch (error) {
+      console.error("Error generating post:", error);
+      toast({
+        title: "Error generating post",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSelectVariation = (variation) => {
+    // Clean up variation text (remove numbering if present)
+    const cleanText = variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '').trim();
+    setPost({ ...post, text: cleanText });
+    onAiClose();
+    setAiPrompt("");
+    setAiVariations([]);
+  };
+
   // Calculate best posting time based on real analytics or selected platforms
   const getBestPostingTime = () => {
     // If we have real analytics data, use it
@@ -1188,6 +1262,14 @@ export const ComposeContent = () => {
                   accept="image/*,video/*"
                   style={{ display: "none" }}
                 />
+                <button
+                  className="media-upload-btn"
+                  onClick={onAiOpen}
+                  title="Generate with AI"
+                  style={{ marginLeft: '8px' }}
+                >
+                  ✨
+                </button>
               </div>
 
               <div className="form-buttons">
@@ -1416,6 +1498,118 @@ export const ComposeContent = () => {
         </ModalContent>
       </Modal>
 
+      {/* AI Generation Modal */}
+      <Modal isOpen={isAiOpen} onClose={onAiClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>✨ Generate Post with AI</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {aiVariations.length === 0 ? (
+              <div>
+                <p style={{ marginBottom: '10px', color: '#666' }}>
+                  What would you like to post about?
+                </p>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="E.g., Announce our new product launch, share a customer success story, promote our upcoming webinar..."
+                  rows="4"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                />
+                <p style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
+                  💡 Tip: Complete your Brand Profile for better AI-generated content
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p style={{ marginBottom: '15px', fontWeight: 'bold' }}>
+                  Select a variation:
+                </p>
+                {aiVariations.map((variation, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectVariation(variation)}
+                    style={{
+                      padding: '15px',
+                      marginBottom: '10px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: '#f9fafb'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#6465f1';
+                      e.currentTarget.style.backgroundColor = '#f5f3ff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.backgroundColor = '#f9fafb';
+                    }}
+                  >
+                    <div style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>
+                      {variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '')}
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setAiVariations([]);
+                    setAiPrompt("");
+                  }}
+                  style={{ marginTop: '10px' }}
+                >
+                  ← Generate Again
+                </Button>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onAiClose} mr={3}>
+              Cancel
+            </Button>
+            {aiVariations.length === 0 && (
+              <Button
+                colorScheme="purple"
+                onClick={handleGenerateWithAI}
+                isLoading={isGenerating}
+                loadingText="Generating..."
+                disabled={!aiPrompt.trim()}
+              >
+                Generate
+              </Button>
+            )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Scheduled Date Display */}
+      {scheduledDate && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#6465f1',
+          color: 'white',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000
+        }}>
+          Scheduled for: {scheduledDate.toLocaleString()}
+        </div>
+      )}
     </div>
   );
 };

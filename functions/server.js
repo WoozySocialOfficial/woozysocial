@@ -482,6 +482,86 @@ app.get("/api/analytics/best-time", async (req, res) => {
   }
 });
 
+// AI Post Generation endpoint
+app.post("/api/generate-post", async (req, res) => {
+  try {
+    const { userId, prompt, platforms } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    // Fetch brand profile from Supabase
+    const { data: brandProfile, error: profileError } = await supabase
+      .from('brand_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("Error fetching brand profile:", profileError);
+    }
+
+    // Build AI prompt with brand context
+    let systemPrompt = "You are a social media content expert. Generate engaging social media posts.";
+    let userPrompt = prompt || "Generate an engaging social media post";
+
+    if (brandProfile) {
+      systemPrompt += `\n\nBrand Context:`;
+      if (brandProfile.brand_name) systemPrompt += `\n- Brand: ${brandProfile.brand_name}`;
+      if (brandProfile.brand_description) systemPrompt += `\n- About: ${brandProfile.brand_description}`;
+      if (brandProfile.tone_of_voice) systemPrompt += `\n- Tone: ${brandProfile.tone_of_voice}`;
+      if (brandProfile.target_audience) systemPrompt += `\n- Audience: ${brandProfile.target_audience}`;
+      if (brandProfile.key_topics) systemPrompt += `\n- Topics: ${brandProfile.key_topics}`;
+      if (brandProfile.brand_values) systemPrompt += `\n- Values: ${brandProfile.brand_values}`;
+      if (brandProfile.sample_posts) systemPrompt += `\n- Style Examples:\n${brandProfile.sample_posts}`;
+    }
+
+    if (platforms && platforms.length > 0) {
+      systemPrompt += `\n\nOptimize for these platforms: ${platforms.join(', ')}`;
+    }
+
+    systemPrompt += `\n\nGenerate 3 variations of the post. Keep posts concise and engaging. Include relevant hashtags.`;
+
+    // Call OpenAI API
+    const openaiResponse = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.8,
+        max_tokens: 500
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+        }
+      }
+    );
+
+    const generatedText = openaiResponse.data.choices[0].message.content;
+
+    // Split variations if the AI provided multiple
+    const variations = generatedText.split(/\n\n(?=\d+\.|\*\*Variation|\*Variation)/).filter(v => v.trim());
+
+    res.json({
+      success: true,
+      variations: variations.length > 1 ? variations : [generatedText],
+      brandProfileUsed: !!brandProfile
+    });
+  } catch (error) {
+    console.error("Error generating post:", error.response?.data || error.message);
+    res.status(500).json({
+      error: "Failed to generate post",
+      details: error.response?.data || error.message
+    });
+  }
+});
+
 const PORT = env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
