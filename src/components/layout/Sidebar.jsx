@@ -1,11 +1,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import "./Sidebar.css";
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { profile } = useAuth();
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard" },
@@ -23,11 +21,7 @@ export const Sidebar = () => {
     <div className="sidebar">
       <div className="sidebar-content">
         <div className="sidebar-logo">
-          {profile?.logo_url ? (
-            <img src={profile.logo_url} alt="Logo" className="sidebar-logo-image" />
-          ) : (
-            <div className="sidebar-logo-text">[LOGO]</div>
-          )}
+          <img src="/ChatGPT Image Dec 31, 2025, 04_19_09 PM.png" alt="Woozy Social" className="sidebar-logo-image" />
         </div>
 
         <div className="sidebar-menu">

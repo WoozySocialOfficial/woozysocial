@@ -60,8 +60,9 @@ export const ComposeContent = () => {
         const res = await fetch(`${baseURL}/api/user-accounts?userId=${user.id}`);
         if (res.ok) {
           const data = await res.json();
-          console.log("Connected accounts from Ayrshare:", data.activeSocialAccounts);
-          setConnectedAccounts(data.activeSocialAccounts || []);
+          console.log("Connected accounts API response:", data);
+          console.log("Connected accounts array:", data.accounts);
+          setConnectedAccounts(data.accounts || []);
         }
       } catch (err) {
         console.error("Error fetching accounts:", err);
@@ -349,11 +350,16 @@ export const ComposeContent = () => {
 
   // Check if a platform is linked
   const isLinked = (platformKey) => {
-    return connectedAccounts.some(account => {
-      const normalized = account.name?.toLowerCase();
+    const result = connectedAccounts.some(account => {
+      // Handle both string array and object array formats
+      const accountName = typeof account === 'string' ? account : account.name;
+      const normalized = accountName?.toLowerCase();
       const mapped = platformNameMap[normalized];
+      console.log(`Checking platform ${platformKey}: account="${accountName}", normalized="${normalized}", mapped="${mapped}"`);
       return mapped === platformKey;
     });
+    console.log(`Platform ${platformKey} linked: ${result}`);
+    return result;
   };
 
   const socialNetworks = [
@@ -1328,19 +1334,22 @@ export const ComposeContent = () => {
                   className={`social-button ${isSelected && isLinked ? 'selected' : ''} ${!isLinked ? 'disabled' : ''}`}
                   onClick={() => handleNetworkToggle(network.name, isLinked)}
                   style={{
-                    backgroundColor: isSelected && isLinked ? network.color : '#d9d9d9'
+                    backgroundColor: isSelected && isLinked ? network.color : (isLinked ? '#f0f0f0' : '#d9d9d9'),
+                    cursor: isLinked ? 'pointer' : 'not-allowed',
+                    opacity: isLinked ? 1 : 0.5,
+                    border: isLinked && !isSelected ? `2px solid ${network.color}` : '2px solid transparent'
                   }}
                 >
                   <Icon
                     className="social-icon"
                     style={{
-                      color: isSelected && isLinked ? 'white' : 'rgba(0,0,0,0.5)'
+                      color: isSelected && isLinked ? 'white' : (isLinked ? network.color : 'rgba(0,0,0,0.5)')
                     }}
                   />
                   <span
                     className="social-name"
                     style={{
-                      color: isSelected && isLinked ? 'white' : 'black'
+                      color: isSelected && isLinked ? 'white' : (isLinked ? network.color : 'rgba(0,0,0,0.5)')
                     }}
                   >
                     {network.displayName}
