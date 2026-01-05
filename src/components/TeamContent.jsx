@@ -158,7 +158,7 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/team/remove-member', {
+      const response = await fetch(`${baseURL}/api/team/remove-member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ export const TeamContent = () => {
 
   const handleUpdateRole = async (memberId, newRole) => {
     try {
-      const response = await fetch('http://localhost:3001/api/team/update-role', {
+      const response = await fetch(`${baseURL}/api/team/update-role`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
