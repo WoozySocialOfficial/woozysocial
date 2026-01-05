@@ -57,9 +57,13 @@ export const DashboardContent = () => {
   const refreshAccounts = async () => {
     if (!user) return;
 
+    const queryParam = activeWorkspace?.id
+      ? `workspaceId=${activeWorkspace.id}`
+      : `userId=${user.id}`;
+
     setLoadingAccounts(true);
     try {
-      const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
+      const res = await fetch(`${baseURL}/api/user-accounts?${queryParam}`);
       if (res.ok) {
         const accountsData = await res.json();
         console.log("Connected accounts from API:", accountsData.accounts);
@@ -80,9 +84,13 @@ export const DashboardContent = () => {
     // Prevent multiple simultaneous connections
     if (connectingPlatform) return;
 
+    const queryParam = activeWorkspace?.id
+      ? `workspaceId=${activeWorkspace.id}`
+      : `userId=${user.id}`;
+
     setConnectingPlatform(platformName);
     try {
-      const res = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
+      const res = await fetch(`${baseURL}/api/generate-jwt?${queryParam}`);
       if (res.ok) {
         const data = await res.json();
 
@@ -126,8 +134,13 @@ export const DashboardContent = () => {
     const fetchDashboardData = async () => {
       if (!user) return;
 
+      // Build query params - use workspaceId if available, otherwise userId
+      const queryParam = activeWorkspace?.id
+        ? `workspaceId=${activeWorkspace.id}`
+        : `userId=${user.id}`;
+
       // Fetch accounts and posts in parallel
-      const fetchAccounts = fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`)
+      const fetchAccounts = fetch(`${baseURL}/api/user-accounts?${queryParam}`)
         .then(res => res.ok ? res.json() : null)
         .then(accountsData => {
           if (accountsData) {
@@ -139,7 +152,7 @@ export const DashboardContent = () => {
         .catch(error => console.error("Error fetching accounts:", error))
         .finally(() => setLoadingAccounts(false));
 
-      const fetchPosts = fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`)
+      const fetchPosts = fetch(`${baseURL}/api/post-history?${queryParam}`)
         .then(res => res.ok ? res.json() : null)
         .then(postsData => {
           if (postsData) {
