@@ -1,0 +1,244 @@
+.accept-invite-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #F1F6F4 0%, #e8f4f0 100%);
+  padding: 20px;
+}
+
+.accept-invite-card {
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(17, 76, 90, 0.12);
+}
+
+.accept-invite-card.error {
+  text-align: center;
+}
+
+/* Header */
+.invite-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.invite-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.invite-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #114C5A;
+  margin: 0 0 8px 0;
+}
+
+.invite-subtitle {
+  font-size: 16px;
+  color: #114C5A;
+  opacity: 0.7;
+  margin: 0;
+}
+
+/* Details */
+.invite-details {
+  background: #F1F6F4;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(17, 76, 90, 0.1);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row.description {
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 8px;
+}
+
+.detail-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #114C5A;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-value {
+  font-size: 16px;
+  color: #114C5A;
+  font-weight: 500;
+}
+
+.detail-value.role-badge {
+  background: #FFC801;
+  color: #114C5A;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+}
+
+.detail-description {
+  font-size: 14px;
+  color: #114C5A;
+  opacity: 0.8;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* Auth Notice */
+.auth-notice {
+  background: #fef3c7;
+  border: 2px solid #fbbf24;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.auth-notice p {
+  margin: 0;
+  font-size: 14px;
+  color: #92400e;
+  font-weight: 500;
+}
+
+/* Actions */
+.invite-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.accept-button,
+.decline-button,
+.back-button {
+  flex: 1;
+  padding: 16px 32px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  font-family: inherit;
+}
+
+.accept-button {
+  background: #114C5A;
+  color: #FFC801;
+}
+
+.accept-button:hover:not(:disabled) {
+  background: #0d3a47;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(17, 76, 90, 0.2);
+}
+
+.accept-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.decline-button {
+  background: transparent;
+  color: #dc2626;
+}
+
+.decline-button:hover:not(:disabled) {
+  background: #fee2e2;
+  transform: translateY(-2px);
+}
+
+.back-button {
+  background: #114C5A;
+  color: #FFC801;
+  margin-top: 24px;
+}
+
+.back-button:hover {
+  background: #0d3a47;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(17, 76, 90, 0.2);
+}
+
+/* Loading State */
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #F1F6F4;
+  border-top: 4px solid #114C5A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  text-align: center;
+  font-size: 16px;
+  color: #114C5A;
+  opacity: 0.7;
+}
+
+/* Error State */
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.error-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #dc2626;
+  margin: 0 0 16px 0;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #114C5A;
+  opacity: 0.8;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .accept-invite-card {
+    padding: 32px 24px;
+  }
+
+  .invite-title {
+    font-size: 24px;
+  }
+
+  .invite-actions {
+    flex-direction: column;
+  }
+
+  .accept-button,
+  .decline-button {
+    width: 100%;
+  }
+}

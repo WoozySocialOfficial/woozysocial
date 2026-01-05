@@ -196,3 +196,89 @@
   opacity: 0.7;
   margin: 0;
 }
+
+/* Pending Invitations Styles */
+.team-section + .team-section {
+  margin-top: 32px;
+}
+
+.member-avatar.pending {
+  background-color: #f59e0b;
+  border-color: #d97706;
+}
+
+.member-card.expired {
+  opacity: 0.6;
+  background-color: #fef2f2;
+}
+
+.invite-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #114C5A;
+  opacity: 0.7;
+}
+
+.invite-date {
+  font-weight: 500;
+}
+
+.invite-separator {
+  opacity: 0.5;
+}
+
+.invite-expiry {
+  font-weight: 500;
+}
+
+.invite-expiry.expired {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.member-role.pending-badge {
+  background-color: #fbbf24;
+  border-color: #d97706;
+}
+
+.resend-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  background-color: #114C5A;
+  color: #FFC801;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resend-button:hover {
+  background-color: #0d3a47;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(17, 76, 90, 0.2);
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  background-color: transparent;
+  color: #dc2626;
+  font-family: inherit;
+}
+
+.cancel-button:hover {
+  background-color: #fee2e2;
+  transform: translateY(-1px);
+}

@@ -1,39 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { InviteMemberModal } from "./InviteMemberModal";
-import { supabase } from "../utils/supabaseClient";
 import "./TeamContent.css";
 
 export const TeamContent = () => {
   const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [invitesLoading, setInvitesLoading] = useState(true);
 
   useEffect(() => {
     if (user?.id) {
       fetchTeamMembers();
+      fetchPendingInvites();
     }
   }, [user]);
 
   const fetchTeamMembers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+      const response = await fetch(`http://localhost:3001/api/team/members?userId=${user.id}`);
+      const payload = await response.json();
 
-      if (error) {
-        console.error('Error fetching team members:', error);
-      } else {
-        setTeamMembers(data || []);
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to fetch team members');
       }
+
+      setTeamMembers(payload.data || []);
     } catch (error) {
       console.error('Error fetching team members:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingInvites = async () => {
+    try {
+      setInvitesLoading(true);
+      const response = await fetch(`http://localhost:3001/api/team/pending-invites?userId=${user.id}`);
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to fetch pending invites');
+      }
+
+      setPendingInvites(payload.data || []);
+    } catch (error) {
+      console.error('Error fetching pending invites:', error);
+    } finally {
+      setInvitesLoading(false);
     }
   };
 
@@ -63,11 +80,74 @@ export const TeamContent = () => {
       }
 
       console.log('Invitation sent successfully:', data);
+      // Refresh pending invites list
+      fetchPendingInvites();
       // The modal will close automatically on success
     } catch (error) {
       console.error('Error in handleInvite:', error);
       // Re-throw the error so the modal can display it
       throw error;
+    }
+  };
+
+  const handleCancelInvite = async (inviteId) => {
+    if (!window.confirm('Are you sure you want to cancel this invitation?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/api/team/cancel-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inviteId,
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel invitation');
+      }
+
+      // Refresh pending invites
+      fetchPendingInvites();
+    } catch (error) {
+      console.error('Error canceling invite:', error);
+      alert(error.message || 'Failed to cancel invitation');
+    }
+  };
+
+  const handleResendInvite = async (invite) => {
+    try {
+      // Call the same endpoint to resend
+      const response = await fetch('http://localhost:3001/api/send-team-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: invite.email,
+          role: invite.role,
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to resend invitation');
+      }
+
+      alert('Invitation resent successfully!');
+      // Update the invited_at timestamp in the UI
+      fetchPendingInvites();
+    } catch (error) {
+      console.error('Error resending invite:', error);
+      alert(error.message || 'Failed to resend invitation');
     }
   };
 
@@ -105,6 +185,7 @@ export const TeamContent = () => {
             ) : (
               teamMembers.map((member) => {
                 const getInitials = (email) => {
+                  if (!email) return "NA";
                   return email.substring(0, 2).toUpperCase();
                 };
 
@@ -120,15 +201,121 @@ export const TeamContent = () => {
                 return (
                   <div key={member.id} className="member-card">
                     <div className="member-info">
-                      <div className="member-avatar">{getInitials(member.email)}</div>
+                      <div className="member-avatar">{getInitials(member.profile?.email)}</div>
                       <div className="member-details">
-                        <h3 className="member-name">{member.email}</h3>
-                        <p className="member-email">Joined {new Date(member.created_at).toLocaleDateString()}</p>
+                        <h3 className="member-name">
+                          {member.profile?.full_name || member.profile?.email || "Unknown user"}
+                        </h3>
+                        <p className="member-email">
+                          {member.profile?.email || "Email not available"}
+                        </p>
+                        <p className="member-email">
+                          Joined {new Date(member.joined_at || member.created_at).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                     <div className="member-actions">
                       <span className="member-role">{getRoleLabel(member.role)}</span>
                       <button className="remove-button">Remove</button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pending Invitations Section */}
+      <div className="team-section">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">Pending Invitations</h2>
+            <p className="section-subtitle">Invitations waiting to be accepted</p>
+          </div>
+        </div>
+
+        <div className="team-content">
+          <div className="members-list">
+            {invitesLoading ? (
+              <div className="team-info-box">
+                <p className="info-text">Loading pending invitations...</p>
+              </div>
+            ) : pendingInvites.length === 0 ? (
+              <div className="team-info-box">
+                <p className="info-text">No pending invitations</p>
+                <p className="info-subtext">
+                  Invitations you send will appear here until they're accepted
+                </p>
+              </div>
+            ) : (
+              pendingInvites.map((invite) => {
+                const getRoleLabel = (role) => {
+                  const labels = {
+                    admin: 'Admin',
+                    editor: 'Editor',
+                    view_only: 'View Only',
+                  };
+                  return labels[role] || role;
+                };
+
+                const getInitials = (email) => {
+                  return email.substring(0, 2).toUpperCase();
+                };
+
+                const formatDate = (dateString) => {
+                  const date = new Date(dateString);
+                  return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                };
+
+                const getExpirationDate = (invitedAt) => {
+                  const date = new Date(invitedAt);
+                  date.setDate(date.getDate() + 7); // Add 7 days
+                  return date;
+                };
+
+                const isExpired = (invitedAt) => {
+                  return new Date() > getExpirationDate(invitedAt);
+                };
+
+                return (
+                  <div key={invite.id} className={`member-card ${isExpired(invite.invited_at) ? 'expired' : ''}`}>
+                    <div className="member-info">
+                      <div className="member-avatar pending">{getInitials(invite.email)}</div>
+                      <div className="member-details">
+                        <h3 className="member-name">{invite.email}</h3>
+                        <div className="invite-meta">
+                          <span className="invite-date">Invited {formatDate(invite.invited_at)}</span>
+                          <span className="invite-separator">|</span>
+                          <span className={`invite-expiry ${isExpired(invite.invited_at) ? 'expired' : ''}`}>
+                            {isExpired(invite.invited_at)
+                              ? 'Expired'
+                              : `Expires ${formatDate(getExpirationDate(invite.invited_at))}`
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="member-actions">
+                      <span className="member-role pending-badge">{getRoleLabel(invite.role)}</span>
+                      <button
+                        className="resend-button"
+                        onClick={() => handleResendInvite(invite)}
+                        title="Resend invitation email"
+                      >
+                        Resend
+                      </button>
+                      <button
+                        className="cancel-button"
+                        onClick={() => handleCancelInvite(invite.id)}
+                        title="Cancel invitation"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 );

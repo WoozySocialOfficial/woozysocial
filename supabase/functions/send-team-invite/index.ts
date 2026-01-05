@@ -256,7 +256,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Social Media Team <noreply@woozysocial.com>', // Update with your domain
+            from: 'onboarding@resend.dev', // Use Resend's test email or your verified domain
             to: [email],
             subject: `${inviterName} invited you to join their team`,
             html: emailHtml,

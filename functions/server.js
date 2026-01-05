@@ -1699,6 +1699,332 @@ app.post("/api/send-team-invite", async (req, res) => {
   }
 });
 
+// Validate Team Invitation endpoint (public - no auth required)
+app.get("/api/team/validate-invite", async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    // Fetch the invitation by token using service role (bypasses RLS)
+    const { data: invitation, error: fetchError } = await supabase
+      .from('team_invitations')
+      .select('id, email, role, status, invited_at, expires_at, owner_id')
+      .eq('invite_token', token)
+      .single();
+
+    if (fetchError || !invitation) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    // Return invitation data (don't include sensitive fields like invite_token)
+    res.json({ data: invitation });
+
+  } catch (error) {
+    console.error('Error validating invitation:', error);
+    res.status(500).json({ error: "Failed to validate invitation", details: error.message });
+  }
+});
+
+// Accept Team Invitation endpoint
+app.post("/api/team/accept-invite", async (req, res) => {
+  try {
+    const { token, userId } = req.body;
+
+    // Validate input
+    if (!token || !userId) {
+      return res.status(400).json({ error: "Token and userId are required" });
+    }
+
+    // Fetch the invitation by token
+    const { data: invitation, error: fetchError } = await supabase
+      .from('team_invitations')
+      .select('*')
+      .eq('invite_token', token)
+      .single();
+
+    if (fetchError || !invitation) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    // Check if invitation is still pending
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({
+        error: `This invitation has already been ${invitation.status}`
+      });
+    }
+
+    // Check if invitation has expired
+    const now = new Date();
+    const expiresAt = new Date(invitation.expires_at);
+    if (now > expiresAt) {
+      // Update status to expired
+      await supabase
+        .from('team_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitation.id);
+
+      return res.status(400).json({ error: 'This invitation has expired' });
+    }
+
+    // Get user's email to verify it matches the invitation
+    const { data: userData } = await supabase.auth.admin.getUserById(userId);
+    const userEmail = userData?.user?.email?.toLowerCase();
+
+    if (!userEmail || userEmail !== invitation.email.toLowerCase()) {
+      return res.status(403).json({
+        error: 'This invitation was sent to a different email address'
+      });
+    }
+
+    // Check if user is already a team member
+    const { data: existingMember } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('owner_id', invitation.owner_id)
+      .eq('member_id', userId)
+      .single();
+
+    if (existingMember) {
+      // Update invitation to accepted even though they're already a member
+      await supabase
+        .from('team_invitations')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id);
+
+      return res.status(400).json({ error: 'You are already a member of this team' });
+    }
+
+    // Create the team member record
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({
+        owner_id: invitation.owner_id,
+        member_id: userId,
+        role: invitation.role,
+        joined_at: new Date().toISOString()
+      });
+
+    if (memberError) {
+      console.error('Error creating team member:', memberError);
+      return res.status(500).json({ error: 'Failed to add you to the team' });
+    }
+
+    // Update invitation status to accepted
+    const { error: updateError } = await supabase
+      .from('team_invitations')
+      .update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString()
+      })
+      .eq('id', invitation.id);
+
+    if (updateError) {
+      console.error('Error updating invitation:', updateError);
+      // Don't fail the request - the member was created successfully
+    }
+
+    console.log('Team invitation accepted successfully:', invitation.id);
+
+    // Get owner's email for confirmation
+    const { data: ownerData } = await supabase.auth.admin.getUserById(invitation.owner_id);
+    const ownerEmail = ownerData?.user?.email;
+
+    // Send confirmation email to the owner
+    if (ownerEmail) {
+      try {
+        await resend.emails.send({
+          from: 'hello@woozysocial.com',
+          to: ownerEmail,
+          subject: `${userEmail} accepted your team invitation`,
+          html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #114C5A; color: #FFC801; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #ffffff; padding: 30px; border: 2px solid #114C5A; border-top: none; border-radius: 0 0 8px 8px; }
+    .info-box { background: #F1F6F4; border: 2px solid #114C5A; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0; font-size: 28px;">Team Invitation Accepted!</h1>
+    </div>
+    <div class="content">
+      <p>Great news! <strong>${userEmail}</strong> has accepted your invitation to join your team.</p>
+
+      <div class="info-box">
+        <p style="margin: 0;"><strong>Email:</strong> ${invitation.email}</p>
+        <p style="margin: 10px 0 0 0;"><strong>Role:</strong> ${invitation.role}</p>
+      </div>
+
+      <p>They now have access to your team and can start collaborating with you.</p>
+
+      <p style="margin-top: 30px;">
+        <a href="${env.APP_URL || 'http://localhost:5173'}/team"
+           style="background: #114C5A; color: #FFC801; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+          View Team Members
+        </a>
+      </p>
+    </div>
+    <div class="footer">
+      <p>This is an automated message from Woozy Social.</p>
+    </div>
+  </div>
+</body>
+</html>
+          `
+        });
+      } catch (emailError) {
+        console.error('Error sending confirmation email to owner:', emailError);
+        // Don't fail the request - the acceptance was successful
+      }
+    }
+
+    res.json({
+      message: 'Successfully joined the team!',
+      role: invitation.role
+    });
+
+  } catch (error) {
+    console.error('Error accepting invitation:', error);
+    res.status(500).json({ error: "Failed to accept invitation", details: error.message });
+  }
+});
+
+// Get Team Members for an owner
+app.get("/api/team/members", async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    const { data: members, error: membersError } = await supabase
+      .from('team_members')
+      .select('id, owner_id, member_id, role, created_at, joined_at, invited_by')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (membersError) {
+      console.error('Error fetching team members:', membersError);
+      return res.status(500).json({ error: 'Failed to fetch team members' });
+    }
+
+    const memberIds = (members || []).map((member) => member.member_id);
+    let profilesById = {};
+
+    if (memberIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, email, full_name')
+        .in('id', memberIds);
+
+      if (profilesError) {
+        console.error('Error fetching user profiles:', profilesError);
+      } else {
+        profilesById = (profiles || []).reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+      }
+    }
+
+    const enrichedMembers = (members || []).map((member) => ({
+      ...member,
+      profile: profilesById[member.member_id] || null,
+    }));
+
+    return res.json({ data: enrichedMembers });
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    return res.status(500).json({ error: 'Failed to fetch team members' });
+  }
+});
+
+// Get Pending Invitations for an owner
+app.get("/api/team/pending-invites", async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    const { data: invites, error: invitesError } = await supabase
+      .from('team_invitations')
+      .select('*')
+      .eq('owner_id', userId)
+      .eq('status', 'pending')
+      .order('invited_at', { ascending: false });
+
+    if (invitesError) {
+      console.error('Error fetching pending invites:', invitesError);
+      return res.status(500).json({ error: 'Failed to fetch pending invites' });
+    }
+
+    return res.json({ data: invites || [] });
+  } catch (error) {
+    console.error('Error fetching pending invites:', error);
+    return res.status(500).json({ error: 'Failed to fetch pending invites' });
+  }
+});
+
+// Cancel a pending invitation
+app.post("/api/team/cancel-invite", async (req, res) => {
+  try {
+    const { inviteId, userId } = req.body;
+
+    if (!inviteId || !userId) {
+      return res.status(400).json({ error: "inviteId and userId are required" });
+    }
+
+    const { data: invite, error: inviteError } = await supabase
+      .from('team_invitations')
+      .select('id, owner_id, status')
+      .eq('id', inviteId)
+      .single();
+
+    if (inviteError || !invite) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    if (invite.owner_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to cancel this invitation' });
+    }
+
+    if (invite.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending invitations can be cancelled' });
+    }
+
+    const { error: cancelError } = await supabase
+      .from('team_invitations')
+      .update({ status: 'cancelled' })
+      .eq('id', inviteId);
+
+    if (cancelError) {
+      console.error('Error canceling invitation:', cancelError);
+      return res.status(500).json({ error: 'Failed to cancel invitation' });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error canceling invitation:', error);
+    return res.status(500).json({ error: 'Failed to cancel invitation' });
+  }
+});
+
 const PORT = env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

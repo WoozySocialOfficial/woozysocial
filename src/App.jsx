@@ -5,6 +5,7 @@ import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignUpPage } from "./components/auth/SignUpPage";
+import { AcceptInvite } from "./pages/AcceptInvite";
 import { Sidebar } from "./components/layout/Sidebar";
 import { TopHeader } from "./components/layout/TopHeader";
 import { MainContent } from "./components/layout/MainContent";
@@ -29,6 +30,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/accept-invite" element={<AcceptInvite />} />
 
             {/* Protected routes */}
             <Route

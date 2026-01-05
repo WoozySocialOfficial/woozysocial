@@ -1,7 +1,7 @@
 .schedule-container {
-  padding: 30px 60px;
+  padding: 30px 20px;
   width: 100%;
-  max-width: 1600px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -90,6 +90,7 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  padding: 10px;
 }
 
 .schedule-loading {
@@ -103,35 +104,36 @@
 .week-view {
   display: flex;
   overflow-x: auto;
-  min-height: 600px;
+  height: calc(100vh - 250px);
+  min-height: 700px;
 }
 
 .time-column {
-  min-width: 80px;
+  min-width: 100px;
   flex-shrink: 0;
   border-right: 1px solid #e5e7eb;
   background: #f9fafb;
 }
 
 .time-header {
-  height: 70px;
+  height: 80px;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .time-slot {
-  height: 60px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-bottom: 1px solid #e5e7eb;
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
   font-weight: 500;
 }
 
 .day-column {
   flex: 1;
-  min-width: 140px;
+  min-width: 160px;
   border-right: 1px solid #e5e7eb;
 }
 
@@ -140,7 +142,7 @@
 }
 
 .day-header {
-  height: 70px;
+  height: 80px;
   border-bottom: 2px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -151,7 +153,7 @@
 }
 
 .day-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #374151;
   text-transform: uppercase;
@@ -159,14 +161,14 @@
 }
 
 .day-date {
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
 }
 
 .schedule-cell {
-  height: 60px;
+  height: 70px;
   border-bottom: 1px solid #e5e7eb;
-  padding: 4px;
+  padding: 6px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -175,7 +177,9 @@
 
 /* Month View */
 .month-view {
-  padding: 20px;
+  padding: 0;
+  height: calc(100vh - 250px);
+  min-height: 700px;
 }
 
 .month-grid {
@@ -186,13 +190,14 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  height: 100%;
 }
 
 .month-day-header {
   background: #f9fafb;
-  padding: 12px;
+  padding: 16px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #374151;
   text-transform: uppercase;
@@ -201,8 +206,8 @@
 
 .month-cell {
   background: white;
-  min-height: 120px;
-  padding: 8px;
+  min-height: 140px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
 }
@@ -213,10 +218,10 @@
 }
 
 .month-date {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .month-posts {

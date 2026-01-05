@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fetch Invitations</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Fetch Team Invitations</h1>
+    <button onclick="testFetch()">Test Fetch Invitations</button>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://adyeceovkhnacaxkymih.supabase.co';
+        const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // Need to add this
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testFetch() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing...</p>';
+
+            try {
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                if (userError) {
+                    resultsDiv.innerHTML = `<p style="color: red;">Error getting user: ${userError.message}</p>`;
+                    return;
+                }
+
+                if (!user) {
+                    resultsDiv.innerHTML = '<p style="color: red;">Not authenticated. Please login first.</p>';
+                    return;
+                }
+
+                resultsDiv.innerHTML += `<p>✅ User: ${user.email}</p>`;
+
+                // Try to fetch invitations
+                const { data, error } = await supabase
+                    .from('team_invitations')
+                    .select('*')
+                    .eq('owner_id', user.id)
+                    .eq('status', 'pending')
+                    .order('invited_at', { ascending: false });
+
+                if (error) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ Error fetching: ${error.message}</p>`;
+                    resultsDiv.innerHTML += `<pre>${JSON.stringify(error, null, 2)}</pre>`;
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ Success! Found ${data.length} pending invitations</p>`;
+                    resultsDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<p style="color: red;">Exception: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
