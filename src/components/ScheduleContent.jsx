@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
@@ -19,6 +20,7 @@ const PLATFORM_ICONS = {
 
 export const ScheduleContent = () => {
   const { user, profile } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("week"); // week, month, kanban
   const [posts, setPosts] = useState([]);
@@ -30,7 +32,7 @@ export const ScheduleContent = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${baseURL}/api/post-history?userId=${user.id}`);
+      const response = await fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`);
       if (!response.ok) throw new Error("Failed to fetch posts");
 
       const data = await response.json();

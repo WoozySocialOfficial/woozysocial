@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ const PLATFORM_ICONS = {
 
 export const PostsContent = () => {
   const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("drafts");
   const [posts, setPosts] = useState([]);
@@ -37,7 +39,7 @@ export const PostsContent = () => {
     if (!user) return;
 
     try {
-      const response = await fetch(`${baseURL}/api/post-history?userId=${user.id}`);
+      const response = await fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`);
       if (!response.ok) throw new Error("Failed to fetch post history");
 
       const data = await response.json();
@@ -87,7 +89,7 @@ export const PostsContent = () => {
         const { data, error } = await supabase
           .from("post_drafts")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("workspace_id", activeWorkspace.id)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -174,7 +176,7 @@ export const PostsContent = () => {
         .from("post_drafts")
         .delete()
         .eq("id", draftId)
-        .eq("user_id", user.id);
+        .eq("workspace_id", activeWorkspace.id);
 
       if (error) throw error;
 

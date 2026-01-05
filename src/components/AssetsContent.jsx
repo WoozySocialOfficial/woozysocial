@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { supabase } from "../utils/supabaseClient";
 import "./AssetsContent.css";
 
 export const AssetsContent = () => {
   const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const toast = useToast();
   const fileInputRef = useRef(null);
 
@@ -29,7 +31,7 @@ export const AssetsContent = () => {
       const { data, error} = await supabase
         .from('media_assets')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('workspace_id', activeWorkspace.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -109,7 +111,7 @@ export const AssetsContent = () => {
         const { error: dbError } = await supabase
           .from('media_assets')
           .insert([{
-            user_id: user.id,
+            workspace_id: activeWorkspace.id,
             file_name: file.name,
             file_type: file.type,
             file_size: file.size,

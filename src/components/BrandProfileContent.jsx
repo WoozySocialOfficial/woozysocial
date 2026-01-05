@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { supabase } from "../utils/supabaseClient";
 import "./BrandProfileContent.css";
 
 export const BrandProfileContent = () => {
   const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,7 +30,7 @@ export const BrandProfileContent = () => {
         const { data, error } = await supabase
           .from('brand_profiles')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('workspace_id', activeWorkspace.id)
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -76,7 +78,7 @@ export const BrandProfileContent = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        user_id: user.id,
+        workspace_id: activeWorkspace.id,
         brand_name: brandName,
         brand_description: brandDescription,
         tone_of_voice: toneOfVoice,

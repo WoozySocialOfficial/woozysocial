@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { WorkspaceSwitcher } from "../workspace/WorkspaceSwitcher";
 import { baseURL } from "../../utils/constants";
 import "./TopHeader.css";
 import notificationIcon from "./vector-15.svg";
@@ -80,7 +81,7 @@ export const TopHeader = () => {
       </div>
 
       <div className="logo-container">
-        <div className="logo-text">[LOGO]</div>
+        <WorkspaceSwitcher />
       </div>
     </div>
   );

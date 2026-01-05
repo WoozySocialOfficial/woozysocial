@@ -8,11 +8,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { baseURL } from "../utils/constants";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { supabase } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 
 export const ComposeContent = () => {
   const { user, profile } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const [post, setPost] = useState({ text: "", media: null });
   const [networks, setNetworks] = useState({
     threads: false,
@@ -54,10 +56,10 @@ export const ComposeContent = () => {
   // Fetch connected accounts from Ayrshare on component mount
   useEffect(() => {
     const fetchAccounts = async () => {
-      if (!user) return;
+      if (!user || !activeWorkspace) return;
 
       try {
-        const res = await fetch(`${baseURL}/api/user-accounts?userId=${user.id}`);
+        const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
         if (res.ok) {
           const data = await res.json();
           console.log("Connected accounts API response:", data);
@@ -69,15 +71,15 @@ export const ComposeContent = () => {
       }
     };
     fetchAccounts();
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   // Fetch real analytics data for best posting time
   useEffect(() => {
     const fetchBestTime = async () => {
-      if (!user) return;
+      if (!user || !activeWorkspace) return;
 
       try {
-        const res = await fetch(`${baseURL}/api/analytics/best-time?userId=${user.id}`);
+        const res = await fetch(`${baseURL}/api/analytics/best-time?workspaceId=${activeWorkspace.id}`);
         if (res.ok) {
           const data = await res.json();
           if (data.hasData && data.bestHours && data.bestHours.length > 0) {
@@ -98,7 +100,7 @@ export const ComposeContent = () => {
       }
     };
     fetchBestTime();
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   // Load draft from sessionStorage if coming from Posts page
   useEffect(() => {
@@ -201,7 +203,8 @@ export const ComposeContent = () => {
 
     try {
       const draftData = {
-        user_id: user.id,
+        workspace_id: activeWorkspace.id,
+        user_id: user.id, // Keep for created_by tracking
         caption: post.text,
         media_urls: mediaPreview ? [mediaPreview] : [],
         platforms: selectedPlatforms,
@@ -215,7 +218,7 @@ export const ComposeContent = () => {
           .from("post_drafts")
           .update(draftData)
           .eq("id", currentDraftId)
-          .eq("user_id", user.id);
+          .eq("workspace_id", activeWorkspace.id);
 
         if (error) throw error;
       } else {
@@ -421,7 +424,7 @@ export const ComposeContent = () => {
 
     const formData = new FormData();
     formData.append("text", post.text);
-    formData.append("userId", user.id);
+    formData.append("workspaceId", activeWorkspace.id);
 
     // Handle media: either a new file upload or existing URL from draft
     if (post.media) {
@@ -447,7 +450,7 @@ export const ComposeContent = () => {
               .from("post_drafts")
               .delete()
               .eq("id", currentDraftId)
-              .eq("user_id", user.id);
+              .eq("workspace_id", activeWorkspace.id);
           } catch (error) {
             console.error("Error deleting draft:", error);
           }
@@ -1028,7 +1031,7 @@ export const ComposeContent = () => {
 
     const formData = new FormData();
     formData.append("text", post.text);
-    formData.append("userId", user.id);
+    formData.append("workspaceId", activeWorkspace.id);
 
     // Handle media: either a new file upload or existing URL from draft
     if (post.media) {
@@ -1079,7 +1082,7 @@ export const ComposeContent = () => {
               .from("post_drafts")
               .delete()
               .eq("id", currentDraftId)
-              .eq("user_id", user.id);
+              .eq("workspace_id", activeWorkspace.id);
           } catch (error) {
             console.error("Error deleting draft:", error);
           }
@@ -1156,7 +1159,7 @@ export const ComposeContent = () => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          userId: user.id,
+          workspaceId: activeWorkspace.id,
           prompt: aiPrompt,
           platforms: selectedPlatforms
         })

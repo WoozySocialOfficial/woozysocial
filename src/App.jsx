@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignUpPage } from "./components/auth/SignUpPage";
@@ -21,40 +22,42 @@ import "./App.css";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
+      <WorkspaceProvider>
+        <Router>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
 
-          {/* Protected routes */}
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <div className="app-container">
-                  <Sidebar />
-                  <TopHeader />
-                  <MainContent>
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                      <Route path="/dashboard" element={<DashboardContent />} />
-                      <Route path="/brand-profile" element={<BrandProfileContent />} />
-                      <Route path="/compose" element={<ComposeContent />} />
-                      <Route path="/schedule" element={<ScheduleContent />} />
-                      <Route path="/posts" element={<PostsContent />} />
-                      <Route path="/assets" element={<AssetsContent />} />
-                      <Route path="/social-inbox" element={<SocialInboxContent />} />
-                      <Route path="/team" element={<TeamContent />} />
-                      <Route path="/settings" element={<SettingsContent />} />
-                    </Routes>
-                  </MainContent>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
+            {/* Protected routes */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <div className="app-container">
+                    <Sidebar />
+                    <TopHeader />
+                    <MainContent>
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard" element={<DashboardContent />} />
+                        <Route path="/brand-profile" element={<BrandProfileContent />} />
+                        <Route path="/compose" element={<ComposeContent />} />
+                        <Route path="/schedule" element={<ScheduleContent />} />
+                        <Route path="/posts" element={<PostsContent />} />
+                        <Route path="/assets" element={<AssetsContent />} />
+                        <Route path="/social-inbox" element={<SocialInboxContent />} />
+                        <Route path="/team" element={<TeamContent />} />
+                        <Route path="/settings" element={<SettingsContent />} />
+                      </Routes>
+                    </MainContent>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </WorkspaceProvider>
     </AuthProvider>
   );
 }

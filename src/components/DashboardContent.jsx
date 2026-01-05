@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 import "./DashboardContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
@@ -25,6 +26,7 @@ const PLATFORM_ICONS = {
 
 export const DashboardContent = () => {
   const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -57,7 +59,7 @@ export const DashboardContent = () => {
 
     setLoadingAccounts(true);
     try {
-      const res = await fetch(`${baseURL}/api/user-accounts?userId=${user.id}`);
+      const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
       if (res.ok) {
         const accountsData = await res.json();
         console.log("Connected accounts from API:", accountsData.accounts);
@@ -80,7 +82,7 @@ export const DashboardContent = () => {
 
     setConnectingPlatform(platformName);
     try {
-      const res = await fetch(`${baseURL}/api/generate-jwt?userId=${user.id}`);
+      const res = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
       if (res.ok) {
         const data = await res.json();
 
@@ -125,7 +127,7 @@ export const DashboardContent = () => {
       if (!user) return;
 
       // Fetch accounts and posts in parallel
-      const fetchAccounts = fetch(`${baseURL}/api/user-accounts?userId=${user.id}`)
+      const fetchAccounts = fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`)
         .then(res => res.ok ? res.json() : null)
         .then(accountsData => {
           if (accountsData) {
@@ -137,7 +139,7 @@ export const DashboardContent = () => {
         .catch(error => console.error("Error fetching accounts:", error))
         .finally(() => setLoadingAccounts(false));
 
-      const fetchPosts = fetch(`${baseURL}/api/post-history?userId=${user.id}`)
+      const fetchPosts = fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`)
         .then(res => res.ok ? res.json() : null)
         .then(postsData => {
           if (postsData) {
@@ -164,7 +166,7 @@ export const DashboardContent = () => {
     };
 
     fetchDashboardData();
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   return (
     <div className="dashboard-content">

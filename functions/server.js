@@ -84,12 +84,18 @@ async function uploadMediaToAyrshare(file) {
 
 app.post("/api/post", upload.single("media"), async (req, res) => {
   try {
-    const { text, networks, scheduledDate, userId, mediaUrl } = req.body;
+    const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = req.body;
     const media = req.file;
 
-    // Get user's profile key from database, or fall back to env variable
+    // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
-    if (userId) {
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      if (workspaceProfileKey) {
+        profileKey = workspaceProfileKey;
+      }
+    } else if (userId) {
+      // Backwards compatibility: support userId for existing code
       const userProfileKey = await getUserProfileKey(userId);
       if (userProfileKey) {
         profileKey = userProfileKey;
@@ -221,11 +227,17 @@ app.post("/api/post", upload.single("media"), async (req, res) => {
 
 app.get("/api/post-history", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, workspaceId } = req.query;
 
-    // Get user's profile key from database, or fall back to env variable
+    // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
-    if (userId) {
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      if (workspaceProfileKey) {
+        profileKey = workspaceProfileKey;
+      }
+    } else if (userId) {
+      // Backwards compatibility: support userId for existing code
       const userProfileKey = await getUserProfileKey(userId);
       if (userProfileKey) {
         profileKey = userProfileKey;
@@ -268,11 +280,17 @@ const readPrivateKey = async (privateKeyPath) => {
 // Updated endpoint to generate JWT URL with required parameters
 app.get("/api/generate-jwt", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, workspaceId } = req.query;
 
-    // Get user's profile key from database, or fall back to env variable
+    // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
-    if (userId) {
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      if (workspaceProfileKey) {
+        profileKey = workspaceProfileKey;
+      }
+    } else if (userId) {
+      // Backwards compatibility: support userId for existing code
       const userProfileKey = await getUserProfileKey(userId);
       if (userProfileKey) {
         profileKey = userProfileKey;
@@ -313,15 +331,25 @@ app.get("/api/generate-jwt", async (req, res) => {
 // New endpoint to fetch user's active social accounts
 app.get("/api/user-accounts", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, workspaceId } = req.query;
 
-    console.log(`[DIAGNOSTIC] /api/user-accounts called with userId: ${userId}`);
+    console.log(`[DIAGNOSTIC] /api/user-accounts called with userId: ${userId}, workspaceId: ${workspaceId}`);
 
-    // Get user's profile key from database, or fall back to env variable
+    // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
     console.log(`[DIAGNOSTIC] Default profile key from .env: ${profileKey}`);
 
-    if (userId) {
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      console.log(`[DIAGNOSTIC] Workspace profile key from database: ${workspaceProfileKey}`);
+      if (workspaceProfileKey) {
+        profileKey = workspaceProfileKey;
+        console.log(`[DIAGNOSTIC] Using workspace's profile key`);
+      } else {
+        console.log(`[DIAGNOSTIC] No workspace profile key found, falling back to .env`);
+      }
+    } else if (userId) {
+      // Backwards compatibility: support userId for existing code
       const userProfileKey = await getUserProfileKey(userId);
       console.log(`[DIAGNOSTIC] User profile key from database: ${userProfileKey}`);
       if (userProfileKey) {
@@ -331,7 +359,7 @@ app.get("/api/user-accounts", async (req, res) => {
         console.log(`[DIAGNOSTIC] No user profile key found, falling back to .env`);
       }
     } else {
-      console.log(`[DIAGNOSTIC] No userId provided, using .env profile key`);
+      console.log(`[DIAGNOSTIC] No workspaceId or userId provided, using .env profile key`);
     }
 
     console.log(`[DIAGNOSTIC] Final profile key being used: ${profileKey}`);
@@ -367,7 +395,7 @@ app.get("/api/user-accounts", async (req, res) => {
   }
 });
 
-// Helper function to get user's profile key from database
+// Helper function to get user's profile key from database (DEPRECATED - use getWorkspaceProfileKey)
 async function getUserProfileKey(userId) {
   try {
     const { data, error } = await supabase
@@ -380,6 +408,23 @@ async function getUserProfileKey(userId) {
     return data?.ayr_profile_key || null;
   } catch (error) {
     console.error('Error fetching user profile key:', error);
+    return null;
+  }
+}
+
+// Helper function to get workspace's profile key from database
+async function getWorkspaceProfileKey(workspaceId) {
+  try {
+    const { data, error } = await supabase
+      .from('workspaces')
+      .select('ayr_profile_key')
+      .eq('id', workspaceId)
+      .single();
+
+    if (error) throw error;
+    return data?.ayr_profile_key || null;
+  } catch (error) {
+    console.error('Error fetching workspace profile key:', error);
     return null;
   }
 }
@@ -448,11 +493,17 @@ app.post("/api/create-user-profile", async (req, res) => {
 // Endpoint to get analytics and best posting times
 app.get("/api/analytics/best-time", async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, workspaceId } = req.query;
 
-    // Get user's profile key from database, or fall back to env variable
+    // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
-    if (userId) {
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      if (workspaceProfileKey) {
+        profileKey = workspaceProfileKey;
+      }
+    } else if (userId) {
+      // Backwards compatibility: support userId for existing code
       const userProfileKey = await getUserProfileKey(userId);
       if (userProfileKey) {
         profileKey = userProfileKey;
@@ -544,18 +595,37 @@ app.get("/api/analytics/best-time", async (req, res) => {
 // AI Post Generation endpoint
 app.post("/api/generate-post", async (req, res) => {
   try {
-    const { userId, prompt, platforms } = req.body;
+    const { userId, workspaceId, prompt, platforms } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+    if (!workspaceId && !userId) {
+      return res.status(400).json({ error: "workspaceId or userId is required" });
     }
 
     // Fetch brand profile from Supabase
-    const { data: brandProfile, error: profileError } = await supabase
-      .from('brand_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    let brandProfile = null;
+    let profileError = null;
+
+    if (workspaceId) {
+      // Fetch by workspace_id (new method)
+      const result = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .single();
+
+      brandProfile = result.data;
+      profileError = result.error;
+    } else if (userId) {
+      // Backwards compatibility: fetch by user_id
+      const result = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      brandProfile = result.data;
+      profileError = result.error;
+    }
 
     if (profileError && profileError.code !== 'PGRST116') {
       console.error("Error fetching brand profile:", profileError);
@@ -634,7 +704,266 @@ app.post("/api/generate-post", async (req, res) => {
   }
 });
 
-// Team Invitation endpoint
+// ============================================================
+// WORKSPACE MANAGEMENT ENDPOINTS
+// ============================================================
+
+// Get workspace details
+app.get("/api/workspaces/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    // Verify user has access to this workspace
+    if (userId) {
+      const { data: membership } = await supabase
+        .from('workspace_members')
+        .select('*')
+        .eq('workspace_id', id)
+        .eq('user_id', userId)
+        .single();
+
+      if (!membership) {
+        return res.status(403).json({ error: "Access denied to this workspace" });
+      }
+    }
+
+    // Fetch workspace
+    const { data: workspace, error } = await supabase
+      .from('workspaces')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    res.json(workspace);
+  } catch (error) {
+    console.error("Error fetching workspace:", error);
+    res.status(500).json({ error: "Failed to fetch workspace" });
+  }
+});
+
+// Update workspace settings
+app.put("/api/workspaces/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, updates } = req.body;
+
+    // Verify user is owner of this workspace
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || membership.role !== 'owner') {
+      return res.status(403).json({ error: "Only workspace owners can update settings" });
+    }
+
+    // Update workspace
+    const { data, error } = await supabase
+      .from('workspaces')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, workspace: data });
+  } catch (error) {
+    console.error("Error updating workspace:", error);
+    res.status(500).json({ error: "Failed to update workspace" });
+  }
+});
+
+// Get workspace members
+app.get("/api/workspaces/:id/members", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    // Verify user has access to this workspace
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('*')
+      .eq('workspace_id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership) {
+      return res.status(403).json({ error: "Access denied to this workspace" });
+    }
+
+    // Fetch all members of the workspace
+    const { data: members, error } = await supabase
+      .from('workspace_members')
+      .select(`
+        *,
+        user:user_profiles(id, full_name, email)
+      `)
+      .eq('workspace_id', id)
+      .order('joined_at', { ascending: true });
+
+    if (error) throw error;
+
+    res.json({ members });
+  } catch (error) {
+    console.error("Error fetching workspace members:", error);
+    res.status(500).json({ error: "Failed to fetch workspace members" });
+  }
+});
+
+// Invite member to workspace
+app.post("/api/workspaces/:id/invite", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, email, role } = req.body;
+
+    // Verify user has permission to invite members
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role, can_manage_team')
+      .eq('workspace_id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || !membership.can_manage_team) {
+      return res.status(403).json({ error: "You do not have permission to invite members" });
+    }
+
+    // Check if user is already a member
+    const { data: existingMember } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', id)
+      .eq('user_id', email) // This would need to be user ID, not email
+      .single();
+
+    if (existingMember) {
+      return res.status(400).json({ error: "User is already a member of this workspace" });
+    }
+
+    // Generate invitation token
+    const invitationToken = `${id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    // Create invitation
+    const { data: invitation, error } = await supabase
+      .from('workspace_invitations')
+      .insert({
+        workspace_id: id,
+        email,
+        role: role || 'member',
+        invited_by: userId,
+        invitation_token: invitationToken,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // TODO: Send invitation email
+    console.log(`TODO: Send invitation email to ${email} with token ${invitationToken}`);
+
+    res.json({ success: true, invitation });
+  } catch (error) {
+    console.error("Error inviting member:", error);
+    res.status(500).json({ error: "Failed to invite member" });
+  }
+});
+
+// Remove member from workspace
+app.delete("/api/workspaces/:workspaceId/members/:memberId", async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+    const { userId } = req.query;
+
+    // Verify user has permission to remove members
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role, can_manage_team')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || !membership.can_manage_team) {
+      return res.status(403).json({ error: "You do not have permission to remove members" });
+    }
+
+    // Cannot remove yourself
+    if (memberId === userId) {
+      return res.status(400).json({ error: "You cannot remove yourself from the workspace" });
+    }
+
+    // Remove member
+    const { error } = await supabase
+      .from('workspace_members')
+      .delete()
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', memberId);
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error removing member:", error);
+    res.status(500).json({ error: "Failed to remove member" });
+  }
+});
+
+// Update member role
+app.put("/api/workspaces/:workspaceId/members/:memberId", async (req, res) => {
+  try {
+    const { workspaceId, memberId } = req.params;
+    const { userId, role, permissions } = req.body;
+
+    // Verify user has permission to update members
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role, can_manage_team')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || !membership.can_manage_team) {
+      return res.status(403).json({ error: "You do not have permission to update members" });
+    }
+
+    // Cannot change your own role
+    if (memberId === userId) {
+      return res.status(400).json({ error: "You cannot change your own role" });
+    }
+
+    // Update member
+    const updateData = { role };
+    if (permissions) {
+      if (permissions.canManageTeam !== undefined) updateData.can_manage_team = permissions.canManageTeam;
+      if (permissions.canManageSettings !== undefined) updateData.can_manage_settings = permissions.canManageSettings;
+      if (permissions.canDeletePosts !== undefined) updateData.can_delete_posts = permissions.canDeletePosts;
+    }
+
+    const { error } = await supabase
+      .from('workspace_members')
+      .update(updateData)
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', memberId);
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error updating member role:", error);
+    res.status(500).json({ error: "Failed to update member role" });
+  }
+});
+
+// ============================================================
+// TEAM INVITATION ENDPOINT
+// ============================================================
+
 app.post("/api/send-team-invite", async (req, res) => {
   try {
     const { email, role, userId } = req.body;
