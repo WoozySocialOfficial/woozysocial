@@ -202,7 +202,8 @@ export const WorkspaceSwitcher = () => {
               {userWorkspaces.length > 0 ? (
                 userWorkspaces.map((workspace) => {
                   const isOwner = workspace.membership?.role === 'owner';
-                  const canManage = hasActiveProfile && isOwner;
+                  // TODO: Add back hasActiveProfile check for paid-only feature
+                  const canManage = isOwner;
 
                   return (
                     <div
