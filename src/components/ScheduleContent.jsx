@@ -22,7 +22,6 @@ const APPROVAL_STATUS = {
   pending: { label: 'Pending', color: '#f59e0b', icon: FaClock },
   approved: { label: 'Approved', color: '#10b981', icon: FaCheck },
   rejected: { label: 'Rejected', color: '#ef4444', icon: FaTimes },
-  changes_requested: { label: 'Changes Requested', color: '#8b5cf6', icon: FaComment },
 };
 
 export const ScheduleContent = () => {
@@ -438,7 +437,6 @@ export const ScheduleContent = () => {
     pending: posts.filter(p => p.approvalStatus === 'pending').length,
     approved: posts.filter(p => p.approvalStatus === 'approved').length,
     rejected: posts.filter(p => p.approvalStatus === 'rejected').length,
-    changes_requested: posts.filter(p => p.approvalStatus === 'changes_requested').length,
   };
 
   return (
@@ -511,14 +509,6 @@ export const ScheduleContent = () => {
         >
           <FaTimes size={12} /> Rejected <span className="filter-count">{approvalCounts.rejected}</span>
         </button>
-        {approvalCounts.changes_requested > 0 && (
-          <button
-            className={`filter-tab changes ${approvalFilter === 'changes_requested' ? 'active' : ''}`}
-            onClick={() => setApprovalFilter('changes_requested')}
-          >
-            <FaComment size={12} /> Changes <span className="filter-count">{approvalCounts.changes_requested}</span>
-          </button>
-        )}
       </div>
 
       <div className="schedule-content">
@@ -594,13 +584,6 @@ export const ScheduleContent = () => {
                 disabled={actionLoading}
               >
                 <FaCheck /> Approve
-              </button>
-              <button
-                className="modal-btn changes"
-                onClick={() => handleApproval(selectedPost.id, 'changes_requested', comment)}
-                disabled={actionLoading || !comment.trim()}
-              >
-                <FaComment /> Request Changes
               </button>
               <button
                 className="modal-btn reject"

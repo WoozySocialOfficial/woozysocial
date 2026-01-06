@@ -388,11 +388,6 @@
   border-color: #ef4444;
 }
 
-.filter-tab.changes.active {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
-}
-
 .filter-count {
   background: rgba(255, 255, 255, 0.2);
   padding: 2px 8px;
@@ -442,10 +437,6 @@
 
 .post-card.approval-rejected {
   border-left-color: #ef4444;
-}
-
-.post-card.approval-changes_requested {
-  border-left-color: #8b5cf6;
 }
 
 /* Post Card Media */
@@ -719,15 +710,6 @@
 
 .modal-btn.approve:hover {
   background: #059669;
-}
-
-.modal-btn.changes {
-  background: #8b5cf6;
-  color: white;
-}
-
-.modal-btn.changes:hover {
-  background: #7c3aed;
 }
 
 .modal-btn.reject {

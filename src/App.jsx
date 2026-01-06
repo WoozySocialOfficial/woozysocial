@@ -19,7 +19,6 @@ import { SocialInboxContent } from "./components/SocialInboxContent";
 import { TeamContent } from "./components/TeamContent";
 import { SettingsContent } from "./components/SettingsContent";
 import { EngagementContent } from "./components/EngagementContent";
-import { Approvals } from "./pages/Approvals";
 import "./App.css";
 
 function App() {
@@ -53,7 +52,6 @@ function App() {
                         <Route path="/engagement" element={<EngagementContent />} />
                         <Route path="/social-inbox" element={<SocialInboxContent />} />
                         <Route path="/team" element={<TeamContent />} />
-                        <Route path="/approvals" element={<Approvals />} />
                         <Route path="/settings" element={<SettingsContent />} />
                       </Routes>
                     </MainContent>

@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const validActions = ['approve', 'reject', 'changes_requested'];
+      const validActions = ['approve', 'reject'];
       if (!validActions.includes(action)) {
         return res.status(400).json({
           error: `Invalid action. Must be one of: ${validActions.join(', ')}`
@@ -46,8 +46,7 @@ module.exports = async function handler(req, res) {
       // Map action to status
       const statusMap = {
         'approve': 'approved',
-        'reject': 'rejected',
-        'changes_requested': 'changes_requested'
+        'reject': 'rejected'
       };
       const newStatus = statusMap[action];
 
@@ -87,7 +86,7 @@ module.exports = async function handler(req, res) {
         .eq('id', postId);
 
       // Add system comment if provided or create default one
-      const systemComment = comment || `Post ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'needs changes'}`;
+      const systemComment = comment || `Post ${action === 'approve' ? 'approved' : 'rejected'}`;
 
       // Get user info for the comment
       const { data: userProfile } = await supabase
@@ -111,7 +110,7 @@ module.exports = async function handler(req, res) {
       res.status(200).json({
         success: true,
         status: newStatus,
-        message: `Post ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'marked as needing changes'}`
+        message: `Post ${action === 'approve' ? 'approved' : 'rejected'}`
       });
 
     } catch (error) {
