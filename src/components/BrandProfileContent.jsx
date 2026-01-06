@@ -13,6 +13,7 @@ export const BrandProfileContent = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const [brandName, setBrandName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
   const [toneOfVoice, setToneOfVoice] = useState("Professional");
   const [targetAudience, setTargetAudience] = useState("");
@@ -30,7 +31,7 @@ export const BrandProfileContent = () => {
         const { data, error } = await supabase
           .from('brand_profiles')
           .select('*')
-          .eq('workspace_id', activeWorkspace.id)
+          .eq('user_id', user.id)
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -39,6 +40,7 @@ export const BrandProfileContent = () => {
 
         if (data) {
           setBrandName(data.brand_name || "");
+          setWebsiteUrl(data.website_url || "");
           setBrandDescription(data.brand_description || "");
           setToneOfVoice(data.tone_of_voice || "Professional");
           setTargetAudience(data.target_audience || "");
@@ -78,8 +80,9 @@ export const BrandProfileContent = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        workspace_id: activeWorkspace.id,
+        user_id: user.id,
         brand_name: brandName,
+        website_url: websiteUrl,
         brand_description: brandDescription,
         tone_of_voice: toneOfVoice,
         target_audience: targetAudience,
@@ -148,6 +151,20 @@ export const BrandProfileContent = () => {
               value={brandName}
               onChange={(e) => setBrandName(e.target.value)}
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="websiteUrl">Website URL</label>
+            <input
+              type="url"
+              id="websiteUrl"
+              placeholder="https://yourbrand.com"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              AI will analyze your website to better understand your brand
+            </small>
           </div>
 
           <div className="form-group">
