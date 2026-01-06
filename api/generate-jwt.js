@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { setCors, getUserProfileKey, getWorkspaceProfileKey } = require("./_utils");
+const { setCors, getWorkspaceProfileKey } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -17,22 +17,8 @@ module.exports = async function handler(req, res) {
   try {
     const { userId, workspaceId } = req.query;
 
-    // Try to get profile key from workspace first, then user, then env fallback
-    let profileKey = process.env.AYRSHARE_PROFILE_KEY;
-
-    if (workspaceId) {
-      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
-      if (workspaceProfileKey) {
-        profileKey = workspaceProfileKey;
-      } else if (userId) {
-        // Workspace doesn't have profile key, try user's key as fallback
-        const userProfileKey = await getUserProfileKey(userId);
-        if (userProfileKey) profileKey = userProfileKey;
-      }
-    } else if (userId) {
-      const userProfileKey = await getUserProfileKey(userId);
-      if (userProfileKey) profileKey = userProfileKey;
-    }
+    // Get workspace profile key for connecting accounts
+    const profileKey = await getWorkspaceProfileKey(workspaceId);
 
     if (!process.env.AYRSHARE_PRIVATE_KEY) {
       return res.status(500).json({ error: "AYRSHARE_PRIVATE_KEY not configured" });

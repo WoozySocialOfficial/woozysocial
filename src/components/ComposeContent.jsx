@@ -11,9 +11,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { supabase } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
+import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 
 export const ComposeContent = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, hasActiveProfile } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [post, setPost] = useState({ text: "", media: null });
   const [networks, setNetworks] = useState({
@@ -1419,6 +1420,15 @@ export const ComposeContent = () => {
 
   return (
     <div className="compose-content">
+      {/* Subscription Banner */}
+      {!hasActiveProfile && (
+        <SubscriptionGuard
+          showBanner={true}
+          showOverlay={false}
+          message="Subscribe to start posting to your social media accounts"
+        />
+      )}
+
       {/* Top Row - Create Post and Socials */}
       <div className="compose-top-row">
         {/* Left - Create Post */}
@@ -1491,8 +1501,20 @@ export const ComposeContent = () => {
                     Draft saved {new Date(lastSaved).toLocaleTimeString()}
                   </span>
                 )}
-                <button className="btn-schedule" onClick={onOpen}>Schedule Post</button>
-                <button className="btn-post" onClick={handleSubmit} disabled={isLoading}>
+                <button
+                  className="btn-schedule"
+                  onClick={onOpen}
+                  disabled={!hasActiveProfile}
+                  style={{ opacity: !hasActiveProfile ? 0.5 : 1, cursor: !hasActiveProfile ? 'not-allowed' : 'pointer' }}
+                >
+                  Schedule Post
+                </button>
+                <button
+                  className="btn-post"
+                  onClick={handleSubmit}
+                  disabled={isLoading || !hasActiveProfile}
+                  style={{ opacity: (!hasActiveProfile || isLoading) ? 0.5 : 1, cursor: (!hasActiveProfile || isLoading) ? 'not-allowed' : 'pointer' }}
+                >
                   {isLoading ? "Posting..." : "Post Now"}
                 </button>
               </div>

@@ -6,6 +6,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaCheck, FaTimes, Fa
 import { FaTiktok } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
 import { formatTimeInTimezone, formatDateOnlyInTimezone } from "../utils/timezones";
+import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import "./ScheduleContent.css";
 
 const PLATFORM_ICONS = {
@@ -25,7 +26,7 @@ const APPROVAL_STATUS = {
 };
 
 export const ScheduleContent = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, hasActiveProfile } = useAuth();
   const { activeWorkspace, workspaceMembership } = useWorkspace();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("week"); // week, month, schedule
@@ -441,6 +442,15 @@ export const ScheduleContent = () => {
 
   return (
     <div className="schedule-container">
+      {/* Subscription Banner */}
+      {!hasActiveProfile && (
+        <SubscriptionGuard
+          showBanner={true}
+          showOverlay={false}
+          message="Subscribe to view your scheduled posts and manage your content calendar"
+        />
+      )}
+
       <div className="schedule-header">
         <h1 className="page-title">Schedule</h1>
         <div className="schedule-controls">

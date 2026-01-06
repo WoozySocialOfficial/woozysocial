@@ -2,9 +2,16 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { WorkspaceSwitcher } from "../workspace/WorkspaceSwitcher";
+import { useAuth } from "../../contexts/AuthContext";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { hasActiveProfile } = useAuth();
+  const { userWorkspaces } = useWorkspace();
+
+  // Show Team if user has active profile OR is part of any workspace
+  const showTeam = hasActiveProfile || userWorkspaces.length > 0;
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard" },
@@ -15,9 +22,17 @@ export const Sidebar = () => {
     { name: "Assets", path: "/assets" },
     { name: "Engagement", path: "/engagement" },
     { name: "Social Inbox", path: "/social-inbox" },
-    { name: "Team", path: "/team" },
+    { name: "Team", path: "/team", requiresSubscriptionOrTeam: true },
     { name: "Settings", path: "/settings" }
   ];
+
+  // Filter menu items based on subscription/team status
+  const visibleMenuItems = menuItems.filter(item => {
+    if (item.requiresSubscriptionOrTeam) {
+      return showTeam;
+    }
+    return true;
+  });
 
   return (
     <div className="sidebar">
@@ -31,7 +46,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="sidebar-menu">
-          {menuItems.map((item, index) => (
+          {visibleMenuItems.map((item, index) => (
             <Link
               key={index}
               to={item.path}

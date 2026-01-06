@@ -30,20 +30,57 @@ async function getUserProfileKey(userId) {
   }
 }
 
-// Helper function to get workspace's profile key
+// Helper function to get workspace's profile key directly by workspace ID
 async function getWorkspaceProfileKey(workspaceId) {
   const supabase = getSupabase();
   if (!supabase) return null;
+
   try {
     const { data, error } = await supabase
       .from('workspaces')
       .select('ayr_profile_key')
       .eq('id', workspaceId)
       .single();
+
     if (error) throw error;
     return data?.ayr_profile_key || null;
   } catch (error) {
     console.error('Error fetching workspace profile key:', error);
+    return null;
+  }
+}
+
+// Helper function to get workspace's profile key for a user (handles team inheritance)
+async function getWorkspaceProfileKeyForUser(userId) {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  try {
+    // First, check if user is a member of any workspace
+    const { data: membership, error: membershipError } = await supabase
+      .from('workspace_members')
+      .select('workspace_id, role')
+      .eq('user_id', userId)
+      .single();
+
+    if (membershipError && membershipError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Error checking workspace membership:', membershipError);
+      return null;
+    }
+
+    if (membership) {
+      // User is a workspace member, get the workspace's profile key
+      const workspaceProfileKey = await getWorkspaceProfileKey(membership.workspace_id);
+      if (workspaceProfileKey) {
+        return workspaceProfileKey;
+      }
+    }
+
+    // User is not a workspace member or workspace has no profile key
+    // Fall back to user's own profile key
+    return await getUserProfileKey(userId);
+  } catch (error) {
+    console.error('Error fetching workspace profile key for user:', error);
     return null;
   }
 }
@@ -78,6 +115,7 @@ module.exports = {
   getSupabase,
   getUserProfileKey,
   getWorkspaceProfileKey,
+  getWorkspaceProfileKeyForUser,
   setCors,
   parseBody
 };

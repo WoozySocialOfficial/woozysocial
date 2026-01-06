@@ -176,6 +176,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Subscription status helpers
+  const subscriptionStatus = profile?.subscription_status || 'inactive';
+  const hasActiveProfile = !!profile?.ayr_profile_key && (subscriptionStatus === 'active' || profile?.is_whitelisted);
+  const isWhitelisted = profile?.is_whitelisted || false;
+  const subscriptionTier = profile?.subscription_tier || null;
+
   const value = {
     user,
     profile,
@@ -185,6 +191,11 @@ export const AuthProvider = ({ children }) => {
     signOut,
     updateProfile,
     refreshProfile: () => user && fetchProfile(user.id),
+    // Subscription properties
+    subscriptionStatus,
+    hasActiveProfile,
+    isWhitelisted,
+    subscriptionTier,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS post_drafts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
   caption TEXT,
   media_urls TEXT[], -- Array of media URLs
   platforms TEXT[], -- Array of platform names
@@ -12,6 +13,9 @@ CREATE TABLE IF NOT EXISTS post_drafts (
 
 -- Create index on user_id for faster queries
 CREATE INDEX IF NOT EXISTS post_drafts_user_id_idx ON post_drafts(user_id);
+
+-- Create index on workspace_id for faster queries
+CREATE INDEX IF NOT EXISTS post_drafts_workspace_id_idx ON post_drafts(workspace_id);
 
 -- Create index on created_at for sorting
 CREATE INDEX IF NOT EXISTS post_drafts_created_at_idx ON post_drafts(created_at DESC);

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { setCors, getUserProfileKey, getWorkspaceProfileKey, getSupabase } = require("./_utils");
+const { setCors, getWorkspaceProfileKeyForUser, getSupabase } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -17,14 +17,8 @@ module.exports = async function handler(req, res) {
   try {
     const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = req.body;
 
-    let profileKey = process.env.AYRSHARE_PROFILE_KEY;
-    if (workspaceId) {
-      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
-      if (workspaceProfileKey) profileKey = workspaceProfileKey;
-    } else if (userId) {
-      const userProfileKey = await getUserProfileKey(userId);
-      if (userProfileKey) profileKey = userProfileKey;
-    }
+    // Get profile key using workspace context (handles team inheritance)
+    const profileKey = await getWorkspaceProfileKeyForUser(userId);
 
     const platforms = Object.entries(JSON.parse(networks))
       .filter(([, value]) => value)

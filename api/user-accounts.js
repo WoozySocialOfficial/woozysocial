@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { setCors, getUserProfileKey, getWorkspaceProfileKey } = require("./_utils");
+const { setCors, getWorkspaceProfileKeyForUser } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -17,14 +17,8 @@ module.exports = async function handler(req, res) {
   try {
     const { userId, workspaceId } = req.query;
 
-    let profileKey = process.env.AYRSHARE_PROFILE_KEY;
-    if (workspaceId) {
-      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
-      if (workspaceProfileKey) profileKey = workspaceProfileKey;
-    } else if (userId) {
-      const userProfileKey = await getUserProfileKey(userId);
-      if (userProfileKey) profileKey = userProfileKey;
-    }
+    // Get profile key using workspace context (handles team inheritance)
+    const profileKey = await getWorkspaceProfileKeyForUser(userId);
 
     const response = await axios.get(`${BASE_AYRSHARE}/user`, {
       headers: {

@@ -8,14 +8,14 @@ import notificationIcon from "./vector-15.svg";
 
 export const TopHeader = () => {
   const { user, profile, signOut } = useAuth();
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, workspaceMembership } = useWorkspace();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const profileRef = useRef(null);
 
-  // Check if current user is the workspace owner (has profile key)
-  const isWorkspaceOwner = activeWorkspace?.id === user?.id || profile?.ayr_profile_key;
+  // Check if current user is the workspace owner or admin (can manage social accounts)
+  const canManageSocialAccounts = workspaceMembership?.role === 'owner' || workspaceMembership?.role === 'admin';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -85,7 +85,7 @@ export const TopHeader = () => {
                 <div className="profile-dropdown-email">{user?.email}</div>
               </div>
               <div className="profile-dropdown-divider" />
-              {isWorkspaceOwner && (
+              {canManageSocialAccounts && (
                 <button
                   className="profile-dropdown-item connect-accounts"
                   onClick={handleConnectSocialAccounts}
