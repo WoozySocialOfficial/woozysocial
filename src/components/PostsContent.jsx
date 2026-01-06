@@ -36,7 +36,7 @@ export const PostsContent = () => {
 
   // Fetch Ayrshare history once and cache it
   const fetchAyrshareHistory = useCallback(async () => {
-    if (!user) return;
+    if (!user || !activeWorkspace?.id) return;
 
     try {
       const response = await fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`);
@@ -52,7 +52,7 @@ export const PostsContent = () => {
       console.error("Error fetching Ayrshare history:", error);
       return [];
     }
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   // Filter posts based on active tab (uses cached data)
   const filterPosts = useCallback((tabName, ayrsharePosts) => {
@@ -80,7 +80,7 @@ export const PostsContent = () => {
 
   // Fetch posts based on active tab
   const fetchPosts = useCallback(async () => {
-    if (!user) return;
+    if (!user || !activeWorkspace?.id) return;
 
     setLoading(true);
     try {
@@ -94,15 +94,39 @@ export const PostsContent = () => {
 
         if (error) throw error;
         setPosts(data || []);
-      } else {
-        // Use cached Ayrshare data if available, otherwise fetch
-        let ayrsharePosts = allAyrsharePosts;
-        if (ayrsharePosts.length === 0) {
-          ayrsharePosts = await fetchAyrshareHistory();
-        }
+      } else if (activeTab === "scheduled") {
+        // Fetch scheduled posts from Supabase
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*")
+          .eq("workspace_id", activeWorkspace.id)
+          .eq("status", "scheduled")
+          .order("scheduled_at", { ascending: true });
 
-        const filteredPosts = filterPosts(activeTab, ayrsharePosts);
-        setPosts(filteredPosts);
+        if (error) throw error;
+        setPosts(data || []);
+      } else if (activeTab === "history") {
+        // Fetch posted posts from Supabase
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*")
+          .eq("workspace_id", activeWorkspace.id)
+          .eq("status", "posted")
+          .order("posted_at", { ascending: false });
+
+        if (error) throw error;
+        setPosts(data || []);
+      } else if (activeTab === "failed") {
+        // Fetch failed posts from Supabase
+        const { data, error } = await supabase
+          .from("posts")
+          .select("*")
+          .eq("workspace_id", activeWorkspace.id)
+          .eq("status", "failed")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setPosts(data || []);
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -110,7 +134,7 @@ export const PostsContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, activeTab, allAyrsharePosts, fetchAyrshareHistory, filterPosts]);
+  }, [user, activeTab, activeWorkspace]);
 
   useEffect(() => {
     fetchPosts();

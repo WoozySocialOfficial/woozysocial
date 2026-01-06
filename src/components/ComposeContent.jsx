@@ -362,15 +362,26 @@ export const ComposeContent = () => {
 
   // Check if a platform is linked
   const isLinked = (platformKey) => {
+    // TEMPORARILY RETURN TRUE FOR ALL PLATFORMS TO TEST HIGHLIGHTING
+    return true;
+
+    if (!connectedAccounts || connectedAccounts.length === 0) {
+      return false;
+    }
+
     const result = connectedAccounts.some(account => {
       // Handle both string array and object array formats
       const accountName = typeof account === 'string' ? account : account.name;
-      const normalized = accountName?.toLowerCase();
-      const mapped = platformNameMap[normalized];
-      console.log(`Checking platform ${platformKey}: account="${accountName}", normalized="${normalized}", mapped="${mapped}"`);
+      if (!accountName) return false;
+
+      const normalized = accountName.toLowerCase();
+      const mapped = platformNameMap[normalized] || normalized;
+
+      console.log(`[isLinked] Checking ${platformKey}: account="${accountName}", normalized="${normalized}", mapped="${mapped}", match=${mapped === platformKey}`);
       return mapped === platformKey;
     });
-    console.log(`Platform ${platformKey} linked: ${result}`);
+
+    console.log(`[isLinked] Platform ${platformKey} final result: ${result}, connectedAccounts:`, connectedAccounts);
     return result;
   };
 

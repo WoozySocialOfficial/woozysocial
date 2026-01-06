@@ -94,9 +94,10 @@ export const AuthProvider = ({ children }) => {
           console.warn('Profile insert error (may be expected if trigger created it):', err);
         }
 
-        // Create Ayrshare profile for the new user
+        // Check if user is whitelisted and create Ayrshare profile if eligible
+        // This allows test/dev accounts to bypass payment during development
         try {
-          const response = await fetch(`${baseURL}/api/create-user-profile`, {
+          const response = await fetch(`${baseURL}/api/check-and-create-profile`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -108,16 +109,20 @@ export const AuthProvider = ({ children }) => {
             }),
           });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Failed to create Ayrshare profile:', errorData);
-            // Don't throw - allow signup to continue even if Ayrshare profile creation fails
+          if (response.ok) {
+            const result = await response.json();
+            if (result.profileCreated) {
+              console.log('Ayrshare profile created for whitelisted user:', result);
+            } else {
+              console.log('User not whitelisted - profile will be created after payment');
+            }
           } else {
-            const profileData = await response.json();
-            console.log('Ayrshare profile created:', profileData);
+            const errorData = await response.json();
+            console.error('Failed to check profile eligibility:', errorData);
+            // Don't throw - allow signup to continue
           }
         } catch (err) {
-          console.error('Error creating Ayrshare profile:', err);
+          console.error('Error checking profile eligibility:', err);
           // Don't throw - allow signup to continue
         }
       }

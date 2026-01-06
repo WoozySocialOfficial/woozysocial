@@ -1,16 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { baseURL } from "../../utils/constants";
 import "./TopHeader.css";
 import notificationIcon from "./vector-15.svg";
 
 export const TopHeader = () => {
   const { user, profile, signOut } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const profileRef = useRef(null);
+
+  // Check if current user is the workspace owner (has profile key)
+  const isWorkspaceOwner = activeWorkspace?.id === user?.id || profile?.ayr_profile_key;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -80,13 +85,15 @@ export const TopHeader = () => {
                 <div className="profile-dropdown-email">{user?.email}</div>
               </div>
               <div className="profile-dropdown-divider" />
-              <button
-                className="profile-dropdown-item connect-accounts"
-                onClick={handleConnectSocialAccounts}
-                disabled={isLinking}
-              >
-                {isLinking ? 'Opening...' : 'Connect Social Accounts'}
-              </button>
+              {isWorkspaceOwner && (
+                <button
+                  className="profile-dropdown-item connect-accounts"
+                  onClick={handleConnectSocialAccounts}
+                  disabled={isLinking}
+                >
+                  {isLinking ? 'Opening...' : 'Connect Social Accounts'}
+                </button>
+              )}
               <button className="profile-dropdown-item sign-out" onClick={handleSignOut}>
                 Sign Out
               </button>

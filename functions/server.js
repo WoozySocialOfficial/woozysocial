@@ -82,7 +82,7 @@ async function uploadMediaToAyrshare(file) {
   }
 }
 
-app.post("/api/post", upload.single("media"), async (req, res) => {
+app.post("/api/post", requireActiveProfile, upload.single("media"), async (req, res) => {
   try {
     const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = req.body;
     const media = req.file;
@@ -225,7 +225,7 @@ app.post("/api/post", upload.single("media"), async (req, res) => {
   }
 });
 
-app.get("/api/post-history", async (req, res) => {
+app.get("/api/post-history", requireActiveProfile, async (req, res) => {
   try {
     const { userId, workspaceId } = req.query;
 
@@ -278,7 +278,7 @@ const readPrivateKey = async (privateKeyPath) => {
 };
 
 // Updated endpoint to generate JWT URL with required parameters
-app.get("/api/generate-jwt", async (req, res) => {
+app.get("/api/generate-jwt", requireActiveProfile, async (req, res) => {
   try {
     const { userId, workspaceId } = req.query;
 
@@ -329,7 +329,7 @@ app.get("/api/generate-jwt", async (req, res) => {
 });
 
 // New endpoint to fetch user's active social accounts
-app.get("/api/user-accounts", async (req, res) => {
+app.get("/api/user-accounts", requireActiveProfile, async (req, res) => {
   try {
     const { userId, workspaceId } = req.query;
 
@@ -430,6 +430,165 @@ async function getWorkspaceProfileKey(workspaceId) {
 }
 
 // Endpoint to create a new Ayrshare profile for a user
+// Whitelist helper functions
+function isWhitelistedEmail(email) {
+  const testEmails = env.TEST_ACCOUNT_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  return testEmails.includes(email.toLowerCase());
+}
+
+function shouldCreateProfile(email, subscriptionStatus) {
+  // In development, allow whitelisted emails
+  if (env.NODE_ENV === 'development' && isWhitelistedEmail(email)) {
+    return true;
+  }
+
+  // In production, require active subscription
+  return subscriptionStatus === 'active';
+}
+
+// Subscription middleware - checks if user has active profile access
+async function requireActiveProfile(req, res, next) {
+  try {
+    // Support both GET (query params) and POST (body params)
+    const params = req.method === 'GET' ? req.query : req.body;
+    const { userId, workspaceId } = params;
+
+    // Determine which user to check (workspace owner or current user)
+    const userIdToCheck = workspaceId || userId;
+
+    if (!userIdToCheck) {
+      return res.status(400).json({
+        error: 'Authentication required',
+        message: 'userId or workspaceId must be provided'
+      });
+    }
+
+    // Fetch user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('email, subscription_status, ayr_profile_key, is_whitelisted')
+      .eq('id', userIdToCheck)
+      .single();
+
+    if (profileError || !profile) {
+      return res.status(404).json({
+        error: 'User profile not found',
+        message: 'Please sign up to continue'
+      });
+    }
+
+    // Check if user has profile access
+    const hasProfileKey = !!profile.ayr_profile_key;
+    const isActive = profile.subscription_status === 'active';
+    const isWhitelisted = isWhitelistedEmail(profile.email) || profile.is_whitelisted;
+
+    // Allow access if they have a profile key AND (active subscription OR whitelisted)
+    if (hasProfileKey && (isActive || isWhitelisted)) {
+      // User has access - continue to endpoint
+      return next();
+    }
+
+    // User doesn't have access - return 403
+    console.log(`Access denied for user ${profile.email}: hasKey=${hasProfileKey}, active=${isActive}, whitelisted=${isWhitelisted}`);
+
+    return res.status(403).json({
+      error: 'Subscription required',
+      message: 'An active subscription is required to use this feature',
+      details: {
+        hasProfile: hasProfileKey,
+        subscriptionStatus: profile.subscription_status
+      },
+      upgradeUrl: '/pricing'
+    });
+
+  } catch (error) {
+    console.error('Error in requireActiveProfile middleware:', error);
+    return res.status(500).json({
+      error: 'Authentication check failed',
+      details: error.message
+    });
+  }
+}
+
+// Check whitelist and create profile if eligible (called at signup)
+app.post("/api/check-and-create-profile", async (req, res) => {
+  try {
+    const { userId, email, title } = req.body;
+
+    if (!userId || !email) {
+      return res.status(400).json({ error: "userId and email are required" });
+    }
+
+    // Check if user is whitelisted
+    if (!isWhitelistedEmail(email)) {
+      console.log(`User ${email} is not whitelisted - profile will be created after payment`);
+      return res.json({
+        profileCreated: false,
+        message: 'User not whitelisted - subscription required'
+      });
+    }
+
+    console.log(`User ${email} is whitelisted - creating Ayrshare profile`);
+
+    // Create Ayrshare profile for whitelisted user
+    const privateKey = await readPrivateKey(env.AYRSHARE_PRIVATE_KEY);
+
+    const profileData = {
+      title: title || `${email}'s Profile`,
+      privateKey: privateKey
+    };
+
+    const response = await axios.post(
+      `${BASE_AYRSHARE}/profiles/profile`,
+      profileData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.AYRSHARE_API_KEY}`
+        }
+      }
+    );
+
+    const { profileKey, refId } = response.data;
+
+    // Store the profile key and update subscription status
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        ayr_profile_key: profileKey,
+        ayr_ref_id: refId,
+        subscription_status: 'active',
+        subscription_tier: 'development',
+        profile_created_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating user profile:', updateError);
+      return res.status(500).json({ error: 'Failed to store profile key' });
+    }
+
+    console.log(`Ayrshare profile created for whitelisted user ${email}`);
+
+    res.json({
+      profileCreated: true,
+      profileKey,
+      refId,
+      message: 'Profile created for whitelisted user'
+    });
+  } catch (error) {
+    console.error(
+      "Error creating Ayrshare profile:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({
+      error: "Failed to create Ayrshare profile",
+      details: error.response?.data || error.message
+    });
+  }
+});
+
+// Legacy endpoint - keep for manual profile creation if needed
 app.post("/api/create-user-profile", async (req, res) => {
   try {
     const { userId, email, title } = req.body;
@@ -464,7 +623,9 @@ app.post("/api/create-user-profile", async (req, res) => {
       .from('user_profiles')
       .update({
         ayr_profile_key: profileKey,
-        ayr_ref_id: refId
+        ayr_ref_id: refId,
+        subscription_status: 'active',
+        profile_created_at: new Date().toISOString()
       })
       .eq('id', userId);
 
@@ -491,7 +652,7 @@ app.post("/api/create-user-profile", async (req, res) => {
 });
 
 // Endpoint to get analytics and best posting times
-app.get("/api/analytics/best-time", async (req, res) => {
+app.get("/api/analytics/best-time", requireActiveProfile, async (req, res) => {
   try {
     const { userId, workspaceId } = req.query;
 
@@ -597,7 +758,7 @@ app.get("/api/analytics/best-time", async (req, res) => {
 // ============================================================
 
 // Delete a published post
-app.delete("/api/post/:id", async (req, res) => {
+app.delete("/api/post/:id", requireActiveProfile, async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, workspaceId } = req.query;
@@ -691,7 +852,7 @@ app.patch("/api/post/:id", async (req, res) => {
 });
 
 // Retry a failed post
-app.put("/api/post/retry", async (req, res) => {
+app.put("/api/post/retry", requireActiveProfile, async (req, res) => {
   try {
     const { userId, workspaceId, postId } = req.body;
 
@@ -736,7 +897,7 @@ app.put("/api/post/retry", async (req, res) => {
 });
 
 // Get individual post details
-app.get("/api/post/:id", async (req, res) => {
+app.get("/api/post/:id", requireActiveProfile, async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, workspaceId } = req.query;
@@ -1788,13 +1949,10 @@ app.post("/api/team/accept-invite", async (req, res) => {
       .single();
 
     if (existingMember) {
-      // Update invitation to accepted even though they're already a member
+      // Delete the invitation since they're already a member
       await supabase
         .from('team_invitations')
-        .update({
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', invitation.id);
 
       return res.status(400).json({ error: 'You are already a member of this team' });
@@ -1815,17 +1973,14 @@ app.post("/api/team/accept-invite", async (req, res) => {
       return res.status(500).json({ error: 'Failed to add you to the team' });
     }
 
-    // Update invitation status to accepted
-    const { error: updateError } = await supabase
+    // Delete the invitation after successful acceptance
+    const { error: deleteError } = await supabase
       .from('team_invitations')
-      .update({
-        status: 'accepted',
-        accepted_at: new Date().toISOString()
-      })
+      .delete()
       .eq('id', invitation.id);
 
-    if (updateError) {
-      console.error('Error updating invitation:', updateError);
+    if (deleteError) {
+      console.error('Error deleting invitation:', deleteError);
       // Don't fail the request - the member was created successfully
     }
 
