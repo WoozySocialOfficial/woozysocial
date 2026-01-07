@@ -172,115 +172,89 @@ export const WorkspaceProvider = ({ children }) => {
     }
   }, [fetchUserWorkspaces]);
 
-  // Invite user to workspace
+  // Invite user to workspace via API
   const inviteToWorkspace = useCallback(async (workspaceId, email, role = 'member') => {
     if (!user) return { data: null, error: 'User not authenticated' };
 
     try {
-      // Check if user has permission to invite
-      const membership = userWorkspaces.find(w => w.id === workspaceId)?.membership;
-      if (!membership || !membership.permissions.canManageTeam) {
-        return { data: null, error: 'You do not have permission to invite members' };
-      }
-
-      // Generate invitation token
-      const invitationToken = `${workspaceId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-
-      // Create invitation
-      const { data: invitation, error: invitationError } = await supabase
-        .from('workspace_invitations')
-        .insert({
-          workspace_id: workspaceId,
+      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email,
           role,
-          invited_by: user.id,
-          invitation_token: invitationToken,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+          userId: user.id
         })
-        .select()
-        .single();
+      });
 
-      if (invitationError) throw invitationError;
+      const data = await res.json();
 
-      // TODO: Send invitation email
-      console.log('Invitation created:', invitation);
-      console.log('TODO: Send invitation email to:', email);
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create invitation');
+      }
 
-      return { data: invitation, error: null };
+      return { data: data.invitation, error: null };
     } catch (error) {
       console.error('Error inviting to workspace:', error);
       return { data: null, error: error.message };
     }
-  }, [user, userWorkspaces]);
+  }, [user]);
 
-  // Remove member from workspace
+  // Remove member from workspace via API
   const removeMember = useCallback(async (workspaceId, memberId) => {
     if (!user) return { error: 'User not authenticated' };
 
     try {
-      // Check if user has permission to remove members
-      const membership = userWorkspaces.find(w => w.id === workspaceId)?.membership;
-      if (!membership || !membership.permissions.canManageTeam) {
-        return { error: 'You do not have permission to remove members' };
+      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/remove-member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          userId: user.id
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to remove member');
       }
-
-      // Cannot remove yourself
-      if (memberId === user.id) {
-        return { error: 'You cannot remove yourself from the workspace' };
-      }
-
-      // Remove member
-      const { error } = await supabase
-        .from('workspace_members')
-        .delete()
-        .eq('workspace_id', workspaceId)
-        .eq('user_id', memberId);
-
-      if (error) throw error;
 
       return { error: null };
     } catch (error) {
       console.error('Error removing member:', error);
       return { error: error.message };
     }
-  }, [user, userWorkspaces]);
+  }, [user]);
 
-  // Update member role
+  // Update member role via API
   const updateMemberRole = useCallback(async (workspaceId, memberId, role, permissions = {}) => {
     if (!user) return { error: 'User not authenticated' };
 
     try {
-      // Check if user has permission to update members
-      const membership = userWorkspaces.find(w => w.id === workspaceId)?.membership;
-      if (!membership || !membership.permissions.canManageTeam) {
-        return { error: 'You do not have permission to update members' };
-      }
-
-      // Cannot change your own role
-      if (memberId === user.id) {
-        return { error: 'You cannot change your own role' };
-      }
-
-      // Update member
-      const { error } = await supabase
-        .from('workspace_members')
-        .update({
+      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/update-member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          userId: user.id,
           role,
-          can_manage_team: permissions.canManageTeam !== undefined ? permissions.canManageTeam : false,
-          can_manage_settings: permissions.canManageSettings !== undefined ? permissions.canManageSettings : false,
-          can_delete_posts: permissions.canDeletePosts !== undefined ? permissions.canDeletePosts : true
+          permissions
         })
-        .eq('workspace_id', workspaceId)
-        .eq('user_id', memberId);
+      });
 
-      if (error) throw error;
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update member');
+      }
 
       return { error: null };
     } catch (error) {
       console.error('Error updating member role:', error);
       return { error: error.message };
     }
-  }, [user, userWorkspaces]);
+  }, [user]);
 
   // Check if user can perform an action
   const canPerformAction = useCallback((action) => {
