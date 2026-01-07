@@ -36,12 +36,13 @@ module.exports = async function handler(req, res) {
     }
 
     // Get all pending invitations for this workspace
+    // Select both invited_at and created_at for compatibility (different migrations)
     const { data: invitations, error: invitationsError } = await supabase
       .from('workspace_invitations')
-      .select('id, email, role, status, invited_at, expires_at, invited_by')
+      .select('id, email, role, status, invited_at, created_at, expires_at, invited_by')
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
-      .order('invited_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (invitationsError) {
       console.error('Invitations query error:', invitationsError);
@@ -66,7 +67,7 @@ module.exports = async function handler(req, res) {
         email: invite.email,
         role: invite.role,
         status: invite.status,
-        invited_at: invite.invited_at,
+        invited_at: invite.invited_at || invite.created_at, // Fallback for compatibility
         expires_at: invite.expires_at,
         invited_by_name: inviter.full_name || inviter.email
       };

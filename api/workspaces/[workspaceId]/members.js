@@ -35,12 +35,13 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: "You don't have access to this workspace" });
     }
 
-    // Get all workspace members
+    // Get all workspace members (exclude owner from display, they're shown separately)
     const { data: members, error: membersError } = await supabase
       .from('workspace_members')
-      .select('id, user_id, role, joined_at, can_manage_team, can_manage_settings, can_delete_posts')
+      .select('id, user_id, role, joined_at, created_at, can_manage_team, can_manage_settings, can_delete_posts')
       .eq('workspace_id', workspaceId)
-      .order('joined_at', { ascending: true });
+      .neq('role', 'owner')
+      .order('created_at', { ascending: true });
 
     if (membersError) {
       console.error('Members query error:', membersError);
@@ -57,22 +58,25 @@ module.exports = async function handler(req, res) {
     const profileMap = {};
     (profiles || []).forEach(p => { profileMap[p.id] = p; });
 
-    // Transform the data for the frontend
+    // Transform the data for the frontend (profile nested for frontend compatibility)
     const transformedMembers = members.map(member => {
       const profile = profileMap[member.user_id] || {};
       return {
         id: member.id,
         user_id: member.user_id,
         role: member.role,
-        joined_at: member.joined_at,
+        joined_at: member.joined_at || member.created_at,
+        created_at: member.created_at,
         permissions: {
           can_manage_team: member.can_manage_team,
           can_manage_settings: member.can_manage_settings,
           can_delete_posts: member.can_delete_posts
         },
-        email: profile.email,
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url
+        profile: {
+          email: profile.email,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url
+        }
       };
     });
 
