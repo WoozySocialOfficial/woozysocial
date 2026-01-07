@@ -124,8 +124,11 @@ export const DashboardContent = () => {
         if (popup.closed) {
           clearInterval(pollTimer);
           setConnectingPlatform(null);
-          // Refresh accounts after popup closes
-          setTimeout(() => refreshAccounts(), 1000);
+          // Refresh accounts after popup closes and notify other components
+          setTimeout(() => {
+            refreshAccounts();
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+          }, 1000);
         }
       }, 500);
     } catch (error) {
@@ -186,6 +189,17 @@ export const DashboardContent = () => {
 
     fetchDashboardData();
   }, [user, activeWorkspace]);
+
+  // Listen for social accounts updates from other components (e.g., TopHeader)
+  useEffect(() => {
+    const handleAccountsUpdated = () => {
+      console.log("Social accounts updated event received, refreshing...");
+      setTimeout(() => refreshAccounts(), 1000);
+    };
+
+    window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
+    return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
+  }, [refreshAccounts]);
 
   return (
     <div className="dashboard-content">

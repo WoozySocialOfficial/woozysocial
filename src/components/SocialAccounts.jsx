@@ -99,6 +99,15 @@ export const SocialAccounts = () => {
     fetchActiveAccounts();
   }, [fetchActiveAccounts]);
 
+  // Listen for social accounts updates from other components
+  useEffect(() => {
+    const handleAccountsUpdated = () => {
+      fetchActiveAccounts();
+    };
+    window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
+    return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
+  }, [fetchActiveAccounts]);
+
   const handleLink = async () => {
     if (!user || !activeWorkspace) return;
 
@@ -127,19 +136,23 @@ export const SocialAccounts = () => {
           clearInterval(poll);
           await fetchActiveAccounts();
           setLoading(false);
+          // Notify other components
+          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
           return;
         }
 
         try {
-          const rr = await fetch(`${baseURL}/api/user-accounts?userId=${user.id}`);
+          const rr = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
           if (rr.ok) {
             const dd = await rr.json();
-            if (Array.isArray(dd.activeSocialAccounts)) {
-              if (dd.activeSocialAccounts.length > initialLen) {
-                setActiveAccounts(dd.activeSocialAccounts);
+            const accounts = dd.activeSocialAccounts || dd.accounts || [];
+            if (Array.isArray(accounts)) {
+              if (accounts.length !== initialLen) {
+                setActiveAccounts(accounts);
                 clearInterval(poll);
                 if (popup && !popup.closed) popup.close();
                 setLoading(false);
+                window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
               }
             }
           }
@@ -152,6 +165,7 @@ export const SocialAccounts = () => {
           await fetchActiveAccounts();
           if (popup && !popup.closed) popup.close();
           setLoading(false);
+          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
         }
       }, pollInterval);
     } catch (err) {

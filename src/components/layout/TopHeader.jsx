@@ -53,14 +53,25 @@ export const TopHeader = () => {
       const left = window.screen.width / 2 - width / 2;
       const top = window.screen.height / 2 - height / 2;
 
-      window.open(
+      const popup = window.open(
         d.url,
         "AyrshareLink",
         `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
       );
+
+      // Poll to detect when popup closes
+      if (popup) {
+        const pollTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            setIsLinking(false);
+            // Dispatch custom event so other components can refresh
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+          }
+        }, 500);
+      }
     } catch (err) {
       console.error("Error connecting social accounts:", err);
-    } finally {
       setIsLinking(false);
     }
   };

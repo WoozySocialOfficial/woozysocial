@@ -85,6 +85,15 @@ const RightSideNav = () => {
     fetchActiveAccounts();
   }, [fetchActiveAccounts]);
 
+  // Listen for social accounts updates from other components
+  useEffect(() => {
+    const handleAccountsUpdated = () => {
+      fetchActiveAccounts();
+    };
+    window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
+    return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
+  }, [fetchActiveAccounts]);
+
   const handleLinkSocialAccounts = async () => {
     if (!user || !activeWorkspace) return;
 
@@ -115,6 +124,8 @@ const RightSideNav = () => {
           if (popup && popup.closed) {
             clearInterval(poll);
             await fetchActiveAccounts();
+            // Notify other components
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
             return;
           }
 
@@ -124,11 +135,12 @@ const RightSideNav = () => {
               const d = await r.json();
               const accounts = d.activeSocialAccounts || d.accounts || [];
               if (Array.isArray(accounts)) {
-                // If new accounts found, update and stop polling
-                if (accounts.length > initialLen) {
+                // If accounts changed, update and stop polling
+                if (accounts.length !== initialLen) {
                   setActiveAccounts(accounts);
                   clearInterval(poll);
                   if (popup && !popup.closed) popup.close();
+                  window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
                 }
               }
             }
@@ -141,6 +153,7 @@ const RightSideNav = () => {
             // final refresh
             await fetchActiveAccounts();
             if (popup && !popup.closed) popup.close();
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
           }
         }, pollInterval);
       } else {
