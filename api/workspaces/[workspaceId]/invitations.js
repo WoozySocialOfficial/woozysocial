@@ -38,10 +38,10 @@ module.exports = async function handler(req, res) {
     // Get all pending invitations for this workspace
     const { data: invitations, error: invitationsError } = await supabase
       .from('workspace_invitations')
-      .select('id, email, role, status, created_at, expires_at, invited_by')
+      .select('id, email, role, status, invited_at, expires_at, invited_by')
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .order('invited_at', { ascending: false });
 
     if (invitationsError) {
       console.error('Invitations query error:', invitationsError);
@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
         email: invite.email,
         role: invite.role,
         status: invite.status,
-        created_at: invite.created_at,
+        invited_at: invite.invited_at,
         expires_at: invite.expires_at,
         invited_by_name: inviter.full_name || inviter.email
       };
