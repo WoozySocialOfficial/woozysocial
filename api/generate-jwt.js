@@ -17,13 +17,34 @@ module.exports = async function handler(req, res) {
   try {
     const { userId, workspaceId } = req.query;
 
+    if (!workspaceId) {
+      return res.status(400).json({ error: "workspaceId is required" });
+    }
+
     // Get workspace profile key for connecting accounts
     const profileKey = await getWorkspaceProfileKey(workspaceId);
+
+    if (!profileKey) {
+      return res.status(400).json({ error: "No Ayrshare profile found for this workspace. Please contact support." });
+    }
 
     if (!process.env.AYRSHARE_PRIVATE_KEY) {
       return res.status(500).json({ error: "AYRSHARE_PRIVATE_KEY not configured" });
     }
-    const privateKey = process.env.AYRSHARE_PRIVATE_KEY.replace(/\\n/g, '\n');
+
+    if (!process.env.AYRSHARE_DOMAIN) {
+      return res.status(500).json({ error: "AYRSHARE_DOMAIN not configured" });
+    }
+
+    if (!process.env.AYRSHARE_API_KEY) {
+      return res.status(500).json({ error: "AYRSHARE_API_KEY not configured" });
+    }
+
+    // Handle private key - support both escaped \n and actual newlines
+    let privateKey = process.env.AYRSHARE_PRIVATE_KEY;
+    if (privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
 
     const jwtData = {
       domain: process.env.AYRSHARE_DOMAIN,
@@ -32,6 +53,8 @@ module.exports = async function handler(req, res) {
       verify: true,
       logout: true
     };
+
+    console.log("Generating JWT for workspace:", workspaceId, "with profileKey:", profileKey);
 
     const response = await axios.post(
       `${BASE_AYRSHARE}/profiles/generateJWT`,
@@ -47,6 +70,7 @@ module.exports = async function handler(req, res) {
     res.status(200).json({ url: response.data.url });
   } catch (error) {
     console.error("Error generating JWT URL:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to generate JWT URL" });
+    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+    res.status(500).json({ error: "Failed to generate JWT URL", details: errorMessage });
   }
 };
