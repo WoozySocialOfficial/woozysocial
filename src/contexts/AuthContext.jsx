@@ -176,6 +176,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   // Subscription status helpers
   const subscriptionStatus = profile?.subscription_status || 'inactive';
   const hasActiveProfile = !!profile?.ayr_profile_key && (subscriptionStatus === 'active' || profile?.is_whitelisted);
@@ -190,6 +202,7 @@ export const AuthProvider = ({ children }) => {
     signIn,
     signOut,
     updateProfile,
+    resetPassword,
     refreshProfile: () => user && fetchProfile(user.id),
     // Subscription properties
     subscriptionStatus,

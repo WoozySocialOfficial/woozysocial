@@ -5,11 +5,16 @@ import './AuthPages.css';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +30,99 @@ export const LoginPage = () => {
       navigate('/dashboard');
     }
   };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setResetError('');
+    setResetLoading(true);
+
+    const { error } = await resetPassword(resetEmail);
+
+    if (error) {
+      setResetError(error.message);
+    } else {
+      setResetSent(true);
+    }
+    setResetLoading(false);
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setResetEmail('');
+    setResetSent(false);
+    setResetError('');
+  };
+
+  if (showForgotPassword) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1 className="auth-title">Reset Password</h1>
+            <p className="auth-subtitle">
+              {resetSent
+                ? 'Check your email for the reset link'
+                : 'Enter your email to receive a reset link'
+              }
+            </p>
+          </div>
+
+          {resetSent ? (
+            <div className="auth-form">
+              <div className="auth-success">
+                We've sent a password reset link to <strong>{resetEmail}</strong>.
+                Please check your inbox and spam folder.
+              </div>
+              <button
+                type="button"
+                className="auth-button"
+                onClick={handleBackToLogin}
+              >
+                Back to Sign In
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleResetPassword} className="auth-form">
+              {resetError && <div className="auth-error">{resetError}</div>}
+
+              <div className="form-group">
+                <label htmlFor="resetEmail" className="form-label">
+                  Email
+                </label>
+                <input
+                  id="resetEmail"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="form-input"
+                  placeholder="you@example.com"
+                  required
+                  disabled={resetLoading}
+                />
+              </div>
+
+              <button type="submit" className="auth-button" disabled={resetLoading}>
+                {resetLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          )}
+
+          <div className="auth-footer">
+            <p className="auth-footer-text">
+              Remember your password?{' '}
+              <button
+                onClick={handleBackToLogin}
+                className="auth-link"
+                disabled={resetLoading}
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
@@ -54,9 +152,22 @@ export const LoginPage = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
+            <div className="form-label-row">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(true);
+                  setResetEmail(email);
+                }}
+                className="forgot-password-link"
+                disabled={loading}
+              >
+                Forgot password?
+              </button>
+            </div>
             <input
               id="password"
               type="password"
