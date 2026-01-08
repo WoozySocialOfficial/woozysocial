@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +16,24 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId } = req.query;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get all workspaces for this user
@@ -40,16 +53,20 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId);
 
     if (error) {
-      console.error("Error fetching workspaces:", error);
-      return res.status(500).json({ error: "Failed to fetch workspaces" });
+      logError('workspace.list.fetch', error, { userId });
+      return sendError(res, "Failed to fetch workspaces", ErrorCodes.DATABASE_ERROR);
     }
 
     // Get user's last workspace preference
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('last_workspace_id')
       .eq('id', userId)
       .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      logError('workspace.list.getProfile', profileError, { userId });
+    }
 
     // Transform the data and deduplicate by workspace ID
     const seen = new Set();
@@ -65,14 +82,13 @@ module.exports = async function handler(req, res) {
         membership: { role: m.role }
       }));
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       workspaces: workspaces,
       lastWorkspaceId: userProfile?.last_workspace_id || null
     });
 
   } catch (error) {
-    console.error("Error listing workspaces:", error);
-    res.status(500).json({ error: "Failed to list workspaces" });
+    logError('workspace.list.handler', error);
+    return sendError(res, "Failed to list workspaces", ErrorCodes.INTERNAL_ERROR);
   }
 };

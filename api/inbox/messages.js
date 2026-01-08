@@ -1,5 +1,16 @@
 const axios = require("axios");
-const { setCors, getWorkspaceProfileKey, getSupabase, parseBody } = require("../_utils");
+const {
+  setCors,
+  getWorkspaceProfileKey,
+  getSupabase,
+  parseBody,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  isServiceConfigured
+} = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -22,7 +33,7 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database connection not available" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   if (req.method === "GET") {
@@ -30,7 +41,7 @@ module.exports = async function handler(req, res) {
   } else if (req.method === "POST") {
     return handleSendMessage(req, res, supabase);
   } else {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 };
 
@@ -42,14 +53,24 @@ async function handleGetMessages(req, res, supabase) {
     const { conversationId, workspaceId, platform, refresh = 'false' } = req.query;
 
     if (!conversationId || !workspaceId || !platform) {
-      return res.status(400).json({
-        error: "conversationId, workspaceId, and platform are required"
-      });
+      return sendError(
+        res,
+        "conversationId, workspaceId, and platform are required",
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(conversationId)) {
+      return sendError(res, "Invalid conversationId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return res.status(400).json({ error: "No Ayrshare profile found for this workspace" });
+      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get the local conversation record
@@ -60,14 +81,18 @@ async function handleGetMessages(req, res, supabase) {
       .eq('workspace_id', workspaceId)
       .single();
 
-    if (convError || !conversation) {
-      return res.status(404).json({ error: "Conversation not found" });
+    if (convError && convError.code !== 'PGRST116') {
+      logError('inbox.messages.getConversation', convError, { conversationId });
+    }
+
+    if (!conversation) {
+      return sendError(res, "Conversation not found", ErrorCodes.NOT_FOUND);
     }
 
     const ayrshareConversationId = conversation.ayrshare_conversation_id;
 
     // Fetch messages from Ayrshare if refresh requested
-    if (refresh === 'true') {
+    if (refresh === 'true' && isServiceConfigured('ayrshare')) {
       await syncMessagesFromAyrshare(
         supabase,
         conversationId,
@@ -86,22 +111,19 @@ async function handleGetMessages(req, res, supabase) {
       .order('sent_at', { ascending: true });
 
     if (msgError) {
-      throw msgError;
+      logError('inbox.messages.fetch', msgError, { conversationId });
+      return sendError(res, "Failed to fetch messages", ErrorCodes.DATABASE_ERROR);
     }
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       messages: messages || [],
       conversationId,
       canReply: conversation.can_reply
     });
 
   } catch (error) {
-    console.error("Error fetching messages:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Failed to fetch messages",
-      details: error.response?.data || error.message
-    });
+    logError('inbox.messages.get.handler', error);
+    return sendError(res, "Failed to fetch messages", ErrorCodes.INTERNAL_ERROR);
   }
 }
 
@@ -114,14 +136,33 @@ async function handleSendMessage(req, res, supabase) {
     const { workspaceId, platform, conversationId, message, mediaUrl } = body;
 
     if (!workspaceId || !platform || !conversationId || !message) {
-      return res.status(400).json({
-        error: "workspaceId, platform, conversationId, and message are required"
-      });
+      return sendError(
+        res,
+        "workspaceId, platform, conversationId, and message are required",
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(conversationId)) {
+      return sendError(res, "Invalid conversationId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate message length
+    if (message.length > 2000) {
+      return sendError(res, "Message exceeds maximum length of 2000 characters", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isServiceConfigured('ayrshare')) {
+      return sendError(res, "Social media service is not configured", ErrorCodes.CONFIG_ERROR);
     }
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return res.status(400).json({ error: "No Ayrshare profile found for this workspace" });
+      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get the conversation to check if we can reply and get Ayrshare conversation ID
@@ -132,14 +173,20 @@ async function handleSendMessage(req, res, supabase) {
       .eq('workspace_id', workspaceId)
       .single();
 
-    if (convError || !conversation) {
-      return res.status(404).json({ error: "Conversation not found" });
+    if (convError && convError.code !== 'PGRST116') {
+      logError('inbox.messages.send.getConversation', convError, { conversationId });
+    }
+
+    if (!conversation) {
+      return sendError(res, "Conversation not found", ErrorCodes.NOT_FOUND);
     }
 
     if (!conversation.can_reply) {
-      return res.status(400).json({
-        error: "Cannot reply to this conversation. Instagram conversations expire after 7 days of inactivity."
-      });
+      return sendError(
+        res,
+        "Cannot reply to this conversation. Instagram conversations expire after 7 days of inactivity.",
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
     // Build message payload for Ayrshare
@@ -153,23 +200,32 @@ async function handleSendMessage(req, res, supabase) {
     }
 
     // Send message via Ayrshare
-    const response = await axios.post(
-      `${BASE_AYRSHARE}/messages/${platform}`,
-      messagePayload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-          "Profile-Key": profileKey
+    let response;
+    try {
+      response = await axios.post(
+        `${BASE_AYRSHARE}/messages/${platform}`,
+        messagePayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+            "Profile-Key": profileKey
+          },
+          timeout: 30000
         }
-      }
-    );
+      );
+    } catch (axiosError) {
+      logError('inbox.messages.send.ayrshare', axiosError, { platform, conversationId });
+      return sendError(
+        res,
+        "Failed to send message",
+        ErrorCodes.EXTERNAL_API_ERROR,
+        axiosError.response?.data
+      );
+    }
 
     if (response.data.status === 'error') {
-      return res.status(400).json({
-        error: "Failed to send message",
-        details: response.data
-      });
+      return sendError(res, "Failed to send message", ErrorCodes.EXTERNAL_API_ERROR, response.data);
     }
 
     // Save message to local cache
@@ -192,11 +248,11 @@ async function handleSendMessage(req, res, supabase) {
       .single();
 
     if (saveError) {
-      console.error("Error saving sent message:", saveError);
+      logError('inbox.messages.send.save', saveError, { conversationId });
     }
 
     // Update conversation's last message
-    await supabase
+    const { error: updateError } = await supabase
       .from('inbox_conversations')
       .update({
         last_message_text: message,
@@ -206,18 +262,18 @@ async function handleSendMessage(req, res, supabase) {
       })
       .eq('id', conversationId);
 
-    res.status(200).json({
-      success: true,
+    if (updateError) {
+      logError('inbox.messages.send.updateConversation', updateError, { conversationId });
+    }
+
+    return sendSuccess(res, {
       message: savedMessage || sentMessage,
       ayrshareResponse: response.data
     });
 
   } catch (error) {
-    console.error("Error sending message:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Failed to send message",
-      details: error.response?.data || error.message
-    });
+    logError('inbox.messages.post.handler', error);
+    return sendError(res, "Failed to send message", ErrorCodes.INTERNAL_ERROR);
   }
 }
 
@@ -234,7 +290,8 @@ async function syncMessagesFromAyrshare(supabase, localConversationId, ayrshareC
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
           "Profile-Key": profileKey
-        }
+        },
+        timeout: 30000
       }
     );
 
@@ -263,14 +320,14 @@ async function syncMessagesFromAyrshare(supabase, localConversationId, ayrshareC
         });
 
       if (error && error.code !== '23505') { // Ignore unique violation
-        console.error(`Error upserting message:`, error);
+        logError('inbox.messages.sync.upsert', error, { messageId: msg.id });
       }
     }
 
     return ayrshareMessages.length;
 
   } catch (error) {
-    console.error("Error syncing messages from Ayrshare:", error.response?.data || error.message);
+    logError('inbox.messages.sync', error);
     throw error;
   }
 }

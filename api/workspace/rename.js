@@ -1,4 +1,13 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +17,35 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId, workspaceId, newName } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['userId', 'workspaceId', 'newName']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!userId || !workspaceId || !newName) {
-      return res.status(400).json({ error: "userId, workspaceId, and newName are required" });
+    if (!isValidUUID(userId) || !isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate name length
+    if (newName.length < 2 || newName.length > 100) {
+      return sendError(res, "Workspace name must be between 2 and 100 characters", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if user is owner of this workspace
@@ -31,12 +56,17 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId)
       .limit(1);
 
-    if (membershipError || !membership || membership.length === 0) {
-      return res.status(403).json({ error: "You do not have access to this workspace" });
+    if (membershipError) {
+      logError('workspace.rename.checkMembership', membershipError, { userId, workspaceId });
+      return sendError(res, "Failed to verify permissions", ErrorCodes.DATABASE_ERROR);
+    }
+
+    if (!membership || membership.length === 0) {
+      return sendError(res, "You do not have access to this workspace", ErrorCodes.FORBIDDEN);
     }
 
     if (membership[0].role !== 'owner') {
-      return res.status(403).json({ error: "Only the owner can rename the workspace" });
+      return sendError(res, "Only the owner can rename the workspace", ErrorCodes.FORBIDDEN);
     }
 
     // Update workspace name
@@ -48,12 +78,11 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (updateError) {
-      console.error("Workspace rename error:", updateError);
-      return res.status(500).json({ error: "Failed to rename workspace" });
+      logError('workspace.rename.update', updateError, { workspaceId, newName });
+      return sendError(res, "Failed to rename workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       workspace: {
         id: workspace.id,
         name: workspace.name,
@@ -62,7 +91,7 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Error renaming workspace:", error);
-    res.status(500).json({ error: "Failed to rename workspace" });
+    logError('workspace.rename.handler', error);
+    return sendError(res, "Failed to rename workspace", ErrorCodes.INTERNAL_ERROR);
   }
 };

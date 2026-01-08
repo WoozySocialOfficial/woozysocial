@@ -1,4 +1,11 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +15,25 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { token } = req.query;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!token) {
-      return res.status(400).json({ error: "Token is required" });
+      return sendError(res, "Token is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate token format (basic check)
+    if (typeof token !== 'string' || token.length < 10) {
+      return sendError(res, "Invalid token format", ErrorCodes.VALIDATION_ERROR);
     }
 
     const { data: invitation, error } = await supabase
@@ -30,7 +43,7 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (error || !invitation) {
-      return res.status(404).json({ error: 'Invitation not found' });
+      return sendError(res, "Invitation not found", ErrorCodes.NOT_FOUND);
     }
 
     // Check if invitation has expired
@@ -41,17 +54,30 @@ module.exports = async function handler(req, res) {
         .update({ status: 'expired' })
         .eq('id', invitation.id);
 
-      return res.status(400).json({ error: 'This invitation has expired' });
+      return sendError(res, "This invitation has expired", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if invitation is still pending
     if (invitation.status !== 'pending') {
-      return res.status(400).json({ error: `This invitation has already been ${invitation.status}` });
+      return sendError(
+        res,
+        `This invitation has already been ${invitation.status}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    res.status(200).json({ data: invitation });
+    return sendSuccess(res, {
+      invitation: {
+        id: invitation.id,
+        email: invitation.email,
+        role: invitation.role,
+        status: invitation.status,
+        invitedAt: invitation.invited_at,
+        expiresAt: invitation.expires_at
+      }
+    });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: "Failed to validate invitation" });
+    logError('team.validate-invite.handler', error);
+    return sendError(res, "Failed to validate invitation", ErrorCodes.INTERNAL_ERROR);
   }
 };

@@ -1,5 +1,15 @@
 const axios = require("axios");
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID,
+  isServiceConfigured
+} = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -22,7 +32,8 @@ const createAyrshareProfile = async (title) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`
-        }
+        },
+        timeout: 30000
       }
     );
 
@@ -31,7 +42,7 @@ const createAyrshareProfile = async (title) => {
       refId: response.data.refId || null
     };
   } catch (error) {
-    console.error("Error creating Ayrshare profile:", error.response?.data || error.message);
+    logError('workspace.create.ayrshareProfile', error);
     return null;
   }
 };
@@ -44,26 +55,42 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId, businessName } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['userId', 'businessName']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!userId || !businessName) {
-      return res.status(400).json({ error: "userId and businessName are required" });
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate business name length
+    if (businessName.length < 2 || businessName.length > 100) {
+      return sendError(res, "Business name must be between 2 and 100 characters", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Create a new Ayrshare profile for this workspace (Business Plan feature)
     let ayrProfileKey = null;
     let ayrRefId = null;
 
-    if (process.env.AYRSHARE_API_KEY) {
+    if (isServiceConfigured('ayrshare')) {
       const ayrProfile = await createAyrshareProfile(businessName);
       if (ayrProfile) {
         ayrProfileKey = ayrProfile.profileKey;
@@ -73,17 +100,21 @@ module.exports = async function handler(req, res) {
 
     // If Ayrshare profile creation failed, fall back to owner's profile key or env var
     if (!ayrProfileKey) {
-      const { data: ownerProfile } = await supabase
+      const { data: ownerProfile, error: profileError } = await supabase
         .from('user_profiles')
         .select('ayr_profile_key, ayr_ref_id')
         .eq('id', userId)
         .single();
 
+      if (profileError && profileError.code !== 'PGRST116') {
+        logError('workspace.create.getOwnerProfile', profileError, { userId });
+      }
+
       ayrProfileKey = ownerProfile?.ayr_profile_key || process.env.AYRSHARE_PROFILE_KEY || null;
       ayrRefId = ownerProfile?.ayr_ref_id || null;
     }
 
-    // Create workspace in database - all businesses share owner's Ayrshare profile
+    // Create workspace in database
     const slug = generateSlug(businessName);
 
     const { data: workspace, error: workspaceError } = await supabase
@@ -99,11 +130,11 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (workspaceError) {
-      console.error("Workspace creation error:", workspaceError);
-      return res.status(500).json({ error: "Failed to create workspace" });
+      logError('workspace.create.insert', workspaceError, { userId, businessName });
+      return sendError(res, "Failed to create workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    // 3. Add user as owner of the workspace
+    // Add user as owner of the workspace
     const { error: memberError } = await supabase
       .from('workspace_members')
       .insert({
@@ -113,20 +144,19 @@ module.exports = async function handler(req, res) {
       });
 
     if (memberError) {
-      console.error("Member creation error:", memberError);
+      logError('workspace.create.addOwner', memberError, { workspaceId: workspace.id, userId });
       // Try to clean up the workspace
       await supabase.from('workspaces').delete().eq('id', workspace.id);
-      return res.status(500).json({ error: "Failed to add user to workspace" });
+      return sendError(res, "Failed to add user to workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    // 4. Update user's last_workspace_id
+    // Update user's last_workspace_id
     await supabase
       .from('user_profiles')
       .update({ last_workspace_id: workspace.id })
       .eq('id', userId);
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       workspace: {
         id: workspace.id,
         name: workspace.name,
@@ -136,7 +166,7 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Error creating workspace:", error);
-    res.status(500).json({ error: "Failed to create workspace" });
+    logError('workspace.create.handler', error);
+    return sendError(res, "Failed to create workspace", ErrorCodes.INTERNAL_ERROR);
   }
 };

@@ -1,4 +1,14 @@
-const { setCors, getSupabase, parseBody } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  parseBody,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -9,7 +19,7 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database not configured" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   // POST - Add a comment
@@ -18,22 +28,39 @@ module.exports = async function handler(req, res) {
       const body = await parseBody(req);
       const { postId, workspaceId, userId, comment } = body;
 
-      if (!postId || !workspaceId || !userId || !comment) {
-        return res.status(400).json({
-          error: "postId, workspaceId, userId, and comment are required"
-        });
+      // Validate required fields
+      const validation = validateRequired(body, ['postId', 'workspaceId', 'userId', 'comment']);
+      if (!validation.valid) {
+        return sendError(
+          res,
+          `Missing required fields: ${validation.missing.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
+      }
+
+      if (!isValidUUID(postId) || !isValidUUID(workspaceId) || !isValidUUID(userId)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Validate comment length
+      if (comment.length > 2000) {
+        return sendError(res, "Comment exceeds maximum length of 2000 characters", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Verify user is a member of the workspace
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from('workspace_members')
         .select('role')
         .eq('workspace_id', workspaceId)
         .eq('user_id', userId)
         .single();
 
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        logError('post.comment.checkMembership', membershipError, { userId, workspaceId });
+      }
+
       if (!membership) {
-        return res.status(403).json({ error: "You are not a member of this workspace" });
+        return sendError(res, "You are not a member of this workspace", ErrorCodes.FORBIDDEN);
       }
 
       // Create the comment
@@ -55,7 +82,10 @@ module.exports = async function handler(req, res) {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logError('post.comment.create', error, { postId, userId });
+        return sendError(res, "Failed to create comment", ErrorCodes.DATABASE_ERROR);
+      }
 
       // Get user info
       const { data: userProfile } = await supabase
@@ -64,8 +94,7 @@ module.exports = async function handler(req, res) {
         .eq('id', userId)
         .single();
 
-      res.status(200).json({
-        success: true,
+      return sendSuccess(res, {
         comment: {
           ...newComment,
           user_profiles: userProfile
@@ -73,8 +102,8 @@ module.exports = async function handler(req, res) {
       });
 
     } catch (error) {
-      console.error("Error creating comment:", error);
-      res.status(500).json({ error: "Failed to create comment" });
+      logError('post.comment.post.handler', error);
+      return sendError(res, "Failed to create comment", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
@@ -84,20 +113,32 @@ module.exports = async function handler(req, res) {
       const { postId, workspaceId, userId } = req.query;
 
       if (!postId) {
-        return res.status(400).json({ error: "postId is required" });
+        return sendError(res, "postId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(postId)) {
+        return sendError(res, "Invalid postId format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Verify user is a member if workspaceId provided
       if (workspaceId && userId) {
-        const { data: membership } = await supabase
+        if (!isValidUUID(workspaceId) || !isValidUUID(userId)) {
+          return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+        }
+
+        const { data: membership, error: membershipError } = await supabase
           .from('workspace_members')
           .select('role')
           .eq('workspace_id', workspaceId)
           .eq('user_id', userId)
           .single();
 
+        if (membershipError && membershipError.code !== 'PGRST116') {
+          logError('post.comment.get.checkMembership', membershipError, { userId, workspaceId });
+        }
+
         if (!membership) {
-          return res.status(403).json({ error: "You are not a member of this workspace" });
+          return sendError(res, "You are not a member of this workspace", ErrorCodes.FORBIDDEN);
         }
       }
 
@@ -119,16 +160,16 @@ module.exports = async function handler(req, res) {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        logError('post.comment.list', error, { postId });
+        return sendError(res, "Failed to fetch comments", ErrorCodes.DATABASE_ERROR);
+      }
 
-      res.status(200).json({
-        success: true,
-        comments: comments || []
-      });
+      return sendSuccess(res, { comments: comments || [] });
 
     } catch (error) {
-      console.error("Error fetching comments:", error);
-      res.status(500).json({ error: "Failed to fetch comments" });
+      logError('post.comment.get.handler', error);
+      return sendError(res, "Failed to fetch comments", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
@@ -138,25 +179,38 @@ module.exports = async function handler(req, res) {
       const body = await parseBody(req);
       const { commentId, userId, comment } = body;
 
-      if (!commentId || !userId || !comment) {
-        return res.status(400).json({
-          error: "commentId, userId, and comment are required"
-        });
+      // Validate required fields
+      const validation = validateRequired(body, ['commentId', 'userId', 'comment']);
+      if (!validation.valid) {
+        return sendError(
+          res,
+          `Missing required fields: ${validation.missing.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
+      }
+
+      if (!isValidUUID(commentId) || !isValidUUID(userId)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Validate comment length
+      if (comment.length > 2000) {
+        return sendError(res, "Comment exceeds maximum length of 2000 characters", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Verify user owns the comment
-      const { data: existingComment } = await supabase
+      const { data: existingComment, error: fetchError } = await supabase
         .from('post_comments')
         .select('user_id')
         .eq('id', commentId)
         .single();
 
-      if (!existingComment) {
-        return res.status(404).json({ error: "Comment not found" });
+      if (fetchError || !existingComment) {
+        return sendError(res, "Comment not found", ErrorCodes.NOT_FOUND);
       }
 
       if (existingComment.user_id !== userId) {
-        return res.status(403).json({ error: "You can only edit your own comments" });
+        return sendError(res, "You can only edit your own comments", ErrorCodes.FORBIDDEN);
       }
 
       const { data: updatedComment, error } = await supabase
@@ -169,16 +223,16 @@ module.exports = async function handler(req, res) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logError('post.comment.update', error, { commentId });
+        return sendError(res, "Failed to update comment", ErrorCodes.DATABASE_ERROR);
+      }
 
-      res.status(200).json({
-        success: true,
-        comment: updatedComment
-      });
+      return sendSuccess(res, { comment: updatedComment });
 
     } catch (error) {
-      console.error("Error updating comment:", error);
-      res.status(500).json({ error: "Failed to update comment" });
+      logError('post.comment.put.handler', error);
+      return sendError(res, "Failed to update comment", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
@@ -188,24 +242,26 @@ module.exports = async function handler(req, res) {
       const { commentId, userId } = req.query;
 
       if (!commentId || !userId) {
-        return res.status(400).json({
-          error: "commentId and userId are required"
-        });
+        return sendError(res, "commentId and userId are required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(commentId) || !isValidUUID(userId)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Verify user owns the comment
-      const { data: existingComment } = await supabase
+      const { data: existingComment, error: fetchError } = await supabase
         .from('post_comments')
         .select('user_id')
         .eq('id', commentId)
         .single();
 
-      if (!existingComment) {
-        return res.status(404).json({ error: "Comment not found" });
+      if (fetchError || !existingComment) {
+        return sendError(res, "Comment not found", ErrorCodes.NOT_FOUND);
       }
 
       if (existingComment.user_id !== userId) {
-        return res.status(403).json({ error: "You can only delete your own comments" });
+        return sendError(res, "You can only delete your own comments", ErrorCodes.FORBIDDEN);
       }
 
       const { error } = await supabase
@@ -213,17 +269,20 @@ module.exports = async function handler(req, res) {
         .delete()
         .eq('id', commentId);
 
-      if (error) throw error;
+      if (error) {
+        logError('post.comment.delete', error, { commentId });
+        return sendError(res, "Failed to delete comment", ErrorCodes.DATABASE_ERROR);
+      }
 
-      res.status(200).json({ success: true });
+      return sendSuccess(res, { message: "Comment deleted successfully" });
 
     } catch (error) {
-      console.error("Error deleting comment:", error);
-      res.status(500).json({ error: "Failed to delete comment" });
+      logError('post.comment.delete.handler', error);
+      return sendError(res, "Failed to delete comment", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   else {
-    res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 };

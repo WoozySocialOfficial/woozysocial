@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,31 +16,39 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database not configured" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId, userId, status } = req.query;
 
     if (!workspaceId || !userId) {
-      return res.status(400).json({ error: "workspaceId and userId are required" });
+      return sendError(res, "workspaceId and userId are required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId) || !isValidUUID(userId)) {
+      return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Verify user is a member of the workspace
-    const { data: membership } = await supabase
+    const { data: membership, error: membershipError } = await supabase
       .from('workspace_members')
       .select('role')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
       .single();
 
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      logError('post.pending-approvals.checkMembership', membershipError, { userId, workspaceId });
+    }
+
     if (!membership) {
-      return res.status(403).json({ error: "You are not a member of this workspace" });
+      return sendError(res, "You are not a member of this workspace", ErrorCodes.FORBIDDEN);
     }
 
     // Build query for posts
@@ -79,7 +95,10 @@ module.exports = async function handler(req, res) {
 
     const { data: posts, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      logError('post.pending-approvals.fetch', error, { workspaceId });
+      return sendError(res, "Failed to fetch pending approvals", ErrorCodes.DATABASE_ERROR);
+    }
 
     // Add comment count and map fields for frontend
     const postsWithMeta = (posts || []).map(post => ({
@@ -100,8 +119,7 @@ module.exports = async function handler(req, res) {
       rejected: postsWithMeta.filter(p => p.approval_status === 'rejected')
     };
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       posts: postsWithMeta,
       grouped: grouped,
       counts: {
@@ -115,7 +133,7 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Error fetching pending approvals:", error);
-    res.status(500).json({ error: "Failed to fetch pending approvals" });
+    logError('post.pending-approvals.handler', error);
+    return sendError(res, "Failed to fetch pending approvals", ErrorCodes.INTERNAL_ERROR);
   }
 };

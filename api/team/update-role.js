@@ -1,4 +1,15 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
+
+const VALID_ROLES = ['admin', 'editor', 'view_only'];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,26 +19,42 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { memberId, newRole, userId } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['memberId', 'newRole', 'userId']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!memberId || !newRole || !userId) {
-      return res.status(400).json({ error: "memberId, newRole, and userId are required" });
+    if (!isValidUUID(memberId) || !isValidUUID(userId)) {
+      return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const validRoles = ['admin', 'editor', 'view_only'];
-    if (!validRoles.includes(newRole)) {
-      return res.status(400).json({ error: 'Invalid role' });
+    // Validate role
+    if (!VALID_ROLES.includes(newRole)) {
+      return sendError(
+        res,
+        `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
+    // Get the team member
     const { data: member, error } = await supabase
       .from('team_members')
       .select('id, owner_id')
@@ -35,18 +62,30 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (error || !member) {
-      return res.status(404).json({ error: 'Team member not found' });
+      return sendError(res, "Team member not found", ErrorCodes.NOT_FOUND);
     }
 
+    // Check authorization
     if (member.owner_id !== userId) {
-      return res.status(403).json({ error: 'Only the team owner can change roles' });
+      return sendError(res, "Only the team owner can change roles", ErrorCodes.FORBIDDEN);
     }
 
-    await supabase.from('team_members').update({ role: newRole }).eq('id', memberId);
+    const { error: updateError } = await supabase
+      .from('team_members')
+      .update({ role: newRole })
+      .eq('id', memberId);
 
-    res.status(200).json({ success: true, newRole });
+    if (updateError) {
+      logError('team.update-role.update', updateError, { memberId, newRole });
+      return sendError(res, "Failed to update role", ErrorCodes.DATABASE_ERROR);
+    }
+
+    return sendSuccess(res, {
+      message: "Role updated successfully",
+      newRole
+    });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to update role' });
+    logError('team.update-role.handler', error);
+    return sendError(res, "Failed to update role", ErrorCodes.INTERNAL_ERROR);
   }
 };

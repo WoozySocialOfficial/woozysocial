@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,20 +16,33 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId } = req.query;
     const { memberId, userId } = req.body;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!memberId || !userId || !workspaceId) {
-      return res.status(400).json({ error: "memberId, userId, and workspaceId are required" });
+      return sendError(res, "memberId, userId, and workspaceId are required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(memberId)) {
+      return sendError(res, "Invalid memberId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if user has permission to remove members
@@ -32,29 +53,41 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId)
       .single();
 
-    if (membershipError || !membership) {
-      return res.status(403).json({ error: "You don't have access to this workspace" });
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      logError('workspaces.remove-member.checkMembership', membershipError, { userId, workspaceId });
+    }
+
+    if (!membership) {
+      return sendError(res, "You don't have access to this workspace", ErrorCodes.FORBIDDEN);
     }
 
     if (!membership.can_manage_team && membership.role !== 'owner') {
-      return res.status(403).json({ error: "You don't have permission to remove members" });
+      return sendError(res, "You don't have permission to remove members", ErrorCodes.FORBIDDEN);
     }
 
     // Cannot remove yourself
     if (memberId === userId) {
-      return res.status(400).json({ error: "You cannot remove yourself from the workspace" });
+      return sendError(res, "You cannot remove yourself from the workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if target is an owner (cannot remove owners)
-    const { data: targetMember } = await supabase
+    const { data: targetMember, error: targetError } = await supabase
       .from('workspace_members')
       .select('role')
       .eq('workspace_id', workspaceId)
       .eq('user_id', memberId)
       .single();
 
-    if (targetMember?.role === 'owner') {
-      return res.status(400).json({ error: "Cannot remove the workspace owner" });
+    if (targetError && targetError.code !== 'PGRST116') {
+      logError('workspaces.remove-member.checkTarget', targetError, { memberId, workspaceId });
+    }
+
+    if (!targetMember) {
+      return sendError(res, "Member not found in this workspace", ErrorCodes.NOT_FOUND);
+    }
+
+    if (targetMember.role === 'owner') {
+      return sendError(res, "Cannot remove the workspace owner", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Remove member
@@ -65,13 +98,14 @@ module.exports = async function handler(req, res) {
       .eq('user_id', memberId);
 
     if (deleteError) {
-      console.error('Remove member error:', deleteError);
-      return res.status(500).json({ error: 'Failed to remove member', details: deleteError.message });
+      logError('workspaces.remove-member.delete', deleteError, { memberId, workspaceId });
+      return sendError(res, "Failed to remove member", ErrorCodes.DATABASE_ERROR);
     }
 
-    res.status(200).json({ success: true, message: "Member removed successfully" });
+    return sendSuccess(res, { message: "Member removed successfully" });
+
   } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Failed to remove member", details: error.message });
+    logError('workspaces.remove-member.handler', error);
+    return sendError(res, "Failed to remove member", ErrorCodes.INTERNAL_ERROR);
   }
 };

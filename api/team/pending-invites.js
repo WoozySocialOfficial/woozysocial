@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +16,24 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId } = req.query;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     const { data: invites, error } = await supabase
@@ -31,12 +44,13 @@ module.exports = async function handler(req, res) {
       .order('invited_at', { ascending: false });
 
     if (error) {
-      return res.status(500).json({ error: 'Failed to fetch pending invites' });
+      logError('team.pending-invites.fetch', error, { userId });
+      return sendError(res, "Failed to fetch pending invites", ErrorCodes.DATABASE_ERROR);
     }
 
-    res.status(200).json({ data: invites || [] });
+    return sendSuccess(res, { invites: invites || [] });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to fetch pending invites' });
+    logError('team.pending-invites.handler', error);
+    return sendError(res, "Failed to fetch pending invites", ErrorCodes.INTERNAL_ERROR);
   }
 };

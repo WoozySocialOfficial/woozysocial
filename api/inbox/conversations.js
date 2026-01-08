@@ -1,5 +1,15 @@
 const axios = require("axios");
-const { setCors, getWorkspaceProfileKey, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getWorkspaceProfileKey,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  isServiceConfigured
+} = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 const SUPPORTED_PLATFORMS = ['facebook', 'instagram', 'twitter'];
@@ -21,31 +31,44 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database connection not available" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId, platform = 'all', refresh = 'false' } = req.query;
 
     if (!workspaceId) {
-      return res.status(400).json({ error: "workspaceId is required" });
+      return sendError(res, "workspaceId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate platform
+    if (platform !== 'all' && !SUPPORTED_PLATFORMS.includes(platform)) {
+      return sendError(
+        res,
+        `Invalid platform. Must be 'all' or one of: ${SUPPORTED_PLATFORMS.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return res.status(400).json({ error: "No Ayrshare profile found for this workspace" });
+      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     const shouldRefresh = refresh === 'true';
     const platformsToFetch = platform === 'all' ? SUPPORTED_PLATFORMS : [platform];
 
     // Check if we should fetch from Ayrshare or use cache
-    if (shouldRefresh) {
+    if (shouldRefresh && isServiceConfigured('ayrshare')) {
       await syncConversationsFromAyrshare(supabase, workspaceId, profileKey, platformsToFetch);
     }
 
@@ -64,7 +87,8 @@ module.exports = async function handler(req, res) {
     const { data: conversations, error } = await query;
 
     if (error) {
-      throw error;
+      logError('inbox.conversations.fetch', error, { workspaceId });
+      return sendError(res, "Failed to fetch conversations", ErrorCodes.DATABASE_ERROR);
     }
 
     // Calculate total unread
@@ -80,8 +104,7 @@ module.exports = async function handler(req, res) {
       return acc;
     }, {});
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       conversations: conversations || [],
       totalUnread,
       platformStats,
@@ -89,11 +112,8 @@ module.exports = async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Error fetching conversations:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Failed to fetch conversations",
-      details: error.response?.data || error.message
-    });
+    logError('inbox.conversations.handler', error);
+    return sendError(res, "Failed to fetch conversations", ErrorCodes.INTERNAL_ERROR);
   }
 };
 
@@ -111,7 +131,8 @@ async function syncConversationsFromAyrshare(supabase, workspaceId, profileKey, 
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
           "Profile-Key": profileKey
-        }
+        },
+        timeout: 30000
       });
 
       const ayrshareConversations = response.data?.conversations || response.data || [];
@@ -145,14 +166,14 @@ async function syncConversationsFromAyrshare(supabase, workspaceId, profileKey, 
           });
 
         if (error) {
-          console.error(`Error upserting conversation ${conv.conversationId}:`, error);
+          logError('inbox.conversations.sync.upsert', error, { conversationId: conv.conversationId });
         } else {
           results.push(conversationData);
         }
       }
 
     } catch (platformError) {
-      console.error(`Error fetching ${platform} conversations:`, platformError.response?.data || platformError.message);
+      logError('inbox.conversations.sync.platform', platformError, { platform });
       // Continue with other platforms
     }
   }

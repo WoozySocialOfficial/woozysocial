@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -10,7 +18,7 @@ module.exports = async function handler(req, res) {
   const supabase = getSupabase();
 
   if (!supabase) {
-    return res.status(500).json({ error: "Database not configured" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   // GET - Fetch notifications
@@ -19,7 +27,15 @@ module.exports = async function handler(req, res) {
       const { userId, workspaceId, unreadOnly } = req.query;
 
       if (!userId) {
-        return res.status(400).json({ error: "userId is required" });
+        return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(userId)) {
+        return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (workspaceId && !isValidUUID(workspaceId)) {
+        return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
       }
 
       let query = supabase
@@ -40,20 +56,21 @@ module.exports = async function handler(req, res) {
       const { data: notifications, error } = await query;
 
       if (error) {
-        // Table might not exist
-        console.error('Error fetching notifications:', error);
-        return res.status(200).json({ notifications: [], unreadCount: 0 });
+        // Table might not exist yet - return empty gracefully
+        logError('notifications.list.fetch', error, { userId });
+        return sendSuccess(res, { notifications: [], unreadCount: 0 });
       }
 
       const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
-      res.status(200).json({
+      return sendSuccess(res, {
         notifications: notifications || [],
         unreadCount
       });
+
     } catch (error) {
-      console.error("Error:", error.message);
-      res.status(500).json({ error: "Failed to fetch notifications" });
+      logError('notifications.list.get.handler', error);
+      return sendError(res, "Failed to fetch notifications", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
@@ -63,7 +80,11 @@ module.exports = async function handler(req, res) {
       const { userId, notificationIds, markAllRead } = req.body;
 
       if (!userId) {
-        return res.status(400).json({ error: "userId is required" });
+        return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(userId)) {
+        return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
       }
 
       if (markAllRead) {
@@ -74,12 +95,22 @@ module.exports = async function handler(req, res) {
           .eq('user_id', userId)
           .eq('read', false);
 
-        if (error) throw error;
+        if (error) {
+          logError('notifications.list.markAllRead', error, { userId });
+          return sendError(res, "Failed to mark notifications as read", ErrorCodes.DATABASE_ERROR);
+        }
 
-        return res.status(200).json({ success: true, message: "All notifications marked as read" });
+        return sendSuccess(res, { message: "All notifications marked as read" });
       }
 
       if (notificationIds && notificationIds.length > 0) {
+        // Validate all notification IDs are UUIDs
+        for (const id of notificationIds) {
+          if (!isValidUUID(id)) {
+            return sendError(res, "Invalid notification ID format", ErrorCodes.VALIDATION_ERROR);
+          }
+        }
+
         // Mark specific notifications as read
         const { error } = await supabase
           .from('notifications')
@@ -87,19 +118,23 @@ module.exports = async function handler(req, res) {
           .in('id', notificationIds)
           .eq('user_id', userId);
 
-        if (error) throw error;
+        if (error) {
+          logError('notifications.list.markRead', error, { userId });
+          return sendError(res, "Failed to update notifications", ErrorCodes.DATABASE_ERROR);
+        }
 
-        return res.status(200).json({ success: true });
+        return sendSuccess(res, { message: "Notifications marked as read" });
       }
 
-      return res.status(400).json({ error: "notificationIds or markAllRead is required" });
+      return sendError(res, "notificationIds or markAllRead is required", ErrorCodes.VALIDATION_ERROR);
+
     } catch (error) {
-      console.error("Error:", error.message);
-      res.status(500).json({ error: "Failed to update notifications" });
+      logError('notifications.list.post.handler', error);
+      return sendError(res, "Failed to update notifications", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   else {
-    res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 };

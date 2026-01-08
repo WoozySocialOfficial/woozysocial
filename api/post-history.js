@@ -1,5 +1,16 @@
 const axios = require("axios");
-const { setCors, getWorkspaceProfileKey, getWorkspaceProfileKeyForUser, getSupabase } = require("./_utils");
+const {
+  setCors,
+  getWorkspaceProfileKey,
+  getWorkspaceProfileKeyForUser,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  isServiceConfigured
+} = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -11,11 +22,19 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
   try {
     const { userId, workspaceId } = req.query;
+
+    if (workspaceId && !isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (userId && !isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
+    }
 
     // Get profile key - prefer workspaceId if provided, otherwise use userId fallback
     let profileKey;
@@ -27,16 +46,31 @@ module.exports = async function handler(req, res) {
     }
 
     if (!profileKey) {
-      return res.status(200).json({ history: [] });
+      return sendSuccess(res, { history: [] });
     }
 
-    const response = await axios.get(`${BASE_AYRSHARE}/history`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-        "Profile-Key": profileKey
-      }
-    });
+    if (!isServiceConfigured('ayrshare')) {
+      return sendError(res, "Social media service is not configured", ErrorCodes.CONFIG_ERROR);
+    }
+
+    let response;
+    try {
+      response = await axios.get(`${BASE_AYRSHARE}/history`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+          "Profile-Key": profileKey
+        },
+        timeout: 30000
+      });
+    } catch (axiosError) {
+      logError('post-history.ayrshare', axiosError);
+      return sendError(
+        res,
+        "Failed to fetch post history from social media service",
+        ErrorCodes.EXTERNAL_API_ERROR
+      );
+    }
 
     // Get approval data from Supabase if workspaceId is provided
     let approvalData = {};
@@ -46,10 +80,14 @@ module.exports = async function handler(req, res) {
       const supabase = getSupabase();
       if (supabase) {
         // Fetch post approvals
-        const { data: approvals } = await supabase
+        const { data: approvals, error: approvalError } = await supabase
           .from('post_approvals')
           .select('post_id, approval_status, reviewed_by, reviewed_at')
           .eq('workspace_id', workspaceId);
+
+        if (approvalError) {
+          logError('post-history.getApprovals', approvalError, { workspaceId });
+        }
 
         if (approvals) {
           approvals.forEach(a => {
@@ -58,7 +96,7 @@ module.exports = async function handler(req, res) {
         }
 
         // Fetch post comments with user info
-        const { data: comments } = await supabase
+        const { data: comments, error: commentsError } = await supabase
           .from('post_comments')
           .select(`
             id,
@@ -71,6 +109,10 @@ module.exports = async function handler(req, res) {
           `)
           .eq('workspace_id', workspaceId)
           .order('created_at', { ascending: true });
+
+        if (commentsError) {
+          logError('post-history.getComments', commentsError, { workspaceId });
+        }
 
         if (comments) {
           comments.forEach(c => {
@@ -99,12 +141,13 @@ module.exports = async function handler(req, res) {
       comments: commentsData[post.id] || []
     }));
 
-    res.status(response.status).json({
+    return sendSuccess(res, {
       ...response.data,
       history: enrichedHistory
     });
+
   } catch (error) {
-    console.error("Error fetching post history:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch post history" });
+    logError('post-history.handler', error);
+    return sendError(res, "Failed to fetch post history", ErrorCodes.INTERNAL_ERROR);
   }
 };

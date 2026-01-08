@@ -1,4 +1,13 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +17,30 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId, workspaceId } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['userId', 'workspaceId']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!userId || !workspaceId) {
-      return res.status(400).json({ error: "userId and workspaceId are required" });
+    if (!isValidUUID(userId) || !isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if user is owner of this workspace
@@ -31,12 +51,17 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId)
       .limit(1);
 
-    if (membershipError || !membership || membership.length === 0) {
-      return res.status(403).json({ error: "You do not have access to this workspace" });
+    if (membershipError) {
+      logError('workspace.delete.checkMembership', membershipError, { userId, workspaceId });
+      return sendError(res, "Failed to verify permissions", ErrorCodes.DATABASE_ERROR);
+    }
+
+    if (!membership || membership.length === 0) {
+      return sendError(res, "You do not have access to this workspace", ErrorCodes.FORBIDDEN);
     }
 
     if (membership[0].role !== 'owner') {
-      return res.status(403).json({ error: "Only the owner can delete the workspace" });
+      return sendError(res, "Only the owner can delete the workspace", ErrorCodes.FORBIDDEN);
     }
 
     // Check how many workspaces the user owns
@@ -47,12 +72,12 @@ module.exports = async function handler(req, res) {
       .eq('role', 'owner');
 
     if (countError) {
-      console.error("Error counting workspaces:", countError);
-      return res.status(500).json({ error: "Failed to verify workspace count" });
+      logError('workspace.delete.countWorkspaces', countError, { userId });
+      return sendError(res, "Failed to verify workspace count", ErrorCodes.DATABASE_ERROR);
     }
 
     if (userWorkspaces && userWorkspaces.length <= 1) {
-      return res.status(400).json({ error: "Cannot delete your only workspace" });
+      return sendError(res, "Cannot delete your only workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Delete workspace members first (foreign key constraint)
@@ -62,7 +87,7 @@ module.exports = async function handler(req, res) {
       .eq('workspace_id', workspaceId);
 
     if (membersDeleteError) {
-      console.error("Members delete error:", membersDeleteError);
+      logError('workspace.delete.members', membersDeleteError, { workspaceId });
     }
 
     // Delete workspace invitations
@@ -72,7 +97,7 @@ module.exports = async function handler(req, res) {
       .eq('workspace_id', workspaceId);
 
     if (invitesDeleteError) {
-      console.error("Invitations delete error:", invitesDeleteError);
+      logError('workspace.delete.invitations', invitesDeleteError, { workspaceId });
     }
 
     // Delete post drafts for this workspace
@@ -82,7 +107,7 @@ module.exports = async function handler(req, res) {
       .eq('workspace_id', workspaceId);
 
     if (draftsDeleteError) {
-      console.error("Drafts delete error:", draftsDeleteError);
+      logError('workspace.delete.drafts', draftsDeleteError, { workspaceId });
     }
 
     // Delete brand profiles for this workspace
@@ -92,7 +117,7 @@ module.exports = async function handler(req, res) {
       .eq('workspace_id', workspaceId);
 
     if (brandDeleteError) {
-      console.error("Brand profile delete error:", brandDeleteError);
+      logError('workspace.delete.brandProfiles', brandDeleteError, { workspaceId });
     }
 
     // Delete the workspace
@@ -102,8 +127,8 @@ module.exports = async function handler(req, res) {
       .eq('id', workspaceId);
 
     if (deleteError) {
-      console.error("Workspace delete error:", deleteError);
-      return res.status(500).json({ error: "Failed to delete workspace", details: deleteError.message });
+      logError('workspace.delete.workspace', deleteError, { workspaceId });
+      return sendError(res, "Failed to delete workspace", ErrorCodes.DATABASE_ERROR);
     }
 
     // Update user's last_workspace_id if it was this workspace
@@ -129,13 +154,10 @@ module.exports = async function handler(req, res) {
         .eq('id', userId);
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Workspace deleted successfully"
-    });
+    return sendSuccess(res, { message: "Workspace deleted successfully" });
 
   } catch (error) {
-    console.error("Error deleting workspace:", error);
-    res.status(500).json({ error: "Failed to delete workspace" });
+    logError('workspace.delete.handler', error);
+    return sendError(res, "Failed to delete workspace", ErrorCodes.INTERNAL_ERROR);
   }
 };

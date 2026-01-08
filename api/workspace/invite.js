@@ -1,4 +1,17 @@
-const { setCors, getSupabase, parseBody } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  parseBody,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID,
+  isValidEmail
+} = require("../_utils");
+
+const VALID_ROLES = ['admin', 'editor', 'view_only'];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -9,7 +22,7 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database not configured" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   // POST - Send invitation
@@ -18,52 +31,63 @@ module.exports = async function handler(req, res) {
       const body = await parseBody(req);
       const { workspaceId, email, role, invitedBy } = body;
 
-      if (!workspaceId || !email || !invitedBy) {
-        return res.status(400).json({ error: "workspaceId, email, and invitedBy are required" });
+      // Validate required fields
+      const validation = validateRequired(body, ['workspaceId', 'email', 'invitedBy']);
+      if (!validation.valid) {
+        return sendError(
+          res,
+          `Missing required fields: ${validation.missing.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
+      }
+
+      if (!isValidUUID(workspaceId) || !isValidUUID(invitedBy)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidEmail(email)) {
+        return sendError(res, "Invalid email format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Validate role if provided
+      if (role && !VALID_ROLES.includes(role)) {
+        return sendError(
+          res,
+          `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
       }
 
       // Verify inviter is owner/admin of workspace
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from('workspace_members')
         .select('role')
         .eq('workspace_id', workspaceId)
         .eq('user_id', invitedBy)
         .single();
 
-      if (!membership || !['owner', 'admin'].includes(membership.role)) {
-        return res.status(403).json({ error: "Only owners and admins can invite members" });
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        logError('workspace.invite.checkMembership', membershipError, { workspaceId, invitedBy });
       }
 
-      // Check if user is already a member
-      const { data: existingUser } = await supabase
-        .from('auth.users')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (existingUser) {
-        const { data: existingMember } = await supabase
-          .from('workspace_members')
-          .select('id')
-          .eq('workspace_id', workspaceId)
-          .eq('user_id', existingUser.id)
-          .single();
-
-        if (existingMember) {
-          return res.status(400).json({ error: "User is already a member of this workspace" });
-        }
+      if (!membership || !['owner', 'admin'].includes(membership.role)) {
+        return sendError(res, "Only owners and admins can invite members", ErrorCodes.FORBIDDEN);
       }
 
       // Check for existing pending invitation
-      const { data: existingInvite } = await supabase
+      const { data: existingInvite, error: existingError } = await supabase
         .from('workspace_invitations')
         .select('id, status')
         .eq('workspace_id', workspaceId)
-        .eq('email', email)
+        .eq('email', email.toLowerCase())
         .single();
 
+      if (existingError && existingError.code !== 'PGRST116') {
+        logError('workspace.invite.checkExisting', existingError, { workspaceId, email });
+      }
+
       if (existingInvite && existingInvite.status === 'pending') {
-        return res.status(400).json({ error: "An invitation is already pending for this email" });
+        return sendError(res, "An invitation is already pending for this email", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Create or update invitation
@@ -87,7 +111,10 @@ module.exports = async function handler(req, res) {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          logError('workspace.invite.update', error, { inviteId: existingInvite.id });
+          return sendError(res, "Failed to update invitation", ErrorCodes.DATABASE_ERROR);
+        }
         invitation = data;
       } else {
         // Create new invitation
@@ -97,7 +124,10 @@ module.exports = async function handler(req, res) {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          logError('workspace.invite.create', error, { workspaceId, email });
+          return sendError(res, "Failed to create invitation", ErrorCodes.DATABASE_ERROR);
+        }
         invitation = data;
       }
 
@@ -108,8 +138,7 @@ module.exports = async function handler(req, res) {
         .eq('id', workspaceId)
         .single();
 
-      res.status(200).json({
-        success: true,
+      return sendSuccess(res, {
         invitation: {
           id: invitation.id,
           email: invitation.email,
@@ -121,18 +150,22 @@ module.exports = async function handler(req, res) {
       });
 
     } catch (error) {
-      console.error("Error creating invitation:", error);
-      res.status(500).json({ error: "Failed to create invitation" });
+      logError('workspace.invite.post.handler', error);
+      return sendError(res, "Failed to create invitation", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   // GET - List invitations for a workspace
   else if (req.method === "GET") {
     try {
-      const { workspaceId, userId } = req.query;
+      const { workspaceId } = req.query;
 
       if (!workspaceId) {
-        return res.status(400).json({ error: "workspaceId is required" });
+        return sendError(res, "workspaceId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(workspaceId)) {
+        return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
       }
 
       const { data: invitations, error } = await supabase
@@ -149,16 +182,16 @@ module.exports = async function handler(req, res) {
         .eq('workspace_id', workspaceId)
         .order('invited_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        logError('workspace.invite.list', error, { workspaceId });
+        return sendError(res, "Failed to fetch invitations", ErrorCodes.DATABASE_ERROR);
+      }
 
-      res.status(200).json({
-        success: true,
-        invitations: invitations || []
-      });
+      return sendSuccess(res, { invitations: invitations || [] });
 
     } catch (error) {
-      console.error("Error fetching invitations:", error);
-      res.status(500).json({ error: "Failed to fetch invitations" });
+      logError('workspace.invite.get.handler', error);
+      return sendError(res, "Failed to fetch invitations", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
@@ -168,30 +201,38 @@ module.exports = async function handler(req, res) {
       const { invitationId, userId } = req.query;
 
       if (!invitationId || !userId) {
-        return res.status(400).json({ error: "invitationId and userId are required" });
+        return sendError(res, "invitationId and userId are required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(invitationId) || !isValidUUID(userId)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Get invitation to verify workspace
-      const { data: invitation } = await supabase
+      const { data: invitation, error: inviteError } = await supabase
         .from('workspace_invitations')
         .select('workspace_id')
         .eq('id', invitationId)
         .single();
 
-      if (!invitation) {
-        return res.status(404).json({ error: "Invitation not found" });
+      if (inviteError || !invitation) {
+        return sendError(res, "Invitation not found", ErrorCodes.NOT_FOUND);
       }
 
       // Verify user is owner/admin
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from('workspace_members')
         .select('role')
         .eq('workspace_id', invitation.workspace_id)
         .eq('user_id', userId)
         .single();
 
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        logError('workspace.invite.delete.checkMembership', membershipError, { userId });
+      }
+
       if (!membership || !['owner', 'admin'].includes(membership.role)) {
-        return res.status(403).json({ error: "Only owners and admins can cancel invitations" });
+        return sendError(res, "Only owners and admins can cancel invitations", ErrorCodes.FORBIDDEN);
       }
 
       const { error } = await supabase
@@ -199,17 +240,20 @@ module.exports = async function handler(req, res) {
         .delete()
         .eq('id', invitationId);
 
-      if (error) throw error;
+      if (error) {
+        logError('workspace.invite.delete', error, { invitationId });
+        return sendError(res, "Failed to cancel invitation", ErrorCodes.DATABASE_ERROR);
+      }
 
-      res.status(200).json({ success: true });
+      return sendSuccess(res, { message: "Invitation cancelled successfully" });
 
     } catch (error) {
-      console.error("Error cancelling invitation:", error);
-      res.status(500).json({ error: "Failed to cancel invitation" });
+      logError('workspace.invite.delete.handler', error);
+      return sendError(res, "Failed to cancel invitation", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   else {
-    res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 };

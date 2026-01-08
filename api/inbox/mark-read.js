@@ -1,4 +1,13 @@
-const { setCors, getSupabase, parseBody } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  parseBody,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 /**
  * Mark Conversation as Read
@@ -14,12 +23,12 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "PUT" && req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database connection not available" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
@@ -27,7 +36,15 @@ module.exports = async function handler(req, res) {
     const { conversationId, userId } = body;
 
     if (!conversationId || !userId) {
-      return res.status(400).json({ error: "conversationId and userId are required" });
+      return sendError(res, "conversationId and userId are required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(conversationId)) {
+      return sendError(res, "Invalid conversationId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Update read status using the database function
@@ -38,27 +55,32 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       // Fallback if function doesn't exist
-      await supabase
+      const { error: updateError } = await supabase
         .from('inbox_conversations')
         .update({ unread_count: 0, updated_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      await supabase
+      if (updateError) {
+        logError('inbox.mark-read.updateConversation', updateError, { conversationId });
+      }
+
+      const { error: upsertError } = await supabase
         .from('inbox_read_status')
         .upsert({
           user_id: userId,
           conversation_id: conversationId,
           last_read_at: new Date().toISOString()
         }, { onConflict: 'user_id,conversation_id' });
+
+      if (upsertError) {
+        logError('inbox.mark-read.upsertStatus', upsertError, { conversationId, userId });
+      }
     }
 
-    res.status(200).json({ success: true });
+    return sendSuccess(res, { message: "Conversation marked as read" });
 
   } catch (error) {
-    console.error("Error marking conversation as read:", error);
-    res.status(500).json({
-      error: "Failed to mark conversation as read",
-      details: error.message
-    });
+    logError('inbox.mark-read.handler', error);
+    return sendError(res, "Failed to mark conversation as read", ErrorCodes.INTERNAL_ERROR);
   }
 };

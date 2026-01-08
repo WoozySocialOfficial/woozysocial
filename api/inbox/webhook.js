@@ -1,4 +1,12 @@
-const { setCors, getSupabase, parseBody } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  parseBody,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError
+} = require("../_utils");
 
 /**
  * Webhook Handler for Ayrshare Message Events
@@ -24,16 +32,16 @@ module.exports = async function handler(req, res) {
     if (challenge) {
       return res.status(200).send(challenge);
     }
-    return res.status(200).json({ status: "Webhook endpoint active" });
+    return sendSuccess(res, { status: "Webhook endpoint active" });
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database connection not available" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
@@ -55,7 +63,7 @@ module.exports = async function handler(req, res) {
     const eventType = event || type;
 
     // Log the webhook event
-    const { data: webhookLog, error: logError } = await supabase
+    const { data: webhookLog, error: logErr } = await supabase
       .from('inbox_webhook_events')
       .insert([{
         event_type: eventType,
@@ -66,8 +74,8 @@ module.exports = async function handler(req, res) {
       .select()
       .single();
 
-    if (logError) {
-      console.error("Error logging webhook event:", logError);
+    if (logErr) {
+      logError('inbox.webhook.log', logErr, { eventType });
     }
 
     // Find the workspace by profile key
@@ -119,22 +127,22 @@ module.exports = async function handler(req, res) {
         case 'message_reaction':
         case 'reaction':
           // Log but don't process reactions for now
-          console.log("Message reaction received:", body);
+          logError('inbox.webhook.reaction', { message: 'Reaction received (not processed)' }, body);
           processed = true;
           break;
 
         default:
-          console.log("Unknown webhook event type:", eventType);
+          logError('inbox.webhook.unknownEvent', { message: `Unknown event type: ${eventType}` }, body);
           errorMessage = `Unknown event type: ${eventType}`;
       }
     } catch (processError) {
-      console.error("Error processing webhook event:", processError);
+      logError('inbox.webhook.process', processError, { eventType });
       errorMessage = processError.message;
     }
 
     // Update the webhook log with processing status
     if (webhookLog?.id) {
-      await supabase
+      const { error: updateErr } = await supabase
         .from('inbox_webhook_events')
         .update({
           processed,
@@ -143,16 +151,17 @@ module.exports = async function handler(req, res) {
           workspace_id: workspaceId
         })
         .eq('id', webhookLog.id);
+
+      if (updateErr) {
+        logError('inbox.webhook.updateLog', updateErr, { webhookLogId: webhookLog.id });
+      }
     }
 
-    res.status(200).json({ success: true, processed });
+    return sendSuccess(res, { processed });
 
   } catch (error) {
-    console.error("Webhook error:", error);
-    res.status(500).json({
-      error: "Webhook processing failed",
-      details: error.message
-    });
+    logError('inbox.webhook.handler', error);
+    return sendError(res, "Webhook processing failed", ErrorCodes.INTERNAL_ERROR);
   }
 };
 
@@ -170,7 +179,7 @@ async function handleNewMessage(supabase, {
   timestamp
 }) {
   if (!workspaceId || !platform || !conversationId) {
-    console.log("Missing required fields for new message");
+    logError('inbox.webhook.newMessage.missingFields', { message: 'Missing required fields' }, { workspaceId, platform, conversationId });
     return;
   }
 
@@ -202,7 +211,7 @@ async function handleNewMessage(supabase, {
       .single();
 
     if (createError) {
-      console.error("Error creating conversation:", createError);
+      logError('inbox.webhook.newMessage.createConversation', createError, { workspaceId, conversationId });
       return;
     }
 
@@ -226,7 +235,7 @@ async function handleNewMessage(supabase, {
     }]);
 
   if (msgError && msgError.code !== '23505') { // Ignore duplicate
-    console.error("Error inserting message:", msgError);
+    logError('inbox.webhook.newMessage.insertMessage', msgError, { conversationId: conversation.id });
   }
 
   // The trigger will automatically update the conversation's last_message and unread_count
@@ -246,9 +255,13 @@ async function handleMessageRead(supabase, {
 
   // Update message read status
   if (messageId) {
-    await supabase
+    const { error } = await supabase
       .from('inbox_messages')
       .update({ read_at: timestamp || new Date().toISOString() })
       .eq('ayrshare_message_id', messageId);
+
+    if (error) {
+      logError('inbox.webhook.messageRead.update', error, { messageId });
+    }
   }
 }

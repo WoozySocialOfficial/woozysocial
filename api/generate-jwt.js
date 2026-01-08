@@ -1,5 +1,16 @@
 const axios = require("axios");
-const { setCors, getSupabase } = require("./_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  applyRateLimit,
+  isServiceConfigured,
+  isValidUUID
+} = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -18,7 +29,7 @@ const getWorkspaceProfileKey = async (workspaceId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching workspace:', error);
+    logError('generate-jwt.getWorkspace', error, { workspaceId });
     return null;
   }
 };
@@ -33,13 +44,14 @@ const createAyrshareProfile = async (title) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`
-        }
+        },
+        timeout: 30000
       }
     );
 
     return response.data.profileKey;
   } catch (error) {
-    console.error("Error creating Ayrshare profile:", error.response?.data || error.message);
+    logError('generate-jwt.createProfile', error);
     return null;
   }
 };
@@ -58,7 +70,7 @@ const updateWorkspaceProfileKey = async (workspaceId, profileKey) => {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error updating workspace profile key:', error);
+    logError('generate-jwt.updateWorkspace', error, { workspaceId });
     return false;
   }
 };
@@ -71,49 +83,71 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 
-  try {
-    const { userId, workspaceId } = req.query;
+  // Rate limiting: 10 JWT generations per minute per user (auth endpoint)
+  const rateLimited = applyRateLimit(req, res, 'generate-jwt', { maxRequests: 10, windowMs: 60000 });
+  if (rateLimited) return;
 
+  try {
+    const { workspaceId } = req.query;
+
+    // Validate required fields
     if (!workspaceId) {
-      return res.status(400).json({ error: "workspaceId is required" });
+      return sendError(res, "workspaceId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate UUID format
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Check required services are configured
+    if (!isServiceConfigured('ayrshareJwt')) {
+      return sendError(
+        res,
+        "Social media connection service is not configured",
+        ErrorCodes.CONFIG_ERROR
+      );
+    }
+
+    if (!isServiceConfigured('ayrshare')) {
+      return sendError(
+        res,
+        "Social media API is not configured",
+        ErrorCodes.CONFIG_ERROR
+      );
     }
 
     // Get workspace profile key for connecting accounts
     const workspace = await getWorkspaceProfileKey(workspaceId);
 
     if (!workspace) {
-      return res.status(400).json({ error: "Workspace not found" });
+      return sendError(res, "Workspace not found", ErrorCodes.NOT_FOUND);
     }
 
     let profileKey = workspace.ayr_profile_key;
 
     // If no profile key exists, create one automatically (Business Plan feature)
-    if (!profileKey && process.env.AYRSHARE_API_KEY) {
+    if (!profileKey) {
       profileKey = await createAyrshareProfile(workspace.name || 'My Business');
 
       if (profileKey) {
         // Save the new profile key to the workspace
-        await updateWorkspaceProfileKey(workspaceId, profileKey);
+        const updated = await updateWorkspaceProfileKey(workspaceId, profileKey);
+        if (!updated) {
+          logError('generate-jwt.saveProfile', 'Failed to save profile key to workspace', { workspaceId });
+        }
       }
     }
 
     if (!profileKey) {
-      return res.status(400).json({ error: "Failed to create Ayrshare profile. Please contact support." });
-    }
-
-    if (!process.env.AYRSHARE_PRIVATE_KEY) {
-      return res.status(500).json({ error: "AYRSHARE_PRIVATE_KEY not configured" });
-    }
-
-    if (!process.env.AYRSHARE_DOMAIN) {
-      return res.status(500).json({ error: "AYRSHARE_DOMAIN not configured" });
-    }
-
-    if (!process.env.AYRSHARE_API_KEY) {
-      return res.status(500).json({ error: "AYRSHARE_API_KEY not configured" });
+      return sendError(
+        res,
+        "Failed to create social media profile. Please try again or contact support.",
+        ErrorCodes.EXTERNAL_API_ERROR
+      );
     }
 
     // Handle private key - support both escaped \n and actual newlines
@@ -130,21 +164,46 @@ module.exports = async function handler(req, res) {
       logout: true
     };
 
-    const response = await axios.post(
-      `${BASE_AYRSHARE}/profiles/generateJWT`,
-      jwtData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`
+    let response;
+    try {
+      response = await axios.post(
+        `${BASE_AYRSHARE}/profiles/generateJWT`,
+        jwtData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`
+          },
+          timeout: 30000
         }
-      }
-    );
+      );
+    } catch (axiosError) {
+      logError('generate-jwt.ayrshare', axiosError, { workspaceId });
 
-    res.status(200).json({ url: response.data.url });
+      const errorMessage = axiosError.response?.data?.message ||
+                          axiosError.response?.data?.error ||
+                          'Unable to generate connection URL';
+
+      return sendError(
+        res,
+        "Failed to generate social media connection URL",
+        ErrorCodes.EXTERNAL_API_ERROR,
+        errorMessage
+      );
+    }
+
+    if (!response.data?.url) {
+      return sendError(
+        res,
+        "Invalid response from social media service",
+        ErrorCodes.EXTERNAL_API_ERROR
+      );
+    }
+
+    return sendSuccess(res, { url: response.data.url });
+
   } catch (error) {
-    console.error("Error generating JWT URL:", error.response?.data || error.message);
-    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-    res.status(500).json({ error: "Failed to generate JWT URL", details: errorMessage });
+    logError('generate-jwt.handler', error, { method: req.method });
+    return sendError(res, "An unexpected error occurred", ErrorCodes.INTERNAL_ERROR);
   }
 };

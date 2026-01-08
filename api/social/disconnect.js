@@ -1,7 +1,23 @@
 const axios = require("axios");
-const { setCors, getSupabase, getWorkspaceProfileKey } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  getWorkspaceProfileKey,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID,
+  isServiceConfigured
+} = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
+
+const VALID_PLATFORMS = [
+  'facebook', 'instagram', 'twitter', 'linkedin',
+  'youtube', 'tiktok', 'pinterest', 'reddit', 'telegram'
+];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -11,29 +27,47 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { platform, userId, workspaceId } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['platform', 'userId']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!platform || !userId) {
-      return res.status(400).json({ error: "platform and userId are required" });
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Valid platforms for Ayrshare
-    const validPlatforms = [
-      'facebook', 'instagram', 'twitter', 'linkedin',
-      'youtube', 'tiktok', 'pinterest', 'reddit', 'telegram'
-    ];
+    if (workspaceId && !isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
 
-    if (!validPlatforms.includes(platform.toLowerCase())) {
-      return res.status(400).json({ error: "Invalid platform" });
+    // Validate platform
+    if (!VALID_PLATFORMS.includes(platform.toLowerCase())) {
+      return sendError(
+        res,
+        `Invalid platform. Must be one of: ${VALID_PLATFORMS.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
+    if (!isServiceConfigured('ayrshare')) {
+      return sendError(res, "Social media service is not configured", ErrorCodes.CONFIG_ERROR);
     }
 
     // Get the profile key for the workspace or user
@@ -44,44 +78,59 @@ module.exports = async function handler(req, res) {
 
     if (!profileKey) {
       // Fall back to user's profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('ayr_profile_key')
         .eq('id', userId)
         .single();
 
+      if (profileError && profileError.code !== 'PGRST116') {
+        logError('social.disconnect.getProfile', profileError, { userId });
+      }
+
       profileKey = profile?.ayr_profile_key;
     }
 
     if (!profileKey) {
-      return res.status(400).json({ error: "No Ayrshare profile found" });
+      return sendError(res, "No social media profile found", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Call Ayrshare API to unlink the social account
-    const response = await axios.delete(`${BASE_AYRSHARE}/profiles/social/${platform.toLowerCase()}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-        "Profile-Key": profileKey
-      }
-    });
+    let response;
+    try {
+      response = await axios.delete(`${BASE_AYRSHARE}/profiles/social/${platform.toLowerCase()}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+          "Profile-Key": profileKey
+        },
+        timeout: 30000
+      });
+    } catch (axiosError) {
+      logError('social.disconnect.ayrshare', axiosError, { platform, userId });
+      return sendError(
+        res,
+        "Failed to disconnect social account",
+        ErrorCodes.EXTERNAL_API_ERROR,
+        axiosError.response?.data
+      );
+    }
 
     if (response.data.status === "success" || response.status === 200) {
-      res.status(200).json({
-        success: true,
+      return sendSuccess(res, {
         message: `${platform} disconnected successfully`
       });
     } else {
-      res.status(400).json({
-        error: "Failed to disconnect platform",
-        details: response.data
-      });
+      return sendError(
+        res,
+        "Failed to disconnect platform",
+        ErrorCodes.EXTERNAL_API_ERROR,
+        response.data
+      );
     }
+
   } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Failed to disconnect social account",
-      details: error.response?.data?.message || error.message
-    });
+    logError('social.disconnect.handler', error);
+    return sendError(res, "Failed to disconnect social account", ErrorCodes.INTERNAL_ERROR);
   }
 };

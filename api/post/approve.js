@@ -1,5 +1,16 @@
 const axios = require("axios");
-const { setCors, getSupabase, parseBody, getWorkspaceProfileKey } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  parseBody,
+  getWorkspaceProfileKey,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -31,11 +42,14 @@ async function sendToAyrshare(post, profileKey) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
       "Profile-Key": profileKey
-    }
+    },
+    timeout: 30000
   });
 
   return response.data;
 }
+
+const VALID_ACTIONS = ['approve', 'reject', 'changes_requested'];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -46,7 +60,7 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabase();
   if (!supabase) {
-    return res.status(500).json({ error: "Database not configured" });
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   // POST - Approve, reject, or request changes
@@ -55,29 +69,42 @@ module.exports = async function handler(req, res) {
       const body = await parseBody(req);
       const { postId, workspaceId, userId, action, comment } = body;
 
-      if (!postId || !workspaceId || !userId || !action) {
-        return res.status(400).json({
-          error: "postId, workspaceId, userId, and action are required"
-        });
+      // Validate required fields
+      const validation = validateRequired(body, ['postId', 'workspaceId', 'userId', 'action']);
+      if (!validation.valid) {
+        return sendError(
+          res,
+          `Missing required fields: ${validation.missing.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
       }
 
-      const validActions = ['approve', 'reject', 'changes_requested'];
-      if (!validActions.includes(action)) {
-        return res.status(400).json({
-          error: `Invalid action. Must be one of: ${validActions.join(', ')}`
-        });
+      if (!isValidUUID(postId) || !isValidUUID(workspaceId) || !isValidUUID(userId)) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!VALID_ACTIONS.includes(action)) {
+        return sendError(
+          res,
+          `Invalid action. Must be one of: ${VALID_ACTIONS.join(', ')}`,
+          ErrorCodes.VALIDATION_ERROR
+        );
       }
 
       // Verify user is a member of the workspace
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from('workspace_members')
         .select('role')
         .eq('workspace_id', workspaceId)
         .eq('user_id', userId)
         .single();
 
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        logError('post.approve.checkMembership', membershipError, { userId, workspaceId });
+      }
+
       if (!membership) {
-        return res.status(403).json({ error: "You are not a member of this workspace" });
+        return sendError(res, "You are not a member of this workspace", ErrorCodes.FORBIDDEN);
       }
 
       // Map action to status
@@ -89,11 +116,15 @@ module.exports = async function handler(req, res) {
       const newStatus = statusMap[action];
 
       // Update or create post approval record
-      const { data: existingApproval } = await supabase
+      const { data: existingApproval, error: approvalError } = await supabase
         .from('post_approvals')
         .select('id')
         .eq('post_id', postId)
         .single();
+
+      if (approvalError && approvalError.code !== 'PGRST116') {
+        logError('post.approve.checkApproval', approvalError, { postId });
+      }
 
       const approvalData = {
         approval_status: newStatus,
@@ -103,101 +134,123 @@ module.exports = async function handler(req, res) {
       };
 
       if (existingApproval) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('post_approvals')
           .update(approvalData)
           .eq('id', existingApproval.id);
+
+        if (updateError) {
+          logError('post.approve.updateApproval', updateError, { approvalId: existingApproval.id });
+        }
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('post_approvals')
           .insert({
             post_id: postId,
             workspace_id: workspaceId,
             ...approvalData
           });
+
+        if (insertError) {
+          logError('post.approve.insertApproval', insertError, { postId, workspaceId });
+        }
       }
 
       // Update the post's approval_status
-      await supabase
+      const { error: postUpdateError } = await supabase
         .from('posts')
         .update({ approval_status: newStatus })
         .eq('id', postId);
 
+      if (postUpdateError) {
+        logError('post.approve.updatePost', postUpdateError, { postId });
+      }
+
       // If approved, send the post to Ayrshare
       if (action === 'approve') {
         // Get the post data
-        const { data: post } = await supabase
+        const { data: post, error: postError } = await supabase
           .from('posts')
           .select('*')
           .eq('id', postId)
           .single();
 
+        if (postError) {
+          logError('post.approve.getPost', postError, { postId });
+          return sendError(res, "Failed to fetch post data", ErrorCodes.DATABASE_ERROR);
+        }
+
         if (post && post.status === 'pending_approval') {
           // Get workspace profile key
           const profileKey = await getWorkspaceProfileKey(workspaceId);
 
-          if (profileKey) {
-            try {
-              const ayrshareResponse = await sendToAyrshare(post, profileKey);
+          if (!profileKey) {
+            return sendError(
+              res,
+              "No social media profile found for this workspace",
+              ErrorCodes.VALIDATION_ERROR
+            );
+          }
 
-              if (ayrshareResponse.status !== 'error') {
-                // Update post with Ayrshare ID and new status
-                const ayrPostId = ayrshareResponse.id || ayrshareResponse.postId;
-                const scheduledTime = new Date(post.scheduled_at);
-                const now = new Date();
-                const isStillFuture = scheduledTime > now;
+          try {
+            const ayrshareResponse = await sendToAyrshare(post, profileKey);
 
-                await supabase
-                  .from('posts')
-                  .update({
-                    ayr_post_id: ayrPostId,
-                    status: isStillFuture ? 'scheduled' : 'posted',
-                    posted_at: isStillFuture ? null : new Date().toISOString()
-                  })
-                  .eq('id', postId);
-              } else {
-                // Ayrshare returned error
-                await supabase
-                  .from('posts')
-                  .update({
-                    status: 'failed',
-                    last_error: ayrshareResponse.message || 'Failed to post to Ayrshare'
-                  })
-                  .eq('id', postId);
+            if (ayrshareResponse.status !== 'error') {
+              // Update post with Ayrshare ID and new status
+              const ayrPostId = ayrshareResponse.id || ayrshareResponse.postId;
+              const scheduledTime = new Date(post.scheduled_at);
+              const now = new Date();
+              const isStillFuture = scheduledTime > now;
 
-                return res.status(400).json({
-                  success: false,
-                  error: 'Failed to post to social platforms',
-                  details: ayrshareResponse
-                });
-              }
-            } catch (ayrError) {
-              // Failed to send to Ayrshare
+              await supabase
+                .from('posts')
+                .update({
+                  ayr_post_id: ayrPostId,
+                  status: isStillFuture ? 'scheduled' : 'posted',
+                  posted_at: isStillFuture ? null : new Date().toISOString()
+                })
+                .eq('id', postId);
+            } else {
+              // Ayrshare returned error
               await supabase
                 .from('posts')
                 .update({
                   status: 'failed',
-                  last_error: ayrError.response?.data?.message || ayrError.message
+                  last_error: ayrshareResponse.message || 'Failed to post to Ayrshare'
                 })
                 .eq('id', postId);
 
-              return res.status(500).json({
-                success: false,
-                error: 'Failed to send post to social platforms',
-                details: ayrError.response?.data || ayrError.message
-              });
+              return sendError(
+                res,
+                "Failed to post to social platforms",
+                ErrorCodes.EXTERNAL_API_ERROR,
+                ayrshareResponse
+              );
             }
-          } else {
-            return res.status(400).json({
-              success: false,
-              error: 'No Ayrshare profile found for this workspace'
-            });
+          } catch (ayrError) {
+            logError('post.approve.ayrshare', ayrError, { postId, workspaceId });
+
+            // Failed to send to Ayrshare
+            await supabase
+              .from('posts')
+              .update({
+                status: 'failed',
+                last_error: ayrError.response?.data?.message || ayrError.message
+              })
+              .eq('id', postId);
+
+            return sendError(
+              res,
+              "Failed to send post to social platforms",
+              ErrorCodes.EXTERNAL_API_ERROR,
+              ayrError.response?.data
+            );
           }
         }
       }
 
       // Add system comment if provided or create default one
-      const systemComment = comment || `Post ${action === 'approve' ? 'approved' : 'rejected'}`;
+      const systemComment = comment || `Post ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'marked for changes'}`;
 
       // Get user info for the comment
       const { data: userProfile } = await supabase
@@ -223,29 +276,33 @@ module.exports = async function handler(req, res) {
         'reject': 'rejected',
         'changes_requested': 'marked for changes'
       };
-      res.status(200).json({
-        success: true,
+
+      return sendSuccess(res, {
         status: newStatus,
         message: `Post ${actionMessages[action]}`
       });
 
     } catch (error) {
-      console.error("Error updating approval:", error);
-      res.status(500).json({ error: "Failed to update approval status" });
+      logError('post.approve.post.handler', error);
+      return sendError(res, "Failed to update approval status", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   // GET - Get approval status and comments for a post
   else if (req.method === "GET") {
     try {
-      const { postId, workspaceId } = req.query;
+      const { postId } = req.query;
 
       if (!postId) {
-        return res.status(400).json({ error: "postId is required" });
+        return sendError(res, "postId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (!isValidUUID(postId)) {
+        return sendError(res, "Invalid postId format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Get approval record
-      const { data: approval } = await supabase
+      const { data: approval, error: approvalError } = await supabase
         .from('post_approvals')
         .select(`
           id,
@@ -260,8 +317,12 @@ module.exports = async function handler(req, res) {
         .eq('post_id', postId)
         .single();
 
+      if (approvalError && approvalError.code !== 'PGRST116') {
+        logError('post.approve.getApproval', approvalError, { postId });
+      }
+
       // Get comments
-      const { data: comments } = await supabase
+      const { data: comments, error: commentsError } = await supabase
         .from('post_comments')
         .select(`
           id,
@@ -278,19 +339,22 @@ module.exports = async function handler(req, res) {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      res.status(200).json({
-        success: true,
+      if (commentsError) {
+        logError('post.approve.getComments', commentsError, { postId });
+      }
+
+      return sendSuccess(res, {
         approval: approval || { approval_status: 'pending' },
         comments: comments || []
       });
 
     } catch (error) {
-      console.error("Error fetching approval:", error);
-      res.status(500).json({ error: "Failed to fetch approval status" });
+      logError('post.approve.get.handler', error);
+      return sendError(res, "Failed to fetch approval status", ErrorCodes.INTERNAL_ERROR);
     }
   }
 
   else {
-    res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
   }
 };

@@ -1,4 +1,13 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  applyRateLimit
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,26 +17,39 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  // Rate limiting: 5 logout-all attempts per hour
+  const rateLimited = applyRateLimit(req, res, 'logout-all', { maxRequests: 5, windowMs: 3600000 });
+  if (rateLimited) return;
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId } = req.body;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Verify user exists
     const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
 
+    if (userError) {
+      logError('auth.logout-all.getUser', userError, { userId });
+    }
+
     if (userError || !user) {
-      return res.status(404).json({ error: "User not found" });
+      return sendError(res, "User not found", ErrorCodes.NOT_FOUND);
     }
 
     // Sign out user from all sessions by updating their auth metadata
@@ -40,16 +62,16 @@ module.exports = async function handler(req, res) {
     });
 
     if (updateError) {
-      console.error("Error invalidating sessions:", updateError);
-      return res.status(500).json({ error: "Failed to logout from all devices" });
+      logError('auth.logout-all.invalidateSessions', updateError, { userId });
+      return sendError(res, "Failed to logout from all devices", ErrorCodes.INTERNAL_ERROR);
     }
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       message: "Logged out from all devices successfully"
     });
+
   } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Failed to logout from all devices" });
+    logError('auth.logout-all.handler', error);
+    return sendError(res, "Failed to logout from all devices", ErrorCodes.INTERNAL_ERROR);
   }
 };

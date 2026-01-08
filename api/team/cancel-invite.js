@@ -1,4 +1,13 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +17,30 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { inviteId, userId } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['inviteId', 'userId']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!inviteId || !userId) {
-      return res.status(400).json({ error: "inviteId and userId are required" });
+    if (!isValidUUID(inviteId) || !isValidUUID(userId)) {
+      return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get the invitation from workspace_invitations
@@ -31,30 +51,42 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (error || !invite) {
-      return res.status(404).json({ error: 'Invitation not found' });
+      return sendError(res, "Invitation not found", ErrorCodes.NOT_FOUND);
     }
 
     // Check if user has permission to cancel (must be owner/admin of workspace)
-    const { data: membership } = await supabase
+    const { data: membership, error: membershipError } = await supabase
       .from('workspace_members')
       .select('role')
       .eq('workspace_id', invite.workspace_id)
       .eq('user_id', userId)
       .single();
 
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      logError('team.cancel-invite.checkMembership', membershipError, { userId, workspaceId: invite.workspace_id });
+    }
+
     if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      return res.status(403).json({ error: 'Not authorized to cancel this invitation' });
+      return sendError(res, "Not authorized to cancel this invitation", ErrorCodes.FORBIDDEN);
     }
 
     if (invite.status !== 'pending') {
-      return res.status(400).json({ error: 'Only pending invitations can be cancelled' });
+      return sendError(res, "Only pending invitations can be cancelled", ErrorCodes.VALIDATION_ERROR);
     }
 
-    await supabase.from('workspace_invitations').update({ status: 'cancelled' }).eq('id', inviteId);
+    const { error: updateError } = await supabase
+      .from('workspace_invitations')
+      .update({ status: 'cancelled' })
+      .eq('id', inviteId);
 
-    res.status(200).json({ success: true });
+    if (updateError) {
+      logError('team.cancel-invite.update', updateError, { inviteId });
+      return sendError(res, "Failed to cancel invitation", ErrorCodes.DATABASE_ERROR);
+    }
+
+    return sendSuccess(res, { message: "Invitation cancelled successfully" });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to cancel invitation' });
+    logError('team.cancel-invite.handler', error);
+    return sendError(res, "Failed to cancel invitation", ErrorCodes.INTERNAL_ERROR);
   }
 };

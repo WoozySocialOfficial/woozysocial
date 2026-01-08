@@ -1,5 +1,14 @@
 const { Resend } = require("resend");
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  isServiceConfigured
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -9,28 +18,40 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId, postId, postCaption, scheduledAt, platforms } = req.body;
-    const supabase = getSupabase();
-    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!workspaceId) {
-      return res.status(400).json({ error: "workspaceId is required" });
+      return sendError(res, "workspaceId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (postId && !isValidUUID(postId)) {
+      return sendError(res, "Invalid postId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get workspace details
-    const { data: workspace } = await supabase
+    const { data: workspace, error: workspaceError } = await supabase
       .from('workspaces')
       .select('name')
       .eq('id', workspaceId)
       .single();
+
+    if (workspaceError && workspaceError.code !== 'PGRST116') {
+      logError('notifications.send-approval.getWorkspace', workspaceError, { workspaceId });
+    }
 
     // Get all view_only (client) members of the workspace
     const { data: clients, error: clientsError } = await supabase
@@ -43,15 +64,16 @@ module.exports = async function handler(req, res) {
       .eq('role', 'view_only');
 
     if (clientsError) {
-      console.error('Error fetching clients:', clientsError);
-      return res.status(500).json({ error: "Failed to fetch client members" });
+      logError('notifications.send-approval.getClients', clientsError, { workspaceId });
+      return sendError(res, "Failed to fetch client members", ErrorCodes.DATABASE_ERROR);
     }
 
     if (!clients || clients.length === 0) {
       // No clients to notify
-      return res.status(200).json({ success: true, notified: 0, message: "No clients to notify" });
+      return sendSuccess(res, { notified: 0, message: "No clients to notify" });
     }
 
+    const resend = isServiceConfigured('resend') ? new Resend(process.env.RESEND_API_KEY) : null;
     const appUrl = process.env.APP_URL || 'https://woozysocial.com';
     const workspaceName = workspace?.name || 'your workspace';
     const platformList = platforms?.join(', ') || 'multiple platforms';
@@ -127,14 +149,14 @@ module.exports = async function handler(req, res) {
           });
           notified++;
         } catch (emailError) {
-          console.error(`Failed to send email to ${clientEmail}:`, emailError);
+          logError('notifications.send-approval.sendEmail', emailError, { email: '[REDACTED]' });
         }
       }
     }
 
     // Store notifications in database (for in-app notifications)
     for (const client of clients) {
-      await supabase.from('notifications').insert({
+      const { error: notifyError } = await supabase.from('notifications').insert({
         user_id: client.user_id,
         workspace_id: workspaceId,
         post_id: postId,
@@ -142,19 +164,21 @@ module.exports = async function handler(req, res) {
         title: 'New Post Awaiting Approval',
         message: `A new post for ${platformList} needs your approval`,
         read: false
-      }).catch(err => {
-        // Table might not exist yet, that's ok
-        console.log('Could not store notification:', err.message);
       });
+
+      if (notifyError) {
+        // Table might not exist yet, that's ok - just log it
+        logError('notifications.send-approval.storeNotification', notifyError, { userId: client.user_id });
+      }
     }
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       notified,
       message: `Notified ${notified} client(s)`
     });
+
   } catch (error) {
-    console.error("Error sending notifications:", error.message);
-    res.status(500).json({ error: "Failed to send notifications", details: error.message });
+    logError('notifications.send-approval.handler', error);
+    return sendError(res, "Failed to send notifications", ErrorCodes.INTERNAL_ERROR);
   }
 };

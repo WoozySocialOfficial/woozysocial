@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +16,28 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId, userId } = req.query;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!workspaceId || !userId) {
-      return res.status(400).json({ error: "workspaceId and userId are required" });
+      return sendError(res, "workspaceId and userId are required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Check if user has access to this workspace
@@ -31,8 +48,12 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId)
       .single();
 
-    if (membershipError || !membership) {
-      return res.status(403).json({ error: "You don't have access to this workspace" });
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      logError('workspaces.members.checkMembership', membershipError, { userId, workspaceId });
+    }
+
+    if (!membership) {
+      return sendError(res, "You don't have access to this workspace", ErrorCodes.FORBIDDEN);
     }
 
     // Get all workspace members (including owner)
@@ -43,8 +64,8 @@ module.exports = async function handler(req, res) {
       .order('created_at', { ascending: true });
 
     if (membersError) {
-      console.error('Members query error:', membersError);
-      return res.status(500).json({ error: 'Failed to fetch members', details: membersError.message });
+      logError('workspaces.members.fetchMembers', membersError, { workspaceId });
+      return sendError(res, "Failed to fetch members", ErrorCodes.DATABASE_ERROR);
     }
 
     // Get user profiles for all members
@@ -83,9 +104,10 @@ module.exports = async function handler(req, res) {
       };
     });
 
-    res.status(200).json({ success: true, members: transformedMembers });
+    return sendSuccess(res, { members: transformedMembers });
+
   } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Failed to fetch workspace members", details: error.message });
+    logError('workspaces.members.handler', error);
+    return sendError(res, "Failed to fetch workspace members", ErrorCodes.INTERNAL_ERROR);
   }
 };

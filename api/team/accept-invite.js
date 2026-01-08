@@ -1,4 +1,13 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  validateRequired,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,21 +17,33 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { token, userId } = req.body;
-    const supabase = getSupabase();
 
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
+    // Validate required fields
+    const validation = validateRequired(req.body, ['token', 'userId']);
+    if (!validation.valid) {
+      return sendError(
+        res,
+        `Missing required fields: ${validation.missing.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
-    if (!token || !userId) {
-      return res.status(400).json({ error: "Token and userId are required" });
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
+    // Fetch invitation
     const { data: invitation, error: fetchError } = await supabase
       .from('team_invitations')
       .select('*')
@@ -30,27 +51,43 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (fetchError || !invitation) {
-      return res.status(404).json({ error: 'Invitation not found' });
+      return sendError(res, "Invitation not found", ErrorCodes.NOT_FOUND);
     }
 
     if (invitation.status !== 'pending') {
-      return res.status(400).json({ error: `This invitation has already been ${invitation.status}` });
+      return sendError(
+        res,
+        `This invitation has already been ${invitation.status}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
+    // Check expiration
     const now = new Date();
     const expiresAt = new Date(invitation.expires_at);
     if (now > expiresAt) {
       await supabase.from('team_invitations').update({ status: 'expired' }).eq('id', invitation.id);
-      return res.status(400).json({ error: 'This invitation has expired' });
+      return sendError(res, "This invitation has expired", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const { data: userData } = await supabase.auth.admin.getUserById(userId);
+    // Verify user email matches invitation
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError) {
+      logError('team.accept-invite.getUser', userError, { userId });
+      return sendError(res, "Failed to verify user", ErrorCodes.INTERNAL_ERROR);
+    }
+
     const userEmail = userData?.user?.email?.toLowerCase();
 
     if (!userEmail || userEmail !== invitation.email.toLowerCase()) {
-      return res.status(403).json({ error: 'This invitation was sent to a different email address' });
+      return sendError(
+        res,
+        "This invitation was sent to a different email address",
+        ErrorCodes.FORBIDDEN
+      );
     }
 
+    // Add user to team
     const { error: memberError } = await supabase
       .from('team_members')
       .insert({
@@ -61,14 +98,27 @@ module.exports = async function handler(req, res) {
       });
 
     if (memberError) {
-      return res.status(500).json({ error: 'Failed to add you to the team' });
+      logError('team.accept-invite.addMember', memberError, { userId, ownerId: invitation.owner_id });
+      return sendError(res, "Failed to add you to the team", ErrorCodes.DATABASE_ERROR);
     }
 
-    await supabase.from('team_invitations').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invitation.id);
+    // Update invitation status
+    const { error: updateError } = await supabase
+      .from('team_invitations')
+      .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+      .eq('id', invitation.id);
 
-    res.status(200).json({ message: 'Successfully joined the team!', role: invitation.role });
+    if (updateError) {
+      logError('team.accept-invite.updateStatus', updateError, { invitationId: invitation.id });
+    }
+
+    return sendSuccess(res, {
+      message: "Successfully joined the team!",
+      role: invitation.role
+    });
+
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: "Failed to accept invitation" });
+    logError('team.accept-invite.handler', error);
+    return sendError(res, "Failed to accept invitation", ErrorCodes.INTERNAL_ERROR);
   }
 };

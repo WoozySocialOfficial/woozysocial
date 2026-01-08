@@ -1,5 +1,18 @@
 const { Resend } = require("resend");
-const { setCors, getSupabase } = require("../../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID,
+  isValidEmail,
+  applyRateLimit,
+  isServiceConfigured
+} = require("../../_utils");
+
+const VALID_ROLES = ['editor', 'admin', 'view_only'];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -9,21 +22,47 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  // Rate limiting: 20 invites per hour per user
+  const rateLimited = applyRateLimit(req, res, 'workspace-invite', { maxRequests: 20, windowMs: 3600000 });
+  if (rateLimited) return;
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { workspaceId } = req.query;
     const { email, role, userId } = req.body;
-    const supabase = getSupabase();
-    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!email || !userId || !workspaceId) {
-      return res.status(400).json({ error: "Email, userId, and workspaceId are required" });
+      return sendError(res, "Email, userId, and workspaceId are required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(workspaceId)) {
+      return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidEmail(email)) {
+      return sendError(res, "Invalid email format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Validate role
+    const assignedRole = role || 'editor';
+    if (!VALID_ROLES.includes(assignedRole)) {
+      return sendError(
+        res,
+        `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`,
+        ErrorCodes.VALIDATION_ERROR
+      );
     }
 
     // Check if user has permission to invite (must be owner or admin of workspace)
@@ -34,12 +73,16 @@ module.exports = async function handler(req, res) {
       .eq('user_id', userId)
       .single();
 
-    if (membershipError || !membership) {
-      return res.status(403).json({ error: "You don't have access to this workspace" });
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      logError('workspaces.invite.checkMembership', membershipError, { userId, workspaceId });
+    }
+
+    if (!membership) {
+      return sendError(res, "You don't have access to this workspace", ErrorCodes.FORBIDDEN);
     }
 
     if (!membership.can_manage_team && membership.role !== 'owner') {
-      return res.status(403).json({ error: "You don't have permission to invite members" });
+      return sendError(res, "You don't have permission to invite members", ErrorCodes.FORBIDDEN);
     }
 
     // Check if user already exists and is a member
@@ -58,7 +101,7 @@ module.exports = async function handler(req, res) {
         .single();
 
       if (existingMember) {
-        return res.status(400).json({ error: 'This user is already a workspace member' });
+        return sendError(res, "This user is already a workspace member", ErrorCodes.VALIDATION_ERROR);
       }
     }
 
@@ -72,7 +115,7 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (existingInvite) {
-      return res.status(400).json({ error: 'An invitation has already been sent to this email' });
+      return sendError(res, "An invitation has already been sent to this email", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Create the invitation (invite_token auto-generated as UUID by database)
@@ -81,7 +124,7 @@ module.exports = async function handler(req, res) {
       .insert({
         workspace_id: workspaceId,
         email: email.toLowerCase(),
-        role: role || 'editor',
+        role: assignedRole,
         invited_by: userId,
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
@@ -90,8 +133,8 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (inviteError) {
-      console.error('Invitation error:', inviteError);
-      return res.status(500).json({ error: 'Failed to create invitation', details: inviteError.message });
+      logError('workspaces.invite.createInvitation', inviteError, { workspaceId, email: '[REDACTED]' });
+      return sendError(res, "Failed to create invitation", ErrorCodes.DATABASE_ERROR);
     }
 
     // Get workspace name for the email
@@ -102,7 +145,9 @@ module.exports = async function handler(req, res) {
       .single();
 
     // Send email if Resend is configured
-    if (resend) {
+    if (isServiceConfigured('resend')) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
       const { data: inviterData } = await supabase
         .from('user_profiles')
         .select('full_name, email')
@@ -142,7 +187,7 @@ module.exports = async function handler(req, res) {
                 <strong>${inviterName}</strong> has invited you to join <strong>${workspaceName}</strong> on Woozy Social.
               </p>
               <p style="margin: 0 0 30px 0; font-size: 16px; color: #114C5A;">
-                Role: <strong>${role || 'editor'}</strong>
+                Role: <strong>${assignedRole}</strong>
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
                 <tr>
@@ -174,14 +219,15 @@ module.exports = async function handler(req, res) {
 </html>`
         });
       } catch (emailError) {
-        console.error('Email error:', emailError);
+        logError('workspaces.invite.sendEmail', emailError, { workspaceId });
         // Don't fail the request if email fails
       }
     }
 
-    res.status(200).json({ success: true, invitation });
+    return sendSuccess(res, { invitation });
+
   } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Failed to send invitation", details: error.message });
+    logError('workspaces.invite.handler', error);
+    return sendError(res, "Failed to send invitation", ErrorCodes.INTERNAL_ERROR);
   }
 };

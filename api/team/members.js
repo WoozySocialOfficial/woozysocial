@@ -1,4 +1,12 @@
-const { setCors, getSupabase } = require("../_utils");
+const {
+  setCors,
+  getSupabase,
+  ErrorCodes,
+  sendSuccess,
+  sendError,
+  logError,
+  isValidUUID
+} = require("../_utils");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -8,19 +16,24 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(res, "Method not allowed", ErrorCodes.METHOD_NOT_ALLOWED);
+  }
+
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    return sendError(res, "Database service is not available", ErrorCodes.CONFIG_ERROR);
   }
 
   try {
     const { userId } = req.query;
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      return res.status(500).json({ error: "Database not configured" });
-    }
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    if (!isValidUUID(userId)) {
+      return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
     const { data: members, error } = await supabase
@@ -30,17 +43,22 @@ module.exports = async function handler(req, res) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return res.status(500).json({ error: 'Failed to fetch team members' });
+      logError('team.members.fetch', error, { userId });
+      return sendError(res, "Failed to fetch team members", ErrorCodes.DATABASE_ERROR);
     }
 
     const memberIds = (members || []).map((m) => m.member_id);
     let profilesById = {};
 
     if (memberIds.length > 0) {
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
         .select('id, email, full_name')
         .in('id', memberIds);
+
+      if (profileError) {
+        logError('team.members.profiles', profileError, { userId });
+      }
 
       profilesById = (profiles || []).reduce((acc, p) => {
         acc[p.id] = p;
@@ -53,9 +71,9 @@ module.exports = async function handler(req, res) {
       profile: profilesById[m.member_id] || null,
     }));
 
-    res.status(200).json({ data: enrichedMembers });
+    return sendSuccess(res, { members: enrichedMembers });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to fetch team members' });
+    logError('team.members.handler', error);
+    return sendError(res, "Failed to fetch team members", ErrorCodes.INTERNAL_ERROR);
   }
 };
