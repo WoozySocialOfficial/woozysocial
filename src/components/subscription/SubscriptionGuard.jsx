@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useNavigate } from 'react-router-dom';
 import './SubscriptionGuard.css';
 
@@ -9,15 +10,30 @@ export const SubscriptionGuard = ({
   showBanner = false,
   message = "Subscribe to unlock this feature"
 }) => {
-  const { hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
+  const { hasActiveProfile, subscriptionStatus, isWhitelisted, profile } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
 
   const handleUpgradeClick = () => {
     navigate('/pricing');
   };
 
-  // If user has active profile, show children without restrictions
-  if (hasActiveProfile) {
+  // Check if workspace has an active profile key (multi-workspace support)
+  const workspaceHasProfile = !!activeWorkspace?.ayr_profile_key;
+
+  // User has access if:
+  // 1. User profile has an active subscription, OR
+  // 2. User is whitelisted (dev/test accounts), OR
+  // 3. User has active subscription status, OR
+  // 4. Active workspace has an Ayrshare profile key
+  const hasAccess = hasActiveProfile ||
+    isWhitelisted ||
+    profile?.is_whitelisted ||
+    subscriptionStatus === 'active' ||
+    workspaceHasProfile;
+
+  // If user has access, show children without restrictions
+  if (hasAccess) {
     return <>{children}</>;
   }
 

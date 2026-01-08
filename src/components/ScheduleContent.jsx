@@ -26,8 +26,17 @@ const APPROVAL_STATUS = {
 };
 
 export const ScheduleContent = () => {
-  const { user, profile, hasActiveProfile } = useAuth();
+  const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
   const { activeWorkspace, workspaceMembership } = useWorkspace();
+
+  // Check if user has access (multi-workspace support)
+  // User has access if: active profile, whitelisted, active subscription, or workspace has profile
+  const workspaceHasProfile = !!activeWorkspace?.ayr_profile_key;
+  const canPost = hasActiveProfile ||
+    isWhitelisted ||
+    profile?.is_whitelisted ||
+    subscriptionStatus === 'active' ||
+    workspaceHasProfile;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("week"); // week, month, schedule
   const [posts, setPosts] = useState([]);
@@ -443,7 +452,7 @@ export const ScheduleContent = () => {
   return (
     <div className="schedule-container">
       {/* Subscription Banner */}
-      {!hasActiveProfile && (
+      {!canPost && (
         <SubscriptionGuard
           showBanner={true}
           showOverlay={false}

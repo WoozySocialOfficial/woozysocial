@@ -14,8 +14,18 @@ import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 
 export const ComposeContent = () => {
-  const { user, profile, hasActiveProfile } = useAuth();
+  const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
   const { activeWorkspace } = useWorkspace();
+
+  // Check if user has access (multi-workspace support)
+  // User has access if: active profile, whitelisted, active subscription, or workspace has profile
+  const workspaceHasProfile = !!activeWorkspace?.ayr_profile_key;
+  const canPost = hasActiveProfile ||
+    isWhitelisted ||
+    profile?.is_whitelisted ||
+    subscriptionStatus === 'active' ||
+    workspaceHasProfile;
+
   const [post, setPost] = useState({ text: "", media: null });
   const [networks, setNetworks] = useState({
     threads: false,
@@ -1440,7 +1450,7 @@ export const ComposeContent = () => {
   return (
     <div className="compose-content">
       {/* Subscription Banner */}
-      {!hasActiveProfile && (
+      {!canPost && (
         <SubscriptionGuard
           showBanner={true}
           showOverlay={false}
@@ -1523,16 +1533,16 @@ export const ComposeContent = () => {
                 <button
                   className="btn-schedule"
                   onClick={onOpen}
-                  disabled={!hasActiveProfile}
-                  style={{ opacity: !hasActiveProfile ? 0.5 : 1, cursor: !hasActiveProfile ? 'not-allowed' : 'pointer' }}
+                  disabled={!canPost}
+                  style={{ opacity: !canPost ? 0.5 : 1, cursor: !canPost ? 'not-allowed' : 'pointer' }}
                 >
                   Schedule Post
                 </button>
                 <button
                   className="btn-post"
                   onClick={handleSubmit}
-                  disabled={isLoading || !hasActiveProfile}
-                  style={{ opacity: (!hasActiveProfile || isLoading) ? 0.5 : 1, cursor: (!hasActiveProfile || isLoading) ? 'not-allowed' : 'pointer' }}
+                  disabled={isLoading || !canPost}
+                  style={{ opacity: (!canPost || isLoading) ? 0.5 : 1, cursor: (!canPost || isLoading) ? 'not-allowed' : 'pointer' }}
                 >
                   {isLoading ? "Posting..." : "Post Now"}
                 </button>
