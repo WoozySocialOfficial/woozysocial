@@ -443,26 +443,25 @@ export const ComposeContent = () => {
     setIsLoading(true);
     onClose();
 
-    const postData = {
-      text: post.text,
-      userId: user.id,
-      workspaceId: activeWorkspace.id,
-      networks: JSON.stringify(networks),
-      scheduledDate: tempScheduledDate.toISOString()
-    };
+    const formData = new FormData();
+    formData.append("text", post.text);
+    formData.append("userId", user.id);
+    formData.append("workspaceId", activeWorkspace.id);
 
     // Handle media: either a new file upload or existing URL from draft
-    if (mediaPreview && typeof mediaPreview === 'string' && mediaPreview.startsWith('http')) {
-      postData.mediaUrl = mediaPreview;
+    if (post.media) {
+      formData.append("media", post.media);
+    } else if (mediaPreview && typeof mediaPreview === 'string' && mediaPreview.startsWith('http')) {
+      formData.append("mediaUrl", mediaPreview);
     }
+
+    formData.append("networks", JSON.stringify(networks));
+    formData.append("scheduledDate", tempScheduledDate.toISOString());
 
     try {
       const response = await fetch(`${baseURL}/api/post`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(postData)
+        body: formData
       });
 
       if (response.ok) {
@@ -1194,17 +1193,21 @@ export const ComposeContent = () => {
 
     setIsLoading(true);
 
-    const postData = {
-      text: post.text,
-      userId: user.id,
-      workspaceId: activeWorkspace.id,
-      networks: JSON.stringify(networks)
-    };
+    const formData = new FormData();
+    formData.append("text", post.text);
+    formData.append("userId", user.id);
+    formData.append("workspaceId", activeWorkspace.id);
 
-    // Handle media: existing URL from draft
-    if (mediaPreview && typeof mediaPreview === 'string' && mediaPreview.startsWith('http')) {
-      postData.mediaUrl = mediaPreview;
+    // Handle media: either a new file upload or existing URL from draft
+    if (post.media) {
+      // New file upload
+      formData.append("media", post.media);
+    } else if (mediaPreview && typeof mediaPreview === 'string' && mediaPreview.startsWith('http')) {
+      // Existing media URL from draft - send as mediaUrl
+      formData.append("mediaUrl", mediaPreview);
     }
+
+    formData.append("networks", JSON.stringify(networks));
 
     if (scheduledDate) {
       // Ensure the scheduled date is in the future
@@ -1228,16 +1231,13 @@ export const ComposeContent = () => {
       console.log("  Scheduled time:", scheduledTime.toISOString());
       console.log("  Time difference (minutes):", (scheduledTime - now) / 1000 / 60);
 
-      postData.scheduledDate = scheduledTime.toISOString();
+      formData.append("scheduledDate", scheduledTime.toISOString());
     }
 
     try {
       const response = await fetch(`${baseURL}/api/post`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(postData)
+        body: formData
       });
 
       if (response.ok) {

@@ -1,10 +1,10 @@
 .client-layout {
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background-color: #f1f6f4;
 }
 
 .client-main-content {
-  margin-left: 240px;
+  margin-left: 275px;
   margin-top: 70px;
   padding: 30px;
   min-height: calc(100vh - 70px);

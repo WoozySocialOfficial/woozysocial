@@ -13,15 +13,15 @@
 }
 
 .header-content h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #114C5A;
-  margin: 0 0 8px 0;
+  font-size: 40px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 4px 0;
 }
 
 .header-content p {
   font-size: 16px;
-  color: #6b7280;
+  color: #666;
   margin: 0;
 }
 
@@ -33,34 +33,36 @@
 .filter-btn {
   padding: 10px 18px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: #000000;
+  opacity: 0.7;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .filter-btn:hover {
-  border-color: #114C5A;
-  color: #114C5A;
+  border-color: #FFC801;
+  color: #FFC801;
+  opacity: 1;
 }
 
 .filter-btn.active {
-  background: #114C5A;
-  border-color: #114C5A;
-  color: #ffffff;
+  border-color: #FFC801;
+  color: #FFC801;
+  opacity: 1;
 }
 
 .loading-state,
 .empty-state {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
   padding: 60px 20px;
   text-align: center;
-  color: #6b7280;
+  color: #666;
 }
 
 .empty-icon {
@@ -78,8 +80,8 @@
 
 .history-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
   overflow: hidden;
   transition: all 0.2s ease;
 }
@@ -91,7 +93,7 @@
 .card-media {
   width: 100%;
   height: 200px;
-  background: #f3f4f6;
+  background: #f8f9fa;
 }
 
 .card-media img {
@@ -110,26 +112,27 @@
 
 .status-badge {
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 .status-badge.approved {
-  background: #d1fae5;
-  color: #065f46;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .status-badge.rejected {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #ffebee;
+  color: #c62828;
 }
 
 .card-caption {
   font-size: 14px;
-  color: #374151;
-  line-height: 1.6;
+  color: #000000;
+  line-height: 1.4;
   margin-bottom: 16px;
 }
 
@@ -156,11 +159,11 @@
 }
 
 .meta-label {
-  color: #9ca3af;
+  color: #999;
 }
 
 .meta-value {
-  color: #6b7280;
+  color: #666;
 }
 
 @media (max-width: 640px) {
@@ -170,5 +173,9 @@
 
   .approved-header {
     flex-direction: column;
+  }
+
+  .header-content h1 {
+    font-size: 28px;
   }
 }

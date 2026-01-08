@@ -8,10 +8,10 @@ export const ClientSidebar = () => {
   const { activeWorkspace } = useWorkspace();
 
   const menuItems = [
-    { name: "Dashboard", path: "/client/dashboard", icon: "📊" },
-    { name: "Pending Approvals", path: "/client/approvals", icon: "⏳" },
-    { name: "Approved Posts", path: "/client/approved", icon: "✅" },
-    { name: "Calendar", path: "/client/calendar", icon: "📅" }
+    { name: "Dashboard", path: "/client/dashboard" },
+    { name: "Pending Approvals", path: "/client/approvals" },
+    { name: "Approved Posts", path: "/client/approved" },
+    { name: "Calendar", path: "/client/calendar" }
   ];
 
   return (
@@ -22,9 +22,16 @@ export const ClientSidebar = () => {
         </div>
 
         <div className="client-workspace-info">
-          <div className="client-workspace-label">CLIENT PORTAL</div>
           {activeWorkspace && (
-            <div className="client-workspace-name">{activeWorkspace.name}</div>
+            <>
+              <div className="client-workspace-avatar">
+                {activeWorkspace.name?.charAt(0).toUpperCase() || "W"}
+              </div>
+              <div className="client-workspace-details">
+                <div className="client-workspace-name">{activeWorkspace.name}</div>
+                <div className="client-workspace-role">Client Portal</div>
+              </div>
+            </>
           )}
         </div>
 
@@ -35,17 +42,9 @@ export const ClientSidebar = () => {
               to={item.path}
               className={`client-menu-item ${location.pathname === item.path ? "active" : ""}`}
             >
-              <span className="client-menu-icon">{item.icon}</span>
-              <span className="client-menu-text">{item.name}</span>
+              <div className="client-menu-item-text">{item.name}</div>
             </Link>
           ))}
-        </div>
-
-        <div className="client-sidebar-footer">
-          <div className="client-role-badge">
-            <span className="role-icon">👤</span>
-            <span className="role-text">Client Access</span>
-          </div>
         </div>
       </div>
     </div>

@@ -533,6 +533,248 @@
   background: #9ca3af;
 }
 
+/* Header Actions */
+.inbox-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.refresh-btn {
+  padding: 10px 20px;
+  background: #114C5A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #0d3a47;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error Banner */
+.inbox-error-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #991b1b;
+  font-size: 14px;
+}
+
+.inbox-error-banner button {
+  background: none;
+  border: none;
+  color: #991b1b;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Loading States */
+.loading-conversations,
+.loading-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #114C5A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Empty Conversations Hint */
+.empty-hint {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+/* Avatar Styles */
+.avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  font-size: 18px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.thread-avatar img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.thread-avatar span {
+  font-size: 22px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* You prefix in conversation preview */
+.you-prefix {
+  color: #114C5A;
+  font-weight: 600;
+}
+
+/* Username in thread header */
+.username {
+  color: #9ca3af;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* Reply warning */
+.reply-warning {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.message-thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+/* Reply disabled state */
+.reply-disabled {
+  background: #fef3c7;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.reply-disabled p {
+  margin: 0;
+  color: #92400e;
+  font-size: 14px;
+}
+
+/* Reply hint */
+.reply-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Unread badge in platform filter */
+.unread-badge {
+  background: #ef4444;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+/* Unread indicator as count */
+.unread-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-width: 20px;
+  height: 20px;
+  background: #FFC801;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #114C5A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* Message media */
+.message-media {
+  margin-top: 8px;
+}
+
+.message-media img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Empty state for no workspace */
+.inbox-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.inbox-empty-state h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin: 16px 0 8px 0;
+}
+
+.inbox-empty-state p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .inbox-content {
@@ -549,6 +791,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+
+  .inbox-header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .inbox-content {
