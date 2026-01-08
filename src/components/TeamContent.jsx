@@ -176,7 +176,7 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/team/remove-member`, {
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/remove-member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,14 +204,14 @@ export const TeamContent = () => {
 
   const handleUpdateRole = async (memberId, newRole) => {
     try {
-      const response = await fetch(`${baseURL}/api/team/update-role`, {
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           memberId,
-          newRole,
+          role: newRole,
           userId: user.id,
         }),
       });
@@ -297,7 +297,7 @@ export const TeamContent = () => {
                       <select
                         className="role-dropdown"
                         value={member.role}
-                        onChange={(e) => handleUpdateRole(member.id, e.target.value)}
+                        onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
                       >
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>
@@ -305,7 +305,7 @@ export const TeamContent = () => {
                       </select>
                       <button
                         className="remove-button"
-                        onClick={() => handleRemoveMember(member.id)}
+                        onClick={() => handleRemoveMember(member.user_id)}
                       >
                         Remove
                       </button>

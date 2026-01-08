@@ -37,7 +37,6 @@ const createAyrshareProfile = async (title) => {
       }
     );
 
-    console.log("Ayrshare profile created:", response.data);
     return response.data.profileKey;
   } catch (error) {
     console.error("Error creating Ayrshare profile:", error.response?.data || error.message);
@@ -93,13 +92,11 @@ module.exports = async function handler(req, res) {
 
     // If no profile key exists, create one automatically (Business Plan feature)
     if (!profileKey && process.env.AYRSHARE_API_KEY) {
-      console.log("No profile key found for workspace, creating one...");
       profileKey = await createAyrshareProfile(workspace.name || 'My Business');
 
       if (profileKey) {
         // Save the new profile key to the workspace
         await updateWorkspaceProfileKey(workspaceId, profileKey);
-        console.log("Profile key saved to workspace:", profileKey);
       }
     }
 
@@ -132,8 +129,6 @@ module.exports = async function handler(req, res) {
       verify: true,
       logout: true
     };
-
-    console.log("Generating JWT for workspace:", workspaceId, "with profileKey:", profileKey);
 
     const response = await axios.post(
       `${BASE_AYRSHARE}/profiles/generateJWT`,

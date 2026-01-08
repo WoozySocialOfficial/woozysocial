@@ -26,7 +26,6 @@ const createAyrshareProfile = async (title) => {
       }
     );
 
-    console.log("Ayrshare profile created:", response.data);
     return {
       profileKey: response.data.profileKey,
       refId: response.data.refId || null

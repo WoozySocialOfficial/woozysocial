@@ -26,7 +26,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (!profileKey) {
-      console.log("No profile key found for workspaceId:", workspaceId, "userId:", userId);
       return res.status(200).json({ accounts: [], activeSocialAccounts: [] });
     }
 
@@ -40,14 +39,11 @@ module.exports = async function handler(req, res) {
 
     const { displayNames } = response.data;
 
-    console.log("Ayrshare displayNames for profileKey", profileKey, ":", displayNames);
-
     if (!displayNames || !Array.isArray(displayNames)) {
       return res.status(200).json({ accounts: [], activeSocialAccounts: [] });
     }
 
     const platformNames = displayNames.map((account) => account.platform);
-    console.log("Connected platforms:", platformNames);
 
     // Return both formats for compatibility with different components
     res.status(200).json({

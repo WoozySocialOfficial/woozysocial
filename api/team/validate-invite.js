@@ -33,6 +33,22 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Invitation not found' });
     }
 
+    // Check if invitation has expired
+    if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
+      // Update status to expired
+      await supabase
+        .from('team_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitation.id);
+
+      return res.status(400).json({ error: 'This invitation has expired' });
+    }
+
+    // Check if invitation is still pending
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ error: `This invitation has already been ${invitation.status}` });
+    }
+
     res.status(200).json({ data: invitation });
   } catch (error) {
     console.error('Error:', error);

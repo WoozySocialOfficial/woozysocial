@@ -23,6 +23,7 @@ export const Sidebar = () => {
     { name: "Engagement", path: "/engagement" },
     { name: "Social Inbox", path: "/social-inbox" },
     { name: "Team", path: "/team", requiresSubscriptionOrTeam: true },
+    { name: "Approvals", path: "/approvals", requiresSubscriptionOrTeam: true },
     { name: "Settings", path: "/settings" }
   ];
 

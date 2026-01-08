@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const validActions = ['approve', 'reject'];
+      const validActions = ['approve', 'reject', 'changes_requested'];
       if (!validActions.includes(action)) {
         return res.status(400).json({
           error: `Invalid action. Must be one of: ${validActions.join(', ')}`
@@ -46,7 +46,8 @@ module.exports = async function handler(req, res) {
       // Map action to status
       const statusMap = {
         'approve': 'approved',
-        'reject': 'rejected'
+        'reject': 'rejected',
+        'changes_requested': 'changes_requested'
       };
       const newStatus = statusMap[action];
 
@@ -107,10 +108,15 @@ module.exports = async function handler(req, res) {
           is_system: true
         });
 
+      const actionMessages = {
+        'approve': 'approved',
+        'reject': 'rejected',
+        'changes_requested': 'marked for changes'
+      };
       res.status(200).json({
         success: true,
         status: newStatus,
-        message: `Post ${action === 'approve' ? 'approved' : 'rejected'}`
+        message: `Post ${actionMessages[action]}`
       });
 
     } catch (error) {

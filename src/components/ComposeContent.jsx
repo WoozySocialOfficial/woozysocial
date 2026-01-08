@@ -1219,7 +1219,7 @@ export const ComposeContent = () => {
           duration: 3000,
           isClosable: true
         });
-        setIsPosting(false);
+        setIsLoading(false);
         return;
       }
 

@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
       .insert({
         workspace_id: workspaceId,
         email: email.toLowerCase(),
-        role: role || 'member',
+        role: role || 'editor',
         invited_by: userId,
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
@@ -123,7 +123,7 @@ module.exports = async function handler(req, res) {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>You've been invited!</h2>
               <p>${inviterName} has invited you to join <strong>${workspaceName}</strong> on Woozy Social.</p>
-              <p>Role: <strong>${role || 'member'}</strong></p>
+              <p>Role: <strong>${role || 'editor'}</strong></p>
               <p style="margin: 30px 0;">
                 <a href="${inviteLink}" style="background-color: #FFC801; color: #114C5A; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                   Accept Invitation
@@ -133,7 +133,6 @@ module.exports = async function handler(req, res) {
             </div>
           `
         });
-        console.log('Invitation email sent to:', email);
       } catch (emailError) {
         console.error('Email error:', emailError);
         // Don't fail the request if email fails

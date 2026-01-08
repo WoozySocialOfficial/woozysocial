@@ -5,10 +5,11 @@ import { supabase } from "../utils/supabaseClient";
 import "./SettingsContent.css";
 
 export const SettingsContent = () => {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const [settings, setSettings] = useState({
@@ -152,9 +153,29 @@ export const SettingsContent = () => {
     }
   };
 
-  const handleChangePassword = () => {
-    console.log("Change password clicked");
-    // TODO: Implement change password functionality
+  const handleChangePassword = async () => {
+    const userEmail = user?.email || settings.email;
+    if (!userEmail) {
+      setSaveMessage("Error: No email address found");
+      return;
+    }
+
+    setPasswordResetLoading(true);
+    setSaveMessage("");
+
+    try {
+      const { error } = await resetPassword(userEmail);
+      if (error) {
+        setSaveMessage("Error sending reset link: " + error.message);
+      } else {
+        setSaveMessage("Password reset link sent to " + userEmail);
+        setTimeout(() => setSaveMessage(""), 5000);
+      }
+    } catch (error) {
+      setSaveMessage("Error sending reset link");
+    } finally {
+      setPasswordResetLoading(false);
+    }
   };
 
   const handleToggle2FA = () => {
@@ -396,8 +417,12 @@ export const SettingsContent = () => {
                 <h3 className="security-item-title">Change Password</h3>
                 <p className="security-item-text">Update your password regularly</p>
               </div>
-              <button className="security-button" onClick={handleChangePassword}>
-                Change Password
+              <button
+                className="security-button"
+                onClick={handleChangePassword}
+                disabled={passwordResetLoading}
+              >
+                {passwordResetLoading ? "Sending..." : "Change Password"}
               </button>
             </div>
             <div className="security-item">

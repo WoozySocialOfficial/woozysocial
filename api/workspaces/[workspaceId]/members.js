@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     // Get all workspace members (exclude owner from display, they're shown separately)
     const { data: members, error: membersError } = await supabase
       .from('workspace_members')
-      .select('id, user_id, role, joined_at, created_at, can_manage_team, can_manage_settings, can_delete_posts')
+      .select('id, user_id, role, created_at, can_manage_team, can_manage_settings, can_delete_posts')
       .eq('workspace_id', workspaceId)
       .neq('role', 'owner')
       .order('created_at', { ascending: true });
@@ -50,7 +50,6 @@ module.exports = async function handler(req, res) {
 
     // Get user profiles for all members
     const userIds = members.map(m => m.user_id);
-    console.log(`[members] Found ${members.length} members (excluding owners), userIds:`, userIds);
 
     // Only query profiles if there are members
     const { data: profiles } = userIds.length > 0

@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
       const inviteData = {
         workspace_id: workspaceId,
         email: email.toLowerCase(),
-        role: role || 'client',
+        role: role || 'editor',
         invited_by: invitedBy,
         status: 'pending',
         invited_at: new Date().toISOString(),
