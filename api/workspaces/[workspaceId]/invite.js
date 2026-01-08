@@ -111,7 +111,8 @@ module.exports = async function handler(req, res) {
 
       const inviterName = inviterData?.full_name || inviterData?.email || 'A team member';
       const workspaceName = workspace?.name || 'a workspace';
-      const appUrl = process.env.APP_URL || 'https://woozysocial.com';
+      // Use FRONTEND_URL for the app, fallback to woozysocial.com (NOT the API URL)
+      const appUrl = process.env.FRONTEND_URL || 'https://woozysocial.com';
       const inviteLink = `${appUrl}/accept-invite?token=${invitation.invite_token}`;
 
       try {
@@ -119,19 +120,58 @@ module.exports = async function handler(req, res) {
           from: 'Woozy Social <hello@woozysocial.com>',
           to: [email],
           subject: `${inviterName} invited you to join ${workspaceName} on Woozy Social`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>You've been invited!</h2>
-              <p>${inviterName} has invited you to join <strong>${workspaceName}</strong> on Woozy Social.</p>
-              <p>Role: <strong>${role || 'editor'}</strong></p>
-              <p style="margin: 30px 0;">
-                <a href="${inviteLink}" style="background-color: #FFC801; color: #114C5A; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                  Accept Invitation
-                </a>
+          html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #F1F6F4;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 2px solid #e0e0e0;">
+          <tr>
+            <td style="padding: 40px; text-align: center; background-color: #114C5A; border-radius: 14px 14px 0 0;">
+              <h1 style="margin: 0; color: #FFC801; font-size: 28px; font-weight: 700;">You've been invited!</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 20px 0; font-size: 16px; color: #114C5A; line-height: 1.6;">
+                <strong>${inviterName}</strong> has invited you to join <strong>${workspaceName}</strong> on Woozy Social.
               </p>
-              <p style="color: #666; font-size: 14px;">This invitation expires in 7 days.</p>
-            </div>
-          `
+              <p style="margin: 0 0 30px 0; font-size: 16px; color: #114C5A;">
+                Role: <strong>${role || 'editor'}</strong>
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="border-radius: 8px; background-color: #FFC801;">
+                    <a href="${inviteLink}" target="_blank" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #114C5A; text-decoration: none;">
+                      Accept Invitation
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 30px 0 0 0; font-size: 14px; color: #666; line-height: 1.6;">
+                This invitation expires in 7 days.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 20px 40px; background-color: #F1F6F4; border-radius: 0 0 14px 14px; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0; font-size: 12px; color: #666; text-align: center;">
+                If the button doesn't work, copy and paste this link:<br>
+                <a href="${inviteLink}" style="color: #114C5A; word-break: break-all;">${inviteLink}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
         });
       } catch (emailError) {
         console.error('Email error:', emailError);
