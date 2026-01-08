@@ -1,4 +1,41 @@
-const { setCors, getSupabase, parseBody } = require("../_utils");
+const axios = require("axios");
+const { setCors, getSupabase, parseBody, getWorkspaceProfileKey } = require("../_utils");
+
+const BASE_AYRSHARE = "https://api.ayrshare.com/api";
+
+// Helper to send post to Ayrshare
+async function sendToAyrshare(post, profileKey) {
+  const postData = {
+    post: post.caption,
+    platforms: post.platforms
+  };
+
+  // Check if scheduled time is in the future
+  if (post.scheduled_at) {
+    const scheduledTime = new Date(post.scheduled_at);
+    const now = new Date();
+
+    if (scheduledTime > now) {
+      // Schedule for future
+      postData.scheduleDate = Math.floor(scheduledTime.getTime() / 1000);
+    }
+    // If scheduled time has passed, post immediately (no scheduleDate)
+  }
+
+  if (post.media_urls && post.media_urls.length > 0) {
+    postData.mediaUrls = post.media_urls;
+  }
+
+  const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+      "Profile-Key": profileKey
+    }
+  });
+
+  return response.data;
+}
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -85,6 +122,79 @@ module.exports = async function handler(req, res) {
         .from('posts')
         .update({ approval_status: newStatus })
         .eq('id', postId);
+
+      // If approved, send the post to Ayrshare
+      if (action === 'approve') {
+        // Get the post data
+        const { data: post } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('id', postId)
+          .single();
+
+        if (post && post.status === 'pending_approval') {
+          // Get workspace profile key
+          const profileKey = await getWorkspaceProfileKey(workspaceId);
+
+          if (profileKey) {
+            try {
+              const ayrshareResponse = await sendToAyrshare(post, profileKey);
+
+              if (ayrshareResponse.status !== 'error') {
+                // Update post with Ayrshare ID and new status
+                const ayrPostId = ayrshareResponse.id || ayrshareResponse.postId;
+                const scheduledTime = new Date(post.scheduled_at);
+                const now = new Date();
+                const isStillFuture = scheduledTime > now;
+
+                await supabase
+                  .from('posts')
+                  .update({
+                    ayr_post_id: ayrPostId,
+                    status: isStillFuture ? 'scheduled' : 'posted',
+                    posted_at: isStillFuture ? null : new Date().toISOString()
+                  })
+                  .eq('id', postId);
+              } else {
+                // Ayrshare returned error
+                await supabase
+                  .from('posts')
+                  .update({
+                    status: 'failed',
+                    last_error: ayrshareResponse.message || 'Failed to post to Ayrshare'
+                  })
+                  .eq('id', postId);
+
+                return res.status(400).json({
+                  success: false,
+                  error: 'Failed to post to social platforms',
+                  details: ayrshareResponse
+                });
+              }
+            } catch (ayrError) {
+              // Failed to send to Ayrshare
+              await supabase
+                .from('posts')
+                .update({
+                  status: 'failed',
+                  last_error: ayrError.response?.data?.message || ayrError.message
+                })
+                .eq('id', postId);
+
+              return res.status(500).json({
+                success: false,
+                error: 'Failed to send post to social platforms',
+                details: ayrError.response?.data || ayrError.message
+              });
+            }
+          } else {
+            return res.status(400).json({
+              success: false,
+              error: 'No Ayrshare profile found for this workspace'
+            });
+          }
+        }
+      }
 
       // Add system comment if provided or create default one
       const systemComment = comment || `Post ${action === 'approve' ? 'approved' : 'rejected'}`;

@@ -74,8 +74,8 @@ module.exports = async function handler(req, res) {
       query = query.in('approval_status', ['pending', 'changes_requested']);
     }
 
-    // Only show scheduled (future) posts
-    query = query.eq('status', 'scheduled');
+    // Show posts that are pending approval or scheduled
+    query = query.in('status', ['pending_approval', 'scheduled']);
 
     const { data: posts, error } = await query;
 
