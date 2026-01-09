@@ -41,7 +41,9 @@ export const EngagementContent = () => {
       if (!response.ok) throw new Error("Failed to fetch posts");
 
       const data = await response.json();
-      const publishedPosts = (data.history || []).filter(post => post.status === "success");
+      // Handle both old format (data.history) and new format (data.data.history)
+      const responseData = data.data || data;
+      const publishedPosts = (responseData.history || []).filter(post => post.status === "success");
       setPosts(publishedPosts);
 
       // Auto-select first post if available
@@ -75,7 +77,9 @@ export const EngagementContent = () => {
       }
 
       const data = await response.json();
-      setComments(data.comments || []);
+      // Handle both old format (data.comments) and new format (data.data.comments)
+      const responseData = data.data || data;
+      setComments(responseData.comments || []);
     } catch (error) {
       console.error("Error fetching comments:", error);
       setComments([]);

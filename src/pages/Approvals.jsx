@@ -53,10 +53,12 @@ export const Approvals = () => {
       const data = await res.json();
 
       if (data.success) {
+        // Handle both old format (data.posts) and new format (data.data.posts)
+        const responseData = data.data || data;
         if (filter === 'all') {
-          setPosts(data.posts);
+          setPosts(responseData.posts || []);
         } else {
-          setPosts(data.grouped?.[filter] || []);
+          setPosts(responseData.grouped?.[filter] || []);
         }
       }
     } catch (error) {
@@ -76,7 +78,9 @@ export const Approvals = () => {
       );
       const data = await res.json();
       if (data.success) {
-        setComments(data.comments || []);
+        // Handle both old format (data.comments) and new format (data.data.comments)
+        const responseData = data.data || data;
+        setComments(responseData.comments || []);
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -146,7 +150,9 @@ export const Approvals = () => {
       const data = await res.json();
 
       if (data.success) {
-        setComments([...comments, data.comment]);
+        // Handle both old format (data.comment) and new format (data.data.comment)
+        const responseData = data.data || data;
+        setComments([...comments, responseData.comment]);
         setComment('');
       }
     } catch (error) {

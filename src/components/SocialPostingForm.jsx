@@ -107,8 +107,9 @@ const SocialPostingForm = () => {
       const response = await fetch(`${baseURL}/api/post-history`);
       if (response.ok) {
         const data = await response.json();
-        // Ayrshare returns an object with posts array, not a direct array
-        setPostHistory(Array.isArray(data) ? data : (data.posts || []));
+        // Handle both old format and new format (data.data.posts)
+        const responseData = data.data || data;
+        setPostHistory(Array.isArray(responseData) ? responseData : (responseData.posts || responseData.history || []));
       } else {
         throw new Error("Failed to fetch post history");
       }

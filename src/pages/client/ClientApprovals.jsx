@@ -36,7 +36,9 @@ export const ClientApprovals = () => {
 
       if (res.ok) {
         const data = await res.json();
-        const filteredPosts = data.grouped?.[activeTab] || [];
+        // Handle both old format (data.grouped) and new format (data.data.grouped)
+        const responseData = data.data || data;
+        const filteredPosts = responseData.grouped?.[activeTab] || [];
         setPosts(filteredPosts);
 
         // Auto-select first post if none selected

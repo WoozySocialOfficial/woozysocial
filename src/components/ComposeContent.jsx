@@ -82,9 +82,11 @@ export const ComposeContent = () => {
         const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
         if (res.ok) {
           const data = await res.json();
+          // Handle both old format (data.accounts) and new format (data.data.accounts)
+          const responseData = data.data || data;
           console.log("Connected accounts API response:", data);
-          console.log("Connected accounts array:", data.accounts);
-          setConnectedAccounts(data.accounts || []);
+          console.log("Connected accounts array:", responseData.accounts);
+          setConnectedAccounts(responseData.accounts || []);
         }
       } catch (err) {
         console.error("Error fetching accounts:", err);

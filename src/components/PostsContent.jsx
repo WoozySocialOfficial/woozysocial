@@ -43,7 +43,9 @@ export const PostsContent = () => {
       if (!response.ok) throw new Error("Failed to fetch post history");
 
       const data = await response.json();
-      const allPosts = data.history || [];
+      // Handle both old format (data.history) and new format (data.data.history)
+      const responseData = data.data || data;
+      const allPosts = responseData.history || [];
       setAllAyrsharePosts(allPosts);
 
       console.log("Ayrshare history fetched:", allPosts.length, "posts");

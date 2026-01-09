@@ -37,7 +37,9 @@ export const WorkspaceProvider = ({ children }) => {
       const listRes = await fetch(`${baseURL}/api/workspace/list?userId=${user.id}`);
       const listData = await listRes.json();
 
-      let workspaces = listData.workspaces || [];
+      // Handle both old format (listData.workspaces) and new format (listData.data.workspaces)
+      const responseData = listData.data || listData;
+      let workspaces = responseData.workspaces || [];
 
       // If no workspaces, auto-migrate the user
       if (workspaces.length === 0) {
@@ -48,10 +50,12 @@ export const WorkspaceProvider = ({ children }) => {
           body: JSON.stringify({ userId: user.id })
         });
         const migrateData = await migrateRes.json();
+        // Handle both old format (migrateData.workspace) and new format (migrateData.data.workspace)
+        const migrateResponse = migrateData.data || migrateData;
 
-        if (migrateData.success && migrateData.workspace) {
+        if (migrateData.success && migrateResponse.workspace) {
           workspaces = [{
-            ...migrateData.workspace,
+            ...migrateResponse.workspace,
             membership: { role: 'owner' }
           }];
         }
@@ -61,7 +65,7 @@ export const WorkspaceProvider = ({ children }) => {
 
       // Set active workspace
       if (workspaces.length > 0) {
-        const lastWorkspace = workspaces.find(w => w.id === listData.lastWorkspaceId);
+        const lastWorkspace = workspaces.find(w => w.id === responseData.lastWorkspaceId);
         const workspace = lastWorkspace || workspaces[0];
 
         setActiveWorkspace(workspace);
@@ -133,19 +137,22 @@ export const WorkspaceProvider = ({ children }) => {
         throw new Error(data.error || 'Failed to create workspace');
       }
 
+      // Handle both old format (data.workspace) and new format (data.data.workspace)
+      const responseData = data.data || data;
+
       // Refresh workspaces and switch to the new one
       await fetchUserWorkspaces();
 
       // Switch to the new workspace
-      if (data.workspace) {
+      if (responseData.workspace) {
         setActiveWorkspace({
-          ...data.workspace,
+          ...responseData.workspace,
           membership: { role: 'owner' }
         });
         setWorkspaceMembership({ role: 'owner' });
       }
 
-      return { data: data.workspace, error: null };
+      return { data: responseData.workspace, error: null };
     } catch (error) {
       console.error('Error creating workspace:', error);
       return { data: null, error: error.message };

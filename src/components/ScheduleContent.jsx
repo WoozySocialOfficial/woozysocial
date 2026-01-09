@@ -61,7 +61,9 @@ export const ScheduleContent = () => {
       if (!response.ok) throw new Error("Failed to fetch posts");
 
       const data = await response.json();
-      const allPosts = data.history || [];
+      // Handle both old format (data.history) and new format (data.data.history)
+      const responseData = data.data || data;
+      const allPosts = responseData.history || [];
 
       // Map posts with their schedule dates
       // Keep scheduleDate as ISO string to prevent timezone conversion issues

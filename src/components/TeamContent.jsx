@@ -37,7 +37,9 @@ export const TeamContent = () => {
         throw new Error(payload.error || 'Failed to fetch team members');
       }
 
-      setTeamMembers(payload.members || []);
+      // Handle both old format (payload.members) and new format (payload.data.members)
+      const responseData = payload.data || payload;
+      setTeamMembers(responseData.members || []);
     } catch (error) {
       console.error('Error fetching team members:', error);
     } finally {
@@ -61,7 +63,9 @@ export const TeamContent = () => {
         throw new Error(payload.error || 'Failed to fetch pending invites');
       }
 
-      setPendingInvites(payload.invitations || []);
+      // Handle both old format (payload.invitations) and new format (payload.data.invitations)
+      const responseData = payload.data || payload;
+      setPendingInvites(responseData.invitations || []);
     } catch (error) {
       console.error('Error fetching pending invites:', error);
     } finally {

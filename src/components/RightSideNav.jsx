@@ -65,7 +65,9 @@ const RightSideNav = () => {
       const response = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
       if (response.ok) {
         const data = await response.json();
-        setActiveAccounts(data.activeSocialAccounts || data.accounts || []);
+        // Handle both old format and new format (data.data.accounts)
+        const responseData = data.data || data;
+        setActiveAccounts(responseData.activeSocialAccounts || responseData.accounts || []);
       } else {
         throw new Error("Failed to fetch active accounts");
       }
