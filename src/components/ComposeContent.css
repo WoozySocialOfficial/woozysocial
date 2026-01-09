@@ -421,6 +421,13 @@
   font-size: 16px;
 }
 
+.preview-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .preview-username {
   font-weight: 600;
   font-size: 12px;
@@ -842,6 +849,21 @@
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+}
+
+.tweet-avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.twitter-avatar-small-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .tweet-content {

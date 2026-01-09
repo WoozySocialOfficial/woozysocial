@@ -48,6 +48,7 @@ export const ComposeContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPreviewPlatform, setSelectedPreviewPlatform] = useState("instagram");
   const [connectedAccounts, setConnectedAccounts] = useState([]);
+  const [accountDetails, setAccountDetails] = useState([]);
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [lastSaved, setLastSaved] = useState(null);
   const autoSaveTimerRef = useRef(null);
@@ -87,6 +88,7 @@ export const ComposeContent = () => {
           console.log("Connected accounts API response:", data);
           console.log("Connected accounts array:", responseData.accounts);
           setConnectedAccounts(responseData.accounts || []);
+          setAccountDetails(responseData.accountDetails || []);
         }
       } catch (err) {
         console.error("Error fetching accounts:", err);
@@ -94,6 +96,17 @@ export const ComposeContent = () => {
     };
     fetchAccounts();
   }, [user, activeWorkspace]);
+
+  // Helper to get account info for a platform
+  const getAccountInfo = (platform) => {
+    const account = accountDetails.find(a =>
+      a.platform?.toLowerCase() === platform?.toLowerCase()
+    );
+    return {
+      username: account?.username || profile?.business_name || 'your_username',
+      profilePicture: account?.profilePicture || null
+    };
+  };
 
   // Fetch real analytics data for best posting time
   useEffect(() => {
@@ -608,8 +621,12 @@ export const ComposeContent = () => {
             <div className="instagram-post">
               <div className="post-header">
                 <div className="post-profile">
-                  <div className="preview-avatar">👤</div>
-                  <div className="preview-username">your_username</div>
+                  {getAccountInfo('instagram').profilePicture ? (
+                    <img src={getAccountInfo('instagram').profilePicture} alt="Profile" className="preview-avatar-img" />
+                  ) : (
+                    <div className="preview-avatar">👤</div>
+                  )}
+                  <div className="preview-username">{getAccountInfo('instagram').username}</div>
                 </div>
                 <div className="preview-menu">⋯</div>
               </div>
@@ -633,15 +650,15 @@ export const ComposeContent = () => {
                 <span>🔖</span>
               </div>
 
-              <div className="post-likes">1,234 likes</div>
+              <div className="post-likes">Be the first to like this</div>
 
               {post.text && (
                 <div className="post-caption">
-                  <span className="caption-username">your_username</span> {post.text}
+                  <span className="caption-username">{getAccountInfo('instagram').username}</span> {post.text}
                 </div>
               )}
 
-              <div className="post-time">2 HOURS AGO</div>
+              <div className="post-time">JUST NOW</div>
             </div>
 
             {/* Instagram Bottom Nav */}
@@ -698,10 +715,14 @@ export const ComposeContent = () => {
               <div className="fb-post">
                 <div className="fb-post-header">
                   <div className="fb-post-profile">
-                    <div className="preview-avatar">👤</div>
+                    {getAccountInfo('facebook').profilePicture ? (
+                      <img src={getAccountInfo('facebook').profilePicture} alt="Profile" className="preview-avatar-img" />
+                    ) : (
+                      <div className="preview-avatar">👤</div>
+                    )}
                     <div className="fb-post-meta">
-                      <div className="preview-username">Your Name</div>
-                      <div className="preview-timestamp">Just Now · 🌍</div>
+                      <div className="preview-username">{getAccountInfo('facebook').username}</div>
+                      <div className="preview-timestamp">Just now · 🌍</div>
                     </div>
                   </div>
                   <div className="preview-menu">⋯</div>
@@ -722,8 +743,8 @@ export const ComposeContent = () => {
                 )}
 
                 <div className="fb-post-engagement">
-                  <span>👍❤😆 120</span>
-                  <span>23 comments</span>
+                  <span>Be the first to react</span>
+                  <span>0 comments</span>
                 </div>
 
                 <div className="fb-post-actions">
@@ -761,7 +782,11 @@ export const ComposeContent = () => {
 
             {/* Twitter Header */}
             <div className="twitter-header">
-              <div className="twitter-avatar-small">👤</div>
+              {getAccountInfo('twitter').profilePicture ? (
+                <img src={getAccountInfo('twitter').profilePicture} alt="Profile" className="twitter-avatar-small-img" />
+              ) : (
+                <div className="twitter-avatar-small">👤</div>
+              )}
               <span className="twitter-logo">𝕏</span>
               <span className="twitter-settings">⚙️</span>
             </div>
@@ -775,11 +800,15 @@ export const ComposeContent = () => {
             {/* Tweet */}
             <div className="twitter-feed">
               <div className="tweet">
-                <div className="tweet-avatar">👤</div>
+                {getAccountInfo('twitter').profilePicture ? (
+                  <img src={getAccountInfo('twitter').profilePicture} alt="Profile" className="tweet-avatar-img" />
+                ) : (
+                  <div className="tweet-avatar">👤</div>
+                )}
                 <div className="tweet-content">
                   <div className="tweet-header">
-                    <span className="tweet-name">Your Name</span>
-                    <span className="tweet-handle">@yourhandle · now</span>
+                    <span className="tweet-name">{getAccountInfo('twitter').username}</span>
+                    <span className="tweet-handle">@{getAccountInfo('twitter').username.toLowerCase().replace(/\s+/g, '')} · now</span>
                   </div>
 
                   {post.text && (
@@ -846,10 +875,14 @@ export const ComposeContent = () => {
               <div className="linkedin-post">
                 <div className="linkedin-post-header">
                   <div className="linkedin-profile">
-                    <div className="preview-avatar">👤</div>
+                    {getAccountInfo('linkedin').profilePicture ? (
+                      <img src={getAccountInfo('linkedin').profilePicture} alt="Profile" className="preview-avatar-img" />
+                    ) : (
+                      <div className="preview-avatar">👤</div>
+                    )}
                     <div className="linkedin-meta">
-                      <div className="preview-username">Your Name</div>
-                      <div className="linkedin-headline">Your Headline</div>
+                      <div className="preview-username">{getAccountInfo('linkedin').username}</div>
+                      <div className="linkedin-headline">{profile?.business_name || 'Your Business'}</div>
                       <div className="preview-timestamp">Just now · 🌍</div>
                     </div>
                   </div>
@@ -871,7 +904,7 @@ export const ComposeContent = () => {
                 )}
 
                 <div className="linkedin-post-stats">
-                  <span>👍 120 · 23 comments</span>
+                  <span>Be the first to react</span>
                 </div>
 
                 <div className="linkedin-post-actions">
@@ -920,9 +953,13 @@ export const ComposeContent = () => {
               <div className="thread-post">
                 <div className="thread-post-header">
                   <div className="thread-profile">
-                    <div className="preview-avatar">👤</div>
+                    {getAccountInfo('threads').profilePicture ? (
+                      <img src={getAccountInfo('threads').profilePicture} alt="Profile" className="preview-avatar-img" />
+                    ) : (
+                      <div className="preview-avatar">👤</div>
+                    )}
                     <div className="thread-meta">
-                      <span className="preview-username">your_username</span>
+                      <span className="preview-username">{getAccountInfo('threads').username}</span>
                       <span className="thread-verified">✓</span>
                     </div>
                   </div>
@@ -951,7 +988,7 @@ export const ComposeContent = () => {
                 </div>
 
                 <div className="thread-stats">
-                  <span>12 replies · 234 likes</span>
+                  <span>0 replies · 0 likes</span>
                 </div>
               </div>
             </div>

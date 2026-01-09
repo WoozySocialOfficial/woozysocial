@@ -76,10 +76,18 @@ module.exports = async function handler(req, res) {
 
     const platformNames = displayNames.map((account) => account.platform);
 
+    // Return full account data for preview components
+    const accountDetails = displayNames.map((account) => ({
+      platform: account.platform,
+      username: account.displayName || account.username || account.platform,
+      profilePicture: account.userImage || account.profilePicture || null
+    }));
+
     // Return both formats for compatibility with different components
     return sendSuccess(res, {
       accounts: platformNames,
-      activeSocialAccounts: platformNames
+      activeSocialAccounts: platformNames,
+      accountDetails: accountDetails
     });
 
   } catch (error) {
