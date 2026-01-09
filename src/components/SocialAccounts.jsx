@@ -46,7 +46,9 @@ export const SocialAccounts = () => {
       const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
       if (!res.ok) throw new Error("Failed to fetch accounts");
       const data = await res.json();
-      const accounts = data.activeSocialAccounts || [];
+      // API returns { success: true, data: { accounts, activeSocialAccounts } }
+      const responseData = data.data || data;
+      const accounts = responseData.activeSocialAccounts || [];
       setActiveAccounts(accounts);
 
       // Sync with Supabase database
@@ -114,15 +116,27 @@ export const SocialAccounts = () => {
 
     try {
       setLoading(true);
-      const r = await fetch(`${baseURL}/api/generate-jwt?userId=${user.id}&workspaceId=${activeWorkspace.id}`);
-      if (!r.ok) throw new Error("Failed to generate link");
+      const r = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
+      if (!r.ok) {
+        const errorData = await r.json().catch(() => ({}));
+        console.error("Generate JWT error:", errorData);
+        throw new Error(errorData.error || "Failed to generate link");
+      }
       const d = await r.json();
+      // API returns { success: true, data: { url: "..." } }
+      const url = d.data?.url || d.url;
+
+      if (!url) {
+        console.error("No URL in response:", d);
+        throw new Error("No connection URL returned");
+      }
+
       const width = 900;
       const height = 700;
       const left = window.screen.width / 2 - width / 2;
       const top = window.screen.height / 2 - height / 2;
       const popup = window.open(
-        d.url,
+        url,
         "AyrshareLink",
         `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
       );
@@ -146,7 +160,9 @@ export const SocialAccounts = () => {
           const rr = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
           if (rr.ok) {
             const dd = await rr.json();
-            const accounts = dd.activeSocialAccounts || dd.accounts || [];
+            // API returns { success: true, data: { accounts, activeSocialAccounts } }
+            const responseData = dd.data || dd;
+            const accounts = responseData.activeSocialAccounts || responseData.accounts || [];
             if (Array.isArray(accounts)) {
               if (accounts.length !== initialLen) {
                 setActiveAccounts(accounts);
