@@ -220,7 +220,7 @@ export const ComposeContent = () => {
 
   // Auto-save draft functionality
   const saveDraft = useCallback(async () => {
-    if (!user || !activeWorkspace) return;
+    if (!user) return;
 
     // Prevent concurrent saves
     if (isSavingRef.current) {
@@ -271,20 +271,10 @@ export const ComposeContent = () => {
       setLastSaved(new Date());
     } catch (error) {
       console.error("Error saving draft:", error);
-      // Show error toast only if it's a real error (not just no content)
-      if (error?.message) {
-        toast({
-          title: "Draft save failed",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true
-        });
-      }
     } finally {
       isSavingRef.current = false;
     }
-  }, [user, activeWorkspace, post.text, mediaPreview, networks, scheduledDate, currentDraftId, toast]);
+  }, [user, post.text, mediaPreview, networks, scheduledDate, currentDraftId]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
