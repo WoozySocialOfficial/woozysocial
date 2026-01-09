@@ -8,6 +8,7 @@ import FormData from "form-data";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import Stripe from "stripe";
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -18,6 +19,20 @@ const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 // Initialize Resend client (optional - only if API key is provided)
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
+
+// Initialize Stripe client (optional - only if API key is provided)
+const stripe = env.STRIPE_SECRET_KEY ? new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-12-18.acacia",
+}) : null;
+
+// Stripe Price ID mapping
+const STRIPE_PRICE_IDS = {
+  solo: env.STRIPE_PRICE_SOLO,
+  pro: env.STRIPE_PRICE_PRO,
+  "pro-plus": env.STRIPE_PRICE_PRO_PLUS,
+  agency: env.STRIPE_PRICE_AGENCY,
+  "brand-bolt": env.STRIPE_PRICE_BRAND_BOLT,
+};
 
 const corsOptions = {};
 
@@ -85,6 +100,13 @@ async function uploadMediaToAyrshare(file) {
 // Note: multer must run BEFORE requireActiveProfile so req.body is populated for FormData
 app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, res) => {
   try {
+    // DEBUG: Log the raw request body to see what we're receiving
+    console.log("=== POST REQUEST DEBUG ===");
+    console.log("Raw req.body:", JSON.stringify(req.body, null, 2));
+    console.log("req.body.scheduledDate:", req.body.scheduledDate);
+    console.log("typeof req.body.scheduledDate:", typeof req.body.scheduledDate);
+    console.log("=== END POST REQUEST DEBUG ===");
+
     const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = req.body;
     const media = req.file;
 
@@ -118,20 +140,18 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     };
 
     if (scheduledDate) {
-      // Ayrshare requires Unix timestamp in SECONDS (not milliseconds)
-      // Parse the ISO string - it's already in UTC format from the client
+      // Ayrshare API expects ISO-8601 UTC date time format: "YYYY-MM-DDThh:mm:ssZ"
+      // Example: "2025-12-01T10:00:00Z"
       const dateObj = new Date(scheduledDate);
-      const timestampSeconds = Math.floor(dateObj.getTime() / 1000);
-      const currentTimeSeconds = Math.floor(Date.now() / 1000);
-      const secondsUntilPost = timestampSeconds - currentTimeSeconds;
+      const now = new Date();
+      const secondsUntilPost = (dateObj.getTime() - now.getTime()) / 1000;
 
       console.log("=== SCHEDULING DEBUG ===");
       console.log("Schedule Date Input (ISO):", scheduledDate);
-      console.log("Schedule Date Object:", dateObj.toISOString());
-      console.log("Schedule Date Timestamp (seconds):", timestampSeconds);
-      console.log("Current Time (seconds):", currentTimeSeconds);
+      console.log("Parsed Date Object:", dateObj.toISOString());
+      console.log("Current Time:", now.toISOString());
       console.log("Time until post (seconds):", secondsUntilPost);
-      console.log("Time until post (minutes):", (secondsUntilPost / 60).toFixed(2));
+      console.log("Time until post (hours):", (secondsUntilPost / 3600).toFixed(2));
       console.log("Is in future?:", secondsUntilPost > 0);
 
       // Validate that the time is in the future
@@ -143,12 +163,15 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
         });
       }
 
-      // Ayrshare requires at least 10 minutes in the future for some platforms
-      if (secondsUntilPost < 60) {
-        console.warn("WARNING: Scheduled time is less than 1 minute in future");
+      // Ayrshare requires at least 5 minutes in the future
+      if (secondsUntilPost < 300) {
+        console.warn("WARNING: Scheduled time is less than 5 minutes in future - some platforms may reject this");
       }
 
-      postData.scheduleDate = timestampSeconds;
+      // CRITICAL FIX: Ayrshare expects ISO-8601 string format, NOT Unix timestamp!
+      // Format: "2025-01-15T14:00:00Z"
+      postData.scheduleDate = dateObj.toISOString();
+      console.log("scheduleDate being sent to Ayrshare:", postData.scheduleDate);
       console.log("=== END SCHEDULING DEBUG ===");
     }
 
@@ -184,7 +207,11 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
       }
     }
 
-    console.log("Sending Data to Ayrshare:", JSON.stringify(postData, null, 2));
+    console.log("=== FINAL POST DATA TO AYRSHARE ===");
+    console.log("postData.scheduleDate:", postData.scheduleDate);
+    console.log("postData.scheduleDate type:", typeof postData.scheduleDate);
+    console.log("Full postData:", JSON.stringify(postData, null, 2));
+    console.log("=== END FINAL POST DATA ===");
 
     const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
       headers: {
@@ -2747,7 +2774,249 @@ app.post("/api/workspace/create", async (req, res) => {
   }
 });
 
+// ============================================================
+// STRIPE PAYMENT ENDPOINTS
+// ============================================================
+
+// Create Checkout Session
+app.post("/api/stripe/create-checkout-session", async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe not configured" });
+    }
+
+    const { userId, tier } = req.body;
+
+    if (!userId || !tier) {
+      return res.status(400).json({ error: "userId and tier are required" });
+    }
+
+    // Validate tier
+    if (!STRIPE_PRICE_IDS.hasOwnProperty(tier)) {
+      return res.status(400).json({
+        error: `Invalid tier: ${tier}. Valid tiers: ${Object.keys(STRIPE_PRICE_IDS).join(", ")}`
+      });
+    }
+
+    const priceId = STRIPE_PRICE_IDS[tier];
+    if (!priceId) {
+      return res.status(500).json({ error: `Price not configured for tier: ${tier}` });
+    }
+
+    // Get user from database
+    const { data: user, error: userError } = await supabase
+      .from("user_profiles")
+      .select("id, email, full_name, stripe_customer_id")
+      .eq("id", userId)
+      .single();
+
+    if (userError || !user) {
+      console.error("User fetch error:", userError);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get or create Stripe customer
+    let customerId = user.stripe_customer_id;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.full_name,
+        metadata: {
+          supabase_user_id: userId,
+        },
+      });
+      customerId = customer.id;
+
+      // Save customer ID to database
+      await supabase
+        .from("user_profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", userId);
+    }
+
+    // Create checkout session
+    const appUrl = env.APP_URL || "http://localhost:5173";
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: "subscription",
+      success_url: `${appUrl}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/pricing?payment=cancelled`,
+      subscription_data: {
+        metadata: {
+          supabase_user_id: userId,
+          tier: tier,
+        },
+      },
+      metadata: {
+        supabase_user_id: userId,
+        tier: tier,
+      },
+      allow_promotion_codes: true,
+      billing_address_collection: "auto",
+    });
+
+    console.log("Checkout session created:", session.id);
+
+    return res.json({
+      success: true,
+      data: {
+        sessionId: session.id,
+        url: session.url,
+      },
+    });
+  } catch (error) {
+    console.error("Stripe checkout error:", error);
+    return res.status(500).json({ error: "Failed to create checkout session", details: error.message });
+  }
+});
+
+// Customer Portal
+app.post("/api/stripe/customer-portal", async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe not configured" });
+    }
+
+    const { userId, returnUrl } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    // Get user from database
+    const { data: user, error: userError } = await supabase
+      .from("user_profiles")
+      .select("id, email, stripe_customer_id")
+      .eq("id", userId)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.stripe_customer_id) {
+      return res.status(400).json({ error: "No subscription found. Please subscribe first." });
+    }
+
+    // Create portal session
+    const appUrl = env.APP_URL || "http://localhost:5173";
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripe_customer_id,
+      return_url: returnUrl || `${appUrl}/settings`,
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        url: session.url,
+      },
+    });
+  } catch (error) {
+    console.error("Stripe portal error:", error);
+    return res.status(500).json({ error: "Failed to create portal session", details: error.message });
+  }
+});
+
+// Stripe Webhook (for local testing - production uses Vercel serverless)
+app.post("/api/stripe/webhook", express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe not configured" });
+    }
+
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("Webhook secret not configured");
+      return res.status(500).json({ error: "Webhook secret not configured" });
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err.message);
+      return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+    }
+
+    console.log(`[WEBHOOK] Received event: ${event.type}`);
+
+    // Handle the event
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const userId = session.metadata?.supabase_user_id;
+        const tier = session.metadata?.tier;
+
+        if (userId) {
+          // Update user subscription status
+          await supabase
+            .from("user_profiles")
+            .update({
+              subscription_status: "active",
+              subscription_tier: tier,
+              stripe_subscription_id: session.subscription,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", userId);
+
+          console.log(`[WEBHOOK] User ${userId} subscription activated: ${tier}`);
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+
+        const { data: user } = await supabase
+          .from("user_profiles")
+          .select("id")
+          .eq("stripe_customer_id", customerId)
+          .single();
+
+        if (user) {
+          await supabase
+            .from("user_profiles")
+            .update({
+              subscription_status: "cancelled",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id);
+
+          console.log(`[WEBHOOK] User ${user.id} subscription cancelled`);
+        }
+        break;
+      }
+
+      default:
+        console.log(`[WEBHOOK] Unhandled event type: ${event.type}`);
+    }
+
+    return res.json({ received: true });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return res.status(500).json({ error: "Webhook handler failed" });
+  }
+});
+
 const PORT = env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  if (stripe) {
+    console.log("Stripe integration enabled");
+  } else {
+    console.warn("WARNING: Stripe not configured - payment features disabled");
+  }
 });

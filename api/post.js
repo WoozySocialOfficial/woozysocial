@@ -175,8 +175,9 @@ module.exports = async function handler(req, res) {
       if (dateObj.getTime() < Date.now()) {
         return sendError(res, "Scheduled date must be in the future", ErrorCodes.VALIDATION_ERROR);
       }
-      const timestampSeconds = Math.floor(dateObj.getTime() / 1000);
-      postData.scheduleDate = timestampSeconds;
+      // CRITICAL: Ayrshare expects ISO-8601 string format, NOT Unix timestamp!
+      // Format: "2025-01-15T14:00:00Z"
+      postData.scheduleDate = dateObj.toISOString();
     }
 
     if (mediaUrl) {
