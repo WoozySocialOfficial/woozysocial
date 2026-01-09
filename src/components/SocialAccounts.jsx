@@ -39,10 +39,11 @@ export const SocialAccounts = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchActiveAccounts = useCallback(async () => {
-    if (!user) return;
+    if (!user || !activeWorkspace) return;
 
     try {
-      const res = await fetch(`${baseURL}/api/user-accounts?userId=${user.id}`);
+      // Use workspaceId for multi-workspace support
+      const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
       if (!res.ok) throw new Error("Failed to fetch accounts");
       const data = await res.json();
       const accounts = data.activeSocialAccounts || [];
@@ -53,7 +54,7 @@ export const SocialAccounts = () => {
     } catch (err) {
       console.warn("fetchActiveAccounts error", err);
     }
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   const syncAccountsToDatabase = async (accounts) => {
     if (!user || !accounts.length) return;
@@ -175,9 +176,17 @@ export const SocialAccounts = () => {
   };
 
   const isLinked = (platName) => {
-    return activeAccounts.some(
-      (a) => a.name && a.name.toLowerCase() === platName.toLowerCase()
-    );
+    // Handle both string array ['instagram', 'facebook'] and object array [{name: 'instagram'}]
+    return activeAccounts.some((a) => {
+      const accountName = typeof a === 'string' ? a : a.name;
+      if (!accountName) return false;
+      // Normalize names for comparison
+      const normalizedAccount = accountName.toLowerCase().replace(/[^a-z]/g, '');
+      const normalizedPlatform = platName.toLowerCase().replace(/[^a-z]/g, '');
+      return normalizedAccount === normalizedPlatform ||
+             normalizedAccount.includes(normalizedPlatform) ||
+             normalizedPlatform.includes(normalizedAccount);
+    });
   };
 
   return (
