@@ -604,15 +604,21 @@ export const ComposeContent = () => {
             {/* Stories Row */}
             <div className="instagram-stories">
               <div className="story-item">
-                <div className="story-avatar active">👤</div>
+                <div className="story-avatar active">
+                  <div className="story-avatar-inner">👤</div>
+                </div>
                 <span className="story-name">Your story</span>
               </div>
               <div className="story-item">
-                <div className="story-avatar">👤</div>
+                <div className="story-avatar">
+                  <div className="story-avatar-inner">👤</div>
+                </div>
                 <span className="story-name">friend1</span>
               </div>
               <div className="story-item">
-                <div className="story-avatar">👤</div>
+                <div className="story-avatar">
+                  <div className="story-avatar-inner">👤</div>
+                </div>
                 <span className="story-name">friend2</span>
               </div>
             </div>
