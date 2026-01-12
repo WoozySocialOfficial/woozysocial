@@ -291,6 +291,7 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     console.log("Full postData:", JSON.stringify(postData, null, 2));
     console.log("=== END FINAL POST DATA ===");
 
+<<<<<<< Updated upstream
     // If requires approval, save to DB and wait for client approval
     if (requiresApproval) {
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
@@ -323,6 +324,9 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     }
 
     // No approval needed - send directly to Ayrshare
+=======
+    // Send to Ayrshare
+>>>>>>> Stashed changes
     const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
       headers: {
         "Content-Type": "application/json",
