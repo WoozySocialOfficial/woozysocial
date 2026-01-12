@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
+import { useToast } from "@chakra-ui/react";
 import { baseURL } from "../utils/constants";
 import { supabase } from "../utils/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
@@ -37,6 +38,7 @@ export const SocialAccounts = () => {
   const { activeWorkspace } = useWorkspace();
   const [activeAccounts, setActiveAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const fetchActiveAccounts = useCallback(async () => {
     if (!user || !activeWorkspace) return;
@@ -187,6 +189,13 @@ export const SocialAccounts = () => {
       }, pollInterval);
     } catch (err) {
       console.error("link error", err);
+      toast({
+        title: "Connection Error",
+        description: err.message || "Failed to connect social account. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true
+      });
       setLoading(false);
     }
   };
