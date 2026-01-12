@@ -1,4 +1,5 @@
 const axios = require("axios");
+const formidable = require("formidable");
 const {
   setCors,
   getWorkspaceProfileKey,
@@ -14,6 +15,41 @@ const {
 } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
+
+// Parse FormData using formidable
+function parseFormData(req) {
+  return new Promise((resolve, reject) => {
+    const form = formidable({ multiples: false });
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      // Formidable v3 returns arrays for fields
+      const parsed = {};
+      for (const key of Object.keys(fields)) {
+        parsed[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
+      }
+      resolve({ fields: parsed, files });
+    });
+  });
+}
+
+// Parse JSON body manually (when bodyParser is disabled)
+function parseJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on('error', reject);
+  });
+}
 
 // Helper to check if workspace has client members who need to approve
 async function workspaceHasClients(supabase, workspaceId) {
@@ -65,22 +101,34 @@ module.exports = async function handler(req, res) {
   const supabase = getSupabase();
 
   try {
-    // Debug: Log what we received
-    const contentType = req.headers['content-type'] || 'none';
-    const bodyType = typeof req.body;
-    const bodyStr = req.body ? JSON.stringify(req.body).substring(0, 500) : 'undefined/null';
-    console.log('POST /api/post - Content-Type:', contentType, '- Body type:', bodyType, '- Body:', bodyStr);
+    const contentType = req.headers['content-type'] || '';
+    let body = {};
 
-    // Use req.body directly (Vercel parses JSON automatically)
-    const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = req.body || {};
+    // Handle both JSON and FormData (bodyParser is disabled)
+    if (contentType.includes('multipart/form-data')) {
+      // Parse FormData with formidable
+      const { fields } = await parseFormData(req);
+      body = fields;
+    } else if (contentType.includes('application/json')) {
+      // Parse JSON manually
+      body = await parseJsonBody(req);
+    } else {
+      // Fallback - try to parse as JSON
+      try {
+        body = await parseJsonBody(req);
+      } catch {
+        body = {};
+      }
+    }
+
+    const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = body;
 
     // Validate required fields
-    const validation = validateRequired(req.body || {}, ['text', 'networks', 'userId']);
+    const validation = validateRequired(body, ['text', 'networks', 'userId']);
     if (!validation.valid) {
-      // Include debug info in error
       return sendError(
         res,
-        `Missing required fields: ${validation.missing.join(', ')}. Debug: content-type=${req.headers['content-type']}, body-type=${typeof req.body}`,
+        `Missing required fields: ${validation.missing.join(', ')}`,
         ErrorCodes.VALIDATION_ERROR
       );
     }
@@ -283,4 +331,11 @@ module.exports = async function handler(req, res) {
     logError('post.handler', error, { method: req.method });
     return sendError(res, "An unexpected error occurred while posting", ErrorCodes.INTERNAL_ERROR);
   }
+};
+
+// Disable Vercel's body parser so formidable can parse FormData
+module.exports.config = {
+  api: {
+    bodyParser: false,
+  },
 };
