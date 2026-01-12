@@ -134,14 +134,6 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
       .filter(([, value]) => value)
       .map(([key]) => key);
 
-    // Validate at least one platform is selected
-    if (platforms.length === 0) {
-      return res.status(400).json({
-        error: 'No platforms selected',
-        message: 'Please select at least one social media platform to post to.'
-      });
-    }
-
     const postData = {
       post: text,
       platforms

@@ -388,6 +388,9 @@ export const ComposeContent = () => {
 
   // Check if a platform is linked
   const isLinked = (platformKey) => {
+    // TEMPORARILY RETURN TRUE FOR ALL PLATFORMS TO TEST HIGHLIGHTING
+    return true;
+
     if (!connectedAccounts || connectedAccounts.length === 0) {
       return false;
     }
