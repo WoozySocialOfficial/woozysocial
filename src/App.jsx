@@ -41,7 +41,6 @@ function App() {
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/accept-invite" element={<AcceptInvite />} />
-            <Route path="/pricing" element={<Pricing />} />
 
             {/* Client Portal Routes */}
             <Route
@@ -86,6 +85,7 @@ function App() {
                           <Route path="/team" element={<TeamContent />} />
                           <Route path="/approvals" element={<Approvals />} />
                           <Route path="/settings" element={<SettingsContent />} />
+                          <Route path="/pricing" element={<Pricing />} />
                         </Routes>
                       </MainContent>
                     </div>
