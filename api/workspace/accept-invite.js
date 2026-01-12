@@ -9,6 +9,44 @@ const {
   validateRequired,
   isValidUUID
 } = require("../_utils");
+const {
+  sendInviteAcceptedNotification,
+  sendMemberJoinedNotification
+} = require("../notifications/helpers");
+
+// Role-based permission defaults
+const ROLE_PERMISSIONS = {
+  owner: {
+    can_manage_team: true,
+    can_manage_settings: true,
+    can_delete_posts: true,
+    can_approve_posts: true
+  },
+  admin: {
+    can_manage_team: true,
+    can_manage_settings: true,
+    can_delete_posts: true,
+    can_approve_posts: true
+  },
+  editor: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: true,
+    can_approve_posts: false
+  },
+  view_only: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: false,
+    can_approve_posts: false
+  },
+  client: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: false,
+    can_approve_posts: true
+  }
+};
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -59,6 +97,7 @@ module.exports = async function handler(req, res) {
         role,
         status,
         expires_at,
+        invited_by,
         workspaces (
           id,
           name,
@@ -95,10 +134,10 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invitation has expired", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Get user's email to verify
+    // Get user's email and name to verify
     const { data: userData, error: userError } = await supabase
       .from('user_profiles')
-      .select('email')
+      .select('email, full_name')
       .eq('id', userId)
       .single();
 
@@ -144,13 +183,18 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Add user to workspace
+    // Add user to workspace with role-based permissions
+    const permissions = ROLE_PERMISSIONS[invitation.role] || ROLE_PERMISSIONS.editor;
     const { error: memberError } = await supabase
       .from('workspace_members')
       .insert({
         workspace_id: invitation.workspace_id,
         user_id: userId,
-        role: invitation.role
+        role: invitation.role,
+        can_manage_team: permissions.can_manage_team,
+        can_manage_settings: permissions.can_manage_settings,
+        can_delete_posts: permissions.can_delete_posts,
+        can_approve_posts: permissions.can_approve_posts
       });
 
     if (memberError) {
@@ -172,6 +216,35 @@ module.exports = async function handler(req, res) {
       .from('user_profiles')
       .update({ last_workspace_id: invitation.workspace_id })
       .eq('id', userId);
+
+    // Send notifications (non-blocking)
+    const acceptedByName = userData?.full_name || userData?.email || 'A new member';
+
+    // Notify the inviter
+    if (invitation.invited_by) {
+      sendInviteAcceptedNotification(supabase, {
+        workspaceId: invitation.workspace_id,
+        inviterId: invitation.invited_by,
+        acceptedByUserId: userId,
+        acceptedByName
+      }).catch(err => logError('workspace.accept-invite.notifyInviter', err));
+    }
+
+    // Notify workspace admins/owners
+    const { data: admins } = await supabase
+      .from('workspace_members')
+      .select('user_id')
+      .eq('workspace_id', invitation.workspace_id)
+      .in('role', ['owner', 'admin']);
+
+    if (admins && admins.length > 0) {
+      sendMemberJoinedNotification(supabase, {
+        workspaceId: invitation.workspace_id,
+        newMemberName: acceptedByName,
+        newMemberId: userId,
+        notifyUserIds: admins.map(a => a.user_id)
+      }).catch(err => logError('workspace.accept-invite.notifyAdmins', err));
+    }
 
     return sendSuccess(res, {
       message: "Successfully joined the workspace",

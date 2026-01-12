@@ -115,7 +115,8 @@ async function sendRoleChangedNotification(supabase, { userId, workspaceId, work
       'owner': 'Owner',
       'admin': 'Admin',
       'editor': 'Editor',
-      'view_only': 'Viewer'
+      'view_only': 'Viewer',
+      'client': 'Client'
     };
 
     await supabase.from('notifications').insert({

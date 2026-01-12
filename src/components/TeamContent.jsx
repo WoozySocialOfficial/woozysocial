@@ -119,13 +119,14 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/team/cancel-invite`, {
+      const response = await fetch(`${baseURL}/api/workspace/cancel-invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           inviteId,
+          workspaceId: activeWorkspace.id,
           userId: user.id,
         }),
       });
@@ -279,6 +280,7 @@ export const TeamContent = () => {
                     admin: 'Admin',
                     editor: 'Editor',
                     view_only: 'View Only',
+                    client: 'Client',
                   };
                   return labels[role] || role;
                 };
@@ -315,6 +317,7 @@ export const TeamContent = () => {
                             <option value="admin">Admin</option>
                             <option value="editor">Editor</option>
                             <option value="view_only">View Only</option>
+                            <option value="client">Client</option>
                           </select>
                           <button
                             className="remove-button"
@@ -362,6 +365,7 @@ export const TeamContent = () => {
                     admin: 'Admin',
                     editor: 'Editor',
                     view_only: 'View Only',
+                    client: 'Client',
                   };
                   return labels[role] || role;
                 };

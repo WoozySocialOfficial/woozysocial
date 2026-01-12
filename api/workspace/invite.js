@@ -13,7 +13,7 @@ const {
   isServiceConfigured
 } = require("../_utils");
 
-const VALID_ROLES = ['admin', 'editor', 'view_only'];
+const VALID_ROLES = ['admin', 'editor', 'view_only', 'client'];
 
 module.exports = async function handler(req, res) {
   setCors(res);

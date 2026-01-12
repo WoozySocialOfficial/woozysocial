@@ -7,8 +7,43 @@ const {
   logError,
   isValidUUID
 } = require("../../_utils");
+const { sendRoleChangedNotification } = require("../../notifications/helpers");
 
-const VALID_ROLES = ['editor', 'admin', 'view_only'];
+const VALID_ROLES = ['editor', 'admin', 'view_only', 'client'];
+
+// Role-based permission defaults
+const ROLE_PERMISSIONS = {
+  owner: {
+    can_manage_team: true,
+    can_manage_settings: true,
+    can_delete_posts: true,
+    can_approve_posts: true
+  },
+  admin: {
+    can_manage_team: true,
+    can_manage_settings: true,
+    can_delete_posts: true,
+    can_approve_posts: true
+  },
+  editor: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: true,
+    can_approve_posts: false
+  },
+  view_only: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: false,
+    can_approve_posts: false
+  },
+  client: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: false,
+    can_approve_posts: true
+  }
+};
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -103,11 +138,23 @@ module.exports = async function handler(req, res) {
 
     // Build update object
     const updateData = {};
-    if (role) updateData.role = role;
+    if (role) {
+      updateData.role = role;
+      // Apply default permissions for the new role
+      const rolePerms = ROLE_PERMISSIONS[role];
+      if (rolePerms) {
+        updateData.can_manage_team = rolePerms.can_manage_team;
+        updateData.can_manage_settings = rolePerms.can_manage_settings;
+        updateData.can_delete_posts = rolePerms.can_delete_posts;
+        updateData.can_approve_posts = rolePerms.can_approve_posts;
+      }
+    }
+    // Allow explicit permission overrides if provided
     if (permissions) {
       if (typeof permissions.canManageTeam === 'boolean') updateData.can_manage_team = permissions.canManageTeam;
       if (typeof permissions.canManageSettings === 'boolean') updateData.can_manage_settings = permissions.canManageSettings;
       if (typeof permissions.canDeletePosts === 'boolean') updateData.can_delete_posts = permissions.canDeletePosts;
+      if (typeof permissions.canApprovePosts === 'boolean') updateData.can_approve_posts = permissions.canApprovePosts;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -124,6 +171,25 @@ module.exports = async function handler(req, res) {
     if (updateError) {
       logError('workspaces.update-member.update', updateError, { memberId, workspaceId });
       return sendError(res, "Failed to update member", ErrorCodes.DATABASE_ERROR);
+    }
+
+    // Send notification if role changed
+    if (role && role !== targetMember.role) {
+      // Get workspace name for notification
+      const { data: workspace } = await supabase
+        .from('workspaces')
+        .select('name')
+        .eq('id', workspaceId)
+        .single();
+
+      sendRoleChangedNotification(supabase, {
+        userId: memberId,
+        workspaceId,
+        workspaceName: workspace?.name || 'the workspace',
+        oldRole: targetMember.role,
+        newRole: role,
+        changedByUserId: userId
+      }).catch(err => logError('workspaces.update-member.notifyRoleChange', err));
     }
 
     return sendSuccess(res, { message: "Member updated successfully" });

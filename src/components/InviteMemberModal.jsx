@@ -16,6 +16,11 @@ const ROLES = [
     value: "view_only",
     label: "View Only",
     description: "Read-only access - can view posts and team members"
+  },
+  {
+    value: "client",
+    label: "Client",
+    description: "Can view and approve scheduled posts before they go live"
   }
 ];
 

@@ -2491,6 +2491,185 @@ app.get("/api/workspaces/:id/invitations", async (req, res) => {
   }
 });
 
+// Cancel workspace invitation
+app.post("/api/workspace/cancel-invite", async (req, res) => {
+  try {
+    const { inviteId, workspaceId, userId } = req.body;
+
+    if (!inviteId || !userId) {
+      return res.status(400).json({ error: "inviteId and userId are required" });
+    }
+
+    // Get the invitation
+    const { data: invite, error: inviteError } = await supabase
+      .from('workspace_invitations')
+      .select('id, workspace_id, status')
+      .eq('id', inviteId)
+      .single();
+
+    if (inviteError || !invite) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    // If workspaceId provided, verify it matches
+    if (workspaceId && invite.workspace_id !== workspaceId) {
+      return res.status(403).json({ error: 'Invitation does not belong to this workspace' });
+    }
+
+    // Check if user has permission to cancel (must be owner/admin of workspace)
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', invite.workspace_id)
+      .eq('user_id', userId)
+      .single();
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      return res.status(403).json({ error: 'Not authorized to cancel this invitation' });
+    }
+
+    if (invite.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending invitations can be cancelled' });
+    }
+
+    // Cancel the invitation
+    const { error: cancelError } = await supabase
+      .from('workspace_invitations')
+      .update({ status: 'cancelled' })
+      .eq('id', inviteId);
+
+    if (cancelError) {
+      console.error('Error canceling invitation:', cancelError);
+      return res.status(500).json({ error: 'Failed to cancel invitation' });
+    }
+
+    return res.json({ success: true, data: { message: 'Invitation cancelled successfully' } });
+  } catch (error) {
+    console.error('Error canceling invitation:', error);
+    return res.status(500).json({ error: 'Failed to cancel invitation' });
+  }
+});
+
+// Role-based permission defaults
+const ROLE_PERMISSIONS = {
+  owner: { can_manage_team: true, can_manage_settings: true, can_delete_posts: true, can_approve_posts: true },
+  admin: { can_manage_team: true, can_manage_settings: true, can_delete_posts: true, can_approve_posts: true },
+  editor: { can_manage_team: false, can_manage_settings: false, can_delete_posts: true, can_approve_posts: false },
+  view_only: { can_manage_team: false, can_manage_settings: false, can_delete_posts: false, can_approve_posts: false },
+  client: { can_manage_team: false, can_manage_settings: false, can_delete_posts: false, can_approve_posts: true }
+};
+
+// Accept workspace invitation
+app.post("/api/workspace/accept-invite", async (req, res) => {
+  try {
+    const { inviteToken, userId } = req.body;
+
+    if (!inviteToken || !userId) {
+      return res.status(400).json({ error: "inviteToken and userId are required" });
+    }
+
+    // Get the invitation by invite_token
+    const { data: invitation, error: inviteError } = await supabase
+      .from('workspace_invitations')
+      .select(`
+        id,
+        workspace_id,
+        email,
+        role,
+        status,
+        expires_at,
+        workspaces (
+          id,
+          name,
+          slug,
+          logo_url
+        )
+      `)
+      .eq('invite_token', inviteToken)
+      .single();
+
+    if (inviteError || !invitation) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    // Check if invitation is still valid
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ error: `Invitation has already been ${invitation.status}` });
+    }
+
+    if (new Date(invitation.expires_at) < new Date()) {
+      await supabase
+        .from('workspace_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitation.id);
+      return res.status(400).json({ error: 'Invitation has expired' });
+    }
+
+    // Get user's email to verify
+    const { data: userData } = await supabase
+      .from('user_profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
+
+    if (userData?.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+      return res.status(403).json({ error: 'This invitation was sent to a different email address' });
+    }
+
+    // Check if user is already a member
+    const { data: existingMember } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', invitation.workspace_id)
+      .eq('user_id', userId)
+      .single();
+
+    if (existingMember) {
+      await supabase
+        .from('workspace_invitations')
+        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+        .eq('id', invitation.id);
+      return res.json({ success: true, data: { message: 'You are already a member of this workspace', workspace: invitation.workspaces } });
+    }
+
+    // Add user to workspace with role-based permissions
+    const permissions = ROLE_PERMISSIONS[invitation.role] || ROLE_PERMISSIONS.editor;
+    const { error: memberError } = await supabase
+      .from('workspace_members')
+      .insert({
+        workspace_id: invitation.workspace_id,
+        user_id: userId,
+        role: invitation.role,
+        can_manage_team: permissions.can_manage_team,
+        can_manage_settings: permissions.can_manage_settings,
+        can_delete_posts: permissions.can_delete_posts,
+        can_approve_posts: permissions.can_approve_posts
+      });
+
+    if (memberError) {
+      console.error('Error adding workspace member:', memberError);
+      return res.status(500).json({ error: 'Failed to add you to the workspace' });
+    }
+
+    // Update invitation status
+    await supabase
+      .from('workspace_invitations')
+      .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+      .eq('id', invitation.id);
+
+    // Update user's last workspace
+    await supabase
+      .from('user_profiles')
+      .update({ last_workspace_id: invitation.workspace_id })
+      .eq('id', userId);
+
+    return res.json({ success: true, data: { message: 'Successfully joined the workspace', workspace: invitation.workspaces } });
+  } catch (error) {
+    console.error('Error accepting invitation:', error);
+    return res.status(500).json({ error: 'Failed to accept invitation' });
+  }
+});
+
 // Remove member from workspace
 app.delete("/api/workspaces/:workspaceId/members/:memberId", async (req, res) => {
   try {
@@ -2553,12 +2732,25 @@ app.put("/api/workspaces/:workspaceId/members/:memberId", async (req, res) => {
       return res.status(400).json({ error: "You cannot change your own role" });
     }
 
-    // Update member
-    const updateData = { role };
+    // Update member with role-based permissions
+    const updateData = {};
+    if (role) {
+      updateData.role = role;
+      // Apply default permissions for the new role
+      const rolePerms = ROLE_PERMISSIONS[role];
+      if (rolePerms) {
+        updateData.can_manage_team = rolePerms.can_manage_team;
+        updateData.can_manage_settings = rolePerms.can_manage_settings;
+        updateData.can_delete_posts = rolePerms.can_delete_posts;
+        updateData.can_approve_posts = rolePerms.can_approve_posts;
+      }
+    }
+    // Allow explicit permission overrides if provided
     if (permissions) {
-      if (permissions.canManageTeam !== undefined) updateData.can_manage_team = permissions.canManageTeam;
-      if (permissions.canManageSettings !== undefined) updateData.can_manage_settings = permissions.canManageSettings;
-      if (permissions.canDeletePosts !== undefined) updateData.can_delete_posts = permissions.canDeletePosts;
+      if (typeof permissions.canManageTeam === 'boolean') updateData.can_manage_team = permissions.canManageTeam;
+      if (typeof permissions.canManageSettings === 'boolean') updateData.can_manage_settings = permissions.canManageSettings;
+      if (typeof permissions.canDeletePosts === 'boolean') updateData.can_delete_posts = permissions.canDeletePosts;
+      if (typeof permissions.canApprovePosts === 'boolean') updateData.can_approve_posts = permissions.canApprovePosts;
     }
 
     const { error } = await supabase
@@ -2590,9 +2782,9 @@ app.post("/api/send-team-invite", async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['admin', 'editor', 'view_only'];
+    const validRoles = ['admin', 'editor', 'view_only', 'client'];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({ error: 'Invalid role. Must be admin, editor, or view_only' });
+      return res.status(400).json({ error: 'Invalid role. Must be admin, editor, view_only, or client' });
     }
 
     // Check if email is already a team member
@@ -3158,9 +3350,9 @@ app.post("/api/team/update-role", async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['admin', 'editor', 'view_only'];
+    const validRoles = ['admin', 'editor', 'view_only', 'client'];
     if (!validRoles.includes(newRole)) {
-      return res.status(400).json({ error: 'Invalid role. Must be admin, editor, or view_only' });
+      return res.status(400).json({ error: 'Invalid role. Must be admin, editor, view_only, or client' });
     }
 
     // Fetch the team member record
