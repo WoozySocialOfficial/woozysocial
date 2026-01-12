@@ -213,6 +213,53 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     console.log("Full postData:", JSON.stringify(postData, null, 2));
     console.log("=== END FINAL POST DATA ===");
 
+    // Check if workspace has clients who need to approve scheduled posts
+    const isScheduled = !!scheduledDate;
+    let requiresApproval = false;
+
+    if (isScheduled) {
+      const { data: clients } = await supabase
+        .from('workspace_members')
+        .select('id')
+        .eq('workspace_id', workspaceId)
+        .eq('role', 'client')
+        .limit(1);
+
+      requiresApproval = clients && clients.length > 0;
+    }
+
+    // If requires approval, save to DB and wait for client approval
+    if (requiresApproval) {
+      const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
+        user_id: userId,
+        workspace_id: workspaceId,
+        created_by: userId,
+        caption: text,
+        media_urls: postData.mediaUrls || [],
+        status: 'pending_approval',
+        scheduled_at: new Date(scheduledDate).toISOString(),
+        platforms: platforms,
+        approval_status: 'pending',
+        requires_approval: true
+      }]).select().single();
+
+      if (saveError) {
+        console.error("Error saving post for approval:", saveError);
+        return res.status(500).json({
+          error: "Failed to save post for approval",
+          details: saveError.message
+        });
+      }
+
+      console.log("Post saved for client approval:", savedPost?.id);
+      return res.status(200).json({
+        status: 'pending_approval',
+        message: 'Post saved and awaiting client approval',
+        postId: savedPost?.id
+      });
+    }
+
+    // No approval needed - send directly to Ayrshare
     const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
       headers: {
         "Content-Type": "application/json",
@@ -226,6 +273,19 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     // Check if Ayrshare returned an error even with 200 status
     if (response.data.status === 'error') {
       console.error("Ayrshare API Error:", JSON.stringify(response.data, null, 2));
+
+      // Save failed post to database
+      await supabase.from("posts").insert([{
+        user_id: userId,
+        workspace_id: workspaceId,
+        created_by: userId,
+        caption: text,
+        media_urls: postData.mediaUrls || [],
+        status: 'failed',
+        scheduled_at: isScheduled ? new Date(scheduledDate).toISOString() : null,
+        platforms: platforms,
+        last_error: response.data.posts?.[0]?.message || 'Post failed'
+      }]);
 
       // Extract detailed error messages
       let errorDetails = "Unknown error";
@@ -244,6 +304,25 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
         fullResponse: response.data
       });
     }
+
+    // Save successful post to database
+    const ayrPostId = response.data.id || response.data.postId;
+    await supabase.from("posts").insert([{
+      user_id: userId,
+      workspace_id: workspaceId,
+      created_by: userId,
+      ayr_post_id: ayrPostId,
+      caption: text,
+      media_urls: postData.mediaUrls || [],
+      status: isScheduled ? 'scheduled' : 'posted',
+      scheduled_at: isScheduled ? new Date(scheduledDate).toISOString() : null,
+      posted_at: isScheduled ? null : new Date().toISOString(),
+      platforms: platforms,
+      approval_status: 'approved',
+      requires_approval: false
+    }]);
+
+    console.log("Post saved to database, ayr_post_id:", ayrPostId);
 
     res.status(response.status).json(response.data);
   } catch (error) {
@@ -277,15 +356,78 @@ app.get("/api/post-history", requireActiveProfile, async (req, res) => {
       }
     }
 
-    const response = await axios.get(`${BASE_AYRSHARE}/history`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
-        "Profile-Key": profileKey
+    // Fetch from Ayrshare
+    let ayrshareHistory = [];
+    try {
+      const response = await axios.get(`${BASE_AYRSHARE}/history`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
+          "Profile-Key": profileKey
+        }
+      });
+      ayrshareHistory = response.data.history || [];
+    } catch (ayrError) {
+      console.error("Error fetching from Ayrshare:", ayrError.response?.data || ayrError.message);
+      // Continue with empty Ayrshare history
+    }
+
+    // Fetch pending approval posts from Supabase
+    let supabasePosts = [];
+    if (workspaceId) {
+      const { data: dbPosts, error: dbError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: false });
+
+      if (!dbError && dbPosts) {
+        supabasePosts = dbPosts.map(post => ({
+          id: post.id,
+          post: post.caption,
+          platforms: post.platforms || [],
+          scheduleDate: post.scheduled_at,
+          status: post.status === 'pending_approval' ? 'scheduled' : post.status,
+          type: post.scheduled_at ? 'schedule' : 'post',
+          mediaUrls: post.media_urls || [],
+          approval_status: post.approval_status || 'pending',
+          requires_approval: post.requires_approval || false,
+          comments: [],
+          created_at: post.created_at,
+          // Mark as from DB so frontend knows it's a local post
+          source: 'database',
+          ayr_post_id: post.ayr_post_id
+        }));
       }
+    }
+
+    // Merge: Supabase posts that are pending approval + Ayrshare history
+    // Avoid duplicates by checking ayr_post_id
+    const ayrPostIds = new Set(ayrshareHistory.map(p => p.id));
+    const pendingPosts = supabasePosts.filter(p =>
+      p.approval_status === 'pending' ||
+      p.approval_status === 'rejected' ||
+      !p.ayr_post_id ||
+      !ayrPostIds.has(p.ayr_post_id)
+    );
+
+    // Add approval status to Ayrshare posts from DB
+    const enrichedAyrshare = ayrshareHistory.map(ayrPost => {
+      const dbPost = supabasePosts.find(p => p.ayr_post_id === ayrPost.id);
+      return {
+        ...ayrPost,
+        approval_status: dbPost?.approval_status || 'approved',
+        requires_approval: dbPost?.requires_approval || false,
+        comments: dbPost?.comments || []
+      };
     });
 
-    res.status(response.status).json(response.data);
+    const allHistory = [...pendingPosts, ...enrichedAyrshare];
+
+    res.status(200).json({
+      history: allHistory,
+      count: allHistory.length
+    });
   } catch (error) {
     console.error(
       "Error fetching post history:",
