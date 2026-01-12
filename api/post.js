@@ -1,5 +1,5 @@
 const axios = require("axios");
-const formidable = require("formidable");
+const Busboy = require("busboy");
 const {
   setCors,
   getWorkspaceProfileKey,
@@ -16,31 +16,33 @@ const {
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
-// Parse FormData using formidable
+// Parse FormData using busboy (works with Vercel serverless)
 function parseFormData(req) {
   return new Promise((resolve, reject) => {
-    const form = formidable({ multiples: false });
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      // Formidable v3 returns arrays for fields
-      const parsed = {};
-      for (const key of Object.keys(fields)) {
-        parsed[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
-      }
-      resolve({ fields: parsed, files });
+    const fields = {};
+    const busboy = Busboy({ headers: req.headers });
+
+    busboy.on('field', (name, value) => {
+      fields[name] = value;
     });
+
+    busboy.on('finish', () => {
+      resolve({ fields, files: {} });
+    });
+
+    busboy.on('error', reject);
+
+    req.pipe(busboy);
   });
 }
 
-// Parse JSON body manually (when bodyParser is disabled)
-function parseJsonBody(req) {
+// Parse raw body for JSON (works with Vercel serverless)
+function parseRawBody(req) {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => {
+      const body = Buffer.concat(chunks).toString('utf8');
       try {
         resolve(body ? JSON.parse(body) : {});
       } catch (e) {
@@ -106,19 +108,12 @@ module.exports = async function handler(req, res) {
 
     // Handle both JSON and FormData (bodyParser is disabled)
     if (contentType.includes('multipart/form-data')) {
-      // Parse FormData with formidable
+      // Parse FormData with busboy
       const { fields } = await parseFormData(req);
       body = fields;
-    } else if (contentType.includes('application/json')) {
-      // Parse JSON manually
-      body = await parseJsonBody(req);
     } else {
-      // Fallback - try to parse as JSON
-      try {
-        body = await parseJsonBody(req);
-      } catch {
-        body = {};
-      }
+      // Parse JSON
+      body = await parseRawBody(req);
     }
 
     const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = body;
