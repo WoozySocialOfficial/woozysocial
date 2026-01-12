@@ -66,9 +66,10 @@ export const DashboardContent = () => {
       const res = await fetch(`${baseURL}/api/user-accounts?${queryParam}`);
       if (res.ok) {
         const accountsData = await res.json();
-        console.log("Connected accounts from API:", accountsData.accounts);
-        setConnectedAccounts(accountsData.accounts || []);
-        setStats(prev => ({ ...prev, connectedCount: accountsData.accounts?.length || 0 }));
+        const data = accountsData.data || accountsData;
+        console.log("Connected accounts from API:", data.accounts);
+        setConnectedAccounts(data.accounts || []);
+        setStats(prev => ({ ...prev, connectedCount: data.accounts?.length || 0 }));
       }
     } catch (error) {
       console.error("Error fetching accounts:", error);
@@ -155,9 +156,10 @@ export const DashboardContent = () => {
         .then(res => res.ok ? res.json() : null)
         .then(accountsData => {
           if (accountsData) {
-            console.log("Connected accounts from API:", accountsData.accounts);
-            setConnectedAccounts(accountsData.accounts || []);
-            setStats(prev => ({ ...prev, connectedCount: accountsData.accounts?.length || 0 }));
+            const data = accountsData.data || accountsData;
+            console.log("Connected accounts from API:", data.accounts);
+            setConnectedAccounts(data.accounts || []);
+            setStats(prev => ({ ...prev, connectedCount: data.accounts?.length || 0 }));
           }
         })
         .catch(error => console.error("Error fetching accounts:", error))
