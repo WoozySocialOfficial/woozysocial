@@ -33,39 +33,43 @@ async function parseFormData(req) {
   });
 }
 
+// Read raw body from request stream (works in Vercel serverless)
+async function getRawBody(req) {
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 // Get request body - handles both JSON and FormData
 async function getRequestBody(req) {
   const contentType = req.headers['content-type'] || '';
 
-  // If JSON, parse the body
-  if (contentType.includes('application/json')) {
-    // Body might already be parsed by Vercel
-    if (req.body && typeof req.body === 'object') {
-      return { fields: req.body, files: {} };
-    }
-    // Otherwise read and parse
-    return new Promise((resolve, reject) => {
-      let body = '';
-      req.on('data', chunk => body += chunk);
-      req.on('end', () => {
-        try {
-          resolve({ fields: JSON.parse(body), files: {} });
-        } catch (e) {
-          reject(e);
-        }
-      });
-      req.on('error', reject);
-    });
-  }
-
-  // If FormData/multipart, use formidable
+  // If FormData/multipart, use formidable (must be first - formidable reads stream)
   if (contentType.includes('multipart/form-data')) {
     return parseFormData(req);
   }
 
-  // Default: try to use req.body if available
-  if (req.body) {
-    return { fields: req.body, files: {} };
+  // For JSON and other types, read the raw body
+  try {
+    const rawBody = await getRawBody(req);
+
+    if (rawBody && contentType.includes('application/json')) {
+      return { fields: JSON.parse(rawBody), files: {} };
+    }
+
+    // Try to parse as JSON anyway (some clients don't set correct content-type)
+    if (rawBody) {
+      try {
+        return { fields: JSON.parse(rawBody), files: {} };
+      } catch {
+        // Not JSON, return empty
+        return { fields: {}, files: {} };
+      }
+    }
+  } catch (error) {
+    logError('getRequestBody.parse', error);
   }
 
   return { fields: {}, files: {} };
