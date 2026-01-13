@@ -40,7 +40,9 @@ export const AcceptInvite = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${baseURL}/api/workspace/validate-invite?token=${token}`);
+      const apiUrl = `${baseURL}/api/workspace/validate-invite?token=${token}`;
+      console.log('Validating invitation at:', apiUrl);
+      const response = await fetch(apiUrl);
       const result = await response.json();
 
       if (!response.ok) {

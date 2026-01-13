@@ -1,6 +1,7 @@
 const {
   setCors,
   getSupabase,
+  parseBody,
   ErrorCodes,
   sendSuccess,
   sendError,
@@ -27,10 +28,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { inviteId, workspaceId, userId } = req.body;
+    const body = await parseBody(req);
+    const { inviteId, workspaceId, userId } = body;
 
     // Validate required fields
-    const validation = validateRequired(req.body, ['inviteId', 'userId']);
+    const validation = validateRequired(body, ['inviteId', 'userId']);
     if (!validation.valid) {
       return sendError(
         res,
