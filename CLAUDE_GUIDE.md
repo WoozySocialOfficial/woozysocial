@@ -47,6 +47,7 @@ List files that should not be refactored or significantly changed:
   - schedule -> ScheduleContent.jsx, post-history.js
   - posting -> post.js, SocialPostingForm.jsx, PostContent.jsx, approve.js, pending-approvals.js
   -connecting social media  -> SocialAccounts.jsx, generate-jwt.js, disconnect.js, user-accounts.js
+  - post approvals -> api/post.js, api/post/approve.js, api/post/pending-approvals.js, src/components/ScheduleContent.jsx
 
 ### Developer 2: [Phiwo]
 - Working [testBranch]

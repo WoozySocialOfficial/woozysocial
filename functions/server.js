@@ -1235,7 +1235,7 @@ app.get("/api/post/pending-approvals", async (req, res) => {
       return res.status(403).json({ success: false, error: "You are not a member of this workspace" });
     }
 
-    // Build query for posts
+    // Build query for posts (removed invalid user_profiles join)
     let query = supabase
       .from('posts')
       .select(`
@@ -1249,11 +1249,7 @@ app.get("/api/post/pending-approvals", async (req, res) => {
         requires_approval,
         created_at,
         user_id,
-        user_profiles!user_id (
-          full_name,
-          email,
-          avatar_url
-        ),
+        created_by,
         post_approvals (
           approval_status,
           reviewed_at,
@@ -1285,15 +1281,39 @@ app.get("/api/post/pending-approvals", async (req, res) => {
       return res.status(500).json({ success: false, error: "Failed to fetch pending approvals" });
     }
 
-    // Add comment count and map fields for frontend
-    const postsWithMeta = (posts || []).map(post => ({
-      ...post,
-      post: post.caption,
-      schedule_date: post.scheduled_at,
-      media_url: post.media_urls?.[0] || null,
-      commentCount: post.post_comments?.length || 0,
-      post_comments: undefined
-    }));
+    // Fetch creator info for all posts
+    const creatorIds = [...new Set((posts || []).map(p => p.created_by || p.user_id).filter(Boolean))];
+    let creatorProfiles = {};
+
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, email, avatar_url')
+        .in('id', creatorIds);
+
+      if (profiles) {
+        creatorProfiles = profiles.reduce((acc, p) => {
+          acc[p.id] = p;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Add comment count, creator info, and map fields for frontend
+    const postsWithMeta = (posts || []).map(post => {
+      const creatorId = post.created_by || post.user_id;
+      const creator = creatorProfiles[creatorId] || null;
+      return {
+        ...post,
+        post: post.caption,
+        schedule_date: post.scheduled_at,
+        media_url: post.media_urls?.[0] || null,
+        commentCount: post.post_comments?.length || 0,
+        post_comments: undefined,
+        user_profiles: creator,
+        creator_name: creator?.full_name || creator?.email || 'Unknown'
+      };
+    });
 
     // Group by approval status
     const grouped = {
@@ -1439,14 +1459,29 @@ app.post("/api/post/approve", async (req, res) => {
           if (post.scheduled_at) {
             const scheduledTime = new Date(post.scheduled_at);
             const now = new Date();
+
+            console.log('[approve] Schedule check:', {
+              scheduled_at_raw: post.scheduled_at,
+              scheduledTime: scheduledTime.toISOString(),
+              now: now.toISOString(),
+              isInFuture: scheduledTime > now,
+              diffMs: scheduledTime.getTime() - now.getTime()
+            });
+
             if (scheduledTime > now) {
-              postData.scheduleDate = Math.floor(scheduledTime.getTime() / 1000);
+              // CRITICAL: Ayrshare expects ISO-8601 string format, NOT Unix timestamp!
+              postData.scheduleDate = scheduledTime.toISOString();
+              console.log('[approve] Adding scheduleDate:', postData.scheduleDate);
+            } else {
+              console.log('[approve] Scheduled time has passed, posting immediately');
             }
           }
 
           if (post.media_urls && post.media_urls.length > 0) {
             postData.mediaUrls = post.media_urls;
           }
+
+          console.log('[approve] Sending post data to Ayrshare:', JSON.stringify(postData, null, 2));
 
           const ayrshareResponse = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
             headers: {
@@ -1457,16 +1492,35 @@ app.post("/api/post/approve", async (req, res) => {
             timeout: 30000
           });
 
+          console.log('[approve] Ayrshare response:', JSON.stringify(ayrshareResponse.data, null, 2));
+
           if (ayrshareResponse.data.status !== 'error') {
-            const ayrPostId = ayrshareResponse.data.id || ayrshareResponse.data.postId;
+            // Ayrshare returns different structures for scheduled vs immediate posts
+            // Scheduled posts: { status: 'success', posts: [{ id: '...', ... }] }
+            // Immediate posts: { status: 'success', id: '...', ... }
+            let ayrPostId;
+            if (ayrshareResponse.data.posts && Array.isArray(ayrshareResponse.data.posts) && ayrshareResponse.data.posts.length > 0) {
+              // For scheduled posts, extract from posts array
+              ayrPostId = ayrshareResponse.data.posts[0].id;
+            } else {
+              // For immediate posts, extract from root level
+              ayrPostId = ayrshareResponse.data.id || ayrshareResponse.data.postId || ayrshareResponse.data.scheduleId;
+            }
+
             const scheduledTime = new Date(post.scheduled_at);
             const now = new Date();
             const isStillFuture = scheduledTime > now;
 
+            console.log('[approve] Extracted ayrPostId:', ayrPostId, 'isStillFuture:', isStillFuture);
+
+            if (!ayrPostId) {
+              console.error('[approve] WARNING: No post ID returned from Ayrshare!', ayrshareResponse.data);
+            }
+
             await supabase
               .from('posts')
               .update({
-                ayr_post_id: ayrPostId,
+                ayr_post_id: ayrPostId || null,
                 status: isStillFuture ? 'scheduled' : 'posted',
                 posted_at: isStillFuture ? null : new Date().toISOString()
               })

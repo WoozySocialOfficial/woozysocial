@@ -53,7 +53,8 @@ function parseRawBody(req) {
   });
 }
 
-// Helper to check if workspace has client members who need to approve
+// Helper to check if workspace has client members (for notification purposes)
+// Note: ALL scheduled posts now require approval regardless of client presence
 async function workspaceHasClients(supabase, workspaceId) {
   if (!workspaceId) return false;
 
@@ -148,14 +149,17 @@ module.exports = async function handler(req, res) {
 
     const isScheduled = !!scheduledDate;
 
-    // Check if workspace has clients who need to approve scheduled posts
-    const hasClients = supabase ? await workspaceHasClients(supabase, workspaceId) : false;
-    const requiresApproval = isScheduled && hasClients;
+    // ALL scheduled posts require approval before going to Ayrshare
+    // This ensures posts are reviewed before being sent to social platforms
+    const requiresApproval = isScheduled;
 
-    // If scheduled and has clients, save to DB only - wait for approval
+    // If scheduled, save to DB only - wait for approval before sending to Ayrshare
     if (requiresApproval) {
-      if (supabase) {
-        const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
+      if (!supabase) {
+        return sendError(res, "Database service is required for scheduled posts", ErrorCodes.CONFIG_ERROR);
+      }
+
+      const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
           user_id: userId,
           workspace_id: workspaceId,
           created_by: userId,
@@ -173,7 +177,7 @@ module.exports = async function handler(req, res) {
           return sendError(res, "Failed to save post for approval", ErrorCodes.DATABASE_ERROR);
         }
 
-        // Send notification to clients (non-blocking)
+        // Send notification to team members (non-blocking)
         try {
           const notifyUrl = `${req.headers.origin || process.env.APP_URL || ''}/api/notifications/send-approval-request`;
           axios.post(notifyUrl, {
@@ -188,12 +192,11 @@ module.exports = async function handler(req, res) {
           logError('post.notification_setup', notifyErr);
         }
 
-        return sendSuccess(res, {
-          status: 'pending_approval',
-          message: 'Post saved and awaiting client approval',
-          postId: savedPost?.id
-        });
-      }
+      return sendSuccess(res, {
+        status: 'pending_approval',
+        message: 'Post scheduled and awaiting approval',
+        postId: savedPost?.id
+      });
     }
 
     // Check Ayrshare is configured

@@ -95,23 +95,29 @@ export const ScheduleContent = () => {
         const pendingPosts = responseData.posts || [];
 
         // Map local posts awaiting approval
-        const localPosts = pendingPosts.map(post => ({
-          id: post.id,
-          content: post.post || post.caption || "",
-          platforms: post.platforms || [],
-          scheduleDate: post.schedule_date || post.scheduled_at,
-          status: post.status,
-          type: 'scheduled',
-          mediaUrls: post.media_urls || (post.media_url ? [post.media_url] : []),
-          approvalStatus: post.approval_status || 'pending',
-          requiresApproval: post.requires_approval !== false,
-          comments: [],
-          commentCount: post.commentCount || 0,
-          source: 'local',
-          user_profiles: post.user_profiles
-        }));
+        const localPosts = pendingPosts
+          .filter(post => {
+            // Only include posts that DON'T have an ayr_post_id
+            // (posts with ayr_post_id are already in Ayrshare history)
+            return !post.ayr_post_id;
+          })
+          .map(post => ({
+            id: post.id,
+            content: post.post || post.caption || "",
+            platforms: post.platforms || [],
+            scheduleDate: post.schedule_date || post.scheduled_at,
+            status: post.status,
+            type: 'scheduled',
+            mediaUrls: post.media_urls || (post.media_url ? [post.media_url] : []),
+            approvalStatus: post.approval_status || 'pending',
+            requiresApproval: post.requires_approval !== false,
+            comments: [],
+            commentCount: post.commentCount || 0,
+            source: 'local',
+            user_profiles: post.user_profiles
+          }));
 
-        // Add local posts that aren't duplicates (check by not having ayrshare IDs)
+        // Add local posts (already filtered to exclude duplicates with ayr_post_id)
         allPosts = [...allPosts, ...localPosts];
       }
 
@@ -300,6 +306,21 @@ export const ScheduleContent = () => {
       .sort((a, b) => new Date(a[0]) - new Date(b[0]));
   };
 
+  // Auto-scroll to current date in schedule view
+  useEffect(() => {
+    if (view === 'schedule' && !loading) {
+      const today = formatDateOnlyInTimezone(new Date(), profile?.timezone || 'UTC');
+      const todaySection = document.querySelector(`[data-date="${today}"]`);
+
+      if (todaySection) {
+        // Scroll to today's section with some offset
+        setTimeout(() => {
+          todaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [view, loading, profile?.timezone]);
+
   const weekDates = getWeekDates();
   const monthDates = getMonthDates();
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -307,7 +328,6 @@ export const ScheduleContent = () => {
 
   // Render Post Card
   const renderPostCard = (post, expanded = false) => {
-    const Icon = PLATFORM_ICONS[post.platforms[0]?.toLowerCase()];
     const approvalInfo = APPROVAL_STATUS[post.approvalStatus] || APPROVAL_STATUS.pending;
     const ApprovalIcon = approvalInfo.icon;
 
@@ -315,22 +335,23 @@ export const ScheduleContent = () => {
       <div
         key={post.id}
         className={`post-card ${post.status === "success" ? "published" : "scheduled"} approval-${post.approvalStatus}`}
-        title={post.content}
+        title="Click to view details"
+        onClick={() => { setSelectedPost(post); setShowCommentModal(true); }}
       >
         <div className="post-card-header">
           <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
             <ApprovalIcon size={10} />
             <span>{approvalInfo.label}</span>
           </div>
-          {post.comments?.length > 0 && (
-            <div className="post-comment-count" title={`${post.comments.length} comment(s)`}>
+          {(post.comments?.length > 0 || post.commentCount > 0) && (
+            <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
               <FaComment size={10} />
-              <span>{post.comments.length}</span>
+              <span>{post.comments?.length || post.commentCount}</span>
             </div>
           )}
         </div>
         <div className="post-card-content">
-          {post.content.substring(0, expanded ? 150 : 50)}{post.content.length > (expanded ? 150 : 50) && "..."}
+          {post.content.substring(0, expanded ? 150 : 80)}{post.content.length > (expanded ? 150 : 80) && "..."}
         </div>
         {post.mediaUrls?.length > 0 && (
           <div className="post-card-media">
@@ -357,7 +378,7 @@ export const ScheduleContent = () => {
                 className="approval-btn approve"
                 onClick={(e) => { e.stopPropagation(); handleApproval(post.id, 'approve'); }}
                 disabled={actionLoading}
-                title="Approve post"
+                title="Approve"
               >
                 <FaCheck size={12} />
               </button>
@@ -367,7 +388,7 @@ export const ScheduleContent = () => {
                 className="approval-btn reject"
                 onClick={(e) => { e.stopPropagation(); handleApproval(post.id, 'reject'); }}
                 disabled={actionLoading}
-                title="Reject post"
+                title="Reject"
               >
                 <FaTimes size={12} />
               </button>
@@ -376,7 +397,7 @@ export const ScheduleContent = () => {
               className="approval-btn comment"
               onClick={(e) => { e.stopPropagation(); setSelectedPost(post); setShowCommentModal(true); }}
               disabled={actionLoading}
-              title="Add comment or request changes"
+              title="Comment"
             >
               <FaComment size={12} />
             </button>
@@ -464,7 +485,7 @@ export const ScheduleContent = () => {
     return (
       <div className="schedule-list-view">
         {postsByDate.map(([dateKey, datePosts]) => (
-          <div key={dateKey} className="schedule-day-section">
+          <div key={dateKey} className="schedule-day-section" data-date={dateKey}>
             <div className="schedule-day-header">
               <h3 className="schedule-day-title">{dateKey}</h3>
               <span className="schedule-day-count">{datePosts.length} post{datePosts.length !== 1 ? 's' : ''}</span>

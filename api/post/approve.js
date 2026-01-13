@@ -27,16 +27,38 @@ async function sendToAyrshare(post, profileKey) {
     const scheduledTime = new Date(post.scheduled_at);
     const now = new Date();
 
+    console.log('[sendToAyrshare] Schedule check:', {
+      scheduled_at_raw: post.scheduled_at,
+      scheduledTime: scheduledTime.toISOString(),
+      now: now.toISOString(),
+      isInFuture: scheduledTime > now,
+      diffMs: scheduledTime.getTime() - now.getTime()
+    });
+
     if (scheduledTime > now) {
-      // Schedule for future
-      postData.scheduleDate = Math.floor(scheduledTime.getTime() / 1000);
+      // Schedule for future - MUST use ISO-8601 string format, NOT Unix timestamp!
+      postData.scheduleDate = scheduledTime.toISOString();
+      console.log('[sendToAyrshare] Adding scheduleDate:', postData.scheduleDate);
+    } else {
+      console.log('[sendToAyrshare] Scheduled time has passed, posting immediately');
     }
-    // If scheduled time has passed, post immediately (no scheduleDate)
+  } else {
+    console.log('[sendToAyrshare] No scheduled_at found on post');
   }
 
-  if (post.media_urls && post.media_urls.length > 0) {
-    postData.mediaUrls = post.media_urls;
+  // Handle media URLs - ensure they are valid URLs
+  if (post.media_urls && Array.isArray(post.media_urls) && post.media_urls.length > 0) {
+    // Filter out any empty/null values and ensure URLs are strings
+    const validMediaUrls = post.media_urls
+      .filter(url => url && typeof url === 'string' && url.trim() !== '')
+      .map(url => url.trim());
+
+    if (validMediaUrls.length > 0) {
+      postData.mediaUrls = validMediaUrls;
+    }
   }
+
+  console.log('[sendToAyrshare] Sending post data:', JSON.stringify(postData, null, 2));
 
   const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
     headers: {
@@ -196,17 +218,26 @@ module.exports = async function handler(req, res) {
           try {
             const ayrshareResponse = await sendToAyrshare(post, profileKey);
 
+            console.log('[approve] Ayrshare response:', JSON.stringify(ayrshareResponse, null, 2));
+
             if (ayrshareResponse.status !== 'error') {
               // Update post with Ayrshare ID and new status
-              const ayrPostId = ayrshareResponse.id || ayrshareResponse.postId;
+              // Ayrshare returns 'id' for immediate posts and 'id' for scheduled posts
+              const ayrPostId = ayrshareResponse.id || ayrshareResponse.postId || ayrshareResponse.scheduleId;
               const scheduledTime = new Date(post.scheduled_at);
               const now = new Date();
               const isStillFuture = scheduledTime > now;
 
+              console.log('[approve] Extracted ayrPostId:', ayrPostId, 'isStillFuture:', isStillFuture);
+
+              if (!ayrPostId) {
+                console.error('[approve] WARNING: No post ID returned from Ayrshare!', ayrshareResponse);
+              }
+
               await supabase
                 .from('posts')
                 .update({
-                  ayr_post_id: ayrPostId,
+                  ayr_post_id: ayrPostId || null,
                   status: isStillFuture ? 'scheduled' : 'posted',
                   posted_at: isStillFuture ? null : new Date().toISOString()
                 })

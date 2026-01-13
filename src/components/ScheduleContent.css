@@ -166,13 +166,14 @@
 }
 
 .schedule-cell {
-  height: 70px;
+  min-height: 70px;
+  height: auto;
   border-bottom: 1px solid #e5e7eb;
   padding: 6px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow: visible;
 }
 
 /* Month View */
@@ -294,26 +295,52 @@
 
 /* Post Card */
 .post-card {
-  background: white;
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 12px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 3px solid #6366f1;
+  border: 1px solid #bae6fd;
+  border-left: 4px solid #3b82f6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .post-card.published {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
   border-left-color: #10b981;
 }
 
 .post-card.scheduled {
+  background: #f0f9ff;
+  border-color: #bae6fd;
   border-left-color: #3b82f6;
 }
 
+/* Approval status backgrounds */
+.post-card.approval-pending {
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left-color: #f59e0b;
+}
+
+.post-card.approval-approved {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  border-left-color: #10b981;
+}
+
+.post-card.approval-rejected {
+  background: #fef2f2;
+  border-color: #fecaca;
+  border-left-color: #ef4444;
+}
+
 .post-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .post-card-content {
@@ -424,19 +451,6 @@
   gap: 3px;
   color: #6b7280;
   font-size: 11px;
-}
-
-/* Post Card with Approval Status */
-.post-card.approval-pending {
-  border-left-color: #f59e0b;
-}
-
-.post-card.approval-approved {
-  border-left-color: #10b981;
-}
-
-.post-card.approval-rejected {
-  border-left-color: #ef4444;
 }
 
 /* Post Card Media */

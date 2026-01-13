@@ -40,6 +40,7 @@ async function getRawBody(req) {
 }
 
 // Create Ayrshare profile for a WORKSPACE (not user!)
+// Returns { profileKey, refId } or null on failure
 async function createAyrshareProfile(workspaceName) {
   try {
     const axios = require("axios");
@@ -59,8 +60,11 @@ async function createAyrshareProfile(workspaceName) {
     );
 
     if (response.data && response.data.profileKey) {
-      console.log(`[WEBHOOK] Created Ayrshare profile: ${response.data.profileKey}`);
-      return response.data.profileKey;
+      console.log(`[WEBHOOK] Created Ayrshare profile: ${response.data.profileKey}, refId: ${response.data.refId}`);
+      return {
+        profileKey: response.data.profileKey,
+        refId: response.data.refId || null
+      };
     }
 
     logError("ayrshare-profile-create", "No profileKey in response", {
@@ -73,22 +77,59 @@ async function createAyrshareProfile(workspaceName) {
   }
 }
 
-// NEW ARCHITECTURE: Create workspace with Ayrshare profile key on payment
+// Update existing workspace with Ayrshare profile key and ref id on payment
+async function updateWorkspaceWithProfile(supabase, workspaceId, tier, workspaceName) {
+  try {
+    // 1. Create Ayrshare profile (returns { profileKey, refId })
+    const ayrshareProfile = await createAyrshareProfile(workspaceName);
+    if (!ayrshareProfile) {
+      logError("workspace-update", "Failed to create Ayrshare profile", { workspaceId, tier });
+      return null;
+    }
+
+    // 2. Update existing workspace with profile key AND ref id
+    const { data: workspace, error: workspaceError } = await supabase
+      .from("workspaces")
+      .update({
+        ayr_profile_key: ayrshareProfile.profileKey,
+        ayr_ref_id: ayrshareProfile.refId,
+        subscription_tier: tier,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", workspaceId)
+      .select()
+      .single();
+
+    if (workspaceError) {
+      logError("workspace-update", workspaceError, { workspaceId, tier });
+      return null;
+    }
+
+    console.log(`[WEBHOOK] Updated workspace ${workspace.id} with profile key and ref id`);
+    return workspace;
+  } catch (error) {
+    logError("workspace-update", error, { workspaceId, tier });
+    return null;
+  }
+}
+
+// Create NEW workspace with Ayrshare profile key and ref id (only if user has no workspaces at all)
 async function createWorkspaceWithProfile(supabase, userId, tier, workspaceName) {
   try {
-    // 1. Create Ayrshare profile
-    const profileKey = await createAyrshareProfile(workspaceName);
-    if (!profileKey) {
+    // 1. Create Ayrshare profile (returns { profileKey, refId })
+    const ayrshareProfile = await createAyrshareProfile(workspaceName);
+    if (!ayrshareProfile) {
       logError("workspace-create", "Failed to create Ayrshare profile", { userId, tier });
       return null;
     }
 
-    // 2. Create workspace with the profile key
+    // 2. Create workspace with profile key AND ref id
     const { data: workspace, error: workspaceError } = await supabase
       .from("workspaces")
       .insert({
         name: workspaceName,
-        ayr_profile_key: profileKey,
+        ayr_profile_key: ayrshareProfile.profileKey,
+        ayr_ref_id: ayrshareProfile.refId,
         subscription_tier: tier,
         created_from_payment: true,
         created_at: new Date().toISOString(),
@@ -119,7 +160,7 @@ async function createWorkspaceWithProfile(supabase, userId, tier, workspaceName)
       // Don't return null - workspace was created, just membership failed
     }
 
-    console.log(`[WEBHOOK] Created workspace ${workspace.id} with profile key for user ${userId}`);
+    console.log(`[WEBHOOK] Created workspace ${workspace.id} with profile key and ref id for user ${userId}`);
     return workspace;
   } catch (error) {
     logError("workspace-create", error, { userId, tier });
@@ -191,19 +232,44 @@ module.exports = async function handler(req, res) {
           logError("stripe-webhook-update", updateError, { userId, event: event.type });
         }
 
-        // Check if user already has a workspace with a profile key
+        // Check user's existing workspaces (as owner)
         const { data: existingWorkspaces } = await supabase
           .from("workspace_members")
-          .select("workspace_id, workspaces!inner(ayr_profile_key)")
+          .select("workspace_id, workspaces!inner(id, name, ayr_profile_key)")
           .eq("user_id", userId)
           .eq("role", "owner");
 
-        const hasWorkspaceWithProfile = existingWorkspaces?.some(
+        const workspaceWithProfile = existingWorkspaces?.find(
           (w) => w.workspaces?.ayr_profile_key
         );
+        const workspaceWithoutProfile = existingWorkspaces?.find(
+          (w) => !w.workspaces?.ayr_profile_key
+        );
 
-        // NEW ARCHITECTURE: Create workspace with profile key if needed
-        if (!hasWorkspaceWithProfile) {
+        if (workspaceWithProfile) {
+          // User already has a workspace with profile key - nothing to do
+          console.log(`[WEBHOOK] User ${userId} already has workspace with profile key: ${workspaceWithProfile.workspace_id}`);
+        } else if (workspaceWithoutProfile) {
+          // User has existing workspace WITHOUT profile key - UPDATE it
+          const existingWorkspace = workspaceWithoutProfile.workspaces;
+          console.log(`[WEBHOOK] Updating existing workspace ${existingWorkspace.id} with profile key`);
+
+          const workspace = await updateWorkspaceWithProfile(
+            supabase,
+            existingWorkspace.id,
+            tier,
+            existingWorkspace.name || workspaceName
+          );
+
+          if (workspace) {
+            console.log(`[WEBHOOK] User ${userId} subscription activated, updated workspace ${workspace.id}`);
+          } else {
+            console.error(`[WEBHOOK] User ${userId} subscription activated but workspace update failed`);
+          }
+        } else {
+          // User has NO workspaces at all - CREATE new one
+          console.log(`[WEBHOOK] User ${userId} has no workspaces, creating new one`);
+
           const workspace = await createWorkspaceWithProfile(
             supabase,
             userId,
@@ -212,12 +278,10 @@ module.exports = async function handler(req, res) {
           );
 
           if (workspace) {
-            console.log(`[WEBHOOK] User ${userId} subscription activated with workspace ${workspace.id}`);
+            console.log(`[WEBHOOK] User ${userId} subscription activated with new workspace ${workspace.id}`);
           } else {
             console.error(`[WEBHOOK] User ${userId} subscription activated but workspace creation failed`);
           }
-        } else {
-          console.log(`[WEBHOOK] User ${userId} already has workspace with profile key`);
         }
         break;
       }

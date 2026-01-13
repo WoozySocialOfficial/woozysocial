@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
       return sendError(res, "You are not a member of this workspace", ErrorCodes.FORBIDDEN);
     }
 
-    // Build query for posts
+    // Build query for posts (removed invalid user_profiles join)
     let query = supabase
       .from('posts')
       .select(`
@@ -65,11 +65,7 @@ module.exports = async function handler(req, res) {
         requires_approval,
         created_at,
         user_id,
-        user_profiles!user_id (
-          full_name,
-          email,
-          avatar_url
-        ),
+        created_by,
         post_approvals (
           approval_status,
           reviewed_at,
@@ -101,16 +97,41 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to fetch pending approvals", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Add comment count and map fields for frontend
-    const postsWithMeta = (posts || []).map(post => ({
-      ...post,
-      // Map to frontend expected field names
-      post: post.caption,
-      schedule_date: post.scheduled_at,
-      media_url: post.media_urls?.[0] || null,
-      commentCount: post.post_comments?.length || 0,
-      post_comments: undefined // Remove the array, just keep count
-    }));
+    // Fetch creator info for all posts
+    const creatorIds = [...new Set((posts || []).map(p => p.created_by || p.user_id).filter(Boolean))];
+    let creatorProfiles = {};
+
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, email, avatar_url')
+        .in('id', creatorIds);
+
+      if (profiles) {
+        creatorProfiles = profiles.reduce((acc, p) => {
+          acc[p.id] = p;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Add comment count, creator info, and map fields for frontend
+    const postsWithMeta = (posts || []).map(post => {
+      const creatorId = post.created_by || post.user_id;
+      const creator = creatorProfiles[creatorId] || null;
+      return {
+        ...post,
+        // Map to frontend expected field names
+        post: post.caption,
+        schedule_date: post.scheduled_at,
+        media_url: post.media_urls?.[0] || null,
+        commentCount: post.post_comments?.length || 0,
+        post_comments: undefined, // Remove the array, just keep count
+        // Add creator info
+        user_profiles: creator,
+        creator_name: creator?.full_name || creator?.email || 'Unknown'
+      };
+    });
 
     // Group by approval status for UI convenience
     const grouped = {
