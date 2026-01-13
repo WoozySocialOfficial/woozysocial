@@ -152,7 +152,7 @@ module.exports = async function handler(req, res) {
         const inviterName = inviterData?.full_name || inviterData?.email || 'A team member';
         const workspaceName = workspace?.name || 'a workspace';
         const assignedRole = role || 'editor';
-        const appUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://woozysocial.com';
+        const appUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://api.woozysocial.com';
         const inviteLink = `${appUrl}/accept-invite?token=${invitation.invite_token}`;
 
         try {
