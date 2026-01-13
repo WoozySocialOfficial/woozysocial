@@ -342,9 +342,8 @@ export const TeamContent = () => {
                         <span className="member-role owner-role">{getRoleLabel(member.role)}</span>
                       ) : isCurrentUser ? (
                         <button
-                          className="remove-button"
+                          className="leave-workspace-button"
                           onClick={handleLeaveWorkspace}
-                          style={{backgroundColor: '#f44336'}}
                         >
                           Leave Workspace
                         </button>

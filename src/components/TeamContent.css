@@ -199,6 +199,26 @@
   transform: translateY(-1px);
 }
 
+.leave-workspace-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #dc2626;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-family: inherit;
+}
+
+.leave-workspace-button:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
 .team-info-box {
   background-color: #F1F6F4;
   border: 3px dashed rgba(0, 0, 0, 0.4);
