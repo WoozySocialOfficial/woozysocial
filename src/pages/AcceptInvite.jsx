@@ -59,9 +59,12 @@ export const AcceptInvite = () => {
         return;
       }
 
-      if (result.success && result.invitation) {
+      // API returns data nested in "data" property
+      const invitation = result.data?.invitation || result.invitation;
+
+      if (result.success && invitation) {
         setInvitation({
-          ...result.invitation,
+          ...invitation,
           type: 'workspace'
         });
       } else {
@@ -99,11 +102,15 @@ export const AcceptInvite = () => {
 
       const data = await response.json();
 
+      // API returns nested in "data" property
+      const responseData = data.data || data;
+      const message = responseData.message;
+
       // Handle "already a member" as success - just redirect
-      if (data.success || data.message?.includes('already a member')) {
+      if (data.success || message?.includes('already a member')) {
         await refreshWorkspaces();
-        const message = data.message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
-        navigate('/team', { state: { message } });
+        const displayMessage = message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
+        navigate('/team', { state: { message: displayMessage } });
         return;
       }
 
@@ -116,8 +123,8 @@ export const AcceptInvite = () => {
       await refreshWorkspaces();
 
       // Success! Redirect to team page
-      const message = `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
-      navigate('/team', { state: { message } });
+      const successMessage = message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
+      navigate('/team', { state: { message: successMessage } });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       setError(error.message || 'Failed to accept invitation');
