@@ -152,8 +152,8 @@ module.exports = async function handler(req, res) {
         const inviterName = inviterData?.full_name || inviterData?.email || 'A team member';
         const workspaceName = workspace?.name || 'a workspace';
         const assignedRole = role || 'editor';
-        // Use APP_URL first (correct), ignore FRONTEND_URL (wrong domain)
-        const appUrl = (process.env.APP_URL || 'https://api.woozysocial.com').trim();
+        // Use APP_URL environment variable for invitation links (must be frontend domain)
+        const appUrl = (process.env.APP_URL || 'https://woozysocial.com').trim();
         const inviteLink = `${appUrl}/accept-invite?token=${invitation.invite_token}`;
 
         try {

@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
     }
 
     const resend = isServiceConfigured('resend') ? new Resend(process.env.RESEND_API_KEY) : null;
-    const appUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://api.woozysocial.com';
+    const appUrl = process.env.APP_URL || 'https://woozysocial.com';
     const workspaceName = workspace?.name || 'your workspace';
     const platformList = platforms?.join(', ') || 'multiple platforms';
     const scheduledDate = scheduledAt ? new Date(scheduledAt).toLocaleString('en-US', {
