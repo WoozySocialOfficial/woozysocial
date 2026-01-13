@@ -38,7 +38,7 @@ export const Sidebar = () => {
     <div className="sidebar">
       <div className="sidebar-content">
         <div className="sidebar-logo">
-          <img src="/ChatGPT Image Dec 31, 2025, 04_19_09 PM.png" alt="Woozy Social" className="sidebar-logo-image" />
+          <img src="/assets/woozysocial.png" alt="Woozy Social" className="sidebar-logo-image" />
         </div>
 
         <div className="sidebar-workspace-switcher">

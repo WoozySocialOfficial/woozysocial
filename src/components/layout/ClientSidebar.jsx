@@ -18,7 +18,7 @@ export const ClientSidebar = () => {
     <div className="client-sidebar">
       <div className="client-sidebar-content">
         <div className="client-sidebar-logo">
-          <img src="/ChatGPT Image Dec 31, 2025, 04_19_09 PM.png" alt="Woozy Social" className="client-logo-image" />
+          <img src="/assets/woozysocial.png" alt="Woozy Social" className="client-logo-image" />
         </div>
 
         <div className="client-workspace-info">

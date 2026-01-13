@@ -129,6 +129,7 @@ export const TopHeader = () => {
         </button>
 
         <div className="logo-container">
+          <img src="/assets/woozysocial.png" alt="Woozy Social" style={{ height: '40px', objectFit: 'contain' }} />
         </div>
 
         <div className="header-right">
@@ -175,7 +176,7 @@ export const TopHeader = () => {
       <div className={`mobile-nav ${mobileNavOpen ? 'open' : ''}`}>
         <div className="mobile-nav-header">
           <img
-            src="/ChatGPT Image Dec 31, 2025, 04_19_09 PM.png"
+            src="/assets/woozysocial.png"
             alt="Woozy Social"
             style={{ height: '40px', objectFit: 'contain' }}
           />
