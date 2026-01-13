@@ -388,9 +388,6 @@ export const ComposeContent = () => {
 
   // Check if a platform is linked
   const isLinked = (platformKey) => {
-    // TEMPORARILY RETURN TRUE FOR ALL PLATFORMS TO TEST HIGHLIGHTING
-    return true;
-
     if (!connectedAccounts || connectedAccounts.length === 0) {
       return false;
     }
@@ -551,12 +548,28 @@ export const ComposeContent = () => {
         setLastSaved(null);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.details || "Failed to schedule post");
+
+        // More specific error messages
+        let errorMessage = errorData.error || "Failed to schedule post";
+
+        if (errorData.code === 'SUBSCRIPTION_REQUIRED') {
+          errorMessage = "Please subscribe to schedule posts.";
+        } else if (errorData.error && errorData.error.includes('No social media accounts')) {
+          errorMessage = "Please connect your social media accounts before scheduling posts.";
+        } else if (errorData.error && errorData.error.includes('upload media')) {
+          errorMessage = errorData.error || "Failed to upload your media file. Please try again.";
+        }
+
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error("Error scheduling post:", error);
       toast({
-        title: "Error scheduling post",
+        title: error.message.includes("subscribe") || error.message.includes("Subscription")
+          ? "Subscription Required"
+          : error.message.includes("connect") || error.message.includes("account")
+          ? "No Social Accounts"
+          : "Error scheduling post",
         description: error.message || "Unable to schedule your post. Please try again.",
         status: "error",
         duration: 5000,
@@ -1388,13 +1401,39 @@ export const ComposeContent = () => {
         setLastSaved(null);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.details || "Failed to submit post");
+
+        // More specific error messages based on error codes
+        let errorMessage = errorData.error || "Failed to submit post";
+        let errorTitle = "An error occurred";
+
+        if (errorData.code === 'SUBSCRIPTION_REQUIRED') {
+          errorTitle = "Subscription Required";
+          errorMessage = "Please subscribe to post to social media platforms.";
+        } else if (errorData.code === 'CONFIG_ERROR') {
+          errorTitle = "Configuration Error";
+          errorMessage = errorData.error || "Social media service is not properly configured. Please contact support.";
+        } else if (errorData.code === 'VALIDATION_ERROR') {
+          errorTitle = "Validation Error";
+          errorMessage = errorData.error || "Please check your post content and try again.";
+        } else if (errorData.error && errorData.error.includes('No social media accounts')) {
+          errorTitle = "No Social Accounts";
+          errorMessage = "Please connect your social media accounts in the Social Accounts tab before posting.";
+        } else if (errorData.error && errorData.error.includes('upload media')) {
+          errorTitle = "Media Upload Failed";
+          errorMessage = errorData.error || "Failed to upload your media file. Please try again.";
+        }
+
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error("Error submitting post:", error);
       toast({
-        title: "An error occurred.",
-        description: error.message || "Unable to submit your post.",
+        title: error.message.includes("connect") || error.message.includes("account")
+          ? "No Social Accounts"
+          : error.message.includes("subscribe") || error.message.includes("Subscription")
+          ? "Subscription Required"
+          : "An error occurred",
+        description: error.message || "Unable to submit your post. Please try again.",
         status: "error",
         duration: 5000,
         isClosable: true

@@ -20,14 +20,33 @@ const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 function parseFormData(req) {
   return new Promise((resolve, reject) => {
     const fields = {};
+    const files = {};
     const busboy = Busboy({ headers: req.headers });
 
     busboy.on('field', (name, value) => {
       fields[name] = value;
     });
 
+    busboy.on('file', (fieldname, file, info) => {
+      const { filename, encoding, mimeType } = info;
+      const chunks = [];
+
+      file.on('data', (data) => {
+        chunks.push(data);
+      });
+
+      file.on('end', () => {
+        files[fieldname] = {
+          buffer: Buffer.concat(chunks),
+          filename,
+          encoding,
+          mimeType
+        };
+      });
+    });
+
     busboy.on('finish', () => {
-      resolve({ fields, files: {} });
+      resolve({ fields, files });
     });
 
     busboy.on('error', reject);
@@ -89,6 +108,57 @@ function parseNetworks(networks) {
   }
 }
 
+// Upload media file to Supabase Storage and return public URL
+async function uploadMediaToStorage(supabase, file, userId, workspaceId) {
+  try {
+    if (!file || !file.buffer) {
+      return { success: false, error: 'No file provided' };
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const extension = file.filename.split('.').pop();
+    const sanitizedFilename = file.filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `${workspaceId || userId}/${timestamp}-${sanitizedFilename}`;
+
+    console.log(`[uploadMediaToStorage] Uploading file: ${storagePath}, size: ${file.buffer.length} bytes, type: ${file.mimeType}`);
+
+    // Upload to Supabase Storage bucket 'post-media'
+    const { data, error } = await supabase.storage
+      .from('post-media')
+      .upload(storagePath, file.buffer, {
+        contentType: file.mimeType,
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      logError('uploadMediaToStorage', error, { storagePath, mimeType: file.mimeType });
+      return { success: false, error: error.message };
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(storagePath);
+
+    if (!publicUrlData || !publicUrlData.publicUrl) {
+      return { success: false, error: 'Failed to generate public URL' };
+    }
+
+    console.log(`[uploadMediaToStorage] Successfully uploaded: ${publicUrlData.publicUrl}`);
+
+    return {
+      success: true,
+      publicUrl: publicUrlData.publicUrl,
+      storagePath
+    };
+  } catch (error) {
+    logError('uploadMediaToStorage', error);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = async function handler(req, res) {
   setCors(res);
 
@@ -109,18 +179,38 @@ module.exports = async function handler(req, res) {
   try {
     const contentType = req.headers['content-type'] || '';
     let body = {};
+    let uploadedFiles = {};
 
     // Handle both JSON and FormData (bodyParser is disabled)
     if (contentType.includes('multipart/form-data')) {
       // Parse FormData with busboy
-      const { fields } = await parseFormData(req);
+      const { fields, files } = await parseFormData(req);
       body = fields;
+      uploadedFiles = files;
     } else {
       // Parse JSON
       body = await parseRawBody(req);
     }
 
-    const { text, networks, scheduledDate, userId, workspaceId, mediaUrl } = body;
+    const { text, networks, scheduledDate, userId, workspaceId } = body;
+    let { mediaUrl } = body;
+
+    // If file was uploaded, upload to Supabase Storage first
+    if (uploadedFiles.media) {
+      console.log('[post] File upload detected, uploading to Supabase Storage...');
+      const uploadResult = await uploadMediaToStorage(supabase, uploadedFiles.media, userId, workspaceId);
+
+      if (!uploadResult.success) {
+        return sendError(
+          res,
+          `Failed to upload media: ${uploadResult.error}`,
+          ErrorCodes.EXTERNAL_API_ERROR
+        );
+      }
+
+      mediaUrl = uploadResult.publicUrl;
+      console.log('[post] Media uploaded successfully:', mediaUrl);
+    }
 
     // Validate required fields
     const validation = validateRequired(body, ['text', 'networks', 'userId']);
