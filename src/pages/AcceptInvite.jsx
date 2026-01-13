@@ -40,7 +40,7 @@ export const AcceptInvite = () => {
     try {
       setLoading(true);
 
-      const apiUrl = `${baseURL}/api/workspace/validate-invite?token=${token}`;
+      const apiUrl = `${baseURL}/api/invitations/validate?token=${token}`;
       console.log('Validating invitation at:', apiUrl);
       const response = await fetch(apiUrl);
       const result = await response.json();
@@ -86,13 +86,13 @@ export const AcceptInvite = () => {
     try {
       setAccepting(true);
 
-      const response = await fetch(`${baseURL}/api/workspace/accept-invite`, {
+      const response = await fetch(`${baseURL}/api/invitations/accept`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inviteToken: token,
+          token: token,
           userId: user.id,
         }),
       });

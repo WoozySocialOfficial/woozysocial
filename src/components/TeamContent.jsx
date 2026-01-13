@@ -55,17 +55,15 @@ export const TeamContent = () => {
       }
 
       setInvitesLoading(true);
-      // Use workspace invitations endpoint
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/invitations?userId=${user.id}`);
+      // Use new invitations API
+      const response = await fetch(`${baseURL}/api/invitations/list?workspaceId=${activeWorkspace.id}&userId=${user.id}`);
       const payload = await response.json();
 
       if (!response.ok) {
         throw new Error(payload.error || 'Failed to fetch pending invites');
       }
 
-      // Handle both old format (payload.invitations) and new format (payload.data.invitations)
-      const responseData = payload.data || payload;
-      setPendingInvites(responseData.invitations || []);
+      setPendingInvites(payload.data?.invitations || payload.invitations || []);
     } catch (error) {
       console.error('Error fetching pending invites:', error);
     } finally {
@@ -83,15 +81,16 @@ export const TeamContent = () => {
         throw new Error('No active workspace');
       }
 
-      // Call the workspace invite API (uses workspace_invitations table)
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/invite`, {
+      // Use new invitations API
+      const response = await fetch(`${baseURL}/api/invitations/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          workspaceId: activeWorkspace.id,
           email: inviteData.email,
-          role: inviteData.role || 'member',
+          role: inviteData.role || 'editor',
           userId: user.id,
         }),
       });
@@ -119,14 +118,14 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/workspace/cancel-invite`, {
+      // Use new invitations API
+      const response = await fetch(`${baseURL}/api/invitations/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          inviteId,
-          workspaceId: activeWorkspace.id,
+          invitationId: inviteId,
           userId: user.id,
         }),
       });
