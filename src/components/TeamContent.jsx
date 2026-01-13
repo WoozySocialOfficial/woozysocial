@@ -235,6 +235,38 @@ export const TeamContent = () => {
     }
   };
 
+  const handleLeaveWorkspace = async () => {
+    if (!window.confirm('Are you sure you want to leave this workspace? You will need to be invited again to rejoin.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${baseURL}/api/invitations/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workspaceId: activeWorkspace.id,
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to leave workspace');
+      }
+
+      alert('You have successfully left the workspace');
+      // Redirect to home or refresh to switch workspace
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Error leaving workspace:', error);
+      alert(error.message || 'Failed to leave workspace');
+    }
+  };
+
   return (
     <div className="team-container">
       <div className="team-header">
@@ -285,6 +317,7 @@ export const TeamContent = () => {
                 };
 
                 const isOwner = member.role === 'owner';
+                const isCurrentUser = member.user_id === user.id;
 
                 return (
                   <div key={member.id} className="member-card">
@@ -294,6 +327,7 @@ export const TeamContent = () => {
                         <h3 className="member-name">
                           {member.profile?.full_name || member.profile?.email || "Unknown user"}
                           {isOwner && <span className="owner-badge">Owner</span>}
+                          {isCurrentUser && !isOwner && <span className="owner-badge" style={{backgroundColor: '#4CAF50'}}>You</span>}
                         </h3>
                         <p className="member-email">
                           {member.profile?.email || "Email not available"}
@@ -306,6 +340,14 @@ export const TeamContent = () => {
                     <div className="member-actions">
                       {isOwner ? (
                         <span className="member-role owner-role">{getRoleLabel(member.role)}</span>
+                      ) : isCurrentUser ? (
+                        <button
+                          className="remove-button"
+                          onClick={handleLeaveWorkspace}
+                          style={{backgroundColor: '#f44336'}}
+                        >
+                          Leave Workspace
+                        </button>
                       ) : (
                         <>
                           <select
