@@ -370,18 +370,42 @@
     grid-template-columns: 1fr;
   }
 
+  .dashboard-right {
+    max-width: 100%;
+  }
+
   .dashboard-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .quick-actions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-content {
+    gap: 20px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard-content {
+    gap: 16px;
+  }
+
   .dashboard-stats {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
   }
 
   .dashboard-title {
@@ -390,5 +414,61 @@
 
   .stat-value {
     font-size: 36px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .quick-actions-section,
+  .recent-posts-section,
+  .social-accounts-section {
+    padding: 20px;
+  }
+
+  .post-item {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    gap: 12px;
+  }
+
+  .dashboard-title {
+    font-size: 24px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 14px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 32px;
+  }
+
+  .quick-actions-section,
+  .recent-posts-section,
+  .social-accounts-section {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  .action-btn {
+    padding: 10px 20px;
+    font-size: 14px;
   }
 }
