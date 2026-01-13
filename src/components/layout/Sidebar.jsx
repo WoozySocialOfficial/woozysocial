@@ -19,7 +19,6 @@ export const Sidebar = () => {
     { name: "Compose", path: "/compose" },
     { name: "Schedule", path: "/schedule" },
     { name: "Posts", path: "/posts" },
-    { name: "Assets", path: "/assets" },
     { name: "Engagement", path: "/engagement" },
     { name: "Social Inbox", path: "/social-inbox" },
     { name: "Team", path: "/team", requiresSubscriptionOrTeam: true },
