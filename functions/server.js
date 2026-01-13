@@ -291,7 +291,6 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     console.log("Full postData:", JSON.stringify(postData, null, 2));
     console.log("=== END FINAL POST DATA ===");
 
-<<<<<<< Updated upstream
     // If requires approval, save to DB and wait for client approval
     if (requiresApproval) {
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
@@ -324,9 +323,6 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
     }
 
     // No approval needed - send directly to Ayrshare
-=======
-    // Send to Ayrshare
->>>>>>> Stashed changes
     const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
       headers: {
         "Content-Type": "application/json",
@@ -2558,6 +2554,71 @@ const ROLE_PERMISSIONS = {
   view_only: { can_manage_team: false, can_manage_settings: false, can_delete_posts: false, can_approve_posts: false },
   client: { can_manage_team: false, can_manage_settings: false, can_delete_posts: false, can_approve_posts: true }
 };
+
+// Validate workspace invitation (public - no auth required)
+app.get("/api/workspace/validate-invite", async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    // Get the invitation by invite_token
+    const { data: invitation, error: inviteError } = await supabase
+      .from('workspace_invitations')
+      .select(`
+        id,
+        workspace_id,
+        email,
+        role,
+        status,
+        invited_at,
+        expires_at,
+        workspaces (
+          id,
+          name,
+          slug,
+          logo_url
+        )
+      `)
+      .eq('invite_token', token)
+      .single();
+
+    if (inviteError || !invitation) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
+    // Check if invitation is still valid
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ error: `Invitation has already been ${invitation.status}` });
+    }
+
+    if (new Date(invitation.expires_at) < new Date()) {
+      await supabase
+        .from('workspace_invitations')
+        .update({ status: 'expired' })
+        .eq('id', invitation.id);
+      return res.status(400).json({ error: 'Invitation has expired' });
+    }
+
+    return res.json({
+      success: true,
+      invitation: {
+        id: invitation.id,
+        email: invitation.email,
+        role: invitation.role,
+        status: invitation.status,
+        invited_at: invitation.invited_at,
+        expires_at: invitation.expires_at,
+        workspace: invitation.workspaces
+      }
+    });
+  } catch (error) {
+    console.error('Error validating invitation:', error);
+    return res.status(500).json({ error: 'Failed to validate invitation' });
+  }
+});
 
 // Accept workspace invitation
 app.post("/api/workspace/accept-invite", async (req, res) => {
