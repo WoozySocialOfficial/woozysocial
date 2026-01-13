@@ -21,7 +21,7 @@
 }
 
 .client-header-left img {
-  height: 50px;
+  height: 60px;
   object-fit: contain;
 }
 
@@ -129,7 +129,7 @@
 
 @media (max-width: 1024px) {
   .client-header-left img {
-    height: 60px;
+    height: 65px;
   }
 }
 
@@ -139,7 +139,7 @@
   }
 
   .client-header-left img {
-    height: 55px;
+    height: 60px;
   }
 
   .client-profile-avatar {

@@ -137,7 +137,7 @@
 }
 
 .logo-container img {
-  height: 50px;
+  height: 60px;
   object-fit: contain;
 }
 
@@ -195,7 +195,7 @@
 }
 
 .mobile-nav-header img {
-  height: 60px;
+  height: 65px;
   object-fit: contain;
 }
 
@@ -253,7 +253,7 @@
   }
 
   .logo-container img {
-    height: 60px;
+    height: 65px;
   }
 }
 
