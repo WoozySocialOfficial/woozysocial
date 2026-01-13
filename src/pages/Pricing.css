@@ -77,15 +77,15 @@
 }
 
 .subscription-badge strong {
-  color: #FFC801;
+  color: #6366f1;
   text-transform: capitalize;
 }
 
 .btn-manage {
   padding: 10px 20px;
   background: transparent;
-  border: 1px solid #FFC801;
-  color: #FFC801;
+  border: 1px solid #6366f1;
+  color: #6366f1;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -97,7 +97,7 @@
 }
 
 .btn-manage:hover:not(:disabled) {
-  background: #FFC801;
+  background: #6366f1;
   color: #000;
 }
 
@@ -147,7 +147,7 @@
 }
 
 .pricing-card.popular {
-  border-color: #FFC801;
+  border-color: #6366f1;
   box-shadow: 0 0 40px rgba(255, 200, 1, 0.15);
 }
 
@@ -160,7 +160,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #FFC801;
+  background: #6366f1;
   color: #000;
   padding: 4px 16px;
   border-radius: 20px;
@@ -283,14 +283,14 @@
 }
 
 .btn-select.btn-popular {
-  background: #FFC801;
-  border-color: #FFC801;
+  background: #6366f1;
+  border-color: #6366f1;
   color: #000;
 }
 
 .btn-select.btn-popular:hover:not(:disabled) {
-  background: #e6b400;
-  border-color: #e6b400;
+  background: #4f46e5;
+  border-color: #4f46e5;
 }
 
 .btn-select.btn-current {
@@ -332,7 +332,7 @@
 }
 
 .contact-info a {
-  color: #FFC801;
+  color: #6366f1;
   text-decoration: none;
 }
 

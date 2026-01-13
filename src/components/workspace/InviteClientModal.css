@@ -3,7 +3,7 @@
 }
 
 .invite-modal .modal-description strong {
-  color: #FFC801;
+  color: #6366f1;
 }
 
 .role-select {
@@ -24,7 +24,7 @@
 
 .role-select:focus {
   outline: none;
-  border-color: #FFC801;
+  border-color: #6366f1;
 }
 
 .role-select:disabled {

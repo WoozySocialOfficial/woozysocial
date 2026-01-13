@@ -63,12 +63,12 @@
 }
 
 .upload-button {
-  background: #FFC801;
+  background: #6366f1;
   color: #114C5A;
 }
 
 .upload-button:hover {
-  background: #ffdb4d;
+  background: #818cf8;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 200, 1, 0.3);
 }
@@ -190,8 +190,8 @@
 }
 
 .filter-btn.active {
-  background-color: #FFC801;
-  border-color: #FFC801;
+  background-color: #6366f1;
+  border-color: #6366f1;
   color: #000000;
 }
 
@@ -206,7 +206,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #FFC801;
+  border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(255, 200, 1, 0.1);
 }
 
@@ -222,12 +222,12 @@
 }
 
 .drop-zone:hover {
-  border-color: #FFC801;
+  border-color: #6366f1;
   background-color: #fffbf0;
 }
 
 .drop-zone.dragging {
-  border-color: #FFC801;
+  border-color: #6366f1;
   background-color: #fff9e6;
   border-style: solid;
 }

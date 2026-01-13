@@ -48,8 +48,8 @@
 }
 
 .filter-tab.active {
-  background: #FFC801;
-  border-color: #FFC801;
+  background: #6366f1;
+  border-color: #6366f1;
   color: #000;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .post-card.selected {
-  border-color: #FFC801;
+  border-color: #6366f1;
 }
 
 .post-card-header {
@@ -287,7 +287,7 @@
 
 .comment.system-comment {
   background: rgba(255, 200, 1, 0.1);
-  border-left: 3px solid #FFC801;
+  border-left: 3px solid #6366f1;
 }
 
 .comment-header {
@@ -337,7 +337,7 @@
 
 .add-comment textarea:focus {
   outline: none;
-  border-color: #FFC801;
+  border-color: #6366f1;
 }
 
 .btn-add-comment {

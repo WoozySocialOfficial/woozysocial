@@ -32,7 +32,7 @@
 }
 
 .client-profile-avatar {
-  background-color: #FFC801;
+  background-color: #6366f1;
   border-radius: 19.5px;
   height: 39px;
   min-width: 39px;
@@ -51,7 +51,7 @@
 }
 
 .client-profile-avatar:hover {
-  background-color: #E6B400;
+  background-color: #4f46e5;
   transform: scale(1.05);
 }
 
@@ -87,7 +87,7 @@
 .client-dropdown-role {
   font-size: 11px;
   font-weight: 500;
-  color: #FFC801;
+  color: #6366f1;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }

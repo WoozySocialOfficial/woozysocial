@@ -62,13 +62,13 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background: #FFC801;
+  background: #6366f1;
   color: #114C5A;
   font-family: inherit;
 }
 
 .add-member-button:hover {
-  background: #ffdb4d;
+  background: #818cf8;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 200, 1, 0.3);
 }
@@ -116,7 +116,7 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #FFC801;
+  color: #6366f1;
   font-weight: 600;
   border: 2px solid rgba(0, 0, 0, 0.4);
 }
@@ -151,7 +151,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #114C5A;
-  background-color: #FFC801;
+  background-color: #6366f1;
   padding: 8px 16px;
   border-radius: 8px;
   border: 2px solid rgba(0, 0, 0, 0.4);
@@ -161,7 +161,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #114C5A;
-  background-color: #FFC801;
+  background-color: #6366f1;
   padding: 8px 16px;
   border-radius: 8px;
   border: 2px solid rgba(0, 0, 0, 0.4);
@@ -171,7 +171,7 @@
 }
 
 .role-dropdown:hover {
-  background-color: #ffdb4d;
+  background-color: #818cf8;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 200, 1, 0.3);
 }
@@ -296,7 +296,7 @@
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
   background-color: #114C5A;
-  color: #FFC801;
+  color: #6366f1;
   font-family: inherit;
   display: flex;
   align-items: center;
@@ -329,7 +329,7 @@
 
 /* Owner styles */
 .member-avatar.owner {
-  background-color: #FFC801;
+  background-color: #6366f1;
   color: #114C5A;
   border: 3px solid #114C5A;
 }
@@ -337,7 +337,7 @@
 .owner-badge {
   display: inline-block;
   background-color: #114C5A;
-  color: #FFC801;
+  color: #6366f1;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
@@ -349,7 +349,7 @@
 
 .member-role.owner-role {
   background-color: #114C5A;
-  color: #FFC801;
+  color: #6366f1;
   font-weight: 700;
 }
 

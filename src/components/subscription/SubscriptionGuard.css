@@ -64,7 +64,7 @@
 }
 
 .subscription-guard-button {
-  background: #FFC801;
+  background: #6366f1;
   color: #000000;
   border: none;
   border-radius: 8px;
@@ -113,7 +113,7 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  color: #FFC801;
+  color: #6366f1;
 }
 
 .subscription-banner-text {
@@ -136,7 +136,7 @@
 
 .subscription-banner-button {
   flex-shrink: 0;
-  background: #FFC801;
+  background: #6366f1;
   color: #000000;
   border: none;
   border-radius: 6px;

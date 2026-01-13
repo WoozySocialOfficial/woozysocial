@@ -47,7 +47,7 @@
 }
 
 .view-btn.active {
-  background: #FFC801;
+  background: #6366f1;
   color: #114C5A;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-weight: 600;
@@ -271,7 +271,7 @@
 }
 
 .schedule-day-count {
-  background: #FFC801;
+  background: #6366f1;
   color: #114C5A;
   padding: 4px 12px;
   border-radius: 12px;

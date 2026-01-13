@@ -23,7 +23,7 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-  pending: '#FFC801',
+  pending: '#6366f1',
   approved: '#2ecc71',
   rejected: '#e74c3c',
   changes_requested: '#f39c12'

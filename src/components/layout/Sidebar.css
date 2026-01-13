@@ -80,12 +80,12 @@
 
 .sidebar .menu-item:hover {
   background-color: transparent;
-  border: 2px solid #FFC801;
+  border: 2px solid #6366f1;
 }
 
 .sidebar .menu-item.active {
   background-color: transparent;
-  border: 2px solid #FFC801;
+  border: 2px solid #6366f1;
 }
 
 .sidebar .menu-item-text {
@@ -106,7 +106,7 @@
 
 .sidebar .menu-item:hover .menu-item-text,
 .sidebar .menu-item.active .menu-item-text {
-  color: #FFC801;
+  color: #6366f1;
   opacity: 1;
 }
 

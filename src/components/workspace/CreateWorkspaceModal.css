@@ -91,7 +91,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #FFC801;
+  border-color: #6366f1;
 }
 
 .form-group input::placeholder {
@@ -143,13 +143,13 @@
 }
 
 .btn-primary {
-  background: #FFC801;
+  background: #6366f1;
   border: none;
   color: #000;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #e6b400;
+  background: #4f46e5;
 }
 
 .btn-primary:disabled,

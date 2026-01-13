@@ -87,7 +87,7 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #FFC801;
+  border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(255, 200, 1, 0.1);
 }
 
@@ -103,7 +103,7 @@
 
 .auth-button {
   padding: 14px 24px;
-  background-color: #FFC801;
+  background-color: #6366f1;
   color: #000000;
   border: none;
   border-radius: 8px;
@@ -115,7 +115,7 @@
 }
 
 .auth-button:hover:not(:disabled) {
-  background-color: #E6B400;
+  background-color: #4f46e5;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 200, 1, 0.3);
 }

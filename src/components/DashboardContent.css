@@ -122,9 +122,9 @@
 }
 
 .action-btn.primary {
-  background-color: #FFC801;
+  background-color: #6366f1;
   color: #000000;
-  border-color: #FFC801;
+  border-color: #6366f1;
 }
 
 .action-btn:hover {
@@ -285,7 +285,7 @@
 
 .social-account-item.clickable:hover {
   background-color: #fff9e6;
-  border: 1px solid #FFC801;
+  border: 1px solid #6366f1;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(255, 200, 1, 0.2);
 }
@@ -346,7 +346,7 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  background-color: #FFC801;
+  background-color: #6366f1;
   color: #000000;
   border: none;
   cursor: pointer;
@@ -354,7 +354,7 @@
 }
 
 .connect-button:hover:not(:disabled) {
-  background-color: #e6b400;
+  background-color: #4f46e5;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(255, 200, 1, 0.3);
 }
