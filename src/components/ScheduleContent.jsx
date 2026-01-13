@@ -306,6 +306,21 @@ export const ScheduleContent = () => {
       .sort((a, b) => new Date(a[0]) - new Date(b[0]));
   };
 
+  // Auto-scroll to current date in schedule view
+  useEffect(() => {
+    if (view === 'schedule' && !loading) {
+      const today = formatDateOnlyInTimezone(new Date(), profile?.timezone || 'UTC');
+      const todaySection = document.querySelector(`[data-date="${today}"]`);
+
+      if (todaySection) {
+        // Scroll to today's section with some offset
+        setTimeout(() => {
+          todaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [view, loading, profile?.timezone]);
+
   const weekDates = getWeekDates();
   const monthDates = getMonthDates();
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -470,7 +485,7 @@ export const ScheduleContent = () => {
     return (
       <div className="schedule-list-view">
         {postsByDate.map(([dateKey, datePosts]) => (
-          <div key={dateKey} className="schedule-day-section">
+          <div key={dateKey} className="schedule-day-section" data-date={dateKey}>
             <div className="schedule-day-header">
               <h3 className="schedule-day-title">{dateKey}</h3>
               <span className="schedule-day-count">{datePosts.length} post{datePosts.length !== 1 ? 's' : ''}</span>
