@@ -34,7 +34,7 @@ export const ClientHeader = () => {
   return (
     <div className="client-header">
       <div className="client-header-left">
-        <img src="/assets/woozysocial.png" alt="Woozy Social" style={{ height: '40px', objectFit: 'contain' }} />
+        <img src="/assets/woozysocial.png" alt="Woozy Social" />
       </div>
 
       <div className="client-header-right">
