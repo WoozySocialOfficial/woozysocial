@@ -44,7 +44,15 @@ export const AcceptInvite = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || 'Invitation not found or invalid');
+        const errorMessage = result.error || 'Invitation not found or invalid';
+
+        // If invitation was already accepted, redirect to dashboard
+        if (errorMessage.includes('already been accepted')) {
+          navigate('/', { state: { message: 'You have already accepted this invitation!' } });
+          return;
+        }
+
+        setError(errorMessage);
         setLoading(false);
         return;
       }
@@ -60,7 +68,7 @@ export const AcceptInvite = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error validating invitation:', error);
-      setError('An error occurred while validating the invitation');
+      setError('An error occurred while validating the invitation. Please check your internet connection and try again.');
       setLoading(false);
     }
   };
@@ -88,6 +96,14 @@ export const AcceptInvite = () => {
       });
 
       const data = await response.json();
+
+      // Handle "already a member" as success - just redirect
+      if (data.success || data.message?.includes('already a member')) {
+        await refreshWorkspaces();
+        const message = data.message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
+        navigate('/team', { state: { message } });
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to accept invitation');
