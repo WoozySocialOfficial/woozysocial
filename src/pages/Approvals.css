@@ -24,33 +24,39 @@
 /* Filter Tabs */
 .approval-filters {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #2a2a2a;
+  padding-bottom: 20px;
 }
 
 .filter-tab {
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #999;
+  padding: 12px 24px;
+  background: #1e1e1e;
+  border: 2px solid #2a2a2a;
+  border-radius: 10px;
+  color: #aaa;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .filter-tab:hover {
-  background: #333;
+  background: #242424;
+  border-color: #afabf9;
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(175, 171, 249, 0.15);
 }
 
 .filter-tab.active {
-  background: #afabf9;
+  background: linear-gradient(135deg, #afabf9 0%, #9895f5 100%);
   border-color: #afabf9;
   color: #000;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(175, 171, 249, 0.3);
 }
 
 /* Content Layout */
@@ -86,8 +92,22 @@
 .loading-state,
 .empty-state {
   text-align: center;
-  padding: 40px;
-  color: #888;
+  padding: 80px 40px;
+  color: #999;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.6;
+}
+
+.empty-state p {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.loading-state {
+  font-weight: 400;
+  font-style: italic;
 }
 
 /* Post Card */
