@@ -291,6 +291,7 @@ async function sendPostScheduledNotification(supabase, { postId, workspaceId, sc
       console.log('[sendPostScheduledNotification] Successfully created', notifications.length, 'notifications');
     }
   } catch (error) {
+    console.log('[sendPostScheduledNotification] Catch block error:', error);
     logError('notifications.helpers.postScheduled', error, { postId, workspaceId });
   }
 }
@@ -580,6 +581,7 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
       console.log('[sendApprovalRequestNotification] Successfully created', notifications.length, 'notifications');
     }
   } catch (error) {
+    console.log('[sendApprovalRequestNotification] Catch block error:', error);
     logError('notifications.helpers.approvalRequest', error, { workspaceId, postId });
   }
 }

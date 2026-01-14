@@ -268,9 +268,10 @@ module.exports = async function handler(req, res) {
           return sendError(res, "Failed to save post for approval", ErrorCodes.DATABASE_ERROR);
         }
 
-        // Send approval request notification to clients (non-blocking)
+        // Send approval request notification to clients
+        // IMPORTANT: Must await to ensure notifications are created before function terminates
         if (workspaceId) {
-          sendApprovalRequestNotification(supabase, {
+          await sendApprovalRequestNotification(supabase, {
             workspaceId,
             postId: savedPost?.id,
             platforms,
@@ -278,9 +279,10 @@ module.exports = async function handler(req, res) {
           }).catch(err => logError('post.notification.approvalRequest', err, { postId: savedPost?.id }));
         }
 
-        // Send post scheduled notification to admins/owners (non-blocking)
+        // Send post scheduled notification to admins/owners
+        // IMPORTANT: Must await to ensure notifications are created before function terminates
         if (workspaceId) {
-          sendPostScheduledNotification(supabase, {
+          await sendPostScheduledNotification(supabase, {
             postId: savedPost?.id,
             workspaceId,
             scheduledAt: scheduledDate,
