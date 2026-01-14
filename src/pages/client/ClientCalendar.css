@@ -177,6 +177,27 @@
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
   backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .posts-modal {
@@ -193,6 +214,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  animation: slideUp 0.3s ease-out;
 }
 
 .modal-header {
@@ -280,6 +302,17 @@
   line-height: 1.5;
   margin-bottom: 10px;
   white-space: pre-wrap;
+}
+
+.post-media {
+  margin-bottom: 10px;
+}
+
+.post-media img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .post-platforms {

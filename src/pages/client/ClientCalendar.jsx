@@ -20,6 +20,30 @@ export const ClientCalendar = () => {
     fetchPosts();
   }, [activeWorkspace, currentDate]);
 
+  // Handle body scroll lock when modal is open
+  useEffect(() => {
+    if (selectedDate) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedDate]);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && selectedDate) {
+        setSelectedDate(null);
+        setSelectedPosts([]);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [selectedDate]);
+
   const fetchPosts = async () => {
     if (!activeWorkspace || !user) return;
 
@@ -73,8 +97,8 @@ export const ClientCalendar = () => {
   const getPostsForDate = (date) => {
     if (!date) return [];
     return posts.filter((post) => {
-      if (!post.scheduled_at) return false;
-      const postDate = new Date(post.scheduled_at);
+      if (!post.schedule_date) return false;
+      const postDate = new Date(post.schedule_date);
       return (
         postDate.getDate() === date.getDate() &&
         postDate.getMonth() === date.getMonth() &&
@@ -111,6 +135,7 @@ export const ClientCalendar = () => {
   };
 
   const formatTime = (dateStr) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -171,7 +196,7 @@ export const ClientCalendar = () => {
                               key={post.id}
                               className="post-dot"
                               style={{ backgroundColor: getStatusColor(post.status, post.approval_status) }}
-                              title={post.caption?.substring(0, 50)}
+                              title={post.post?.substring(0, 50)}
                             />
                           ))}
                           {datePosts.length > 3 && (
@@ -239,10 +264,15 @@ export const ClientCalendar = () => {
                         style={{ backgroundColor: getStatusColor(post.status, post.approval_status) }}
                       />
                       <div className="modal-post-content">
-                        <div className="post-time">{formatTime(post.scheduled_at)}</div>
+                        <div className="post-time">{formatTime(post.schedule_date)}</div>
                         <div className="post-caption">
-                          {post.caption || 'No caption'}
+                          {post.post || 'No content'}
                         </div>
+                        {post.media_url && (
+                          <div className="post-media">
+                            <img src={post.media_url} alt="Post media" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} />
+                          </div>
+                        )}
                         <div className="post-platforms">
                           {post.platforms?.join(', ')}
                         </div>
