@@ -236,6 +236,7 @@ async function sendNewCommentNotification(supabase, { postId, workspaceId, comme
 async function sendPostScheduledNotification(supabase, { postId, workspaceId, scheduledAt, platforms, createdByUserId }) {
   try {
     console.log('[sendPostScheduledNotification] Starting...', { workspaceId, postId, createdByUserId });
+    console.log('[sendPostScheduledNotification] About to query workspace_members...');
 
     // Notify workspace admins/owners (excluding the creator)
     const { data: admins, error: queryError } = await supabase
@@ -245,7 +246,10 @@ async function sendPostScheduledNotification(supabase, { postId, workspaceId, sc
       .in('role', ['owner', 'admin'])
       .neq('user_id', createdByUserId);
 
+    console.log('[sendPostScheduledNotification] Query completed. Error:', queryError, 'Data:', admins);
+
     if (queryError) {
+      console.log('[sendPostScheduledNotification] Query error detected, returning early');
       logError('notifications.helpers.postScheduled.query', queryError, { workspaceId, postId });
       return;
     }
@@ -526,6 +530,7 @@ async function sendPostPublishedNotification(supabase, { postId, workspaceId, cr
 async function sendApprovalRequestNotification(supabase, { workspaceId, postId, platforms, createdByUserId }) {
   try {
     console.log('[sendApprovalRequestNotification] Starting...', { workspaceId, postId, platforms });
+    console.log('[sendApprovalRequestNotification] About to query workspace_members...');
 
     // Get all view_only and client members (database may use either role name)
     const { data: clients, error: queryError } = await supabase
@@ -534,7 +539,10 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
       .eq('workspace_id', workspaceId)
       .in('role', ['view_only', 'client']);
 
+    console.log('[sendApprovalRequestNotification] Query completed. Error:', queryError, 'Data:', clients);
+
     if (queryError) {
+      console.log('[sendApprovalRequestNotification] Query error detected, returning early');
       logError('notifications.helpers.approvalRequest.query', queryError, { workspaceId, postId });
       return;
     }
