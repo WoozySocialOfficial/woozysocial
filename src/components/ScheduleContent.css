@@ -47,7 +47,7 @@
 }
 
 .view-btn.active {
-  background: #6366f1;
+  background: #6961f6;
   color: #114C5A;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-weight: 600;
@@ -235,7 +235,7 @@
 
 .more-posts {
   font-size: 11px;
-  color: #6366f1;
+  color: #6961f6;
   font-weight: 500;
   padding: 4px 8px;
   background: #eef2ff;
@@ -271,7 +271,7 @@
 }
 
 .schedule-day-count {
-  background: #6366f1;
+  background: #6961f6;
   color: #114C5A;
   padding: 4px 12px;
   border-radius: 12px;
@@ -521,7 +521,7 @@
 }
 
 .approval-btn.comment:hover {
-  background: #6366f1;
+  background: #6961f6;
   color: white;
 }
 

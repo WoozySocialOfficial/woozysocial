@@ -120,13 +120,13 @@
 }
 
 .btn-post {
-  background-color: #6366f1;
+  background-color: #6961f6;
   color: #000000;
-  border-color: #6366f1;
+  border-color: #6961f6;
 }
 
 .btn-post:hover {
-  background-color: #4f46e5;
+  background-color: #5951e5;
 }
 
 /* Right Column - Socials */
@@ -1438,7 +1438,7 @@
 
 .quick-action-btn:hover {
   background: #f9fafb;
-  border-color: #6366f1;
+  border-color: #6961f6;
 }
 
 /* Responsive */

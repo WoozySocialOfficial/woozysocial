@@ -109,12 +109,12 @@
 
 .client-menu-item:hover {
   background-color: transparent;
-  border: 2px solid #6366f1;
+  border: 2px solid #6961f6;
 }
 
 .client-menu-item.active {
   background-color: transparent;
-  border: 2px solid #6366f1;
+  border: 2px solid #6961f6;
 }
 
 .client-menu-item-text {
@@ -135,6 +135,6 @@
 
 .client-menu-item:hover .client-menu-item-text,
 .client-menu-item.active .client-menu-item-text {
-  color: #6366f1;
+  color: #6961f6;
   opacity: 1;
 }

@@ -74,9 +74,9 @@ export const SubscriptionGuard = ({
           <div className="subscription-guard-card">
             <div className="subscription-guard-icon">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="24" fill="#6366f1" fillOpacity="0.1"/>
-                <path d="M24 14V18M24 26V30M16 22L14 24L16 26M32 22L34 24L32 26M20 30L18 32M28 30L30 32M20 18L18 16M28 18L30 16" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="24" cy="24" r="4" stroke="#6366f1" strokeWidth="2"/>
+                <rect width="48" height="48" rx="24" fill="#6961f6" fillOpacity="0.1"/>
+                <path d="M24 14V18M24 26V30M16 22L14 24L16 26M32 22L34 24L32 26M20 30L18 32M28 30L30 32M20 18L18 16M28 18L30 16" stroke="#6961f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="24" cy="24" r="4" stroke="#6961f6" strokeWidth="2"/>
               </svg>
             </div>
             <h3 className="subscription-guard-title">

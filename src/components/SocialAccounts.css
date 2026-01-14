@@ -41,7 +41,7 @@
 }
 
 .platform-card:hover {
-  border-color: #6366f1;
+  border-color: #6961f6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }

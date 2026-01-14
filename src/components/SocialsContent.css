@@ -110,12 +110,12 @@
   cursor: pointer;
   transition: all 0.2s;
   border: none;
-  background-color: #6366f1;
+  background-color: #6961f6;
   color: #ffffff;
 }
 
 .connect-button:hover {
-  background-color: #4f46e5;
+  background-color: #5951e5;
 }
 
 .connect-button.connected {

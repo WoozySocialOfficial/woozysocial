@@ -1697,7 +1697,7 @@ export const ComposeContent = () => {
                     disabled={isShorteningLink || !urlToShorten}
                     style={{
                       padding: '10px 20px',
-                      backgroundColor: '#6366f1',
+                      backgroundColor: '#6961f6',
                       border: 'none',
                       borderRadius: '8px',
                       fontSize: '14px',
@@ -1716,7 +1716,7 @@ export const ComposeContent = () => {
                     padding: '12px',
                     backgroundColor: 'rgba(255, 200, 1, 0.1)',
                     borderRadius: '8px',
-                    border: '1px solid #6366f1'
+                    border: '1px solid #6961f6'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <input

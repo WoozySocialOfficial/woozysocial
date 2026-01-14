@@ -196,12 +196,12 @@
 }
 
 .invite-button {
-  background: #6366f1;
+  background: #6961f6;
   color: #114C5A;
 }
 
 .invite-button:hover:not(:disabled) {
-  background: #818cf8;
+  background: #afabf9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 200, 1, 0.3);
 }

@@ -40,7 +40,7 @@
 }
 
 .top-header .profile-avatar {
-  background-color: #6366f1;
+  background-color: #6961f6;
   border-radius: 19.5px;
   height: 39px;
   min-width: 39px;
@@ -59,7 +59,7 @@
 }
 
 .top-header .profile-avatar:hover {
-  background-color: #4f46e5;
+  background-color: #5951e5;
   transform: scale(1.05);
 }
 
@@ -224,8 +224,8 @@
 
 .mobile-nav-item:hover,
 .mobile-nav-item.active {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #6961f6;
+  color: #6961f6;
 }
 
 /* Responsive Styles */

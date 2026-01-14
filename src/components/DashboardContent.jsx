@@ -359,7 +359,7 @@ export const DashboardContent = () => {
                       <span
                         className={`status-badge ${isConnected ? 'active' : 'inactive'}`}
                         style={{
-                          backgroundColor: isConnected ? '#6366f1' : '#fee2e2',
+                          backgroundColor: isConnected ? '#6961f6' : '#fee2e2',
                           color: isConnected ? '#114C5A' : '#dc2626',
                           padding: '6px 16px',
                           borderRadius: '20px',

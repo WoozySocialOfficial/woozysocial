@@ -233,7 +233,7 @@ export const WorkspaceSwitcher = () => {
                           <svg className="check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path
                               d="M13 4L6 11L3 8"
-                              stroke="#6366f1"
+                              stroke="#6961f6"
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -283,7 +283,7 @@ export const WorkspaceSwitcher = () => {
                   <svg className="check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path
                       d="M13 4L6 11L3 8"
-                      stroke="#6366f1"
+                      stroke="#6961f6"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
