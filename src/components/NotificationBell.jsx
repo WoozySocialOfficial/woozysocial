@@ -141,6 +141,7 @@ export const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fadingOutIds, setFadingOutIds] = useState(new Set());
   const dropdownRef = useRef(null);
 
   // Get notification config with fallback
@@ -184,11 +185,19 @@ export const NotificationBell = () => {
     }
   }, [user, activeWorkspace]);
 
-  // Mark all as read
+  // Mark all as read with animation
   const markAllAsRead = async () => {
     if (!user || unreadCount === 0) return;
 
     try {
+      // Get all unread notification IDs
+      const unreadNotifications = notifications.filter(n => !n.read);
+      const unreadIds = unreadNotifications.map(n => n.id);
+
+      // Add to fading out set
+      setFadingOutIds(prev => new Set([...prev, ...unreadIds]));
+
+      // Mark as read in backend
       await fetch(`${baseURL}/api/notifications/list`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,17 +207,29 @@ export const NotificationBell = () => {
         })
       });
 
+      // Update state to mark as read
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+
+      // After animation completes, remove from dropdown
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => !unreadIds.includes(n.id)));
+        setFadingOutIds(new Set());
+      }, 300); // Match CSS transition duration
+
     } catch (error) {
       console.error("Error marking as read:", error);
     }
   };
 
-  // Handle notification click with smart routing
+  // Handle notification click with smart routing and animation
   const handleNotificationClick = (notification) => {
-    // Mark as read
+    // Mark as read with animation
     if (!notification.read) {
+      // Add to fading out set
+      setFadingOutIds(prev => new Set(prev).add(notification.id));
+
+      // Mark as read in backend
       fetch(`${baseURL}/api/notifications/list`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,10 +239,21 @@ export const NotificationBell = () => {
         })
       }).catch(err => console.error(err));
 
+      // Update notification state
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
+
+      // After animation, remove from dropdown
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== notification.id));
+        setFadingOutIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(notification.id);
+          return newSet;
+        });
+      }, 300); // Match CSS transition duration
     }
 
     // Navigate based on notification type and metadata
@@ -407,11 +439,12 @@ export const NotificationBell = () => {
 
   const renderNotificationItem = (notification) => {
     const config = getConfig(notification.type);
+    const isFadingOut = fadingOutIds.has(notification.id);
 
     return (
       <div
         key={notification.id}
-        className={`notification-item ${!notification.read ? 'unread' : ''}`}
+        className={`notification-item ${!notification.read ? 'unread' : ''} ${isFadingOut ? 'fade-out' : ''}`}
         onClick={() => handleNotificationClick(notification)}
       >
         <span

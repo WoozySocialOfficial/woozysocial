@@ -24,6 +24,7 @@ import { SettingsContent } from "./components/SettingsContent";
 import { EngagementContent } from "./components/EngagementContent";
 import { Approvals } from "./pages/Approvals";
 import { Pricing } from "./pages/Pricing";
+import { Notifications } from "./pages/Notifications";
 import { ClientDashboard } from "./pages/client/ClientDashboard";
 import { ClientApprovals } from "./pages/client/ClientApprovals";
 import { ClientApproved } from "./pages/client/ClientApproved";
@@ -84,6 +85,7 @@ function App() {
                           <Route path="/social-inbox" element={<SocialInboxContent />} />
                           <Route path="/team" element={<TeamContent />} />
                           <Route path="/approvals" element={<Approvals />} />
+                          <Route path="/notifications" element={<Notifications />} />
                           <Route path="/settings" element={<SettingsContent />} />
                           <Route path="/pricing" element={<Pricing />} />
                         </Routes>
