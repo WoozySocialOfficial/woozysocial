@@ -56,6 +56,7 @@ function App() {
                         <Route path="/approvals" element={<ClientApprovals />} />
                         <Route path="/approved" element={<ClientApproved />} />
                         <Route path="/calendar" element={<ClientCalendar />} />
+                        <Route path="/notifications" element={<Notifications />} />
                       </Routes>
                     </ClientLayout>
                   </RoleBasedRedirect>

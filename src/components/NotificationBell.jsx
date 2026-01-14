@@ -550,7 +550,7 @@ export const NotificationBell = () => {
               <button
                 className="view-all-btn"
                 onClick={() => {
-                  navigate('/notifications');
+                  navigate(isClientRole ? '/client/notifications' : '/notifications');
                   setIsOpen(false);
                 }}
               >
