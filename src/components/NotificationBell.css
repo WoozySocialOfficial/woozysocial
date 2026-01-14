@@ -57,7 +57,7 @@
 
 .notification-dropdown {
   position: fixed;
-  top: 60px;
+  top: 78px;
   right: 20px;
   width: 380px;
   background: #ffffff;
@@ -321,11 +321,18 @@
 }
 
 /* Mobile responsive */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    top: 68px; /* Header height is 60px on mobile */
+  }
+}
+
 @media (max-width: 480px) {
   .notification-dropdown {
     width: calc(100vw - 20px);
-    right: -10px;
+    right: 10px;
     max-width: 360px;
+    top: 68px;
   }
 
   .notification-list {
