@@ -212,11 +212,22 @@ export const ScheduleContent = () => {
     return filteredPosts.filter(post => {
       if (!post.scheduleDate) return false;
       const postDate = new Date(post.scheduleDate);
+
+      // Compare dates in local time
+      const postYear = postDate.getFullYear();
+      const postMonth = postDate.getMonth();
+      const postDay = postDate.getDate();
+      const postHour = postDate.getHours();
+
+      const slotYear = date.getFullYear();
+      const slotMonth = date.getMonth();
+      const slotDay = date.getDate();
+
       return (
-        postDate.getFullYear() === date.getFullYear() &&
-        postDate.getMonth() === date.getMonth() &&
-        postDate.getDate() === date.getDate() &&
-        postDate.getHours() === hour
+        postYear === slotYear &&
+        postMonth === slotMonth &&
+        postDay === slotDay &&
+        postHour === hour
       );
     });
   };
