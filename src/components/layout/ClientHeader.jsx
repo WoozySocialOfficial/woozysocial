@@ -33,9 +33,7 @@ export const ClientHeader = () => {
 
   return (
     <div className="client-header">
-      <div className="client-header-left">
-        <img src="/assets/woozysocial.png" alt="Woozy Social" style={{ height: '75px', objectFit: 'contain' }} />
-      </div>
+      <div style={{ flex: 1 }}></div>
 
       <div className="client-header-right">
         <NotificationBell />
