@@ -196,7 +196,7 @@ async function sendNewCommentNotification(supabase, { postId, workspaceId, comme
         .from('workspace_members')
         .select('user_id')
         .eq('workspace_id', workspaceId)
-        .in('role', ['client', 'view_only', 'owner', 'admin'])
+        .in('role', ['owner', 'admin', 'client'])
         .neq('user_id', commenterId);
 
       approvers?.forEach(approver => {
@@ -532,14 +532,15 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
     console.log('[sendApprovalRequestNotification] Starting...', { workspaceId, postId, platforms });
     console.log('[sendApprovalRequestNotification] About to query workspace_members...');
 
-    // Get all view_only and client members (database may use either role name)
-    const { data: clients, error: queryError } = await supabase
+    // Get all members who can approve posts (owner, admin, client)
+    // Exclude editors as they create posts but can't approve them
+    const { data: approvers, error: queryError } = await supabase
       .from('workspace_members')
       .select('user_id, role')
       .eq('workspace_id', workspaceId)
-      .in('role', ['view_only', 'client']);
+      .in('role', ['owner', 'admin', 'client']);
 
-    console.log('[sendApprovalRequestNotification] Query completed. Error:', queryError, 'Data:', clients);
+    console.log('[sendApprovalRequestNotification] Query completed. Error:', queryError, 'Data:', approvers);
 
     if (queryError) {
       console.log('[sendApprovalRequestNotification] Query error detected, returning early');
@@ -547,17 +548,17 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
       return;
     }
 
-    console.log('[sendApprovalRequestNotification] Clients found:', clients?.length || 0, 'roles:', clients?.map(c => c.role));
+    console.log('[sendApprovalRequestNotification] Approvers found:', approvers?.length || 0, 'roles:', approvers?.map(a => a.role));
 
-    if (!clients || clients.length === 0) {
-      console.log('[sendApprovalRequestNotification] No clients found, skipping notification');
+    if (!approvers || approvers.length === 0) {
+      console.log('[sendApprovalRequestNotification] No approvers found, skipping notification');
       return;
     }
 
     const platformList = platforms?.join(', ') || 'multiple platforms';
 
-    const notifications = clients.map(client => ({
-      user_id: client.user_id,
+    const notifications = approvers.map(approver => ({
+      user_id: approver.user_id,
       workspace_id: workspaceId,
       post_id: postId,
       type: 'approval_request',
@@ -574,6 +575,7 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
 
     if (insertError) {
       logError('notifications.helpers.approvalRequest.insert', insertError, { workspaceId, postId, count: notifications.length });
+      console.log('[sendApprovalRequestNotification] Insert error:', insertError);
     } else {
       console.log('[sendApprovalRequestNotification] Successfully created', notifications.length, 'notifications');
     }
