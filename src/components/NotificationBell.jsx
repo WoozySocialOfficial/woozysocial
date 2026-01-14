@@ -164,15 +164,16 @@ export const NotificationBell = () => {
       console.log('[NotificationBell] Response status:', res.status, 'ok:', res.ok);
 
       if (res.ok) {
-        const data = await res.json();
-        console.log('[NotificationBell] Received data:', data);
-        console.log('[NotificationBell] data.success:', data.success);
-        console.log('[NotificationBell] data.data:', data.data);
-        console.log('[NotificationBell] Notifications count:', data.notifications?.length || data.data?.notifications?.length || 0);
+        const response = await res.json();
+        console.log('[NotificationBell] Received response:', response);
 
-        setNotifications(data.notifications || data.data?.notifications || []);
-        setUnreadCount(data.unreadCount || data.data?.unreadCount || 0);
-        console.log('[NotificationBell] State updated');
+        // API returns { success: true, data: { notifications: [], unreadCount: 0 } }
+        const data = response.data || response;
+        console.log('[NotificationBell] Notifications count:', data.notifications?.length || 0);
+
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+        console.log('[NotificationBell] State updated - notifications:', data.notifications?.length, 'unread:', data.unreadCount);
       } else {
         console.error('[NotificationBell] Response not ok:', res.status);
       }
