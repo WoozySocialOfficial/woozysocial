@@ -149,26 +149,6 @@ export const ClientDashboard = () => {
       <div className="quick-actions-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <Link to="/compose" className="quick-action-card">
-            <span className="action-icon">✍️</span>
-            <span className="action-text">New Post</span>
-          </Link>
-
-          <Link to="/compose" className="quick-action-card">
-            <span className="action-icon">🤖</span>
-            <span className="action-text">AI Generate</span>
-          </Link>
-
-          <Link to="/brand-profile" className="quick-action-card">
-            <span className="action-icon">🏢</span>
-            <span className="action-text">Brand Profile</span>
-          </Link>
-
-          <Link to="/schedule" className="quick-action-card">
-            <span className="action-icon">📆</span>
-            <span className="action-text">View Schedule</span>
-          </Link>
-
           <Link to="/client/approvals" className="quick-action-card">
             <span className="action-icon">📋</span>
             <span className="action-text">Review Pending Posts</span>
