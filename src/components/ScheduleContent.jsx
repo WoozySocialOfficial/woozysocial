@@ -311,7 +311,7 @@ export const ScheduleContent = () => {
             )}
           </div>
           <div className="post-card-content">
-            {post.content.substring(0, 50)}{post.content.length > 50 && "..."}
+            {post.content.substring(0, 35)}{post.content.length > 35 && "..."}
           </div>
           <div className="post-card-footer">
             <div className="post-platforms">
@@ -331,7 +331,7 @@ export const ScheduleContent = () => {
         {isExpanded && (
           <div className="post-card-expanded">
             {/* Full content */}
-            {post.content.length > 50 && (
+            {post.content.length > 35 && (
               <div className="post-card-full-content">
                 {post.content}
               </div>
