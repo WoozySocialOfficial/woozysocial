@@ -206,11 +206,14 @@ export const ClientCalendar = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Selected Date Posts */}
-        <div className="calendar-sidebar">
-          {selectedDate ? (
-            <>
+      {/* Modal for Selected Date Posts */}
+      {selectedDate && (
+        <>
+          <div className="modal-overlay" onClick={() => setSelectedDate(null)} />
+          <div className="posts-modal">
+            <div className="modal-header">
               <h3>
                 {selectedDate.toLocaleDateString('en-US', {
                   weekday: 'long',
@@ -218,21 +221,27 @@ export const ClientCalendar = () => {
                   day: 'numeric'
                 })}
               </h3>
+              <button className="modal-close" onClick={() => setSelectedDate(null)}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-content">
               {selectedPosts.length === 0 ? (
                 <div className="no-posts">No posts scheduled for this day.</div>
               ) : (
-                <div className="sidebar-posts">
+                <div className="modal-posts">
                   {selectedPosts.map((post) => (
-                    <div key={post.id} className="sidebar-post">
+                    <div key={post.id} className="modal-post">
                       <div
                         className="post-status-bar"
                         style={{ backgroundColor: getStatusColor(post.status, post.approval_status) }}
                       />
-                      <div className="sidebar-post-content">
+                      <div className="modal-post-content">
                         <div className="post-time">{formatTime(post.scheduled_at)}</div>
                         <div className="post-caption">
-                          {post.caption?.substring(0, 100) || 'No caption'}
-                          {post.caption?.length > 100 && '...'}
+                          {post.caption || 'No caption'}
                         </div>
                         <div className="post-platforms">
                           {post.platforms?.join(', ')}
@@ -242,15 +251,10 @@ export const ClientCalendar = () => {
                   ))}
                 </div>
               )}
-            </>
-          ) : (
-            <div className="no-selection">
-              <span className="selection-icon">📅</span>
-              <p>Click on a day to see scheduled posts</p>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
