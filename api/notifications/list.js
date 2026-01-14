@@ -26,6 +26,8 @@ module.exports = async function handler(req, res) {
     try {
       const { userId, workspaceId, unreadOnly } = req.query;
 
+      console.log('[notifications.list] GET request:', { userId, workspaceId, unreadOnly });
+
       if (!userId) {
         return sendError(res, "userId is required", ErrorCodes.VALIDATION_ERROR);
       }
@@ -53,7 +55,9 @@ module.exports = async function handler(req, res) {
         query = query.eq('read', false);
       }
 
+      console.log('[notifications.list] Executing query...');
       const { data: notifications, error } = await query;
+      console.log('[notifications.list] Query result:', { count: notifications?.length || 0, error: error?.message || null });
 
       if (error) {
         // Table might not exist yet - return empty gracefully
