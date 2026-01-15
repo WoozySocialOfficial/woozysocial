@@ -56,7 +56,7 @@
 /* Content Layout */
 .approvals-content {
   display: grid;
-  grid-template-columns: 1fr 400px;
+  grid-template-columns: 1fr 340px;
   gap: 24px;
 }
 
@@ -201,16 +201,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid #eee;
   background: #fff;
 }
 
 .detail-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   color: #1a1a1a;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .close-detail {
@@ -229,12 +229,12 @@
 }
 
 .detail-content {
-  padding: 16px;
+  padding: 12px;
 }
 
 .detail-section {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -245,30 +245,30 @@
 
 .detail-section label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #7c78e8;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 .post-full-content {
-  font-size: 15px;
+  font-size: 13px;
   color: #333;
-  line-height: 1.7;
+  line-height: 1.5;
   white-space: pre-wrap;
   background: #fafafa;
-  padding: 16px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 6px;
   border: 1px solid #eee;
 }
 
 .detail-media {
-  max-width: 280px;
+  max-width: 200px;
   width: 100%;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .detail-platforms {
@@ -278,11 +278,11 @@
 }
 
 .platform-tag {
-  padding: 8px 16px;
+  padding: 5px 12px;
   background: linear-gradient(135deg, #f8f8ff 0%, #f0f0ff 100%);
   border: 1px solid #e8e8f8;
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: 16px;
+  font-size: 12px;
   color: #5951e5;
   text-transform: capitalize;
   font-weight: 600;
@@ -299,25 +299,25 @@
 .comments-section {
   background: #fafafa;
   border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 14px;
-  margin-top: 16px;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 12px;
 }
 
 .comments-section label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #7c78e8;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
 }
 
 .comments-list {
-  max-height: 180px;
+  max-height: 120px;
   overflow-y: auto;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .comment {
@@ -360,25 +360,25 @@
 
 .loading-comments,
 .no-comments {
-  font-size: 13px;
+  font-size: 12px;
   color: #999;
   text-align: center;
-  padding: 24px;
+  padding: 14px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px dashed #ddd;
 }
 
 .add-comment textarea {
   width: 100%;
-  padding: 14px;
+  padding: 10px;
   background: #fff;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #333;
-  font-size: 14px;
+  font-size: 13px;
   resize: none;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   box-sizing: border-box;
   font-family: inherit;
   transition: border-color 0.2s;
@@ -395,12 +395,12 @@
 }
 
 .btn-add-comment {
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: #afabf9;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #000;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -419,17 +419,17 @@
 /* Action Buttons */
 .approval-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 14px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #eee;
 }
 
 .approval-actions button {
   flex: 1;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
