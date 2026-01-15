@@ -18,7 +18,9 @@ export const WorkspaceSwitcher = () => {
   const [deletingWorkspace, setDeletingWorkspace] = useState(null);
   const [editName, setEditName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
   const navigate = useNavigate();
 
   // Create a fallback "personal workspace" from user info
@@ -27,6 +29,17 @@ export const WorkspaceSwitcher = () => {
     name: profile?.full_name || user?.email?.split('@')[0] || 'My Workspace',
     logo_url: null
   };
+
+  // Calculate dropdown position when it opens
+  useEffect(() => {
+    if (showDropdown && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.left
+      });
+    }
+  }, [showDropdown]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -162,6 +175,7 @@ export const WorkspaceSwitcher = () => {
   return (
     <div className="workspace-switcher" ref={dropdownRef}>
       <button
+        ref={triggerRef}
         className="workspace-trigger"
         onClick={() => setShowDropdown(!showDropdown)}
         aria-label="Switch workspace"
@@ -196,7 +210,13 @@ export const WorkspaceSwitcher = () => {
       </button>
 
       {showDropdown && (
-        <div className="workspace-dropdown">
+        <div
+          className="workspace-dropdown"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`
+          }}
+        >
           <div className="dropdown-section">
             <div className="section-label">Workspaces</div>
             <div className="workspaces-list">
