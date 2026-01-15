@@ -442,7 +442,6 @@ export const NotificationBell = () => {
   };
 
   const renderNotificationItem = (notification) => {
-    const config = getConfig(notification.type);
     const isFadingOut = fadingOutIds.has(notification.id);
 
     return (
@@ -451,12 +450,6 @@ export const NotificationBell = () => {
         className={`notification-item ${!notification.read ? 'unread' : ''} ${isFadingOut ? 'fade-out' : ''}`}
         onClick={() => handleNotificationClick(notification)}
       >
-        <span
-          className="notification-icon"
-          style={{ backgroundColor: `${config.color}20` }}
-        >
-          {config.icon}
-        </span>
         <div className="notification-content">
           <div className="notification-title">{notification.title}</div>
           {notification.message && (
