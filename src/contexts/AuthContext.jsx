@@ -1,6 +1,16 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { baseURL } from '../utils/constants';
+import {
+  baseURL,
+  SUBSCRIPTION_TIERS,
+  getTierConfig,
+  hasFeature,
+  hasTabAccess,
+  canCreateWorkspace,
+  canInviteTeamMember,
+  getWorkspaceLimit,
+  getTeamMemberLimit
+} from '../utils/constants';
 
 const AuthContext = createContext({});
 
@@ -192,7 +202,86 @@ export const AuthProvider = ({ children }) => {
   const subscriptionStatus = profile?.subscription_status || 'inactive';
   const hasActiveProfile = !!profile?.ayr_profile_key && (subscriptionStatus === 'active' || profile?.is_whitelisted);
   const isWhitelisted = profile?.is_whitelisted || false;
-  const subscriptionTier = profile?.subscription_tier || null;
+
+  // Determine effective subscription tier
+  // Whitelisted users or users with active profiles get treated as AGENCY tier (full access)
+  const subscriptionTier = isWhitelisted || hasActiveProfile
+    ? (profile?.subscription_tier || SUBSCRIPTION_TIERS.AGENCY)
+    : (profile?.subscription_tier || SUBSCRIPTION_TIERS.FREE);
+
+  const workspaceAddOns = profile?.workspace_add_ons || 0; // Track purchased workspace add-ons
+
+  // Tier configuration helpers
+  const tierConfig = getTierConfig(subscriptionTier);
+
+  // Feature access helpers
+  const hasFeatureAccess = (featureName) => {
+    // Whitelisted users get full access
+    if (isWhitelisted) return true;
+
+    // If user has active subscription, check their tier
+    if (subscriptionStatus === 'active') {
+      return hasFeature(subscriptionTier, featureName);
+    }
+
+    // If user has an Ayrshare profile key, they have access (backward compatibility)
+    if (hasActiveProfile) {
+      return hasFeature(subscriptionTier, featureName);
+    }
+
+    // For workspace members without personal subscription:
+    // Grant feature access (will be restricted by role permissions instead)
+    // This prevents workspace members from seeing "upgrade" prompts for features
+    // they can use as part of the workspace
+    // Features will still be gated by role (e.g., editors can post, clients cannot)
+    // Return true to allow access - role permissions will handle the rest
+    return true;
+  };
+
+  // Tab access helper
+  const hasTabAccessCheck = (tabName) => {
+    // Whitelisted users get full access
+    if (isWhitelisted) return true;
+
+    // If user has active subscription, check their tier
+    if (subscriptionStatus === 'active') {
+      return hasTabAccess(subscriptionTier, tabName);
+    }
+
+    // If user has an Ayrshare profile key, they have access (backward compatibility)
+    if (hasActiveProfile) {
+      return hasTabAccess(subscriptionTier, tabName);
+    }
+
+    // Non-subscribed users without profile: FREE tier restrictions
+    return hasTabAccess(SUBSCRIPTION_TIERS.FREE, tabName);
+  };
+
+  // Workspace limit helpers
+  const canCreateNewWorkspace = (currentWorkspaceCount) => {
+    // Whitelisted users can create unlimited
+    if (isWhitelisted) return true;
+
+    // Check if subscription is active
+    if (subscriptionStatus !== 'active') return false;
+
+    return canCreateWorkspace(subscriptionTier, currentWorkspaceCount, workspaceAddOns);
+  };
+
+  const workspaceLimit = getWorkspaceLimit(subscriptionTier, workspaceAddOns);
+
+  // Team member limit helpers
+  const canInviteNewMember = (currentMemberCount) => {
+    // Whitelisted users can invite unlimited
+    if (isWhitelisted) return true;
+
+    // Check if subscription is active
+    if (subscriptionStatus !== 'active') return false;
+
+    return canInviteTeamMember(subscriptionTier, currentMemberCount);
+  };
+
+  const teamMemberLimit = getTeamMemberLimit(subscriptionTier);
 
   const value = {
     user,
@@ -209,6 +298,17 @@ export const AuthProvider = ({ children }) => {
     hasActiveProfile,
     isWhitelisted,
     subscriptionTier,
+    tierConfig,
+    workspaceAddOns,
+    // Feature access helpers
+    hasFeatureAccess,
+    hasTabAccess: hasTabAccessCheck,
+    // Workspace helpers
+    canCreateNewWorkspace,
+    workspaceLimit,
+    // Team helpers
+    canInviteNewMember,
+    teamMemberLimit,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

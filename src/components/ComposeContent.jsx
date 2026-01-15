@@ -12,6 +12,7 @@ import { useWorkspace } from "../contexts/WorkspaceContext";
 import { supabase } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
+import FeatureGate from "./subscription/FeatureGate";
 
 export const ComposeContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
@@ -1609,23 +1610,35 @@ export const ComposeContent = () => {
                   accept="image/*,video/*"
                   style={{ display: "none" }}
                 />
-                <button
-                  className="media-upload-btn"
-                  onClick={onAiOpen}
-                  title="Generate with AI"
-                  style={{ marginLeft: '8px' }}
+                <FeatureGate
+                  feature="aiFeatures"
+                  fallbackType="hide"
+                  requiredTier="Pro"
                 >
-                  ✨
-                </button>
-                <button
-                  className="media-upload-btn"
-                  onClick={handleGenerateHashtags}
-                  title="Generate Hashtags"
-                  disabled={isGeneratingHashtags}
-                  style={{ marginLeft: '8px' }}
+                  <button
+                    className="media-upload-btn"
+                    onClick={onAiOpen}
+                    title="Generate with AI"
+                    style={{ marginLeft: '8px' }}
+                  >
+                    ✨
+                  </button>
+                </FeatureGate>
+                <FeatureGate
+                  feature="aiFeatures"
+                  fallbackType="hide"
+                  requiredTier="Pro"
                 >
-                  {isGeneratingHashtags ? '...' : '#'}
-                </button>
+                  <button
+                    className="media-upload-btn"
+                    onClick={handleGenerateHashtags}
+                    title="Generate Hashtags"
+                    disabled={isGeneratingHashtags}
+                    style={{ marginLeft: '8px' }}
+                  >
+                    {isGeneratingHashtags ? '...' : '#'}
+                  </button>
+                </FeatureGate>
                 <button
                   className="media-upload-btn"
                   onClick={() => setShowLinkShortener(!showLinkShortener)}
@@ -1837,83 +1850,90 @@ export const ComposeContent = () => {
         </div>
 
         {/* Right - Performance Prediction */}
-        <div className="compose-prediction">
-          <div className="prediction-header-section">
-            <h3 className="prediction-title">Performance Prediction</h3>
-          </div>
-          <div className="prediction-container">
-            {/* Engagement Score Circle */}
-            <div className="engagement-score">
-              <svg width="120" height="120" viewBox="0 0 120 120">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke="#e5e7eb"
-                  strokeWidth="10"
-                />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke={getScoreColor()}
-                  strokeWidth="10"
-                  strokeDasharray="314"
-                  strokeDashoffset={getStrokeOffset()}
-                  transform="rotate(-90 60 60)"
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
-                />
-                <text
-                  x="60"
-                  y="70"
-                  textAnchor="middle"
-                  fontSize="36"
-                  fontWeight="bold"
-                  fill={getScoreColor()}
-                >
-                  {engagementScore}
-                </text>
-              </svg>
-              <p className="score-label">Engagement Score</p>
+        <FeatureGate
+          feature="postPredictions"
+          fallbackType="overlay"
+          requiredTier="Pro"
+          upgradeMessage="Post predictions and best time to post recommendations are available in Pro tier and higher."
+        >
+          <div className="compose-prediction">
+            <div className="prediction-header-section">
+              <h3 className="prediction-title">Performance Prediction</h3>
             </div>
+            <div className="prediction-container">
+              {/* Engagement Score Circle */}
+              <div className="engagement-score">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke={getScoreColor()}
+                    strokeWidth="10"
+                    strokeDasharray="314"
+                    strokeDashoffset={getStrokeOffset()}
+                    transform="rotate(-90 60 60)"
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+                  />
+                  <text
+                    x="60"
+                    y="70"
+                    textAnchor="middle"
+                    fontSize="36"
+                    fontWeight="bold"
+                    fill={getScoreColor()}
+                  >
+                    {engagementScore}
+                  </text>
+                </svg>
+                <p className="score-label">Engagement Score</p>
+              </div>
 
-            {/* Prediction Details */}
-            <div className="prediction-details">
-              <div className="prediction-item">
-                <span className="prediction-icon">🕐</span>
-                <div className="prediction-info">
-                  <span className="prediction-label">
-                    Best time: {hasRealData ? "📊" : "📈"}
-                  </span>
-                  <span className="prediction-value">{getBestPostingTime()}</span>
-                  {hasRealData && (
-                    <span style={{ fontSize: '10px', color: '#10b981' }}>
-                      Based on your analytics
+              {/* Prediction Details */}
+              <div className="prediction-details">
+                <div className="prediction-item">
+                  <span className="prediction-icon">🕐</span>
+                  <div className="prediction-info">
+                    <span className="prediction-label">
+                      Best time: {hasRealData ? "📊" : "📈"}
                     </span>
-                  )}
+                    <span className="prediction-value">{getBestPostingTime()}</span>
+                    {hasRealData && (
+                      <span style={{ fontSize: '10px', color: '#10b981' }}>
+                        Based on your analytics
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="prediction-item">
+                  <span className="prediction-icon">#</span>
+                  <div className="prediction-info">
+                    <span className="prediction-label">Hashtags:</span>
+                    <span className="prediction-value">{getHashtagCount()} / 5-10</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="prediction-item">
-                <span className="prediction-icon">#</span>
-                <div className="prediction-info">
-                  <span className="prediction-label">Hashtags:</span>
-                  <span className="prediction-value">{getHashtagCount()} / 5-10</span>
-                </div>
+              {/* Quick Actions */}
+              <div className="quick-actions">
+                <h4 className="quick-actions-title">⚡ Quick Actions</h4>
+                <button className="quick-action-btn">🔥 Trending Hashtags</button>
+                <button className="quick-action-btn">♻️ Recycle Top Post</button>
               </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="quick-actions">
-              <h4 className="quick-actions-title">⚡ Quick Actions</h4>
-              <button className="quick-action-btn">🔥 Trending Hashtags</button>
-              <button className="quick-action-btn">♻️ Recycle Top Post</button>
             </div>
           </div>
-        </div>
+        </FeatureGate>
       </div>
 
       {/* Schedule Modal */}

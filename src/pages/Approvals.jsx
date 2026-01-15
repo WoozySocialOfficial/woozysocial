@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
+import RoleGuard from '../components/roles/RoleGuard';
 import { baseURL } from '../utils/constants';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
@@ -31,7 +32,7 @@ const STATUS_COLORS = {
 
 export const Approvals = () => {
   const { user } = useAuth();
-  const { activeWorkspace, workspaceMembership } = useWorkspace();
+  const { activeWorkspace, workspaceMembership, canApprovePost } = useWorkspace();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -362,29 +363,35 @@ export const Approvals = () => {
 
               {/* Action Buttons - only show for pending and changes_requested */}
               {(selectedPost.approval_status === 'pending' || selectedPost.approval_status === 'changes_requested') && (
-                <div className="approval-actions">
-                  <button
-                    className="btn-reject"
-                    onClick={() => handleApprovalAction('reject')}
-                    disabled={submitting}
-                  >
-                    Reject
-                  </button>
-                  <button
-                    className="btn-changes"
-                    onClick={() => handleApprovalAction('changes_requested')}
-                    disabled={submitting}
-                  >
-                    Request Changes
-                  </button>
-                  <button
-                    className="btn-approve"
-                    onClick={() => handleApprovalAction('approve')}
-                    disabled={submitting}
-                  >
-                    Approve
-                  </button>
-                </div>
+                <RoleGuard
+                  permission="canApprovePosts"
+                  fallbackType="message"
+                  fallbackMessage="You do not have permission to approve or reject posts. Only Admins and Clients can approve posts."
+                >
+                  <div className="approval-actions">
+                    <button
+                      className="btn-reject"
+                      onClick={() => handleApprovalAction('reject')}
+                      disabled={submitting}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      className="btn-changes"
+                      onClick={() => handleApprovalAction('changes_requested')}
+                      disabled={submitting}
+                    >
+                      Request Changes
+                    </button>
+                    <button
+                      className="btn-approve"
+                      onClick={() => handleApprovalAction('approve')}
+                      disabled={submitting}
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </RoleGuard>
               )}
             </div>
           </div>

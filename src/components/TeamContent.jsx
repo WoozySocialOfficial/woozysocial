@@ -25,6 +25,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { InviteMemberModal } from "./InviteMemberModal";
+import TeamMemberLimitGate from "./subscription/TeamMemberLimitGate";
+import RoleGuard from "./roles/RoleGuard";
 import { baseURL } from "../utils/constants";
 import "./TeamContent.css";
 
@@ -303,9 +305,11 @@ export const TeamContent = () => {
             <h2 className="section-title">Team Members</h2>
             <p className="section-subtitle">Invite and manage your team collaborators</p>
           </div>
-          <button className="add-member-button" onClick={handleAddMember}>
-            + Add Member
-          </button>
+          <TeamMemberLimitGate onAllowed={handleAddMember}>
+            <button className="add-member-button">
+              + Add Member
+            </button>
+          </TeamMemberLimitGate>
         </div>
 
         <div className="team-content">
@@ -371,22 +375,27 @@ export const TeamContent = () => {
                         </button>
                       ) : (
                         <>
-                          <select
-                            className="role-dropdown"
-                            value={member.role}
-                            onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
-                          >
-                            <option value="admin">Admin</option>
-                            <option value="editor">Editor</option>
-                            <option value="view_only">View Only</option>
-                            <option value="client">Client</option>
-                          </select>
-                          <button
-                            className="remove-button"
-                            onClick={() => handleRemoveMember(member.user_id)}
-                          >
-                            Remove
-                          </button>
+                          <RoleGuard permission="canManageTeam" fallbackType="hide">
+                            <select
+                              className="role-dropdown"
+                              value={member.role}
+                              onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="editor">Editor</option>
+                              <option value="view_only">View Only</option>
+                              <option value="client">Client</option>
+                            </select>
+                            <button
+                              className="remove-button"
+                              onClick={() => handleRemoveMember(member.user_id)}
+                            >
+                              Remove
+                            </button>
+                          </RoleGuard>
+                          <RoleGuard permission="canManageTeam" fallbackType="message" fallbackMessage="Only admins can manage team members.">
+                            <span className="member-role">{getRoleLabel(member.role)}</span>
+                          </RoleGuard>
                         </>
                       )}
                     </div>

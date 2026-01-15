@@ -1,7 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabaseClient';
-import { baseURL } from '../utils/constants';
+import {
+  baseURL,
+  TEAM_ROLES,
+  getRoleConfig,
+  hasPermission,
+  hasRoleTabAccess,
+  isClientRole as checkIsClientRole,
+  isAdminRole as checkIsAdminRole,
+  canPerformPostAction
+} from '../utils/constants';
 
 const WorkspaceContext = createContext({});
 
@@ -263,43 +272,130 @@ export const WorkspaceProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Check if user can perform an action
+  // Get current user's role
+  const userRole = workspaceMembership?.role || TEAM_ROLES.VIEW_ONLY;
+  const roleConfig = getRoleConfig(userRole);
+
+  // Check if user has a specific permission
+  const hasRolePermission = useCallback((permissionName) => {
+    if (!workspaceMembership) return false;
+    return hasPermission(userRole, permissionName);
+  }, [userRole, workspaceMembership]);
+
+  // Check if user can access a specific tab
+  const canAccessTab = useCallback((tabName) => {
+    if (!workspaceMembership) return false;
+    return hasRoleTabAccess(userRole, tabName);
+  }, [userRole, workspaceMembership]);
+
+  // Check if user can perform action on a post
+  const canEditPost = useCallback((postCreatorId) => {
+    const isOwnPost = postCreatorId === user?.id;
+    return canPerformPostAction(userRole, 'edit', isOwnPost);
+  }, [userRole, user]);
+
+  const canDeletePost = useCallback((postCreatorId) => {
+    const isOwnPost = postCreatorId === user?.id;
+    return canPerformPostAction(userRole, 'delete', isOwnPost);
+  }, [userRole, user]);
+
+  const canApprovePost = useCallback(() => {
+    return canPerformPostAction(userRole, 'approve');
+  }, [userRole]);
+
+  const canCreatePost = useCallback(() => {
+    return canPerformPostAction(userRole, 'create');
+  }, [userRole]);
+
+  // Legacy action checker (for backward compatibility)
   const canPerformAction = useCallback((action) => {
     if (!workspaceMembership) return false;
 
     switch (action) {
       case 'manageTeam':
-        return workspaceMembership.permissions?.canManageTeam;
+        return hasPermission(userRole, 'canManageTeam');
       case 'manageSettings':
-        return workspaceMembership.permissions?.canManageSettings;
+        return hasPermission(userRole, 'canManageSettings');
       case 'deletePosts':
-        return workspaceMembership.permissions?.canDeletePosts;
+        return hasPermission(userRole, 'canDeleteAllPosts');
       case 'isOwner':
-        return workspaceMembership.role === 'owner';
+        return userRole === TEAM_ROLES.OWNER;
       case 'isAdmin':
-        return workspaceMembership.role === 'owner' || workspaceMembership.role === 'admin';
+        return checkIsAdminRole(userRole);
       default:
         return false;
     }
-  }, [workspaceMembership]);
+  }, [userRole, workspaceMembership]);
 
-  // Check if user is a client (view_only role) - used for routing to client portal
-  const isClientRole = workspaceMembership?.role === 'view_only' || workspaceMembership?.role === 'client';
+  // Check if user is a client (view_only/client role) - used for routing to client portal
+  const isClient = checkIsClientRole(userRole);
+  const isAdmin = checkIsAdminRole(userRole);
+  const isOwner = userRole === TEAM_ROLES.OWNER;
+
+  // Fetch workspace members for the active workspace
+  const [workspaceMembers, setWorkspaceMembers] = useState([]);
+
+  const fetchWorkspaceMembers = useCallback(async () => {
+    if (!activeWorkspace?.id || !user) {
+      setWorkspaceMembers([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members?userId=${user.id}`);
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to fetch members');
+      }
+
+      const responseData = payload.data || payload;
+      setWorkspaceMembers(responseData.members || []);
+    } catch (error) {
+      console.error('Error fetching workspace members:', error);
+      setWorkspaceMembers([]);
+    }
+  }, [activeWorkspace, user]);
+
+  // Fetch members when workspace changes
+  useEffect(() => {
+    fetchWorkspaceMembers();
+  }, [fetchWorkspaceMembers]);
 
   const value = {
+    // Workspace state
     activeWorkspace,
     userWorkspaces,
     workspaceMembership,
+    workspaceMembers,
     loading,
-    isClientRole,
+
+    // Role information
+    userRole,
+    roleConfig,
+    isClient,
+    isAdmin,
+    isOwner,
+    isClientRole: isClient, // Legacy alias
+
+    // Permission checks
+    hasRolePermission,
+    canAccessTab,
+    canEditPost,
+    canDeletePost,
+    canApprovePost,
+    canCreatePost,
+    canPerformAction, // Legacy
+
+    // Workspace operations
     switchWorkspace,
     createWorkspace,
     updateWorkspace,
     inviteToWorkspace,
     removeMember,
     updateMemberRole,
-    canPerformAction,
-    refreshWorkspaces: fetchUserWorkspaces
+    refreshWorkspaces: fetchUserWorkspaces,
+    refreshMembers: fetchWorkspaceMembers
   };
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
