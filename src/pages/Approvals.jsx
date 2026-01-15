@@ -360,30 +360,32 @@ export const Approvals = () => {
                 Status: {STATUS_LABELS[selectedPost.approval_status]}
               </div>
 
-              {/* Action Buttons */}
-              <div className="approval-actions">
-                <button
-                  className="btn-reject"
-                  onClick={() => handleApprovalAction('reject')}
-                  disabled={submitting}
-                >
-                  Reject
-                </button>
-                <button
-                  className="btn-changes"
-                  onClick={() => handleApprovalAction('changes_requested')}
-                  disabled={submitting}
-                >
-                  Request Changes
-                </button>
-                <button
-                  className="btn-approve"
-                  onClick={() => handleApprovalAction('approve')}
-                  disabled={submitting}
-                >
-                  Approve
-                </button>
-              </div>
+              {/* Action Buttons - only show for pending and changes_requested */}
+              {(selectedPost.approval_status === 'pending' || selectedPost.approval_status === 'changes_requested') && (
+                <div className="approval-actions">
+                  <button
+                    className="btn-reject"
+                    onClick={() => handleApprovalAction('reject')}
+                    disabled={submitting}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    className="btn-changes"
+                    onClick={() => handleApprovalAction('changes_requested')}
+                    disabled={submitting}
+                  >
+                    Request Changes
+                  </button>
+                  <button
+                    className="btn-approve"
+                    onClick={() => handleApprovalAction('approve')}
+                    disabled={submitting}
+                  >
+                    Approve
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
