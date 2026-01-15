@@ -604,6 +604,54 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
   }
 }
 
+/**
+ * Send notification when a user is mentioned in a comment
+ */
+async function sendMentionNotifications(supabase, {
+  postId,
+  workspaceId,
+  commentId,
+  mentionerId,
+  mentionerName,
+  mentionedUserIds,
+  comment
+}) {
+  try {
+    // Get post details for context
+    const { data: post } = await supabase
+      .from('posts')
+      .select('caption, status')
+      .eq('id', postId)
+      .single();
+
+    const postContext = post?.caption?.substring(0, 50) || 'a post';
+
+    // Create notifications for each mentioned user
+    const notifications = mentionedUserIds
+      .filter(userId => userId !== mentionerId) // Don't notify yourself
+      .map(userId => ({
+        user_id: userId,
+        workspace_id: workspaceId,
+        post_id: postId,
+        type: 'comment_mention',
+        title: 'You were mentioned',
+        message: `${mentionerName} mentioned you in a comment: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+        actor_id: mentionerId,
+        metadata: {
+          commentId,
+          postCaption: postContext
+        },
+        read: false
+      }));
+
+    if (notifications.length > 0) {
+      await supabase.from('notifications').insert(notifications);
+    }
+  } catch (error) {
+    logError('notifications.helpers.mentionNotification', error, { postId, commentId });
+  }
+}
+
 module.exports = {
   sendApprovalNotification,
   sendWorkspaceInviteNotification,
@@ -611,6 +659,7 @@ module.exports = {
   sendRoleChangedNotification,
   sendMemberJoinedNotification,
   sendNewCommentNotification,
+  sendMentionNotifications,
   sendPostScheduledNotification,
   sendInboxMessageNotification,
   sendInviteCancelledNotification,

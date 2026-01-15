@@ -627,6 +627,38 @@ async function requireActiveProfile(req, res, callback) {
   }
 }
 
+/**
+ * Parse @mentions from comment text and return array of user IDs
+ * @param {string} commentText - The comment text with @mentions
+ * @param {Array} workspaceMembers - Array of workspace member objects with {id, full_name}
+ * @returns {Array<string>} - Array of mentioned user IDs
+ */
+function parseMentions(commentText, workspaceMembers) {
+  if (!commentText || !workspaceMembers) return [];
+
+  // Match @mentions: @FirstName LastName or @SingleName
+  // Captures: @John Doe, @Jane, @Bob Smith
+  const mentionRegex = /@([A-Za-z]+(?:\s+[A-Za-z]+)*)/g;
+  const matches = [...commentText.matchAll(mentionRegex)];
+
+  const mentionedIds = new Set();
+
+  matches.forEach(match => {
+    const mentionedName = match[1].trim();
+
+    // Find matching user by full_name (case-insensitive)
+    const user = workspaceMembers.find(member =>
+      member.full_name?.toLowerCase() === mentionedName.toLowerCase()
+    );
+
+    if (user) {
+      mentionedIds.add(user.id);
+    }
+  });
+
+  return Array.from(mentionedIds);
+}
+
 module.exports = {
   // Existing exports
   getSupabase,
@@ -651,6 +683,9 @@ module.exports = {
   validateTypes,
   isValidEmail,
   isValidUUID,
+
+  // Comment utilities
+  parseMentions,
 
   // Rate limiting
   checkRateLimit,

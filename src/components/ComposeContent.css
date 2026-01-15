@@ -1467,3 +1467,28 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Draft Comments Section */
+.compose-comments {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 24px;
+}
+
+.comments-header {
+  margin-bottom: 20px;
+}
+
+.comments-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.comments-hint {
+  font-size: 13px;
+  color: #6b7280;
+}

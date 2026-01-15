@@ -1,0 +1,200 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { baseURL } from '../../utils/constants';
+import { supabase } from '../../utils/supabaseClient';
+import './CommentThread.css';
+
+const PRIORITY_CONFIG = {
+  urgent: { color: '#ef4444', label: 'Urgent', icon: '🔴' },
+  high: { color: '#f59e0b', label: 'High', icon: '🟠' },
+  normal: { color: '#6b7280', label: 'Normal', icon: '⚪' }
+};
+
+export const CommentThread = ({
+  postId,
+  workspaceId,
+  onCommentAdded,
+  enableRealtime = true
+}) => {
+  const { user } = useAuth();
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch comments
+  const fetchComments = async () => {
+    if (!postId || !workspaceId) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${baseURL}/api/post/comment?postId=${postId}&workspaceId=${workspaceId}&userId=${user.id}`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        const responseData = data.data || data;
+        setComments(responseData.comments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [postId, workspaceId]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!enableRealtime || !postId) return;
+
+    const channel = supabase
+      .channel(`comments-${postId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`
+        },
+        async (payload) => {
+          // Fetch the complete comment with user profile
+          const { data } = await supabase
+            .from('post_comments')
+            .select(`
+              id,
+              comment,
+              priority,
+              mentions,
+              is_system,
+              created_at,
+              user_id,
+              user_profiles (
+                full_name,
+                email,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (data) {
+            setComments(prev => [...prev, data]);
+            if (onCommentAdded) onCommentAdded(data);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`
+        },
+        (payload) => {
+          setComments(prev =>
+            prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c)
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`
+        },
+        (payload) => {
+          setComments(prev => prev.filter(c => c.id !== payload.old.id));
+        }
+      )
+      .subscribe();
+
+    // Fallback polling every 30s
+    const interval = setInterval(fetchComments, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, [postId, enableRealtime]);
+
+  const formatTime = (dateStr) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getPriorityConfig = (priority) => {
+    return PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.normal;
+  };
+
+  if (loading && comments.length === 0) {
+    return <div className="loading-comments">Loading comments...</div>;
+  }
+
+  if (comments.length === 0) {
+    return <div className="no-comments">No comments yet</div>;
+  }
+
+  return (
+    <div className="comment-thread">
+      {comments.map((comment) => {
+        const priorityConfig = getPriorityConfig(comment.priority);
+        const isOwnComment = comment.user_id === user?.id;
+
+        return (
+          <div
+            key={comment.id}
+            className={`comment ${comment.is_system ? 'system-comment' : ''} ${isOwnComment ? 'own-comment' : ''}`}
+            style={{ borderLeft: `3px solid ${priorityConfig.color}` }}
+          >
+            <div className="comment-header">
+              <div className="comment-author-section">
+                {comment.user_profiles?.avatar_url ? (
+                  <img
+                    src={comment.user_profiles.avatar_url}
+                    alt=""
+                    className="comment-avatar"
+                  />
+                ) : (
+                  <div className="comment-avatar-placeholder">
+                    {(comment.user_profiles?.full_name || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <span className="comment-author">
+                  {comment.user_profiles?.full_name || comment.user_profiles?.email || 'User'}
+                </span>
+                {comment.priority !== 'normal' && (
+                  <span
+                    className="priority-badge"
+                    style={{ backgroundColor: priorityConfig.color }}
+                    title={priorityConfig.label}
+                  >
+                    {priorityConfig.icon} {priorityConfig.label}
+                  </span>
+                )}
+              </div>
+              <span className="comment-time">{formatTime(comment.created_at)}</span>
+            </div>
+            <p className="comment-text">{comment.comment}</p>
+            {comment.updated_at && comment.updated_at !== comment.created_at && (
+              <span className="comment-edited">(edited)</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};

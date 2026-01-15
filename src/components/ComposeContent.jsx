@@ -13,6 +13,8 @@ import { supabase } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import FeatureGate from "./subscription/FeatureGate";
+import { CommentThread } from "./comments/CommentThread";
+import { CommentInput } from "./comments/CommentInput";
 
 export const ComposeContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
@@ -1935,6 +1937,27 @@ export const ComposeContent = () => {
           </div>
         </FeatureGate>
       </div>
+
+      {/* Draft Comments Section */}
+      {currentDraftId && activeWorkspace && (
+        <div className="compose-comments">
+          <div className="comments-header">
+            <h3>Draft Comments</h3>
+            <span className="comments-hint">Collaborate with your team on this draft</span>
+          </div>
+          <CommentThread
+            postId={currentDraftId}
+            workspaceId={activeWorkspace.id}
+            enableRealtime={true}
+          />
+          <CommentInput
+            postId={currentDraftId}
+            workspaceId={activeWorkspace.id}
+            showPrioritySelector={true}
+            placeholder="Add a comment or suggestion for this draft..."
+          />
+        </div>
+      )}
 
       {/* Schedule Modal */}
       <Modal isOpen={isOpen} onClose={handleCancelSchedule}>

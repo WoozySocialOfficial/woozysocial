@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { FaSearch, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaSnapchat, FaTrash, FaSyncAlt } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
+import { PostDetailPanel } from "./comments/PostDetailPanel";
 import "./PostsContent.css";
 
 const PLATFORM_ICONS = {
@@ -33,6 +34,7 @@ export const PostsContent = () => {
   const [allAyrsharePosts, setAllAyrsharePosts] = useState([]); // Cache Ayrshare data
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPost, setSelectedPost] = useState(null);
 
   // Fetch Ayrshare history once and cache it
   const fetchAyrshareHistory = useCallback(async () => {
@@ -274,6 +276,21 @@ export const PostsContent = () => {
     navigate("/compose");
   };
 
+  const handleEditScheduledPost = (post) => {
+    // Store post in sessionStorage to edit in Compose page
+    sessionStorage.setItem("loadDraft", JSON.stringify({
+      id: post.id,
+      content: post.post || post.caption,
+      caption: post.post || post.caption,
+      media_urls: post.mediaUrls || (post.media_url ? [post.media_url] : []),
+      platforms: post.platforms || [],
+      scheduled_date: post.scheduleDate || post.schedule_date || post.scheduled_at,
+      workspace_id: activeWorkspace.id
+    }));
+    setSelectedPost(null); // Close panel
+    navigate("/compose");
+  };
+
   const handleRefresh = async () => {
     setAllAyrsharePosts([]); // Clear cache
     await fetchPosts(); // Refetch
@@ -357,9 +374,13 @@ export const PostsContent = () => {
             filteredPosts.map((post, idx) => (
               <div
                 key={post.id || idx}
-                className={`posts-table-row ${activeTab === 'drafts' ? 'clickable' : ''}`}
-                onClick={() => activeTab === 'drafts' && handleLoadDraft(post)}
-                style={{ cursor: activeTab === 'drafts' ? 'pointer' : 'default' }}
+                className={`posts-table-row ${(activeTab === 'drafts' || activeTab === 'scheduled') ? 'clickable' : ''}`}
+                onClick={() => {
+                  if (activeTab === 'drafts' || activeTab === 'scheduled') {
+                    setSelectedPost({...post, workspace_id: activeWorkspace.id});
+                  }
+                }}
+                style={{ cursor: (activeTab === 'drafts' || activeTab === 'scheduled') ? 'pointer' : 'default' }}
               >
                 <div className="posts-checkbox-col">
                   {activeTab === 'drafts' ? (
@@ -412,6 +433,17 @@ export const PostsContent = () => {
           )}
         </div>
       </div>
+
+      {/* Post Detail Panel */}
+      {selectedPost && (
+        <PostDetailPanel
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          showApprovalActions={false}
+          onEditDraft={handleLoadDraft}
+          onEditScheduledPost={handleEditScheduledPost}
+        />
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ const {
   validateRequired,
   isValidUUID
 } = require("../_utils");
-const { sendNewCommentNotification } = require("../notifications/helpers");
+const { sendNewCommentNotification, sendMentionNotifications } = require("../notifications/helpers");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const body = await parseBody(req);
-      const { postId, workspaceId, userId, comment } = body;
+      const { postId, workspaceId, userId, comment, priority = 'normal', mentions = [] } = body;
 
       // Validate required fields
       const validation = validateRequired(body, ['postId', 'workspaceId', 'userId', 'comment']);
@@ -41,6 +41,20 @@ module.exports = async function handler(req, res) {
 
       if (!isValidUUID(postId) || !isValidUUID(workspaceId) || !isValidUUID(userId)) {
         return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Validate priority
+      if (!['normal', 'high', 'urgent'].includes(priority)) {
+        return sendError(res, "Invalid priority value. Must be: normal, high, or urgent", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Validate mentions is an array of valid UUIDs
+      if (!Array.isArray(mentions)) {
+        return sendError(res, "Mentions must be an array", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (mentions.length > 0 && !mentions.every(id => isValidUUID(id))) {
+        return sendError(res, "Invalid mention ID format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Validate comment length
@@ -72,11 +86,15 @@ module.exports = async function handler(req, res) {
           workspace_id: workspaceId,
           user_id: userId,
           comment: comment,
+          priority: priority,
+          mentions: mentions,
           is_system: false
         })
         .select(`
           id,
           comment,
+          priority,
+          mentions,
           is_system,
           created_at,
           user_id
@@ -104,6 +122,19 @@ module.exports = async function handler(req, res) {
         commenterName,
         comment
       });
+
+      // Send mention notifications if there are mentions (non-blocking)
+      if (mentions && mentions.length > 0) {
+        sendMentionNotifications(supabase, {
+          postId,
+          workspaceId,
+          commentId: newComment.id,
+          mentionerId: userId,
+          mentionerName: commenterName,
+          mentionedUserIds: mentions,
+          comment
+        });
+      }
 
       return sendSuccess(res, {
         comment: {
@@ -158,6 +189,8 @@ module.exports = async function handler(req, res) {
         .select(`
           id,
           comment,
+          priority,
+          mentions,
           is_system,
           created_at,
           updated_at,
@@ -169,6 +202,7 @@ module.exports = async function handler(req, res) {
           )
         `)
         .eq('post_id', postId)
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -188,7 +222,7 @@ module.exports = async function handler(req, res) {
   else if (req.method === "PUT") {
     try {
       const body = await parseBody(req);
-      const { commentId, userId, comment } = body;
+      const { commentId, userId, comment, priority, mentions } = body;
 
       // Validate required fields
       const validation = validateRequired(body, ['commentId', 'userId', 'comment']);
@@ -224,12 +258,29 @@ module.exports = async function handler(req, res) {
         return sendError(res, "You can only edit your own comments", ErrorCodes.FORBIDDEN);
       }
 
+      // Build update object
+      const updateData = {
+        comment: comment,
+        updated_at: new Date().toISOString()
+      };
+
+      // Only update priority if provided and valid
+      if (priority && ['normal', 'high', 'urgent'].includes(priority)) {
+        updateData.priority = priority;
+      }
+
+      // Only update mentions if provided and valid
+      if (Array.isArray(mentions)) {
+        if (mentions.length === 0 || mentions.every(id => isValidUUID(id))) {
+          updateData.mentions = mentions;
+        } else {
+          return sendError(res, "Invalid mention ID format", ErrorCodes.VALIDATION_ERROR);
+        }
+      }
+
       const { data: updatedComment, error } = await supabase
         .from('post_comments')
-        .update({
-          comment: comment,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', commentId)
         .select()
         .single();
