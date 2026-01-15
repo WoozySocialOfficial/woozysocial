@@ -27,10 +27,18 @@ module.exports = async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const body = await parseBody(req);
-      const { postId, workspaceId, userId, comment, priority = 'normal', mentions = [] } = body;
+      const { postId, draftId, workspaceId, userId, comment, priority = 'normal', mentions = [] } = body;
 
-      // Validate required fields
-      const validation = validateRequired(body, ['postId', 'workspaceId', 'userId', 'comment']);
+      // Validate required fields - either postId or draftId must be provided
+      if (!postId && !draftId) {
+        return sendError(res, "Either postId or draftId is required", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if (postId && draftId) {
+        return sendError(res, "Cannot specify both postId and draftId", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      const validation = validateRequired(body, ['workspaceId', 'userId', 'comment']);
       if (!validation.valid) {
         return sendError(
           res,
@@ -39,7 +47,7 @@ module.exports = async function handler(req, res) {
         );
       }
 
-      if (!isValidUUID(postId) || !isValidUUID(workspaceId) || !isValidUUID(userId)) {
+      if ((postId && !isValidUUID(postId)) || (draftId && !isValidUUID(draftId)) || !isValidUUID(workspaceId) || !isValidUUID(userId)) {
         return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
       }
 
@@ -79,17 +87,25 @@ module.exports = async function handler(req, res) {
       }
 
       // Create the comment
+      const insertData = {
+        workspace_id: workspaceId,
+        user_id: userId,
+        comment: comment,
+        priority: priority,
+        mentions: mentions,
+        is_system: false
+      };
+
+      // Add either post_id or draft_id
+      if (postId) {
+        insertData.post_id = postId;
+      } else {
+        insertData.draft_id = draftId;
+      }
+
       const { data: newComment, error } = await supabase
         .from('post_comments')
-        .insert({
-          post_id: postId,
-          workspace_id: workspaceId,
-          user_id: userId,
-          comment: comment,
-          priority: priority,
-          mentions: mentions,
-          is_system: false
-        })
+        .insert(insertData)
         .select(`
           id,
           comment,
@@ -97,7 +113,9 @@ module.exports = async function handler(req, res) {
           mentions,
           is_system,
           created_at,
-          user_id
+          user_id,
+          post_id,
+          draft_id
         `)
         .single();
 
@@ -114,26 +132,29 @@ module.exports = async function handler(req, res) {
         .single();
 
       // Send notification to post creator and other commenters (non-blocking)
+      // Only send if it's a post (not a draft)
       const commenterName = userProfile?.full_name || userProfile?.email || 'Someone';
-      sendNewCommentNotification(supabase, {
-        postId,
-        workspaceId,
-        commenterId: userId,
-        commenterName,
-        comment
-      });
-
-      // Send mention notifications if there are mentions (non-blocking)
-      if (mentions && mentions.length > 0) {
-        sendMentionNotifications(supabase, {
+      if (postId) {
+        sendNewCommentNotification(supabase, {
           postId,
           workspaceId,
-          commentId: newComment.id,
-          mentionerId: userId,
-          mentionerName: commenterName,
-          mentionedUserIds: mentions,
+          commenterId: userId,
+          commenterName,
           comment
         });
+
+        // Send mention notifications if there are mentions (non-blocking)
+        if (mentions && mentions.length > 0) {
+          sendMentionNotifications(supabase, {
+            postId,
+            workspaceId,
+            commentId: newComment.id,
+            mentionerId: userId,
+            mentionerName: commenterName,
+            mentionedUserIds: mentions,
+            comment
+          });
+        }
       }
 
       return sendSuccess(res, {
@@ -149,17 +170,22 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // GET - Get comments for a post
+  // GET - Get comments for a post or draft
   else if (req.method === "GET") {
     try {
-      const { postId, workspaceId, userId } = req.query;
+      const { postId, draftId, workspaceId, userId } = req.query;
 
-      if (!postId) {
-        return sendError(res, "postId is required", ErrorCodes.VALIDATION_ERROR);
+      // Either postId or draftId must be provided
+      if (!postId && !draftId) {
+        return sendError(res, "Either postId or draftId is required", ErrorCodes.VALIDATION_ERROR);
       }
 
-      if (!isValidUUID(postId)) {
-        return sendError(res, "Invalid postId format", ErrorCodes.VALIDATION_ERROR);
+      if (postId && draftId) {
+        return sendError(res, "Cannot specify both postId and draftId", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      if ((postId && !isValidUUID(postId)) || (draftId && !isValidUUID(draftId))) {
+        return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
       }
 
       // Verify user is a member if workspaceId provided
@@ -184,8 +210,8 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // First, try to fetch comments with user profiles using the relationship
-      let { data: comments, error } = await supabase
+      // Build query based on whether it's a post or draft
+      let query = supabase
         .from('post_comments')
         .select(`
           id,
@@ -196,13 +222,24 @@ module.exports = async function handler(req, res) {
           created_at,
           updated_at,
           user_id,
+          post_id,
+          draft_id,
           user_profiles (
             full_name,
             email,
             avatar_url
           )
-        `)
-        .eq('post_id', postId)
+        `);
+
+      // Filter by post_id or draft_id
+      if (postId) {
+        query = query.eq('post_id', postId);
+      } else {
+        query = query.eq('draft_id', draftId);
+      }
+
+      // First, try to fetch comments with user profiles using the relationship
+      let { data: comments, error } = await query
         .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
 
@@ -210,11 +247,20 @@ module.exports = async function handler(req, res) {
       if (error && error.message?.includes('relationship')) {
         console.log('Relationship not found, using fallback query method');
 
-        // Get comments without relationship
-        const { data: commentsOnly, error: commentsError } = await supabase
+        // Build fallback query
+        let fallbackQuery = supabase
           .from('post_comments')
-          .select('id, comment, priority, mentions, is_system, created_at, updated_at, user_id')
-          .eq('post_id', postId)
+          .select('id, comment, priority, mentions, is_system, created_at, updated_at, user_id, post_id, draft_id');
+
+        // Filter by post_id or draft_id
+        if (postId) {
+          fallbackQuery = fallbackQuery.eq('post_id', postId);
+        } else {
+          fallbackQuery = fallbackQuery.eq('draft_id', draftId);
+        }
+
+        // Get comments without relationship
+        const { data: commentsOnly, error: commentsError } = await fallbackQuery
           .order('priority', { ascending: false })
           .order('created_at', { ascending: true });
 

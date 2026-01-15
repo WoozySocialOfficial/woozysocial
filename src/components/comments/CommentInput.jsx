@@ -13,6 +13,7 @@ const PRIORITY_OPTIONS = [
 
 export const CommentInput = ({
   postId,
+  draftId,
   workspaceId,
   onCommentAdded,
   placeholder = "Add a comment...",
@@ -185,19 +186,27 @@ export const CommentInput = ({
     try {
       const mentions = parseMentions();
 
-      console.log('Submitting comment:', { postId, workspaceId, userId: user.id, comment: comment.trim(), priority, mentions });
+      const requestBody = {
+        workspaceId,
+        userId: user.id,
+        comment: comment.trim(),
+        priority,
+        mentions
+      };
+
+      // Add either postId or draftId
+      if (postId) {
+        requestBody.postId = postId;
+      } else if (draftId) {
+        requestBody.draftId = draftId;
+      }
+
+      console.log('Submitting comment:', requestBody);
 
       const res = await fetch(`${baseURL}/api/post/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId,
-          workspaceId,
-          userId: user.id,
-          comment: comment.trim(),
-          priority,
-          mentions
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await res.json();

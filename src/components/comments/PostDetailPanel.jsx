@@ -157,12 +157,14 @@ export const PostDetailPanel = ({
         <div className="detail-section comments-section">
           <label>Comments & Feedback</label>
           <CommentThread
-            postId={post.id}
+            postId={post.status === 'draft' ? undefined : post.id}
+            draftId={post.status === 'draft' ? post.id : undefined}
             workspaceId={post.workspace_id}
             enableRealtime={true}
           />
           <CommentInput
-            postId={post.id}
+            postId={post.status === 'draft' ? undefined : post.id}
+            draftId={post.status === 'draft' ? post.id : undefined}
             workspaceId={post.workspace_id}
             showPrioritySelector={true}
           />

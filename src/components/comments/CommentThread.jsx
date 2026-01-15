@@ -12,6 +12,7 @@ const PRIORITY_CONFIG = {
 
 export const CommentThread = ({
   postId,
+  draftId,
   workspaceId,
   onCommentAdded,
   enableRealtime = true
@@ -22,12 +23,14 @@ export const CommentThread = ({
 
   // Fetch comments
   const fetchComments = async () => {
-    if (!postId || !workspaceId) return;
+    if ((!postId && !draftId) || !workspaceId) return;
 
     setLoading(true);
     try {
+      // Build query string based on whether it's a post or draft
+      const idParam = postId ? `postId=${postId}` : `draftId=${draftId}`;
       const res = await fetch(
-        `${baseURL}/api/post/comment?postId=${postId}&workspaceId=${workspaceId}&userId=${user.id}`
+        `${baseURL}/api/post/comment?${idParam}&workspaceId=${workspaceId}&userId=${user.id}`
       );
       const data = await res.json();
 
@@ -44,7 +47,7 @@ export const CommentThread = ({
 
   useEffect(() => {
     fetchComments();
-  }, [postId, workspaceId]);
+  }, [postId, draftId, workspaceId]);
 
   // Real-time subscription
   useEffect(() => {

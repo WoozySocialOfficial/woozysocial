@@ -138,6 +138,23 @@ export const ScheduleContent = () => {
     await fetchPosts();
   };
 
+  const handleEditScheduledPost = (post) => {
+    // Navigate to Compose page to edit the scheduled post
+    // Store post data in sessionStorage for loading in Compose
+    sessionStorage.setItem("loadDraft", JSON.stringify({
+      id: post.id,
+      content: post.caption || post.content || post.post,
+      caption: post.caption || post.content || post.post,
+      media_urls: post.media_urls || post.mediaUrls || [],
+      platforms: post.platforms || [],
+      scheduled_date: post.scheduled_at || post.scheduleDate || post.schedule_date,
+      workspace_id: activeWorkspace.id
+    }));
+    setSelectedPost(null);
+    // Navigate to compose - you'll need to import useNavigate from react-router-dom
+    window.location.href = '/compose';
+  };
+
   // Filter posts by approval status AND auto-remove rejected posts older than 7 days
   const filteredPosts = posts.filter(post => {
     // Remove rejected posts older than 7 days from display
@@ -600,6 +617,7 @@ export const ScheduleContent = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
+          onEditScheduledPost={handleEditScheduledPost}
           showApprovalActions={canApprove}
         />
       )}
