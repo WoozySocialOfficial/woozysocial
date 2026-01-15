@@ -328,24 +328,24 @@ export const ScheduleContent = () => {
       >
         <div className="post-card-header">
           <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
-            <ApprovalIcon size={8} />
+            <ApprovalIcon size={11} />
             <span>{approvalInfo.label}</span>
           </div>
           {(post.comments?.length > 0 || post.commentCount > 0) && (
             <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
-              <FaComment size={8} />
+              <FaComment size={10} />
               <span>{post.comments?.length || post.commentCount}</span>
             </div>
           )}
         </div>
         <div className="post-card-content">
-          {post.content.substring(0, 50)}{post.content.length > 50 && "..."}
+          {post.content.substring(0, 80)}{post.content.length > 80 && "..."}
         </div>
         <div className="post-card-footer">
           <div className="post-platforms">
             {post.platforms.slice(0, 3).map((platform, idx) => {
               const PlatformIcon = PLATFORM_ICONS[platform?.toLowerCase()];
-              return PlatformIcon ? <PlatformIcon key={idx} size={10} /> : null;
+              return PlatformIcon ? <PlatformIcon key={idx} size={14} /> : null;
             })}
             {post.platforms.length > 3 && <span className="platform-more">+{post.platforms.length - 3}</span>}
           </div>
@@ -373,13 +373,13 @@ export const ScheduleContent = () => {
     });
 
     // Calculate dynamic height for each hour slot
-    // Each post card is approximately 60-65px tall (includes header, content, footer, padding)
+    // Each post card is approximately 90-100px tall (larger for readability)
     const getSlotHeight = (hour) => {
       const postCount = hourPostCounts[hour];
-      if (postCount === 0) return 70;
-      // Base padding (30px) + (65px per card with content + 5px gap)
-      // This ensures cards have room to show all content without overlapping
-      return Math.max(70, 30 + (postCount * 70));
+      if (postCount === 0) return 80;
+      // Base padding (35px) + (95px per card with all content visible + gap)
+      // This ensures cards are large enough to show caption, time, and platforms
+      return Math.max(80, 35 + (postCount * 95));
     };
 
     return (
