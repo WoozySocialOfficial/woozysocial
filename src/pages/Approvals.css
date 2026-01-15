@@ -207,10 +207,7 @@
   align-items: center;
   padding: 18px 24px;
   border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
   background: #fff;
-  z-index: 1;
 }
 
 .detail-header h3 {
