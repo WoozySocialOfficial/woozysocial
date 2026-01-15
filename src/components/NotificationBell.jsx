@@ -135,7 +135,7 @@ const NOTIFICATION_CONFIG = {
 
 export const NotificationBell = () => {
   const { user } = useAuth();
-  const { activeWorkspace, isClientRole } = useWorkspace();
+  const { activeWorkspace, isClientRole, switchWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -221,7 +221,7 @@ export const NotificationBell = () => {
   };
 
   // Handle notification click with smart routing and animation
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     // Mark as read with animation
     if (!notification.read) {
       // Add to fading out set for animation
@@ -249,6 +249,12 @@ export const NotificationBell = () => {
           return newSet;
         });
       }, 300); // Match CSS transition duration
+    }
+
+    // Switch workspace if notification is from a different workspace
+    if (notification.workspace_id && activeWorkspace?.id !== notification.workspace_id) {
+      console.log(`[NotificationBell] Switching from workspace ${activeWorkspace?.id} to ${notification.workspace_id}`);
+      await switchWorkspace(notification.workspace_id);
     }
 
     // Navigate based on notification type and metadata

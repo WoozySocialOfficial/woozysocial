@@ -238,6 +238,15 @@ async function sendPostScheduledNotification(supabase, { postId, workspaceId, sc
     console.log('[sendPostScheduledNotification] Starting...', { workspaceId, postId, createdByUserId });
     console.log('[sendPostScheduledNotification] About to query workspace_members...');
 
+    // Get workspace name
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single();
+
+    const workspaceName = workspace?.name || 'Unknown Workspace';
+
     // Notify workspace admins/owners (excluding the creator)
     const { data: admins, error: queryError } = await supabase
       .from('workspace_members')
@@ -275,9 +284,9 @@ async function sendPostScheduledNotification(supabase, { postId, workspaceId, sc
       post_id: postId,
       type: 'post_scheduled',
       title: 'New Post Scheduled',
-      message: `A new post has been scheduled for ${scheduledDate} on ${platforms.join(', ')}.`,
+      message: `A new post has been scheduled for ${scheduledDate} on ${platforms.join(', ')} [${workspaceName}]`,
       actor_id: createdByUserId,
-      metadata: { scheduledAt, platforms },
+      metadata: { scheduledAt, platforms, workspaceName },
       read: false
     }));
 
@@ -533,6 +542,15 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
     console.log('[sendApprovalRequestNotification] Starting...', { workspaceId, postId, platforms });
     console.log('[sendApprovalRequestNotification] About to query workspace_members...');
 
+    // Get workspace name
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single();
+
+    const workspaceName = workspace?.name || 'Unknown Workspace';
+
     // Get all members who can approve posts (owner, admin, client)
     // Exclude editors as they create posts but can't approve them
     const { data: approvers, error: queryError } = await supabase
@@ -564,10 +582,10 @@ async function sendApprovalRequestNotification(supabase, { workspaceId, postId, 
       post_id: postId,
       type: 'approval_request',
       title: 'New Post Awaiting Approval',
-      message: `A new post for ${platformList} needs your approval`,
+      message: `A new post for ${platformList} needs your approval [${workspaceName}]`,
       actor_id: createdByUserId,
       read: false,
-      metadata: { platforms }
+      metadata: { platforms, workspaceName }
     }));
 
     const { data: insertedData, error: insertError } = await supabase
