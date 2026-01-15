@@ -233,12 +233,12 @@
 }
 
 .detail-content {
-  padding: 24px;
+  padding: 16px;
 }
 
 .detail-section {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -254,7 +254,7 @@
   color: #7c78e8;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .post-full-content {
@@ -304,8 +304,8 @@
   background: #fafafa;
   border: 1px solid #eee;
   border-radius: 10px;
-  padding: 20px;
-  margin-top: 24px;
+  padding: 14px;
+  margin-top: 16px;
 }
 
 .comments-section label {
@@ -319,16 +319,16 @@
 }
 
 .comments-list {
-  max-height: 250px;
+  max-height: 180px;
   overflow-y: auto;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .comment {
-  padding: 14px;
+  padding: 10px;
   background: #fff;
   border-radius: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border: 1px solid #eee;
 }
 
@@ -424,8 +424,8 @@
 .approval-actions {
   display: flex;
   gap: 10px;
-  margin-top: 20px;
-  padding-top: 20px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid #eee;
 }
 
