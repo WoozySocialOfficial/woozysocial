@@ -217,7 +217,7 @@ export const Approvals = () => {
             <div className="loading-state">Loading posts...</div>
           ) : posts.length === 0 ? (
             <div className="empty-state">
-              <p>No {filter === 'pending' ? 'posts pending approval' : `${filter} posts`}</p>
+              <p>No {filter === 'pending' ? 'posts pending approval' : filter === 'changes_requested' ? 'posts with changes requested' : filter === 'approved' ? 'approved posts' : filter === 'rejected' ? 'rejected posts' : 'posts'}</p>
             </div>
           ) : (
             posts.map((post) => (
