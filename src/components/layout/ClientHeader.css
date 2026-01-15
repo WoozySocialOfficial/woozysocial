@@ -102,6 +102,14 @@
   transition: background-color 0.2s;
 }
 
+.client-dropdown-item.connect-accounts {
+  color: #5951e5;
+}
+
+.client-dropdown-item.connect-accounts:hover {
+  background-color: #f0efff;
+}
+
 .client-dropdown-item.sign-out {
   color: #EF4444;
 }

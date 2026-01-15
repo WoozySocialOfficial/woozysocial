@@ -16,8 +16,11 @@ export const TopHeader = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const profileRef = useRef(null);
 
-  // Check if current user is the workspace owner or admin (can manage social accounts)
-  const canManageSocialAccounts = workspaceMembership?.role === 'owner' || workspaceMembership?.role === 'admin';
+  // Allow owners, admins, and clients to connect social accounts
+  // This allows clients to link their own social media accounts directly
+  const canManageSocialAccounts = workspaceMembership?.role === 'owner' ||
+                                   workspaceMembership?.role === 'admin' ||
+                                   workspaceMembership?.role === 'client';
 
   // Show Team if user has active profile OR is part of any workspace
   const showTeam = hasActiveProfile || userWorkspaces?.length > 0;
