@@ -24,16 +24,12 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   // Try to get cached data for instant load
-  const cacheStart = performance.now();
   const cachedProfile = (() => {
     try {
       const cached = localStorage.getItem('woozy_profile_cache');
       return cached ? JSON.parse(cached) : null;
     } catch { return null; }
   })();
-  if (cachedProfile) {
-    console.log(`⚡ Cache load: ${(performance.now() - cacheStart).toFixed(2)}ms`);
-  }
 
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(cachedProfile);
@@ -76,15 +72,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const fetchProfile = async (userId) => {
-    const fetchStart = performance.now();
     try {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
-
-      console.log(`🌐 Network fetch: ${(performance.now() - fetchStart).toFixed(0)}ms`);
 
       if (error && error.code !== 'PGRST116') {
         throw error;
