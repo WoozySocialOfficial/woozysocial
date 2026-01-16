@@ -2,13 +2,13 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const ProtectedRoute = ({ children }) => {
-  const { user, loading, profile } = useAuth();
+  const { user, loading, profile, authChecked } = useAuth();
 
   // Optimistic loading: if we have cached profile, show content immediately
-  // The auth will verify in the background
   const hasCachedData = !!profile;
 
-  // Only show loading if no cached data AND still loading
+  // Show loading spinner only if:
+  // - No cached data AND still loading
   if (loading && !hasCachedData) {
     return (
       <div style={{
@@ -31,8 +31,9 @@ export const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If done loading and no user, redirect to login
-  if (!loading && !user) {
+  // Only redirect to login AFTER auth has been checked with Supabase
+  // This prevents premature redirects when using cached data
+  if (authChecked && !user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -41,6 +42,6 @@ export const ProtectedRoute = ({ children }) => {
     return children;
   }
 
-  // Fallback: redirect to login
-  return <Navigate to="/login" replace />;
+  // Still waiting for auth check - show nothing (brief moment)
+  return null;
 };

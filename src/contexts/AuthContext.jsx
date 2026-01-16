@@ -37,24 +37,21 @@ export const AuthProvider = ({ children }) => {
 
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(cachedProfile);
-  // If we have cached data, don't show loading - render immediately
+  // If we have cached data, don't show loading spinner - render immediately
   const [loading, setLoading] = useState(!cachedProfile);
+  // Track if initial auth check is complete (needed for redirect logic)
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setAuthChecked(true); // Mark auth as checked
       if (session?.user) {
-        // If we already have cached profile, don't block on fetch
-        if (cachedProfile) {
-          // Fetch fresh data in background (non-blocking)
-          fetchProfile(session.user.id);
-        } else {
-          // No cache, need to wait for profile
-          fetchProfile(session.user.id);
-        }
+        // Fetch fresh profile data
+        fetchProfile(session.user.id);
       } else {
-        // No session - clear cache and redirect to login
+        // No session - clear cache
         localStorage.removeItem('woozy_profile_cache');
         localStorage.removeItem('woozy_workspace_cache');
         setProfile(null);
@@ -325,6 +322,7 @@ export const AuthProvider = ({ children }) => {
     user,
     profile,
     loading,
+    authChecked,
     signUp,
     signIn,
     signOut,
