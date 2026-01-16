@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
-import { baseURL, SUBSCRIPTION_TIERS } from "../../utils/constants";
+import { baseURL, SUBSCRIPTION_TIERS, hasTabAccess } from "../../utils/constants";
 import { NotificationBell } from "../NotificationBell";
 import "./TopHeader.css";
 
@@ -23,28 +23,24 @@ export const TopHeader = () => {
                                    workspaceMembership?.role === 'admin' ||
                                    workspaceMembership?.role === 'client';
 
-  // Show Team if user has active profile OR is part of any workspace
-  const showTeam = hasActiveProfile || userWorkspaces?.length > 0;
-
   const menuItems = [
-    { name: "Dashboard", path: "/dashboard" },
-    { name: "Brand Profile", path: "/brand-profile" },
-    { name: "Compose", path: "/compose" },
-    { name: "Schedule", path: "/schedule" },
-    { name: "Posts", path: "/posts" },
-    { name: "Assets", path: "/assets" },
-    { name: "Engagement", path: "/engagement" },
-    { name: "Social Inbox", path: "/social-inbox" },
-    { name: "Team", path: "/team", requiresSubscriptionOrTeam: true },
-    { name: "Approvals", path: "/approvals", requiresSubscriptionOrTeam: true },
-    { name: "Settings", path: "/settings" }
+    { name: "Dashboard", path: "/dashboard", tab: "dashboard" },
+    { name: "Brand Profile", path: "/brand-profile", tab: "brand-profile" },
+    { name: "Compose", path: "/compose", tab: "compose" },
+    { name: "Schedule", path: "/schedule", tab: "schedule" },
+    { name: "Posts", path: "/posts", tab: "posts" },
+    { name: "Assets", path: "/assets", tab: "assets" },
+    { name: "Engagement", path: "/engagement", tab: "engagement" },
+    { name: "Social Inbox", path: "/social-inbox", tab: "social-inbox" },
+    { name: "Team", path: "/team", tab: "team" },
+    { name: "Approvals", path: "/approvals", tab: "approvals" },
+    { name: "Settings", path: "/settings", tab: "settings" }
   ];
 
+  // Filter menu items based on subscription tier
   const visibleMenuItems = menuItems.filter(item => {
-    if (item.requiresSubscriptionOrTeam) {
-      return showTeam;
-    }
-    return true;
+    // Check subscription tier access for each tab
+    return hasTabAccess(subscriptionTier, item.tab);
   });
 
   // Close dropdown when clicking outside
