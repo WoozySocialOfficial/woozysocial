@@ -225,12 +225,42 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: `Webhook signature verification failed: ${err.message}` });
   }
 
-  console.log(`[WEBHOOK] Received event: ${event.type}`);
+  console.log(`[WEBHOOK] Received event: ${event.type} (ID: ${event.id})`);
   console.log(`[WEBHOOK] Environment check:`, {
     hasSupabase: !!supabase,
     hasAyrshareKey: !!process.env.AYRSHARE_API_KEY,
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
   });
+
+  // Check for duplicate events using Stripe event ID (idempotency)
+  // Only check for events that perform critical actions like workspace creation
+  const criticalEvents = ['checkout.session.completed'];
+  if (criticalEvents.includes(event.type)) {
+    const { data: existingEvent } = await supabase
+      .from('stripe_events')
+      .select('id')
+      .eq('stripe_event_id', event.id)
+      .single();
+
+    if (existingEvent) {
+      console.log(`[WEBHOOK] Event ${event.id} already processed, skipping`);
+      return res.status(200).json({ received: true, duplicate: true });
+    }
+
+    // Record this event as processed
+    const { error: eventError } = await supabase
+      .from('stripe_events')
+      .insert({
+        stripe_event_id: event.id,
+        event_type: event.type,
+        processed_at: new Date().toISOString()
+      });
+
+    if (eventError) {
+      console.warn(`[WEBHOOK] Could not record event (may not have stripe_events table):`, eventError.message);
+      // Continue anyway - the table might not exist yet
+    }
+  }
 
   try {
     switch (event.type) {
