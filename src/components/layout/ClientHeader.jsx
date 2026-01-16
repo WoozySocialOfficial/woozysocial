@@ -4,7 +4,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { baseURL } from "../../utils/constants";
 import { NotificationBell } from "../NotificationBell";
-import { WorkspaceSwitcher } from "../workspace/WorkspaceSwitcher";
 import "./ClientHeader.css";
 
 export const ClientHeader = () => {
@@ -84,7 +83,6 @@ export const ClientHeader = () => {
 
   return (
     <div className="client-header">
-      <WorkspaceSwitcher />
       <div style={{ flex: 1 }}></div>
 
       <div className="client-header-right">
