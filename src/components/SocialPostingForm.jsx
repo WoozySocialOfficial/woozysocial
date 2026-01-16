@@ -41,8 +41,12 @@ import { FaTiktok } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
 import PostTimelineCard from "./PostTimeLineCard";
 import { baseURL } from "../utils/constants";
+import { useAuth } from "../contexts/AuthContext";
+import { useWorkspace } from "../contexts/WorkspaceContext";
 
 const SocialPostingForm = () => {
+  const { user } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const [post, setPost] = useState({ text: "", media: null });
   const [networks, setNetworks] = useState({
     facebook: false,
@@ -141,6 +145,10 @@ const SocialPostingForm = () => {
       formData.append("media", post.media);
     }
     formData.append("networks", JSON.stringify(networks));
+    formData.append("userId", user?.id);
+    if (activeWorkspace?.id) {
+      formData.append("workspaceId", activeWorkspace.id);
+    }
     if (scheduledDate) {
       formData.append("scheduledDate", scheduledDate.toISOString());
     }
