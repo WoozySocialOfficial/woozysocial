@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
-import { baseURL } from "../utils/constants";
+import { baseURL, hasFeature } from "../utils/constants";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaCheck, FaTimes, FaComment, FaClock } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
@@ -27,7 +27,7 @@ const APPROVAL_STATUS = {
 };
 
 export const ScheduleContent = () => {
-  const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
+  const { user, profile, hasActiveProfile, subscriptionStatus, subscriptionTier, isWhitelisted } = useAuth();
   const { activeWorkspace, workspaceMembership } = useWorkspace();
 
   // Check if user has access (multi-workspace support)
@@ -50,6 +50,9 @@ export const ScheduleContent = () => {
   // Check if user is a client (can approve/reject)
   const isClient = workspaceMembership?.role === 'client';
   const canApprove = isClient || workspaceMembership?.role === 'owner' || workspaceMembership?.role === 'admin';
+
+  // Check if subscription tier has approval workflows feature
+  const hasApprovalWorkflows = hasFeature(subscriptionTier, 'approvalWorkflows');
 
   // Fetch scheduled and published posts from unified endpoint (single source of truth)
   const fetchPosts = useCallback(async () => {
@@ -343,10 +346,13 @@ export const ScheduleContent = () => {
         title="Click to view details"
       >
         <div className="post-card-header">
-          <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
-            <ApprovalIcon size={11} />
-            <span>{approvalInfo.label}</span>
-          </div>
+          {/* Only show approval badge if tier has approval workflows */}
+          {hasApprovalWorkflows && (
+            <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
+              <ApprovalIcon size={11} />
+              <span>{approvalInfo.label}</span>
+            </div>
+          )}
           {(post.comments?.length > 0 || post.commentCount > 0) && (
             <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
               <FaComment size={10} />
@@ -570,33 +576,35 @@ export const ScheduleContent = () => {
         </div>
       </div>
 
-      {/* Approval Filter Tabs */}
-      <div className="approval-filter-tabs">
-        <button
-          className={`filter-tab ${approvalFilter === 'all' ? 'active' : ''}`}
-          onClick={() => setApprovalFilter('all')}
-        >
-          All <span className="filter-count">{approvalCounts.all}</span>
-        </button>
-        <button
-          className={`filter-tab pending ${approvalFilter === 'pending' ? 'active' : ''}`}
-          onClick={() => setApprovalFilter('pending')}
-        >
-          <FaClock size={12} /> Pending <span className="filter-count">{approvalCounts.pending}</span>
-        </button>
-        <button
-          className={`filter-tab approved ${approvalFilter === 'approved' ? 'active' : ''}`}
-          onClick={() => setApprovalFilter('approved')}
-        >
-          <FaCheck size={12} /> Approved <span className="filter-count">{approvalCounts.approved}</span>
-        </button>
-        <button
-          className={`filter-tab rejected ${approvalFilter === 'rejected' ? 'active' : ''}`}
-          onClick={() => setApprovalFilter('rejected')}
-        >
-          <FaTimes size={12} /> Rejected <span className="filter-count">{approvalCounts.rejected}</span>
-        </button>
-      </div>
+      {/* Approval Filter Tabs - Only show for tiers with approval workflows */}
+      {hasApprovalWorkflows && (
+        <div className="approval-filter-tabs">
+          <button
+            className={`filter-tab ${approvalFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('all')}
+          >
+            All <span className="filter-count">{approvalCounts.all}</span>
+          </button>
+          <button
+            className={`filter-tab pending ${approvalFilter === 'pending' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('pending')}
+          >
+            <FaClock size={12} /> Pending <span className="filter-count">{approvalCounts.pending}</span>
+          </button>
+          <button
+            className={`filter-tab approved ${approvalFilter === 'approved' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('approved')}
+          >
+            <FaCheck size={12} /> Approved <span className="filter-count">{approvalCounts.approved}</span>
+          </button>
+          <button
+            className={`filter-tab rejected ${approvalFilter === 'rejected' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('rejected')}
+          >
+            <FaTimes size={12} /> Rejected <span className="filter-count">{approvalCounts.rejected}</span>
+          </button>
+        </div>
+      )}
 
       <div className="schedule-content">
         {loading ? (
@@ -619,7 +627,7 @@ export const ScheduleContent = () => {
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
           onEditScheduledPost={handleEditScheduledPost}
-          showApprovalActions={canApprove}
+          showApprovalActions={canApprove && hasApprovalWorkflows}
         />
       )}
     </div>
