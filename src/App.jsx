@@ -1,47 +1,75 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { RoleBasedRedirect } from "./components/auth/RoleBasedRedirect";
-import { LoginPage } from "./components/auth/LoginPage";
-import { SignUpPage } from "./components/auth/SignUpPage";
-import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
-import { AcceptInvite } from "./pages/AcceptInvite";
 import { Sidebar } from "./components/layout/Sidebar";
 import { TopHeader } from "./components/layout/TopHeader";
 import { MainContent } from "./components/layout/MainContent";
 import { ClientLayout } from "./components/layout/ClientLayout";
-import { DashboardContent } from "./components/DashboardContent";
-import { ComposeContent } from "./components/ComposeContent";
-import { PostsContent } from "./components/PostsContent";
-import { BrandProfileContent } from "./components/BrandProfileContent";
-import { ScheduleContent } from "./components/ScheduleContent";
-import { AssetsContent } from "./components/AssetsContent";
-import { SocialInboxContent } from "./components/SocialInboxContent";
-import { TeamContent } from "./components/TeamContent";
-import { SettingsContent } from "./components/SettingsContent";
-import { EngagementContent } from "./components/EngagementContent";
-import { Approvals } from "./pages/Approvals";
-import { Pricing } from "./pages/Pricing";
-import { Notifications } from "./pages/Notifications";
-import { ClientDashboard } from "./pages/client/ClientDashboard";
-import { ClientApprovals } from "./pages/client/ClientApprovals";
-import { ClientApproved } from "./pages/client/ClientApproved";
-import { ClientCalendar } from "./pages/client/ClientCalendar";
 import "./App.css";
+
+// Lazy load all page components - only loaded when user navigates to them
+const LoginPage = lazy(() => import("./components/auth/LoginPage").then(m => ({ default: m.LoginPage })));
+const SignUpPage = lazy(() => import("./components/auth/SignUpPage").then(m => ({ default: m.SignUpPage })));
+const ResetPasswordPage = lazy(() => import("./components/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite").then(m => ({ default: m.AcceptInvite })));
+
+// Main app pages - lazy loaded
+const DashboardContent = lazy(() => import("./components/DashboardContent").then(m => ({ default: m.DashboardContent })));
+const ComposeContent = lazy(() => import("./components/ComposeContent").then(m => ({ default: m.ComposeContent })));
+const PostsContent = lazy(() => import("./components/PostsContent").then(m => ({ default: m.PostsContent })));
+const BrandProfileContent = lazy(() => import("./components/BrandProfileContent").then(m => ({ default: m.BrandProfileContent })));
+const ScheduleContent = lazy(() => import("./components/ScheduleContent").then(m => ({ default: m.ScheduleContent })));
+const AssetsContent = lazy(() => import("./components/AssetsContent").then(m => ({ default: m.AssetsContent })));
+const SocialInboxContent = lazy(() => import("./components/SocialInboxContent").then(m => ({ default: m.SocialInboxContent })));
+const TeamContent = lazy(() => import("./components/TeamContent").then(m => ({ default: m.TeamContent })));
+const SettingsContent = lazy(() => import("./components/SettingsContent").then(m => ({ default: m.SettingsContent })));
+const EngagementContent = lazy(() => import("./components/EngagementContent").then(m => ({ default: m.EngagementContent })));
+const Approvals = lazy(() => import("./pages/Approvals").then(m => ({ default: m.Approvals })));
+const Pricing = lazy(() => import("./pages/Pricing").then(m => ({ default: m.Pricing })));
+const Notifications = lazy(() => import("./pages/Notifications").then(m => ({ default: m.Notifications })));
+
+// Client portal pages - lazy loaded
+const ClientDashboard = lazy(() => import("./pages/client/ClientDashboard").then(m => ({ default: m.ClientDashboard })));
+const ClientApprovals = lazy(() => import("./pages/client/ClientApprovals").then(m => ({ default: m.ClientApprovals })));
+const ClientApproved = lazy(() => import("./pages/client/ClientApproved").then(m => ({ default: m.ClientApproved })));
+const ClientCalendar = lazy(() => import("./pages/client/ClientCalendar").then(m => ({ default: m.ClientCalendar })));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    minHeight: '200px'
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid #f3f3f3',
+      borderTop: '3px solid #7c3aed',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
+    }} />
+    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 function App() {
   return (
     <AuthProvider>
       <WorkspaceProvider>
         <Router>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/accept-invite" element={<AcceptInvite />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
 
             {/* Client Portal Routes */}
             <Route
@@ -96,7 +124,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
-          </Routes>
+            </Routes>
+          </Suspense>
         </Router>
       </WorkspaceProvider>
     </AuthProvider>
