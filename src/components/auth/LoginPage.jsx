@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './AuthPages.css';
@@ -6,6 +6,11 @@ import './AuthPages.css';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { signIn, resetPassword } = useAuth();
+
+  // Prefetch Dashboard chunk while user is on login page
+  useEffect(() => {
+    import('../DashboardContent');
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
