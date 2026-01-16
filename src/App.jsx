@@ -28,7 +28,7 @@ const TeamContent = lazy(() => import("./components/TeamContent").then(m => ({ d
 const SettingsContent = lazy(() => import("./components/SettingsContent").then(m => ({ default: m.SettingsContent })));
 const EngagementContent = lazy(() => import("./components/EngagementContent").then(m => ({ default: m.EngagementContent })));
 const Approvals = lazy(() => import("./pages/Approvals").then(m => ({ default: m.Approvals })));
-const Pricing = lazy(() => import("./pages/Pricing").then(m => ({ default: m.Pricing })));
+const Pricing = lazy(() => import("./pages/Pricing"));
 const Notifications = lazy(() => import("./pages/Notifications").then(m => ({ default: m.Notifications })));
 
 // Client portal pages - lazy loaded

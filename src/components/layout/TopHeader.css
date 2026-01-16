@@ -124,6 +124,14 @@
   background-color: #EFF6FF;
 }
 
+.profile-dropdown-item.manage-subscription {
+  color: #8B5CF6;
+}
+
+.profile-dropdown-item.manage-subscription:hover {
+  background-color: #F5F3FF;
+}
+
 .profile-dropdown-item.sign-out {
   color: #EF4444;
 }
