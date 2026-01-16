@@ -149,10 +149,7 @@ export const NotificationBell = () => {
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
-    if (!user) {
-      console.log('[NotificationBell] No user, skipping fetch');
-      return;
-    }
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -160,23 +157,14 @@ export const NotificationBell = () => {
         ? `${baseURL}/api/notifications/list?userId=${user.id}&workspaceId=${activeWorkspace.id}`
         : `${baseURL}/api/notifications/list?userId=${user.id}`;
 
-      console.log('[NotificationBell] Fetching notifications from:', url);
       const res = await fetch(url);
-      console.log('[NotificationBell] Response status:', res.status, 'ok:', res.ok);
 
       if (res.ok) {
         const response = await res.json();
-        console.log('[NotificationBell] Received response:', response);
-
         // API returns { success: true, data: { notifications: [], unreadCount: 0 } }
         const data = response.data || response;
-        console.log('[NotificationBell] Notifications count:', data.notifications?.length || 0);
-
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
-        console.log('[NotificationBell] State updated - notifications:', data.notifications?.length, 'unread:', data.unreadCount);
-      } else {
-        console.error('[NotificationBell] Response not ok:', res.status);
       }
     } catch (error) {
       console.error("[NotificationBell] Error fetching notifications:", error);
@@ -253,7 +241,6 @@ export const NotificationBell = () => {
 
     // Switch workspace if notification is from a different workspace
     if (notification.workspace_id && activeWorkspace?.id !== notification.workspace_id) {
-      console.log(`[NotificationBell] Switching from workspace ${activeWorkspace?.id} to ${notification.workspace_id}`);
       await switchWorkspace(notification.workspace_id);
     }
 

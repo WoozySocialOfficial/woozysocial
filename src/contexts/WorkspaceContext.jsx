@@ -63,7 +63,6 @@ export const WorkspaceProvider = ({ children }) => {
 
       // If no workspaces, auto-migrate the user
       if (workspaces.length === 0) {
-        console.log('No workspaces found, migrating user...');
         const migrateRes = await fetch(`${baseURL}/api/workspace/migrate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

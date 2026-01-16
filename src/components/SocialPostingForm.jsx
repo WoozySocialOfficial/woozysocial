@@ -181,7 +181,6 @@ const SocialPostingForm = () => {
         setMediaPreview(null);
         setMediaType(null);
         setScheduledDate(null);
-        console.log("Post result:", result);
         fetchPostHistory(); // Refresh the post history
       } else {
         throw new Error("Failed to submit post");

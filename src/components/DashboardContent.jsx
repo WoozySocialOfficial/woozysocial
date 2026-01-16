@@ -67,7 +67,6 @@ export const DashboardContent = () => {
       if (res.ok) {
         const accountsData = await res.json();
         const data = accountsData.data || accountsData;
-        console.log("Connected accounts from API:", data.accounts);
         setConnectedAccounts(data.accounts || []);
         setStats(prev => ({ ...prev, connectedCount: data.accounts?.length || 0 }));
       }
@@ -159,7 +158,6 @@ export const DashboardContent = () => {
         .then(accountsData => {
           if (accountsData) {
             const data = accountsData.data || accountsData;
-            console.log("Connected accounts from API:", data.accounts);
             setConnectedAccounts(data.accounts || []);
             setStats(prev => ({ ...prev, connectedCount: data.accounts?.length || 0 }));
           }
@@ -199,7 +197,6 @@ export const DashboardContent = () => {
   // Listen for social accounts updates from other components (e.g., TopHeader)
   useEffect(() => {
     const handleAccountsUpdated = () => {
-      console.log("Social accounts updated event received, refreshing...");
       setTimeout(() => refreshAccounts(), 1000);
     };
 

@@ -49,8 +49,6 @@ export const PostsContent = () => {
       const responseData = data.data || data;
       const allPosts = responseData.history || [];
       setAllAyrsharePosts(allPosts);
-
-      console.log("Ayrshare history fetched:", allPosts.length, "posts");
       return allPosts;
     } catch (error) {
       console.error("Error fetching Ayrshare history:", error);

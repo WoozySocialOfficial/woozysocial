@@ -89,8 +89,6 @@ export const ComposeContent = () => {
           const data = await res.json();
           // Handle both old format (data.accounts) and new format (data.data.accounts)
           const responseData = data.data || data;
-          console.log("Connected accounts API response:", data);
-          console.log("Connected accounts array:", responseData.accounts);
           setConnectedAccounts(responseData.accounts || []);
           setAccountDetails(responseData.accountDetails || []);
         }
@@ -127,9 +125,7 @@ export const ComposeContent = () => {
             const displayHour = bestHour > 12 ? bestHour - 12 : (bestHour === 0 ? 12 : bestHour);
             setBestPostingTime(`${displayHour}:00 ${period}`);
             setHasRealData(true);
-            console.log("Best posting time from analytics:", `${displayHour}:00 ${period}`);
           } else {
-            console.log("No analytics data available, using default times");
             setHasRealData(false);
           }
         }
@@ -232,10 +228,7 @@ export const ComposeContent = () => {
     if (!user) return;
 
     // Prevent concurrent saves
-    if (isSavingRef.current) {
-      console.log("Save already in progress, skipping...");
-      return;
-    }
+    if (isSavingRef.current) return;
 
     // Don't save if there's no content
     const selectedPlatforms = Object.keys(networks).filter(key => networks[key]);
@@ -408,12 +401,9 @@ export const ComposeContent = () => {
 
       const normalized = accountName.toLowerCase();
       const mapped = platformNameMap[normalized] || normalized;
-
-      console.log(`[isLinked] Checking ${platformKey}: account="${accountName}", normalized="${normalized}", mapped="${mapped}", match=${mapped === platformKey}`);
       return mapped === platformKey;
     });
 
-    console.log(`[isLinked] Platform ${platformKey} final result: ${result}, connectedAccounts:`, connectedAccounts);
     return result;
   };
 
@@ -1314,11 +1304,6 @@ export const ComposeContent = () => {
         setIsLoading(false);
         return;
       }
-
-      console.log("Scheduling post:");
-      console.log("  Current time:", now.toISOString());
-      console.log("  Scheduled time:", scheduledTime.toISOString());
-      console.log("  Time difference (minutes):", (scheduledTime - now) / 1000 / 60);
     }
 
     try {

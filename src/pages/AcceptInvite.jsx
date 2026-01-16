@@ -59,7 +59,6 @@ export const AcceptInvite = () => {
       setLoading(true);
 
       const apiUrl = `${baseURL}/api/invitations/validate?token=${token}`;
-      console.log('Validating invitation at:', apiUrl);
       const response = await fetch(apiUrl);
       const result = await response.json();
 

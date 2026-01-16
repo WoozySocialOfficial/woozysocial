@@ -147,14 +147,7 @@ export const AuthProvider = ({ children }) => {
             }),
           });
 
-          if (response.ok) {
-            const result = await response.json();
-            if (result.profileCreated) {
-              console.log('Ayrshare profile created for whitelisted user:', result);
-            } else {
-              console.log('User not whitelisted - profile will be created after payment');
-            }
-          } else {
+          if (!response.ok) {
             const errorData = await response.json();
             console.error('Failed to check profile eligibility:', errorData);
             // Don't throw - allow signup to continue

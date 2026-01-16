@@ -126,7 +126,6 @@ export const TeamContent = () => {
         throw new Error(data.error || 'Failed to send invitation');
       }
 
-      console.log('Invitation sent successfully:', data);
       // Refresh pending invites list
       fetchPendingInvites();
       // The modal will close automatically on success

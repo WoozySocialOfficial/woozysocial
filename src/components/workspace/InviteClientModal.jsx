@@ -58,8 +58,8 @@ export const InviteClientModal = ({ isOpen, onClose, onInviteSent }) => {
 
       try {
         await navigator.clipboard.writeText(inviteLink);
-      } catch (clipboardError) {
-        console.log('Could not copy to clipboard');
+      } catch {
+        // Clipboard access not available
       }
 
       if (onInviteSent) {

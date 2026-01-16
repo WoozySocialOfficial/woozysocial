@@ -201,8 +201,6 @@ export const CommentInput = ({
         requestBody.draftId = draftId;
       }
 
-      console.log('Submitting comment:', requestBody);
-
       const res = await fetch(`${baseURL}/api/post/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -210,7 +208,6 @@ export const CommentInput = ({
       });
 
       const data = await res.json();
-      console.log('Comment API response:', data);
 
       if (data.success) {
         const responseData = data.data || data;

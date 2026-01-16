@@ -12,7 +12,6 @@ export const SocialsContent = () => {
   ]);
 
   const handleConnect = (platformName) => {
-    console.log(`Connecting to ${platformName}...`);
     // TODO: Implement OAuth connection flow
   };
 
