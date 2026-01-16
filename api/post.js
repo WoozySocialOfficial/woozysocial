@@ -13,7 +13,7 @@ const {
   applyRateLimit,
   isServiceConfigured
 } = require("./_utils");
-const { sendPostScheduledNotification, sendApprovalRequestNotification } = require("./notifications/helpers");
+const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPostUpdatedNotification } = require("./notifications/helpers");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -276,6 +276,15 @@ module.exports = async function handler(req, res) {
 
         console.log('[post] Post updated successfully:', updatedPost.id);
 
+        // Get user info for notifications
+        const { data: userProfile } = await supabase
+          .from('user_profiles')
+          .select('full_name, email')
+          .eq('id', userId)
+          .single();
+
+        const updatedByName = userProfile?.full_name || userProfile?.email || 'Someone';
+
         // Send approval request notification to clients (since it needs re-approval)
         if (workspaceId) {
           await sendApprovalRequestNotification(supabase, {
@@ -284,6 +293,14 @@ module.exports = async function handler(req, res) {
             platforms,
             createdByUserId: userId
           }).catch(err => logError('post.notification.approvalRequest', err, { postId: updatedPost.id }));
+
+          // Send "post updated" notification to approvers (especially those who requested changes)
+          await sendPostUpdatedNotification(supabase, {
+            postId: updatedPost.id,
+            workspaceId,
+            updatedByUserId: userId,
+            updatedByName
+          }).catch(err => logError('post.notification.postUpdated', err, { postId: updatedPost.id }));
         }
 
         return sendSuccess(res, {

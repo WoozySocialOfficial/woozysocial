@@ -652,6 +652,52 @@ async function sendMentionNotifications(supabase, {
   }
 }
 
+/**
+ * Send notification when a post is updated after a change request
+ * Notifies approvers (especially those who requested changes) that the post has been updated
+ */
+async function sendPostUpdatedNotification(supabase, { postId, workspaceId, updatedByUserId, updatedByName }) {
+  try {
+    // Get the post to check who created it
+    const { data: post } = await supabase
+      .from('posts')
+      .select('created_by')
+      .eq('id', postId)
+      .single();
+
+    if (!post) return;
+
+    // Get all approvers (admin, client, owner) in the workspace, except the person who updated
+    const { data: approvers } = await supabase
+      .from('workspace_members')
+      .select('user_id')
+      .eq('workspace_id', workspaceId)
+      .in('role', ['owner', 'admin', 'client'])
+      .neq('user_id', updatedByUserId);
+
+    if (!approvers || approvers.length === 0) return;
+
+    // Create notifications for all approvers
+    const notifications = approvers.map(approver => ({
+      user_id: approver.user_id,
+      workspace_id: workspaceId,
+      post_id: postId,
+      type: 'post_updated',
+      title: 'Post Updated',
+      message: `${updatedByName} has updated a post and it's ready for re-approval.`,
+      actor_id: updatedByUserId,
+      metadata: {},
+      read: false
+    }));
+
+    if (notifications.length > 0) {
+      await supabase.from('notifications').insert(notifications);
+    }
+  } catch (error) {
+    logError('notifications.helpers.postUpdated', error, { postId, workspaceId });
+  }
+}
+
 module.exports = {
   sendApprovalNotification,
   sendWorkspaceInviteNotification,
@@ -668,5 +714,6 @@ module.exports = {
   sendSocialAccountUnlinkedNotification,
   sendPostFailedNotification,
   sendPostPublishedNotification,
-  sendApprovalRequestNotification
+  sendApprovalRequestNotification,
+  sendPostUpdatedNotification
 };

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { sendApprovalNotification } = require("../notifications/helpers");
+const { sendApprovalNotification, sendNewCommentNotification } = require("../notifications/helpers");
 const {
   setCors,
   getSupabase,
@@ -319,6 +319,18 @@ module.exports = async function handler(req, res) {
         reviewerId: userId,
         comment
       });
+
+      // Send comment notification to approvers/collaborators (for change requests and rejections)
+      // This ensures admins/editors are notified when clients request changes
+      if (action === 'changes_requested' || action === 'reject') {
+        sendNewCommentNotification(supabase, {
+          postId,
+          workspaceId,
+          commenterId: userId,
+          commenterName: userName,
+          comment: systemComment
+        });
+      }
 
       return sendSuccess(res, {
         status: newStatus,
