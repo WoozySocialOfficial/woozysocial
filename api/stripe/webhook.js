@@ -25,19 +25,20 @@ function getTierFromPriceId(priceId) {
 
 // Helper to get raw body from request
 async function getRawBody(req) {
-  // For Vercel serverless functions, req.body is already the raw buffer
-  if (req.body) {
+  // Check if body is already a Buffer (Vercel sometimes provides this)
+  if (Buffer.isBuffer(req.body)) {
     return req.body;
   }
 
-  // Fallback for other environments
+  // If body exists but isn't a Buffer, it's been parsed - we need the raw body
+  // On Vercel, when bodyParser: false, we need to read the stream
   return new Promise((resolve, reject) => {
-    let data = "";
+    const chunks = [];
     req.on("data", (chunk) => {
-      data += chunk;
+      chunks.push(chunk);
     });
     req.on("end", () => {
-      resolve(data);
+      resolve(Buffer.concat(chunks));
     });
     req.on("error", reject);
   });
