@@ -10,10 +10,5 @@
       "maxDuration": 30,
       "memory": 1024
     }
-  },
-  "api": {
-    "bodyParser": {
-      "sizeLimit": "1mb"
-    }
   }
 }
