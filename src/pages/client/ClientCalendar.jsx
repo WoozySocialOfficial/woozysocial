@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { baseURL } from "../../utils/constants";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
-import { FaTiktok, FaThreads } from "react-icons/fa6";
-import { SiX, SiBluesky } from "react-icons/si";
+import { CalendarPostModal } from "../../components/client/CalendarPostModal";
 import "./ClientCalendar.css";
 
 export const ClientCalendar = () => {
@@ -118,8 +116,10 @@ export const ClientCalendar = () => {
   const handleDateClick = (date) => {
     if (!date) return;
     const datePosts = getPostsForDate(date);
-    setSelectedDate(date);
-    setSelectedPosts(datePosts);
+    if (datePosts.length > 0) {
+      setSelectedDate(date);
+      setSelectedPosts(datePosts);
+    }
   };
 
   const prevMonth = () => {
@@ -132,15 +132,6 @@ export const ClientCalendar = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
     setSelectedDate(null);
     setSelectedPosts([]);
-  };
-
-  const formatTime = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const days = getDaysInMonth(currentDate);
@@ -234,56 +225,17 @@ export const ClientCalendar = () => {
       </div>
 
       {/* Modal for Selected Date Posts */}
-      {selectedDate && (
-        <>
-          <div className="modal-overlay" onClick={() => setSelectedDate(null)} />
-          <div className="posts-modal">
-            <div className="modal-header">
-              <h3>
-                {selectedDate.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </h3>
-              <button className="modal-close" onClick={() => setSelectedDate(null)}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="modal-content">
-              {selectedPosts.length === 0 ? (
-                <div className="no-posts">No posts scheduled for this day.</div>
-              ) : (
-                <div className="modal-posts">
-                  {selectedPosts.map((post) => (
-                    <div key={post.id} className="modal-post">
-                      <div
-                        className="post-status-bar"
-                        style={{ backgroundColor: getStatusColor(post.status, post.approval_status) }}
-                      />
-                      <div className="modal-post-content">
-                        <div className="post-time">{formatTime(post.schedule_date)}</div>
-                        <div className="post-caption">
-                          {post.post || 'No content'}
-                        </div>
-                        {post.media_url && (
-                          <div className="post-media">
-                            <img src={post.media_url} alt="Post media" style={{ width: '100%', borderRadius: '8px', marginTop: '8px' }} />
-                          </div>
-                        )}
-                        <div className="post-platforms">
-                          {post.platforms?.join(', ')}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </>
+      {selectedDate && selectedPosts.length > 0 && (
+        <CalendarPostModal
+          posts={selectedPosts}
+          selectedDate={selectedDate}
+          currentPostIndex={0}
+          onClose={() => {
+            setSelectedDate(null);
+            setSelectedPosts([]);
+          }}
+          onPostUpdated={fetchPosts}
+        />
       )}
     </div>
   );
