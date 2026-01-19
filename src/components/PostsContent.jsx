@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
+import { useDrafts, usePosts, useInvalidateQueries } from "../hooks/useQueries";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaSnapchat, FaTrash, FaSyncAlt } from "react-icons/fa";
@@ -30,117 +31,47 @@ export const PostsContent = () => {
   const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("drafts");
-  const [posts, setPosts] = useState([]);
-  const [allAyrsharePosts, setAllAyrsharePosts] = useState([]); // Cache Ayrshare data
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPost, setSelectedPost] = useState(null);
+  const { invalidatePosts } = useInvalidateQueries();
 
-  // Fetch Ayrshare history once and cache it
-  const fetchAyrshareHistory = useCallback(async () => {
-    if (!user || !activeWorkspace?.id) return;
+  // Map tab to status for posts query
+  const statusMap = {
+    scheduled: "scheduled",
+    history: "posted",
+    failed: "failed"
+  };
 
-    try {
-      const response = await fetch(`${baseURL}/api/post-history?workspaceId=${activeWorkspace.id}`);
-      if (!response.ok) throw new Error("Failed to fetch post history");
+  // Use React Query for drafts
+  const {
+    data: drafts = [],
+    isLoading: draftsLoading,
+    refetch: refetchDrafts
+  } = useDrafts(activeWorkspace?.id, user?.id);
 
-      const data = await response.json();
-      // Handle both old format (data.history) and new format (data.data.history)
-      const responseData = data.data || data;
-      const allPosts = responseData.history || [];
-      setAllAyrsharePosts(allPosts);
-      return allPosts;
-    } catch (error) {
-      console.error("Error fetching Ayrshare history:", error);
-      return [];
+  // Use React Query for posts (scheduled, history, failed)
+  const {
+    data: postsData = [],
+    isLoading: postsLoading,
+    refetch: refetchPosts
+  } = usePosts(activeWorkspace?.id, user?.id, {
+    status: statusMap[activeTab],
+    limit: 100
+  });
+
+  // Get current posts based on active tab
+  const posts = activeTab === "drafts" ? drafts : postsData;
+  const loading = activeTab === "drafts" ? draftsLoading : postsLoading;
+
+  // Refresh function
+  const handleRefresh = () => {
+    invalidatePosts(activeWorkspace?.id);
+    if (activeTab === "drafts") {
+      refetchDrafts();
+    } else {
+      refetchPosts();
     }
-  }, [user, activeWorkspace]);
-
-  // Filter posts based on active tab (uses cached data)
-  const filterPosts = useCallback((tabName, ayrsharePosts) => {
-    const now = new Date();
-
-    if (tabName === "scheduled") {
-      return ayrsharePosts.filter(post => {
-        if (post.status === "scheduled") return true;
-        if (post.type === "schedule" || post.type === "scheduled") return true;
-        if (post.scheduleDate) {
-          const scheduleTime = new Date(post.scheduleDate);
-          return scheduleTime > now;
-        }
-        return false;
-      });
-    } else if (tabName === "history") {
-      return ayrsharePosts.filter(post => {
-        return post.status === "success" && post.type !== "schedule" && post.type !== "scheduled";
-      });
-    } else if (tabName === "failed") {
-      return ayrsharePosts.filter(post => post.status === "error");
-    }
-    return [];
-  }, []);
-
-  // Fetch posts based on active tab
-  const fetchPosts = useCallback(async () => {
-    if (!user || !activeWorkspace?.id) return;
-
-    setLoading(true);
-    try {
-      if (activeTab === "drafts") {
-        // Fetch drafts from Supabase
-        const { data, error } = await supabase
-          .from("post_drafts")
-          .select("*")
-          .eq("workspace_id", activeWorkspace.id)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setPosts(data || []);
-      } else if (activeTab === "scheduled") {
-        // Fetch scheduled posts from Supabase
-        const { data, error } = await supabase
-          .from("posts")
-          .select("*")
-          .eq("workspace_id", activeWorkspace.id)
-          .eq("status", "scheduled")
-          .order("scheduled_at", { ascending: true });
-
-        if (error) throw error;
-        setPosts(data || []);
-      } else if (activeTab === "history") {
-        // Fetch posted posts from Supabase
-        const { data, error } = await supabase
-          .from("posts")
-          .select("*")
-          .eq("workspace_id", activeWorkspace.id)
-          .eq("status", "posted")
-          .order("posted_at", { ascending: false });
-
-        if (error) throw error;
-        setPosts(data || []);
-      } else if (activeTab === "failed") {
-        // Fetch failed posts from Supabase
-        const { data, error } = await supabase
-          .from("posts")
-          .select("*")
-          .eq("workspace_id", activeWorkspace.id)
-          .eq("status", "failed")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setPosts(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, activeTab, activeWorkspace]);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  };
 
   // Filter posts based on search query
   const filteredPosts = posts.filter(post => {
@@ -206,8 +137,9 @@ export const PostsContent = () => {
 
       if (error) throw error;
 
-      // Refresh posts
-      fetchPosts();
+      // Refresh drafts
+      invalidatePosts(activeWorkspace?.id);
+      refetchDrafts();
     } catch (error) {
       console.error("Error deleting draft:", error);
     }
@@ -228,9 +160,9 @@ export const PostsContent = () => {
         throw new Error(error.details || "Failed to delete post");
       }
 
-      // Clear cache and refresh
-      setAllAyrsharePosts([]);
-      await fetchPosts();
+      // Invalidate cache and refresh
+      invalidatePosts(activeWorkspace?.id);
+      refetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
       alert("Failed to delete post: " + error.message);
@@ -259,9 +191,9 @@ export const PostsContent = () => {
         throw new Error(error.details || "Failed to retry post");
       }
 
-      // Clear cache and refresh
-      setAllAyrsharePosts([]);
-      await fetchPosts();
+      // Invalidate cache and refresh
+      invalidatePosts(activeWorkspace?.id);
+      refetchPosts();
     } catch (error) {
       console.error("Error retrying post:", error);
       alert("Failed to retry post: " + error.message);
@@ -288,11 +220,6 @@ export const PostsContent = () => {
     }));
     setSelectedPost(null); // Close panel
     navigate("/compose");
-  };
-
-  const handleRefresh = async () => {
-    setAllAyrsharePosts([]); // Clear cache
-    await fetchPosts(); // Refetch
   };
 
   return (

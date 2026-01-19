@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { baseURL } from "../utils/constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
+import { useConnectedAccounts } from "../hooks/useQueries";
 import { supabase } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
@@ -50,8 +51,6 @@ export const ComposeContent = () => {
   const [scheduledDate, setScheduledDate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPreviewPlatform, setSelectedPreviewPlatform] = useState("instagram");
-  const [connectedAccounts, setConnectedAccounts] = useState([]);
-  const [accountDetails, setAccountDetails] = useState([]);
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [isEditingScheduledPost, setIsEditingScheduledPost] = useState(false); // Track if editing a scheduled post
   const [lastSaved, setLastSaved] = useState(null);
@@ -79,26 +78,10 @@ export const ComposeContent = () => {
   const [shortenedLink, setShortenedLink] = useState(null);
   const [isShorteningLink, setIsShorteningLink] = useState(false);
 
-  // Fetch connected accounts from Ayrshare on component mount
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      if (!user || !activeWorkspace) return;
-
-      try {
-        const res = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          // Handle both old format (data.accounts) and new format (data.data.accounts)
-          const responseData = data.data || data;
-          setConnectedAccounts(responseData.accounts || []);
-          setAccountDetails(responseData.accountDetails || []);
-        }
-      } catch (err) {
-        console.error("Error fetching accounts:", err);
-      }
-    };
-    fetchAccounts();
-  }, [user, activeWorkspace]);
+  // Use React Query for connected accounts
+  const { data: accountsData } = useConnectedAccounts(activeWorkspace?.id, user?.id);
+  const connectedAccounts = accountsData?.accounts || [];
+  const accountDetails = accountsData?.accountDetails || [];
 
   // Helper to get account info for a platform
   const getAccountInfo = (platform) => {

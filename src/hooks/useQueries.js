@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { baseURL } from "../utils/constants";
+import { supabase } from "../utils/supabaseClient";
 
 // ============================================
 // SOCIAL ACCOUNTS
@@ -32,18 +33,33 @@ export function usePosts(workspaceId, userId, options = {}) {
   return useQuery({
     queryKey: ["posts", workspaceId, status, limit],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (workspaceId) params.append("workspaceId", workspaceId);
-      if (userId) params.append("userId", userId);
-      if (status) params.append("status", status);
-      if (limit) params.append("limit", limit);
+      let query = supabase
+        .from("posts")
+        .select("*")
+        .eq("workspace_id", workspaceId);
 
-      const res = await fetch(`${baseURL}/api/posts?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch posts");
-      const data = await res.json();
-      return data.data || data;
+      if (status) {
+        query = query.eq("status", status);
+      }
+
+      // Order by appropriate field based on status
+      if (status === "scheduled") {
+        query = query.order("scheduled_at", { ascending: true });
+      } else if (status === "posted") {
+        query = query.order("posted_at", { ascending: false });
+      } else {
+        query = query.order("created_at", { ascending: false });
+      }
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!(workspaceId || userId),
+    enabled: !!workspaceId,
     staleTime: 1000 * 30, // 30 seconds - posts change more frequently
   });
 }
@@ -52,15 +68,17 @@ export function useScheduledPosts(workspaceId, userId) {
   return useQuery({
     queryKey: ["scheduledPosts", workspaceId],
     queryFn: async () => {
-      const queryParam = workspaceId
-        ? `workspaceId=${workspaceId}`
-        : `userId=${userId}`;
-      const res = await fetch(`${baseURL}/api/posts/scheduled?${queryParam}`);
-      if (!res.ok) throw new Error("Failed to fetch scheduled posts");
-      const data = await res.json();
-      return data.data || data;
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "scheduled")
+        .order("scheduled_at", { ascending: true });
+
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!(workspaceId || userId),
+    enabled: !!workspaceId,
     staleTime: 1000 * 30,
   });
 }
@@ -82,6 +100,23 @@ export function usePendingApprovals(workspaceId, userId, status = "pending") {
   });
 }
 
+export function useUnifiedSchedule(workspaceId, userId, status = "all") {
+  return useQuery({
+    queryKey: ["unifiedSchedule", workspaceId, status],
+    queryFn: async () => {
+      const res = await fetch(
+        `${baseURL}/api/post/unified-schedule?workspaceId=${workspaceId}&userId=${userId}&status=${status}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch schedule");
+      const data = await res.json();
+      const responseData = data.data || data;
+      return responseData.posts || [];
+    },
+    enabled: !!(workspaceId && userId),
+    staleTime: 1000 * 30, // 30 seconds
+  });
+}
+
 // ============================================
 // DRAFTS
 // ============================================
@@ -90,15 +125,16 @@ export function useDrafts(workspaceId, userId) {
   return useQuery({
     queryKey: ["drafts", workspaceId],
     queryFn: async () => {
-      const queryParam = workspaceId
-        ? `workspaceId=${workspaceId}`
-        : `userId=${userId}`;
-      const res = await fetch(`${baseURL}/api/drafts?${queryParam}`);
-      if (!res.ok) throw new Error("Failed to fetch drafts");
-      const data = await res.json();
-      return data.data || data;
+      const { data, error } = await supabase
+        .from("post_drafts")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!(workspaceId || userId),
+    enabled: !!workspaceId,
     staleTime: 1000 * 60, // 1 minute
   });
 }
@@ -192,6 +228,7 @@ export function useInvalidateQueries() {
       queryClient.invalidateQueries({ queryKey: ["scheduledPosts", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["pendingApprovals", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["drafts", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["unifiedSchedule", workspaceId] });
     },
 
     // Invalidate after connecting/disconnecting accounts
@@ -216,6 +253,7 @@ export function useInvalidateQueries() {
       queryClient.invalidateQueries({ queryKey: ["scheduledPosts", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["pendingApprovals", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["drafts", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["unifiedSchedule", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["connectedAccounts", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["teamMembers", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["brandProfile", workspaceId] });

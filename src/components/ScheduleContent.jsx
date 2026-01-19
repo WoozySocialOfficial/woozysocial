@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL, hasFeature } from "../utils/constants";
+import { useUnifiedSchedule, useInvalidateQueries } from "../hooks/useQueries";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaCheck, FaTimes, FaComment, FaClock } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
@@ -40,12 +41,10 @@ export const ScheduleContent = () => {
     workspaceHasProfile;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("week"); // week, month, schedule
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [approvalFilter, setApprovalFilter] = useState("all"); // all, pending, approved, rejected
   const [selectedPost, setSelectedPost] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [expandedPostId, setExpandedPostId] = useState(null);
+  const { invalidatePosts } = useInvalidateQueries();
 
   // Check if user is a client (can approve/reject)
   const isClient = workspaceMembership?.role === 'client';
@@ -54,39 +53,18 @@ export const ScheduleContent = () => {
   // Check if subscription tier has approval workflows feature
   const hasApprovalWorkflows = hasFeature(subscriptionTier, 'approvalWorkflows');
 
-  // Fetch scheduled and published posts from unified endpoint (single source of truth)
-  const fetchPosts = useCallback(async () => {
-    if (!user || !activeWorkspace?.id) return;
+  // Use React Query for unified schedule data
+  const {
+    data: posts = [],
+    isLoading: loading,
+    refetch: refetchPosts
+  } = useUnifiedSchedule(activeWorkspace?.id, user?.id, "all");
 
-    setLoading(true);
-    try {
-      // Fetch from unified endpoint that handles deduplication
-      const response = await fetch(
-        `${baseURL}/api/post/unified-schedule?workspaceId=${activeWorkspace.id}&userId=${user.id}&status=all`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch posts');
-      }
-
-      const data = await response.json();
-      const responseData = data.data || data;
-      const unifiedPosts = responseData.posts || [];
-
-      // Posts are already properly formatted and deduplicated by the backend
-      setPosts(unifiedPosts);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      // Set empty array on error to prevent UI issues
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, activeWorkspace?.id]);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  // Refresh function that invalidates cache
+  const fetchPosts = () => {
+    invalidatePosts(activeWorkspace?.id);
+    refetchPosts();
+  };
 
   // Handle post approval
   const handleApproval = async (postId, action, commentText = "") => {
@@ -111,8 +89,8 @@ export const ScheduleContent = () => {
         throw new Error(data.error || 'Failed to update approval');
       }
 
-      // Refresh posts
-      await fetchPosts();
+      // Refresh posts using cached query
+      fetchPosts();
       setSelectedPost(null);
     } catch (error) {
       console.error('Error updating approval:', error);
@@ -126,19 +104,16 @@ export const ScheduleContent = () => {
   const handleApprove = async (postId) => {
     await handleApproval(postId, 'approve');
     setSelectedPost(null);
-    await fetchPosts();
   };
 
   const handleReject = async (postId) => {
     await handleApproval(postId, 'reject');
     setSelectedPost(null);
-    await fetchPosts();
   };
 
   const handleRequestChanges = async (postId) => {
     await handleApproval(postId, 'changes_requested');
     setSelectedPost(null);
-    await fetchPosts();
   };
 
   const handleEditScheduledPost = (post) => {
