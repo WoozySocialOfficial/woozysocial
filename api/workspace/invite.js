@@ -116,6 +116,12 @@ module.exports = async function handler(req, res) {
           logError('workspace.invite.update', error, { inviteId: existingInvite.id });
           return sendError(res, "Failed to update invitation", ErrorCodes.DATABASE_ERROR);
         }
+
+        if (!data) {
+          logError('workspace.invite.update.noData', 'No data returned after update', { inviteId: existingInvite.id });
+          return sendError(res, "Failed to retrieve updated invitation", ErrorCodes.DATABASE_ERROR);
+        }
+
         invitation = data;
       } else {
         // Create new invitation
@@ -129,6 +135,12 @@ module.exports = async function handler(req, res) {
           logError('workspace.invite.create', error, { workspaceId, email });
           return sendError(res, "Failed to create invitation", ErrorCodes.DATABASE_ERROR);
         }
+
+        if (!data) {
+          logError('workspace.invite.create.noData', 'No data returned after insert', { workspaceId, email });
+          return sendError(res, "Failed to retrieve created invitation", ErrorCodes.DATABASE_ERROR);
+        }
+
         invitation = data;
       }
 
@@ -218,6 +230,17 @@ module.exports = async function handler(req, res) {
           logError('workspace.invite.sendEmail', emailError, { workspaceId });
           // Don't fail the request if email fails
         }
+      }
+
+      // Final validation before sending response
+      if (!invitation || !invitation.invite_token) {
+        logError('workspace.invite.finalValidation', 'Invitation object is invalid', {
+          hasInvitation: !!invitation,
+          hasToken: !!invitation?.invite_token,
+          workspaceId,
+          email
+        });
+        return sendError(res, "Failed to generate invitation", ErrorCodes.INTERNAL_ERROR);
       }
 
       return sendSuccess(res, {

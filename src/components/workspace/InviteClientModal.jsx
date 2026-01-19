@@ -43,17 +43,25 @@ export const InviteClientModal = ({ isOpen, onClose, onInviteSent }) => {
         })
       });
 
-      const data = await res.json();
+      const response = await res.json();
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to send invitation');
+      if (!res.ok || !response.success) {
+        throw new Error(response.error || 'Failed to send invitation');
       }
+
+      // Validate response structure
+      if (!response.data || !response.data.invitation || !response.data.invitation.inviteToken) {
+        console.error('Invalid API response structure:', response);
+        throw new Error('Invalid response from server. Please try again.');
+      }
+
+      const { invitation } = response.data;
 
       setSuccess(true);
       setEmail('');
 
       // Copy invite link to clipboard
-      const inviteLink = `${window.location.origin}/accept-invite?token=${data.invitation.inviteToken}`;
+      const inviteLink = `${window.location.origin}/accept-invite?token=${invitation.inviteToken}`;
 
       try {
         await navigator.clipboard.writeText(inviteLink);
@@ -62,7 +70,7 @@ export const InviteClientModal = ({ isOpen, onClose, onInviteSent }) => {
       }
 
       if (onInviteSent) {
-        onInviteSent(data.invitation);
+        onInviteSent(invitation);
       }
 
       // Close after delay
