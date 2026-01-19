@@ -104,7 +104,8 @@
   border-radius: 10px;
   font-size: 15px;
   color: #114C5A;
-  background-color: #F1F6F4;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
   transition: all 0.2s;
   font-family: inherit;
   box-sizing: border-box;
@@ -126,6 +127,19 @@
 .form-input::placeholder {
   color: #114C5A;
   opacity: 0.5;
+}
+
+/* Override browser autofill dark styles */
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover,
+.form-input:-webkit-autofill:focus,
+.form-select:-webkit-autofill,
+.form-select:-webkit-autofill:hover,
+.form-select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: #114C5A !important;
+  background-color: #ffffff !important;
+  caret-color: #114C5A;
 }
 
 .form-input:disabled,
