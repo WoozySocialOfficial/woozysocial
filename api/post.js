@@ -464,7 +464,11 @@ module.exports = async function handler(req, res) {
     // Send to Ayrshare
     console.log('[POST] Sending to Ayrshare...', {
       endpoint: `${BASE_AYRSHARE}/post`,
-      postData: { ...postData, post: postData.post?.substring(0, 50) + '...' }
+      platforms: postData.platforms,
+      hasMedia: !!postData.mediaUrls,
+      hasSchedule: !!postData.scheduleDate,
+      postPreview: postData.post?.substring(0, 50) + '...',
+      profileKeyPrefix: profileKey?.substring(0, 8) + '...'
     });
     let response;
     try {
@@ -505,7 +509,17 @@ module.exports = async function handler(req, res) {
       }
 
       // Include actual Ayrshare error in the response for better debugging
-      const ayrshareError = axiosError.response?.data?.message || axiosError.response?.data?.error || axiosError.message;
+      // Ayrshare can return errors in different formats
+      const responseData = axiosError.response?.data;
+      let ayrshareError = responseData?.message
+        || responseData?.error
+        || (responseData?.errors ? JSON.stringify(responseData.errors) : null)
+        || (typeof responseData === 'string' ? responseData : null)
+        || (responseData ? JSON.stringify(responseData) : null)
+        || axiosError.message;
+
+      console.error('[POST] Extracted Ayrshare error:', ayrshareError);
+
       return sendError(
         res,
         ayrshareError || "Failed to connect to social media service",
