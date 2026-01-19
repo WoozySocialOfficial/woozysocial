@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
+import { useConnectedAccounts, useInvalidateQueries } from "../hooks/useQueries";
 import { baseURL } from "../utils/constants";
 import "./DashboardContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
@@ -28,9 +29,18 @@ export const DashboardContent = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const { invalidateAccounts } = useInvalidateQueries();
+
+  // Use React Query for connected accounts (cached!)
+  const {
+    data: accountsData,
+    isLoading: loadingAccounts,
+    refetch: refetchAccounts
+  } = useConnectedAccounts(activeWorkspace?.id, user?.id);
+
+  const connectedAccounts = accountsData?.accounts || [];
+
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [connectedAccounts, setConnectedAccounts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const [connectingPlatform, setConnectingPlatform] = useState(null);
   const [stats, setStats] = useState({
@@ -38,6 +48,11 @@ export const DashboardContent = () => {
     postsThisMonth: 0,
     connectedCount: 0
   });
+
+  // Update stats when accounts change
+  useEffect(() => {
+    setStats(prev => ({ ...prev, connectedCount: connectedAccounts.length }));
+  }, [connectedAccounts]);
 
   const socialAccounts = [
     { name: "Facebook", icon: FaFacebookF, key: "facebook", color: "#1877F2" },
@@ -53,28 +68,10 @@ export const DashboardContent = () => {
     { name: "Snapchat", icon: SiSnapchat, key: "snapchat", color: "#FFFC00" }
   ];
 
-  // Function to refresh connected accounts
-  const refreshAccounts = async () => {
-    if (!user) return;
-
-    const queryParam = activeWorkspace?.id
-      ? `workspaceId=${activeWorkspace.id}`
-      : `userId=${user.id}`;
-
-    setLoadingAccounts(true);
-    try {
-      const res = await fetch(`${baseURL}/api/user-accounts?${queryParam}`);
-      if (res.ok) {
-        const accountsData = await res.json();
-        const data = accountsData.data || accountsData;
-        setConnectedAccounts(data.accounts || []);
-        setStats(prev => ({ ...prev, connectedCount: data.accounts?.length || 0 }));
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-    } finally {
-      setLoadingAccounts(false);
-    }
+  // Function to refresh connected accounts (uses React Query cache invalidation)
+  const refreshAccounts = () => {
+    invalidateAccounts(activeWorkspace?.id || user?.id);
+    refetchAccounts();
   };
 
   // Function to handle connecting a platform
