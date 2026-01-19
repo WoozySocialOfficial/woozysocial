@@ -504,9 +504,11 @@ module.exports = async function handler(req, res) {
         if (dbErr) logError('post.save_failed', dbErr);
       }
 
+      // Include actual Ayrshare error in the response for better debugging
+      const ayrshareError = axiosError.response?.data?.message || axiosError.response?.data?.error || axiosError.message;
       return sendError(
         res,
-        "Failed to connect to social media service",
+        ayrshareError || "Failed to connect to social media service",
         ErrorCodes.EXTERNAL_API_ERROR,
         axiosError.response?.data
       );

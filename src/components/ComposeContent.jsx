@@ -573,12 +573,15 @@ export const ComposeContent = () => {
       }
     } catch (error) {
       console.error("Error scheduling post:", error);
+      // Determine error title based on error content
+      let title = "Scheduling Failed";
+      if (error.message.includes("No social media accounts") || error.message.includes("connect your accounts")) {
+        title = "No Social Accounts";
+      } else if (error.message.includes("subscribe") || error.message.includes("Subscription")) {
+        title = "Subscription Required";
+      }
       toast({
-        title: error.message.includes("subscribe") || error.message.includes("Subscription")
-          ? "Subscription Required"
-          : error.message.includes("connect") || error.message.includes("account")
-          ? "No Social Accounts"
-          : "Error scheduling post",
+        title,
         description: error.message || "Unable to schedule your post. Please try again.",
         status: "error",
         duration: 5000,
@@ -1436,18 +1439,24 @@ export const ComposeContent = () => {
         } else if (errorData.error && errorData.error.includes('upload media')) {
           errorTitle = "Media Upload Failed";
           errorMessage = errorData.error || "Failed to upload your media file. Please try again.";
+        } else if (errorData.code === 'EXTERNAL_API_ERROR') {
+          errorTitle = "Posting Failed";
+          errorMessage = errorData.error || "Failed to post to social media. Please try again.";
         }
 
         throw new Error(errorMessage);
       }
     } catch (error) {
       console.error("Error submitting post:", error);
+      // Determine error title based on error content
+      let title = "Posting Failed";
+      if (error.message.includes("No social media accounts") || error.message.includes("connect your accounts")) {
+        title = "No Social Accounts";
+      } else if (error.message.includes("subscribe") || error.message.includes("Subscription")) {
+        title = "Subscription Required";
+      }
       toast({
-        title: error.message.includes("connect") || error.message.includes("account")
-          ? "No Social Accounts"
-          : error.message.includes("subscribe") || error.message.includes("Subscription")
-          ? "Subscription Required"
-          : "An error occurred",
+        title,
         description: error.message || "Unable to submit your post. Please try again.",
         status: "error",
         duration: 5000,
