@@ -62,20 +62,36 @@ async function fetchWebsiteContent(url) {
   }
 }
 
-// Get brand profile for the workspace
-async function getBrandProfile(workspaceId) {
+// Get brand profile for the workspace (with user_id fallback)
+async function getBrandProfile(workspaceId, userId) {
   try {
-    const { data, error } = await supabase
-      .from('brand_profiles')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .single();
+    // Try workspace_id first
+    if (workspaceId) {
+      const { data, error } = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .single();
 
-    if (error || !data) {
-      return null;
+      if (!error && data) {
+        return data;
+      }
     }
 
-    return data;
+    // Fallback to user_id for backwards compatibility
+    if (userId) {
+      const { data, error } = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+    }
+
+    return null;
   } catch (error) {
     console.error('Error fetching brand profile:', error);
     return null;
@@ -107,13 +123,13 @@ Content Summary: ${websiteData.content}
   if (brandProfile) {
     brandContext = `
 BRAND PROFILE:
-Business Name: ${brandProfile.business_name || 'N/A'}
-Industry: ${brandProfile.industry || 'N/A'}
+Brand Name: ${brandProfile.brand_name || 'N/A'}
+Brand Description: ${brandProfile.brand_description || 'N/A'}
 Target Audience: ${brandProfile.target_audience || 'N/A'}
-Brand Voice: ${brandProfile.brand_voice || 'N/A'}
-Key Messages: ${brandProfile.key_messages || 'N/A'}
-Hashtags to Use: ${brandProfile.hashtags || 'N/A'}
-Topics to Avoid: ${brandProfile.topics_to_avoid || 'N/A'}
+Tone of Voice: ${brandProfile.tone_of_voice || 'N/A'}
+Key Topics: ${brandProfile.key_topics || 'N/A'}
+Brand Values: ${brandProfile.brand_values || 'N/A'}
+Sample Posts Style: ${brandProfile.sample_posts || 'N/A'}
 `;
   }
 
@@ -194,7 +210,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { workspaceId, prompt, platforms = [], websiteUrl } = req.body;
+    const { workspaceId, userId, prompt, platforms = [], websiteUrl } = req.body;
 
     if (!workspaceId) {
       return res.status(400).json({ error: "Workspace ID is required" });
@@ -205,7 +221,7 @@ module.exports = async (req, res) => {
     }
 
     // Get brand profile first (we might need its website URL)
-    const brandProfile = await getBrandProfile(workspaceId);
+    const brandProfile = await getBrandProfile(workspaceId, userId);
 
     // Fetch website content - use provided URL or fall back to brand profile website
     let websiteData = null;

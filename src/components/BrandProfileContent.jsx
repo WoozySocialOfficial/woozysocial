@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
@@ -7,12 +7,17 @@ import { supabase } from "../utils/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import "./BrandProfileContent.css";
 
+const DRAFT_KEY = "brand_profile_draft";
+
 export const BrandProfileContent = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const hasLoadedData = useRef(false);
 
   const [brandName, setBrandName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -26,8 +31,74 @@ export const BrandProfileContent = () => {
   // Use React Query for brand profile (cached!)
   const { data: profileData, isLoading } = useUserBrandProfile(user?.id);
 
-  // Populate form when data loads
+  // Auto-save draft to localStorage
+  const saveDraft = useCallback(() => {
+    const draft = {
+      brandName,
+      websiteUrl,
+      brandDescription,
+      toneOfVoice,
+      targetAudience,
+      keyTopics,
+      brandValues,
+      samplePosts,
+      userId: user?.id,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    setHasDraft(true);
+  }, [brandName, websiteUrl, brandDescription, toneOfVoice, targetAudience, keyTopics, brandValues, samplePosts, user?.id]);
+
+  // Clear draft from localStorage
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+  }, []);
+
+  // Load draft from localStorage on mount
   useEffect(() => {
+    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        // Only load draft if it belongs to the current user
+        if (draft.userId === user?.id) {
+          setHasDraft(true);
+        }
+      } catch (e) {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    }
+  }, [user?.id]);
+
+  // Populate form when data loads (from DB or draft)
+  useEffect(() => {
+    if (hasLoadedData.current) return;
+
+    // Check for draft first
+    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.userId === user?.id) {
+          // Load from draft
+          setBrandName(draft.brandName || "");
+          setWebsiteUrl(draft.websiteUrl || "");
+          setBrandDescription(draft.brandDescription || "");
+          setToneOfVoice(draft.toneOfVoice || "Professional");
+          setTargetAudience(draft.targetAudience || "");
+          setKeyTopics(draft.keyTopics || "");
+          setBrandValues(draft.brandValues || "");
+          setSamplePosts(draft.samplePosts || "");
+          hasLoadedData.current = true;
+          return;
+        }
+      } catch (e) {
+        // Invalid draft, ignore
+      }
+    }
+
+    // Otherwise load from profile data
     if (profileData) {
       setBrandName(profileData.brand_name || "");
       setWebsiteUrl(profileData.website_url || "");
@@ -37,8 +108,28 @@ export const BrandProfileContent = () => {
       setKeyTopics(profileData.key_topics || "");
       setBrandValues(profileData.brand_values || "");
       setSamplePosts(profileData.sample_posts || "");
+      hasLoadedData.current = true;
     }
-  }, [profileData]);
+  }, [profileData, user?.id]);
+
+  // Auto-save draft when form changes (debounced)
+  useEffect(() => {
+    if (!hasLoadedData.current) return;
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveDraft();
+    }, 1000); // Save after 1 second of no typing
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [brandName, websiteUrl, brandDescription, toneOfVoice, targetAudience, keyTopics, brandValues, samplePosts, saveDraft]);
 
   const handleSave = async () => {
     if (!user) {
@@ -56,6 +147,7 @@ export const BrandProfileContent = () => {
     try {
       const profileData = {
         user_id: user.id,
+        workspace_id: activeWorkspace?.id || null,
         brand_name: brandName,
         website_url: websiteUrl,
         brand_description: brandDescription,
@@ -73,8 +165,14 @@ export const BrandProfileContent = () => {
 
       if (error) throw error;
 
-      // Invalidate cache so next load is fresh
+      // Clear the draft since we saved successfully
+      clearDraft();
+
+      // Invalidate both caches so next load is fresh
       queryClient.invalidateQueries({ queryKey: ["userBrandProfile", user.id] });
+      if (activeWorkspace?.id) {
+        queryClient.invalidateQueries({ queryKey: ["brandProfile", activeWorkspace.id] });
+      }
 
       toast({
         title: "Brand profile saved!",
@@ -108,11 +206,71 @@ export const BrandProfileContent = () => {
     );
   }
 
+  // Discard draft and reload from database
+  const handleDiscardDraft = () => {
+    clearDraft();
+    hasLoadedData.current = false;
+    if (profileData) {
+      setBrandName(profileData.brand_name || "");
+      setWebsiteUrl(profileData.website_url || "");
+      setBrandDescription(profileData.brand_description || "");
+      setToneOfVoice(profileData.tone_of_voice || "Professional");
+      setTargetAudience(profileData.target_audience || "");
+      setKeyTopics(profileData.key_topics || "");
+      setBrandValues(profileData.brand_values || "");
+      setSamplePosts(profileData.sample_posts || "");
+    } else {
+      setBrandName("");
+      setWebsiteUrl("");
+      setBrandDescription("");
+      setToneOfVoice("Professional");
+      setTargetAudience("");
+      setKeyTopics("");
+      setBrandValues("");
+      setSamplePosts("");
+    }
+    hasLoadedData.current = true;
+    toast({
+      title: "Draft discarded",
+      description: "Loaded saved profile data",
+      status: "info",
+      duration: 2000,
+      isClosable: true
+    });
+  };
+
   return (
     <div className="brand-profile-container">
       <div className="brand-profile-header">
         <h1 className="page-title">Brand Profile</h1>
         <p className="page-subtitle">Define your brand to help AI generate better content</p>
+        {hasDraft && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginTop: '8px',
+            padding: '8px 12px',
+            background: '#FFF3CD',
+            borderRadius: '6px',
+            fontSize: '14px'
+          }}>
+            <span style={{ color: '#856404' }}>Unsaved draft</span>
+            <button
+              onClick={handleDiscardDraft}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#856404',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="brand-profile-content">

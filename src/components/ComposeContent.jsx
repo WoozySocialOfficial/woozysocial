@@ -1474,6 +1474,7 @@ export const ComposeContent = () => {
         },
         body: JSON.stringify({
           workspaceId: activeWorkspace.id,
+          userId: user?.id,
           prompt: aiPrompt,
           platforms: selectedPlatforms,
           websiteUrl: aiWebsiteUrl || null
