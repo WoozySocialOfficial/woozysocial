@@ -8,12 +8,18 @@ const supabase = createClient(
 // Fetch and extract text content from a URL
 async function fetchWebsiteContent(url) {
   try {
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; WoozySocial/1.0; +https://woozysocial.com)'
       },
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch URL: ${response.status}`);
