@@ -198,3 +198,34 @@
   font-size: 14px;
   line-height: 1.5;
 }
+
+/* Email Verification Message Styles */
+.verification-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.verification-email {
+  font-size: 16px;
+  font-weight: 600;
+  color: #6465f1;
+  margin: 8px 0 0 0;
+}
+
+.verification-content {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.verification-text {
+  font-size: 15px;
+  color: #333333;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.verification-note {
+  font-size: 13px;
+  color: #888888;
+  margin: 0;
+}

@@ -12,6 +12,7 @@ export const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,9 +36,44 @@ export const SignUpPage = () => {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate('/dashboard');
+      setLoading(false);
+      setShowVerificationMessage(true);
     }
   };
+
+  // Show verification message after successful signup
+  if (showVerificationMessage) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="verification-icon">✉️</div>
+            <h1 className="auth-title">Check your email</h1>
+            <p className="auth-subtitle">We've sent a verification link to</p>
+            <p className="verification-email">{email}</p>
+          </div>
+
+          <div className="verification-content">
+            <p className="verification-text">
+              Click the link in the email to verify your account and get started with Woozy Social.
+            </p>
+            <p className="verification-note">
+              Didn't receive the email? Check your spam folder or try signing up again.
+            </p>
+          </div>
+
+          <div className="auth-footer">
+            <button
+              onClick={() => navigate('/login')}
+              className="auth-button"
+            >
+              Go to Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
