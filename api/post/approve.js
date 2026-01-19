@@ -133,17 +133,34 @@ module.exports = async function handler(req, res) {
         return sendError(res, "Only admins and clients can approve posts", ErrorCodes.FORBIDDEN);
       }
 
-      // Check if subscription tier has approval workflows feature enabled
-      // Get user's subscription tier
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('subscription_tier')
-        .eq('id', userId)
+      // Check if approval workflows are enabled for this workspace
+      // Get the WORKSPACE OWNER's subscription tier (not the approving client's)
+      const { data: workspace } = await supabase
+        .from('workspaces')
+        .select('owner_id')
+        .eq('id', workspaceId)
         .single();
 
-      const tier = userProfile?.subscription_tier || 'free';
+      const { data: ownerProfile } = await supabase
+        .from('user_profiles')
+        .select('subscription_tier')
+        .eq('id', workspace?.owner_id)
+        .single();
 
-      if (!hasFeature(tier, 'approvalWorkflows')) {
+      const tier = ownerProfile?.subscription_tier || 'free';
+
+      // Check if workspace has clients (clients viewing means approval was required)
+      const { data: clients } = await supabase
+        .from('workspace_members')
+        .select('id')
+        .eq('workspace_id', workspaceId)
+        .in('role', ['client', 'view_only'])
+        .limit(1);
+
+      const hasClients = clients && clients.length > 0;
+
+      // Allow approval if tier has the feature OR if workspace has clients
+      if (!hasFeature(tier, 'approvalWorkflows') && !hasClients) {
         return sendError(
           res,
           "Approval workflows are not available on your subscription tier. Please upgrade to Pro Plus or Agency to access this feature.",
@@ -225,8 +242,11 @@ module.exports = async function handler(req, res) {
         }
 
         if (post && post.status === 'pending_approval') {
-          // Get workspace profile key
-          const profileKey = await getWorkspaceProfileKey(workspaceId);
+          // Get workspace profile key with env fallback
+          let profileKey = await getWorkspaceProfileKey(workspaceId);
+          if (!profileKey && process.env.AYRSHARE_PROFILE_KEY) {
+            profileKey = process.env.AYRSHARE_PROFILE_KEY;
+          }
 
           if (!profileKey) {
             return sendError(
