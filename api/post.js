@@ -533,7 +533,8 @@ module.exports = async function handler(req, res) {
     // Save successful post to database
     console.log('[POST] Saving successful post to database...');
     if (supabase) {
-      const ayrPostId = response.data.id || response.data.postId;
+      // Ayrshare API returns posts in an array: response.data.posts[0].id
+      const ayrPostId = response.data.posts?.[0]?.id || response.data.id || response.data.postId;
       const postRecord = {
         user_id: userId,
         workspace_id: workspaceId,
@@ -570,7 +571,7 @@ module.exports = async function handler(req, res) {
     console.log('[POST] Returning success response');
     return sendSuccess(res, {
       status: isScheduled ? 'scheduled' : 'posted',
-      postId: response.data.id || response.data.postId,
+      postId: response.data.posts?.[0]?.id || response.data.id || response.data.postId,
       platforms: platforms,
       ...response.data
     });
