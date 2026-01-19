@@ -35,12 +35,16 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invalid userId format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Get profile key - prefer workspaceId if provided, otherwise use userId fallback
+    // Get profile key - prefer workspaceId if provided, otherwise use userId fallback, then env fallback
     let profileKey;
     if (workspaceId) {
       profileKey = await getWorkspaceProfileKey(workspaceId);
     } else if (userId) {
       profileKey = await getWorkspaceProfileKeyForUser(userId);
+    }
+    // Fallback to environment variable (consistent with generate-jwt.js and post.js)
+    if (!profileKey && process.env.AYRSHARE_PROFILE_KEY) {
+      profileKey = process.env.AYRSHARE_PROFILE_KEY;
     }
 
     if (!profileKey) {

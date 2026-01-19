@@ -413,7 +413,7 @@ module.exports = async function handler(req, res) {
     }
     console.log('[POST] Ayrshare configured');
 
-    // Get profile key
+    // Get profile key - check workspace first, then user, then env fallback (matches generate-jwt.js)
     console.log('[POST] Getting profile key for workspaceId:', workspaceId, 'userId:', userId);
     let profileKey;
     if (workspaceId) {
@@ -425,9 +425,14 @@ module.exports = async function handler(req, res) {
       profileKey = await getWorkspaceProfileKeyForUser(userId);
       console.log('[POST] User profile key:', profileKey ? 'FOUND' : 'NOT FOUND');
     }
+    // Fallback to environment variable (consistent with generate-jwt.js)
+    if (!profileKey && process.env.AYRSHARE_PROFILE_KEY) {
+      profileKey = process.env.AYRSHARE_PROFILE_KEY;
+      console.log('[POST] Using fallback AYRSHARE_PROFILE_KEY from env');
+    }
 
     if (!profileKey) {
-      console.error('[POST] No profile key found for workspace or user');
+      console.error('[POST] No profile key found for workspace, user, or env');
       return sendError(
         res,
         "No social media accounts connected. Please connect your accounts first.",
