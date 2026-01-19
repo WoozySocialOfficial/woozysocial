@@ -216,21 +216,23 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // Fetch website content if URL provided
+    // Get brand profile first (we might need its website URL)
+    const brandProfile = await getBrandProfile(workspaceId);
+
+    // Fetch website content - use provided URL or fall back to brand profile website
     let websiteData = null;
-    if (websiteUrl && websiteUrl.trim()) {
+    const urlToFetch = (websiteUrl && websiteUrl.trim()) || brandProfile?.website_url;
+
+    if (urlToFetch) {
       try {
         // Validate URL
-        new URL(websiteUrl);
-        websiteData = await fetchWebsiteContent(websiteUrl.trim());
+        new URL(urlToFetch);
+        websiteData = await fetchWebsiteContent(urlToFetch.trim());
       } catch (urlError) {
         console.error('Invalid URL or fetch error:', urlError.message);
         // Continue without website data
       }
     }
-
-    // Get brand profile
-    const brandProfile = await getBrandProfile(workspaceId);
 
     // Generate content with OpenAI
     const variations = await generateWithOpenAI(
