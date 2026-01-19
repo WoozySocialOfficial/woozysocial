@@ -107,17 +107,32 @@ export function useDrafts(workspaceId, userId) {
 // TEAM MEMBERS
 // ============================================
 
-export function useTeamMembers(workspaceId) {
+export function useTeamMembers(workspaceId, userId) {
   return useQuery({
     queryKey: ["teamMembers", workspaceId],
     queryFn: async () => {
-      const res = await fetch(`${baseURL}/api/workspace/members?workspaceId=${workspaceId}`);
+      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/members?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch team members");
       const data = await res.json();
-      return data.data || data;
+      const responseData = data.data || data;
+      return responseData.members || [];
     },
-    enabled: !!workspaceId,
+    enabled: !!(workspaceId && userId),
     staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+}
+
+export function usePendingInvites(workspaceId, userId) {
+  return useQuery({
+    queryKey: ["pendingInvites", workspaceId],
+    queryFn: async () => {
+      const res = await fetch(`${baseURL}/api/invitations/list?workspaceId=${workspaceId}&userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch pending invites");
+      const data = await res.json();
+      return data.data?.invitations || data.invitations || [];
+    },
+    enabled: !!(workspaceId && userId),
+    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -187,6 +202,7 @@ export function useInvalidateQueries() {
     // Invalidate after team member changes
     invalidateTeam: (workspaceId) => {
       queryClient.invalidateQueries({ queryKey: ["teamMembers", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["pendingInvites", workspaceId] });
     },
 
     // Invalidate notifications

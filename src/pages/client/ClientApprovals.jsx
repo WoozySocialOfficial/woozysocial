@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePendingApprovals, useInvalidateQueries } from "../../hooks/useQueries";
 import { baseURL } from "../../utils/constants";
 import { useToast } from "@chakra-ui/react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit } from "react-icons/fa";
@@ -12,12 +13,18 @@ export const ClientApprovals = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
   const toast = useToast();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { invalidatePosts } = useInvalidateQueries();
   const [selectedPost, setSelectedPost] = useState(null);
   const [activeTab, setActiveTab] = useState("pending");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Use React Query for cached data fetching
+  const {
+    data: posts = [],
+    isLoading: loading,
+    refetch: refetchPosts
+  } = usePendingApprovals(activeWorkspace?.id, user?.id, activeTab);
 
   const tabs = [
     { id: "pending", label: "Pending", icon: FaClock },
@@ -26,36 +33,17 @@ export const ClientApprovals = () => {
     { id: "rejected", label: "Rejected", icon: FaTimes }
   ];
 
+  // Auto-select first post when posts change
   useEffect(() => {
-    fetchPosts();
-  }, [activeWorkspace, activeTab, user]);
-
-  const fetchPosts = async () => {
-    if (!activeWorkspace || !user) return;
-
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `${baseURL}/api/post/pending-approvals?workspaceId=${activeWorkspace.id}&userId=${user.id}&status=${activeTab}`
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        // Handle both old format (data.grouped) and new format (data.data.grouped)
-        const responseData = data.data || data;
-        const filteredPosts = responseData.grouped?.[activeTab] || [];
-        setPosts(filteredPosts);
-
-        // Auto-select first post if none selected
-        if (filteredPosts.length > 0 && !selectedPost) {
-          setSelectedPost(filteredPosts[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-    } finally {
-      setLoading(false);
+    if (posts.length > 0 && !selectedPost) {
+      setSelectedPost(posts[0]);
     }
+  }, [posts, selectedPost]);
+
+  // Refresh function that invalidates cache
+  const fetchPosts = () => {
+    invalidatePosts(activeWorkspace?.id);
+    refetchPosts();
   };
 
   const handleApproval = async (action) => {

@@ -21,9 +21,10 @@
  *
  * Last Stable: January 13, 2026
  */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
+import { useTeamMembers, usePendingInvites, useInvalidateQueries } from "../hooks/useQueries";
 import { InviteMemberModal } from "./InviteMemberModal";
 import { InviteClientModal } from "./workspace/InviteClientModal";
 import TeamMemberLimitGate from "./subscription/TeamMemberLimitGate";
@@ -34,68 +35,33 @@ import "./TeamContent.css";
 export const TeamContent = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [pendingInvites, setPendingInvites] = useState([]);
+  const { invalidateTeam } = useInvalidateQueries();
+
+  // Use React Query for cached data fetching
+  const {
+    data: teamMembers = [],
+    isLoading: loading,
+    refetch: refetchTeamMembers
+  } = useTeamMembers(activeWorkspace?.id, user?.id);
+
+  const {
+    data: pendingInvites = [],
+    isLoading: invitesLoading,
+    refetch: refetchPendingInvites
+  } = usePendingInvites(activeWorkspace?.id, user?.id);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [invitesLoading, setInvitesLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.id && activeWorkspace?.id) {
-      fetchTeamMembers();
-      fetchPendingInvites();
-    }
-  }, [user, activeWorkspace]);
-
-  const fetchTeamMembers = async () => {
-    try {
-      if (!activeWorkspace?.id) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      // Use workspace members endpoint
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members?userId=${user.id}`);
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to fetch team members');
-      }
-
-      // Handle both old format (payload.members) and new format (payload.data.members)
-      const responseData = payload.data || payload;
-      setTeamMembers(responseData.members || []);
-    } catch (error) {
-      console.error('Error fetching team members:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Refresh functions that invalidate cache
+  const fetchTeamMembers = () => {
+    invalidateTeam(activeWorkspace?.id);
+    refetchTeamMembers();
   };
 
-  const fetchPendingInvites = async () => {
-    try {
-      if (!activeWorkspace?.id) {
-        setInvitesLoading(false);
-        return;
-      }
-
-      setInvitesLoading(true);
-      // Use new invitations API
-      const response = await fetch(`${baseURL}/api/invitations/list?workspaceId=${activeWorkspace.id}&userId=${user.id}`);
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to fetch pending invites');
-      }
-
-      setPendingInvites(payload.data?.invitations || payload.invitations || []);
-    } catch (error) {
-      console.error('Error fetching pending invites:', error);
-    } finally {
-      setInvitesLoading(false);
-    }
+  const fetchPendingInvites = () => {
+    invalidateTeam(activeWorkspace?.id);
+    refetchPendingInvites();
   };
 
   const handleAddMember = () => {
