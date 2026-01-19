@@ -4,11 +4,15 @@ import "./Sidebar.css";
 import { WorkspaceSwitcher } from "../workspace/WorkspaceSwitcher";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
+import { useInboxUnreadCount } from "../../hooks/useInboxUnreadCount";
 
 export const Sidebar = () => {
   const location = useLocation();
   const { hasActiveProfile, hasTabAccess, subscriptionTier } = useAuth();
-  const { userWorkspaces, canAccessTab } = useWorkspace();
+  const { activeWorkspace, userWorkspaces, canAccessTab } = useWorkspace();
+
+  // Get unread count for Social Inbox badge
+  const { unreadCount } = useInboxUnreadCount(activeWorkspace?.id, !!activeWorkspace?.id);
 
   // Show Team if user has active profile OR is part of any workspace
   const showTeam = hasActiveProfile || userWorkspaces.length > 0;
@@ -71,7 +75,12 @@ export const Sidebar = () => {
               to={item.path}
               className={`menu-item ${location.pathname === item.path ? "active" : ""}`}
             >
-              <div className="menu-item-text">{item.name}</div>
+              <div className="menu-item-text">
+                {item.name}
+                {item.path === "/social-inbox" && unreadCount > 0 && (
+                  <span className="menu-item-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
+              </div>
             </Link>
           ))}
         </div>
