@@ -74,8 +74,8 @@ function parseRawBody(req) {
   });
 }
 
-// Helper to check if workspace has client members (for notification purposes)
-// Note: ALL scheduled posts now require approval regardless of client presence
+// Helper to check if workspace has client members
+// Used to determine if scheduled posts require client approval before going out
 async function workspaceHasClients(supabase, workspaceId) {
   if (!workspaceId) return false;
 
@@ -272,7 +272,7 @@ module.exports = async function handler(req, res) {
     const isScheduled = !!scheduledDate;
     console.log('[POST] Is scheduled:', isScheduled);
 
-    // Get user's subscription tier to check if approval workflows are enabled
+    // Check if approval is required - either by tier feature OR if workspace has clients
     let requiresApproval = false;
     if (isScheduled && supabase) {
       const { data: userProfile } = await supabase
@@ -282,12 +282,15 @@ module.exports = async function handler(req, res) {
         .single();
 
       const tier = userProfile?.subscription_tier || 'free';
+      const tierHasApproval = hasFeature(tier, 'approvalWorkflows');
 
-      // Only require approval if the tier has approval workflows feature
-      // Solo and Pro tiers don't have approval workflows, so their scheduled posts go straight to Ayrshare
-      requiresApproval = hasFeature(tier, 'approvalWorkflows');
+      // Check if workspace has clients - if so, require approval for client review
+      const hasClients = workspaceId ? await workspaceHasClients(supabase, workspaceId) : false;
 
-      console.log('[post] Tier:', tier, '| Has approval workflows:', requiresApproval);
+      // Require approval if tier has the feature OR if workspace has clients
+      requiresApproval = tierHasApproval || hasClients;
+
+      console.log('[post] Tier:', tier, '| Tier has approval:', tierHasApproval, '| Has clients:', hasClients, '| Requires approval:', requiresApproval);
     }
 
     // If scheduled, save to DB only - wait for approval before sending to Ayrshare
