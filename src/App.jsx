@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { WorkspaceProvider } from "./contexts/WorkspaceContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -8,6 +9,7 @@ import { Sidebar } from "./components/layout/Sidebar";
 import { TopHeader } from "./components/layout/TopHeader";
 import { MainContent } from "./components/layout/MainContent";
 import { ClientLayout } from "./components/layout/ClientLayout";
+import { getOrganizationSchema, getWebSiteSchema } from "./utils/seoConfig";
 import "./App.css";
 
 // Lazy load all page components - only loaded when user navigates to them
@@ -64,6 +66,15 @@ function App() {
     <AuthProvider>
       <WorkspaceProvider>
         <Router>
+          {/* Global Schema.org Structured Data */}
+          <Helmet>
+            <script type="application/ld+json">
+              {JSON.stringify(getOrganizationSchema())}
+            </script>
+            <script type="application/ld+json">
+              {JSON.stringify(getWebSiteSchema())}
+            </script>
+          </Helmet>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public routes */}

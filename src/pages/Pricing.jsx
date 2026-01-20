@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { baseURL } from '../utils/constants';
 import { loadStripe } from '@stripe/stripe-js';
 import { FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import { PricingSEO } from '../components/SEO';
 import './Pricing.css';
 
 // Initialize Stripe - this will be loaded lazily
@@ -14,9 +15,9 @@ const PRICING_TIERS = [
   {
     id: 'solo',
     name: 'Solo',
-    price: 35,
+    monthlyPrice: 35,
+    annualPrice: 350, // 2 months free (35 * 10)
     currency: 'GBP',
-    period: 'month',
     description: 'Perfect for individuals and content creators',
     features: [
       { text: '1 social profile', included: true },
@@ -32,9 +33,9 @@ const PRICING_TIERS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 50,
+    monthlyPrice: 50,
+    annualPrice: 500, // 2 months free (50 * 10)
     currency: 'GBP',
-    period: 'month',
     description: 'For growing businesses and marketers',
     features: [
       { text: '3 social profiles', included: true },
@@ -50,9 +51,9 @@ const PRICING_TIERS = [
   {
     id: 'pro-plus',
     name: 'Pro Plus',
-    price: 115,
+    monthlyPrice: 115,
+    annualPrice: 1150, // 2 months free (115 * 10)
     currency: 'GBP',
-    period: 'month',
     description: 'Advanced features for power users',
     features: [
       { text: '5 social profiles', included: true },
@@ -68,9 +69,9 @@ const PRICING_TIERS = [
   {
     id: 'agency',
     name: 'Agency',
-    price: 288,
+    monthlyPrice: 288,
+    annualPrice: 2880, // 2 months free (288 * 10)
     currency: 'GBP',
-    period: 'month',
     description: 'Complete solution for agencies',
     features: [
       { text: '15 social profiles', included: true },
@@ -86,9 +87,9 @@ const PRICING_TIERS = [
   {
     id: 'brand-bolt',
     name: 'BrandBolt',
-    price: 25,
+    monthlyPrice: 25,
+    annualPrice: 250, // 2 months free (25 * 10)
     currency: 'GBP',
-    period: 'month',
     description: 'Starter plan for brand building',
     features: [
       { text: '1 social profile', included: true },
@@ -109,6 +110,7 @@ export const Pricing = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
+  const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'annual'
 
   // Check for payment result from URL params
   const paymentStatus = searchParams.get('payment');
@@ -137,6 +139,12 @@ export const Pricing = () => {
     setError(null);
 
     try {
+      console.log('[PRICING] Creating checkout with:', {
+        userId: user.id,
+        tier: tierId,
+        billingPeriod: billingPeriod
+      });
+
       const response = await fetch(`${baseURL}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -145,6 +153,7 @@ export const Pricing = () => {
         body: JSON.stringify({
           userId: user.id,
           tier: tierId,
+          billingPeriod: billingPeriod, // Pass the selected billing period
         }),
       });
 
@@ -216,11 +225,30 @@ export const Pricing = () => {
   };
 
   return (
-    <div className="pricing-page">
-      <div className="pricing-header">
-        <h1>Choose Your Plan</h1>
-        <p>Select the perfect plan for your social media management needs</p>
-      </div>
+    <>
+      <PricingSEO />
+      <div className="pricing-page">
+        <div className="pricing-header">
+          <h1>Choose Your Plan</h1>
+          <p>Select the perfect plan for your social media management needs</p>
+
+          {/* Billing Period Toggle */}
+          <div className="billing-toggle">
+            <button
+              className={`toggle-btn ${billingPeriod === 'monthly' ? 'active' : ''}`}
+              onClick={() => setBillingPeriod('monthly')}
+            >
+              Monthly
+            </button>
+            <button
+              className={`toggle-btn ${billingPeriod === 'annual' ? 'active' : ''}`}
+              onClick={() => setBillingPeriod('annual')}
+            >
+              Annual
+              <span className="savings-badge">Save 17%</span>
+            </button>
+          </div>
+        </div>
 
       {/* Payment Status Messages */}
       {isPaymentSuccess && (
@@ -283,8 +311,20 @@ export const Pricing = () => {
               </div>
 
               <div className="price-section">
-                <span className="price">{formatPrice(tier.price, tier.currency)}</span>
-                <span className="period">per {tier.period}</span>
+                <span className="price">
+                  {formatPrice(
+                    billingPeriod === 'monthly' ? tier.monthlyPrice : tier.annualPrice,
+                    tier.currency
+                  )}
+                </span>
+                <span className="period">
+                  per {billingPeriod === 'monthly' ? 'month' : 'year'}
+                </span>
+                {billingPeriod === 'annual' && (
+                  <span className="annual-info">
+                    {formatPrice(tier.annualPrice / 12, tier.currency)}/month billed annually
+                  </span>
+                )}
               </div>
 
               <ul className="features-list">
@@ -329,7 +369,8 @@ export const Pricing = () => {
           Need a custom plan? <a href="mailto:support@woozysocial.com">Contact us</a>
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
