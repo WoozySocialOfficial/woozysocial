@@ -185,8 +185,12 @@ export const Pricing = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('[PRICING] No user found');
+      return;
+    }
 
+    console.log('[PRICING] Opening billing portal for user:', user.id);
     setLoading('manage');
     setError(null);
 
@@ -198,19 +202,26 @@ export const Pricing = () => {
         },
         body: JSON.stringify({
           userId: user.id,
+          returnUrl: `${window.location.origin}/pricing`,
         }),
       });
 
       const data = await response.json();
+      console.log('[PRICING] Portal response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to open billing portal');
       }
 
-      window.location.href = data.data.url;
+      if (data.data?.url) {
+        console.log('[PRICING] Redirecting to portal:', data.data.url);
+        window.location.href = data.data.url;
+      } else {
+        throw new Error('No portal URL received');
+      }
     } catch (err) {
-      console.error('Portal error:', err);
-      setError(err.message);
+      console.error('[PRICING] Portal error:', err);
+      setError(`Unable to open billing portal: ${err.message}`);
     } finally {
       setLoading(null);
     }
