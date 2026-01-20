@@ -93,7 +93,7 @@
 /* Tabs Container */
 .posts-tabs-container {
   backdrop-filter: blur(25px) brightness(100%);
-  background-color: #114c5a;
+  background-color: #afabf9;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 20px 20px 0px 0px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.02);
@@ -319,11 +319,11 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: rgba(17, 76, 90, 0.1);
+  background-color: rgba(175, 171, 249, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #114c5a;
+  color: #afabf9;
 }
 
 .posts-loading,
