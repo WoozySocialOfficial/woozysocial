@@ -6,6 +6,34 @@
   color: #afabf9;
 }
 
+.invite-modal input[type="email"] {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #114C5A;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.invite-modal input[type="email"]:focus {
+  outline: none;
+  border-color: #afabf9;
+}
+
+.invite-modal input[type="email"]::placeholder {
+  color: #114C5A;
+  opacity: 0.5;
+}
+
+.invite-modal input[type="email"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .role-select {
   width: 100%;
   padding: 12px 14px;
