@@ -41,12 +41,17 @@ module.exports = async function handler(req, res) {
 
   const supabase = getSupabase();
   if (!supabase) {
+    console.error("[CREATE ACCOUNT] Supabase client is null - check env vars");
+    console.error("[CREATE ACCOUNT] SUPABASE_URL exists:", !!process.env.SUPABASE_URL);
+    console.error("[CREATE ACCOUNT] SUPABASE_SERVICE_ROLE_KEY exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     return sendError(
       res,
       "Database not configured",
       ErrorCodes.CONFIG_ERROR
     );
   }
+
+  console.log("[CREATE ACCOUNT] Supabase client initialized successfully");
 
   try {
     const {
@@ -142,6 +147,9 @@ module.exports = async function handler(req, res) {
     }
 
     // STEP 1: Create Supabase auth user
+    console.log("[CREATE ACCOUNT] About to call supabase.auth.admin.createUser");
+    console.log("[CREATE ACCOUNT] Email:", email.toLowerCase());
+
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: email.toLowerCase(),
       password: password,
@@ -152,6 +160,14 @@ module.exports = async function handler(req, res) {
     });
 
     if (authError) {
+      console.error("[CREATE ACCOUNT] Auth error details:", {
+        name: authError.name,
+        message: authError.message,
+        status: authError.status,
+        code: authError.code,
+        stack: authError.stack
+      });
+
       logError("create-account-auth", authError, { email });
 
       // Handle specific auth errors
