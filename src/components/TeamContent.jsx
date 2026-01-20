@@ -356,6 +356,7 @@ export const TeamContent = () => {
                               <option value="admin">Admin</option>
                               <option value="editor">Editor</option>
                               <option value="view_only">View Only</option>
+                              <option value="client">Client</option>
                             </select>
                             <button
                               className="remove-button"
