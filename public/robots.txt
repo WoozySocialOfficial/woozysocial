@@ -1,5 +1,5 @@
 # Robots.txt for Woozy Social
-# https://www.woozysocials.com/robots.txt
+# https://www.woozysocial.com/robots.txt
 
 # Allow all search engines to crawl public pages
 User-agent: *
@@ -54,4 +54,4 @@ User-agent: MJ12bot
 Disallow: /
 
 # Sitemap location
-Sitemap: https://www.woozysocials.com/sitemap.xml
+Sitemap: https://www.woozysocial.com/sitemap.xml

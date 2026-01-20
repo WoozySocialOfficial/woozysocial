@@ -2,12 +2,12 @@
  * Dynamic Sitemap Generator for Woozy Social
  * Generates XML sitemap with public pages
  *
- * Access at: https://www.woozysocials.com/sitemap.xml
+ * Access at: https://www.woozysocial.com/sitemap.xml
  */
 
 export default async function handler(req, res) {
   try {
-    const baseUrl = 'https://www.woozysocials.com';
+    const baseUrl = 'https://www.woozysocial.com';
     const currentDate = new Date().toISOString();
 
     // Define public pages with their priorities and change frequencies

@@ -26,7 +26,7 @@ export default function SEO({
   // Get the base URL from environment or window location
   const baseUrl = typeof window !== 'undefined'
     ? window.location.origin
-    : 'https://www.woozysocials.com';
+    : 'https://www.woozysocial.com';
 
   // Construct full canonical URL
   const fullCanonical = canonical
