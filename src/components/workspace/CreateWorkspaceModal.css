@@ -13,12 +13,12 @@
 }
 
 .modal-content {
-  background: #1a1a1a;
+  background: #ffffff;
   border-radius: 12px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  border: 1px solid #333;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
@@ -26,21 +26,21 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: #114C5A;
 }
 
 .modal-close {
   background: none;
   border: none;
   cursor: pointer;
-  color: #888;
+  color: #666;
   padding: 4px;
   display: flex;
   align-items: center;
@@ -50,8 +50,8 @@
 }
 
 .modal-close:hover {
-  color: #fff;
-  background: #333;
+  color: #114C5A;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .modal-body {
@@ -59,7 +59,7 @@
 }
 
 .modal-description {
-  color: #888;
+  color: #666;
   font-size: 14px;
   margin: 0 0 20px 0;
   line-height: 1.5;
@@ -74,17 +74,18 @@
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #ccc;
+  color: #114C5A;
 }
 
 .form-group input {
   width: 100%;
   padding: 12px 14px;
   font-size: 14px;
-  border: 1px solid #444;
+  border: 2px solid rgba(0, 0, 0, 0.4);
   border-radius: 8px;
-  background: #222;
-  color: #fff;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #114C5A;
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
@@ -95,7 +96,8 @@
 }
 
 .form-group input::placeholder {
-  color: #666;
+  color: #114C5A;
+  opacity: 0.5;
 }
 
 .form-group input:disabled {
@@ -117,7 +119,7 @@
   display: flex;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid #333;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   justify-content: flex-end;
 }
 
@@ -133,13 +135,13 @@
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid #444;
-  color: #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #666;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #333;
-  color: #fff;
+  background: rgba(0, 0, 0, 0.05);
+  color: #114C5A;
 }
 
 .btn-primary {
@@ -150,6 +152,7 @@
 
 .btn-primary:hover:not(:disabled) {
   background: #5951e5;
+  color: #fff;
 }
 
 .btn-primary:disabled,
