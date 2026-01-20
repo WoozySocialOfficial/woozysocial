@@ -123,25 +123,23 @@ export const AcceptInvite = () => {
       const responseData = data.data || data;
       const message = responseData.message;
 
-      // Handle "already a member" as success - just redirect
-      if (data.success || message?.includes('already a member')) {
-        await refreshWorkspaces();
-        const displayMessage = message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
-        navigate('/team', { state: { message: displayMessage } });
-        return;
-      }
-
-      if (!response.ok) {
+      if (!response.ok && !message?.includes('already a member')) {
         throw new Error(data.error || 'Failed to accept invitation');
       }
 
+      // Clear workspace cache to ensure fresh data is loaded
+      localStorage.removeItem('woozy_workspace_cache');
+
       // Refresh workspaces to load the newly joined workspace
-      // The API has already set last_workspace_id, so it will auto-select
       await refreshWorkspaces();
 
-      // Success! Redirect to team page
-      const successMessage = message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
-      navigate('/team', { state: { message: successMessage } });
+      // Small delay to ensure state is updated before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Success! Redirect to team page (or dashboard for clients)
+      const displayMessage = message || `You have successfully joined ${invitation.workspace?.name || 'the workspace'}!`;
+      const redirectPath = invitation.role === 'client' ? '/client/dashboard' : '/team';
+      navigate(redirectPath, { state: { message: displayMessage } });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       setError(error.message || 'Failed to accept invitation');
