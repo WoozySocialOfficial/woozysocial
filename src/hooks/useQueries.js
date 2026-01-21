@@ -224,10 +224,17 @@ export function useBrandProfile(workspaceId) {
   return useQuery({
     queryKey: ["brandProfile", workspaceId],
     queryFn: async () => {
-      const res = await fetch(`${baseURL}/api/brand-profile?workspaceId=${workspaceId}`);
-      if (!res.ok) throw new Error("Failed to fetch brand profile");
-      const data = await res.json();
-      return data.data || data;
+      const { data, error } = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error;
+      }
+
+      return data || null;
     },
     enabled: !!workspaceId,
     staleTime: 1000 * 60 * 5, // 5 minutes - brand profile rarely changes
