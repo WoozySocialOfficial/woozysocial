@@ -59,42 +59,73 @@ async function getRawBody(req) {
   });
 }
 
+// Helper function to delay execution
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Create Ayrshare profile for a WORKSPACE (not user!)
 // Returns { profileKey, refId } or null on failure
-async function createAyrshareProfile(workspaceName) {
-  try {
-    const axios = require("axios");
+// Includes retry logic with exponential backoff
+async function createAyrshareProfile(workspaceName, maxRetries = 3) {
+  const axios = require("axios");
 
-    const response = await axios.post(
-      "https://api.ayrshare.com/api/profiles/profile",
-      {
-        title: workspaceName || "My Business",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-          "Content-Type": "application/json",
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[WEBHOOK] Ayrshare profile creation attempt ${attempt}/${maxRetries} for "${workspaceName}"`);
+
+      const response = await axios.post(
+        "https://api.ayrshare.com/api/profiles/profile",
+        {
+          title: workspaceName || "My Business",
         },
-        timeout: 30000,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 30000,
+        }
+      );
+
+      if (response.data && response.data.profileKey) {
+        console.log(`[WEBHOOK] Created Ayrshare profile: ${response.data.profileKey}, refId: ${response.data.refId}`);
+        return {
+          profileKey: response.data.profileKey,
+          refId: response.data.refId || null
+        };
       }
-    );
 
-    if (response.data && response.data.profileKey) {
-      console.log(`[WEBHOOK] Created Ayrshare profile: ${response.data.profileKey}, refId: ${response.data.refId}`);
-      return {
-        profileKey: response.data.profileKey,
-        refId: response.data.refId || null
-      };
+      // No profileKey in response - this is an unexpected response format
+      console.error(`[WEBHOOK] Ayrshare API returned unexpected response (attempt ${attempt}):`, response.data);
+
+      if (attempt < maxRetries) {
+        const retryDelay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`[WEBHOOK] Retrying in ${retryDelay}ms...`);
+        await delay(retryDelay);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error(`[WEBHOOK] Ayrshare API error (attempt ${attempt}/${maxRetries}):`, errorMessage);
+
+      // Don't retry on certain errors (bad request, unauthorized)
+      const statusCode = error.response?.status;
+      if (statusCode === 400 || statusCode === 401 || statusCode === 403) {
+        console.error(`[WEBHOOK] Non-retryable error (${statusCode}), giving up`);
+        logError("ayrshare-profile-create", error, { workspaceName, attempt, statusCode });
+        return null;
+      }
+
+      if (attempt < maxRetries) {
+        const retryDelay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`[WEBHOOK] Retrying in ${retryDelay}ms...`);
+        await delay(retryDelay);
+      } else {
+        logError("ayrshare-profile-create", error, { workspaceName, attempts: maxRetries });
+      }
     }
-
-    logError("ayrshare-profile-create", "No profileKey in response", {
-      response: response.data,
-    });
-    return null;
-  } catch (error) {
-    logError("ayrshare-profile-create", error);
-    return null;
   }
+
+  console.error(`[WEBHOOK] Failed to create Ayrshare profile after ${maxRetries} attempts`);
+  return null;
 }
 
 // Update existing workspace with Ayrshare profile key and ref id on payment
