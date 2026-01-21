@@ -146,9 +146,12 @@ export const BrandProfileContent = () => {
 
     setIsSaving(true);
     try {
+      if (!activeWorkspace?.id) {
+        throw new Error('No active workspace selected');
+      }
+
       const profileData = {
-        user_id: user.id,
-        workspace_id: activeWorkspace?.id || null,
+        workspace_id: activeWorkspace.id,
         brand_name: brandName,
         website_url: websiteUrl,
         brand_description: brandDescription,
@@ -162,7 +165,7 @@ export const BrandProfileContent = () => {
 
       const { error } = await supabase
         .from('brand_profiles')
-        .upsert(profileData, { onConflict: 'user_id' });
+        .upsert(profileData, { onConflict: 'workspace_id' });
 
       if (error) throw error;
 
