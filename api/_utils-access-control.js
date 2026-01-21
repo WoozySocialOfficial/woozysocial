@@ -212,6 +212,8 @@ function canPerformPostAction(role, action, isOwnPost = false) {
  */
 async function verifyWorkspaceMembership(supabase, userId, workspaceId) {
   try {
+    console.log('[ACCESS] Verifying workspace membership:', { userId, workspaceId });
+
     const { data: member, error } = await supabase
       .from('workspace_members')
       .select('id, user_id, workspace_id, role, can_manage_team, can_manage_settings, can_delete_posts, can_approve_posts')
@@ -220,16 +222,49 @@ async function verifyWorkspaceMembership(supabase, userId, workspaceId) {
       .single();
 
     if (error) {
-      return { success: false, error: 'Not a workspace member', code: 'NOT_MEMBER' };
+      // PGRST116 = "The result contains 0 rows" - this means user is not a member
+      if (error.code === 'PGRST116') {
+        console.log('[ACCESS] User is not a member of workspace:', { userId, workspaceId });
+        return { success: false, error: 'Not a workspace member', code: 'NOT_MEMBER' };
+      }
+
+      // Any other error is a database/RLS issue, not a membership issue
+      console.error('[ACCESS] Database error checking membership:', {
+        userId,
+        workspaceId,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        errorHint: error.hint
+      });
+
+      return {
+        success: false,
+        error: `Database error: ${error.message || 'Failed to verify membership'}`,
+        code: 'DB_ERROR',
+        details: error
+      };
     }
 
     if (!member) {
+      console.log('[ACCESS] No member data returned (should not happen with .single())');
       return { success: false, error: 'Not a workspace member', code: 'NOT_MEMBER' };
     }
 
+    console.log('[ACCESS] Membership verified successfully:', {
+      userId,
+      workspaceId,
+      role: member.role
+    });
+
     return { success: true, member };
   } catch (err) {
-    console.error('Error verifying workspace membership:', err);
+    console.error('[ACCESS] Exception verifying workspace membership:', {
+      userId,
+      workspaceId,
+      error: err,
+      stack: err.stack
+    });
     return { success: false, error: 'Failed to verify membership', code: 'VERIFICATION_ERROR' };
   }
 }
