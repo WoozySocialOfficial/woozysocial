@@ -6,6 +6,8 @@ DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON user_profi
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Only insert if profile doesn't already exist
+  -- This allows marketing site to pre-create profiles before auth user creation
   INSERT INTO public.user_profiles (
     id,
     email,
@@ -21,7 +23,8 @@ BEGIN
     false,
     'inactive',
     'free'
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;  -- Skip if already exists
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
