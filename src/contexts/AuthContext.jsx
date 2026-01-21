@@ -112,10 +112,41 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // User profile is automatically created by database trigger
-      // Check if user is whitelisted and create Ayrshare profile if eligible
-      // This allows test/dev accounts to bypass payment during development
+      // IMPORTANT: Database trigger should create profile automatically,
+      // but we try client-side insert as fallback in case trigger isn't set up yet
       if (data.user) {
+        console.log('[SIGNUP] User created, attempting profile creation');
+
+        try {
+          // Try to insert profile (will fail silently if trigger already created it)
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert([
+              {
+                id: data.user.id,
+                email: email.toLowerCase(),
+                full_name: fullName,
+                onboarding_completed: false,
+                subscription_status: 'inactive',
+                subscription_tier: 'free'
+              },
+            ])
+            .select()
+            .single();
+
+          if (profileError) {
+            // Log but don't fail - trigger might have already created it
+            console.log('[SIGNUP] Profile insert result:', profileError.message);
+          } else {
+            console.log('[SIGNUP] Profile created successfully via client');
+          }
+        } catch (err) {
+          // Silent fail - trigger might have already created profile
+          console.log('[SIGNUP] Profile creation attempt:', err.message);
+        }
+
+        // Check if user is whitelisted and create Ayrshare profile if eligible
+        // This allows test/dev accounts to bypass payment during development
         try {
           const response = await fetch(`${baseURL}/api/check-and-create-profile`, {
             method: 'POST',

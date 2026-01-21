@@ -46,5 +46,10 @@ CREATE POLICY "Users can update own profile"
   ON user_profiles FOR UPDATE
   USING (auth.uid() = id);
 
+-- Allow authenticated users to insert their own profile (for client-side fallback)
+CREATE POLICY "Users can insert own profile"
+  ON user_profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 -- Allow the trigger to insert (using SECURITY DEFINER)
--- No INSERT policy needed since trigger handles it
+-- The INSERT policy above allows client-side fallback if trigger isn't set up
