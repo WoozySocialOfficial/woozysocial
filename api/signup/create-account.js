@@ -233,10 +233,17 @@ module.exports = async function handler(req, res) {
       console.log("[CREATE ACCOUNT] Using existing workspace:", existingWorkspace.id);
       workspace = existingWorkspace;
     } else {
+      // Generate URL-friendly slug from workspace name
+      const slug = workspaceName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
       const { data: newWorkspace, error: workspaceError } = await supabase
         .from('workspaces')
         .insert({
           name: workspaceName,
+          slug: slug,
           owner_id: userId,
           onboarding_status: 'pending_payment',
           questionnaire_data: questionnaireAnswers || {},
