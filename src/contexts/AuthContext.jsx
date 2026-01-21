@@ -112,62 +112,52 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // IMPORTANT: Database trigger should create profile automatically,
-      // but we try client-side insert as fallback in case trigger isn't set up yet
+      // Ensure profile exists via API (bypasses RLS, more reliable than trigger alone)
       if (data.user) {
-        console.log('[SIGNUP] User created, attempting profile creation');
+        console.log('[SIGNUP] User created, ensuring profile via API');
 
-        try {
-          // Try to insert profile (will fail silently if trigger already created it)
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert([
-              {
-                id: data.user.id,
-                email: email.toLowerCase(),
-                full_name: fullName,
-                onboarding_completed: false,
-                subscription_status: 'inactive',
-                subscription_tier: 'free'
-              },
-            ])
-            .select()
-            .single();
-
-          if (profileError) {
-            // Log but don't fail - trigger might have already created it
-            console.log('[SIGNUP] Profile insert result:', profileError.message);
-          } else {
-            console.log('[SIGNUP] Profile created successfully via client');
-          }
-        } catch (err) {
-          // Silent fail - trigger might have already created profile
-          console.log('[SIGNUP] Profile creation attempt:', err.message);
-        }
-
-        // Check if user is whitelisted and create Ayrshare profile if eligible
-        // This allows test/dev accounts to bypass payment during development
         try {
           const response = await fetch(`${baseURL}/api/check-and-create-profile`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: data.user.id,
-              email: email,
+              email: email.toLowerCase(),
+              fullName: fullName,
               title: `${fullName || email}'s Profile`
             }),
           });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Failed to check profile eligibility:', errorData);
-            // Don't throw - allow signup to continue
+          const result = await response.json();
+          if (response.ok) {
+            console.log('[SIGNUP] Profile ensured via API:', result.data);
+          } else {
+            console.warn('[SIGNUP] API profile creation failed, trying fallback:', result);
+            // Fallback to direct upsert
+            await supabase.from('user_profiles').upsert({
+              id: data.user.id,
+              email: email.toLowerCase(),
+              full_name: fullName,
+              onboarding_completed: false,
+              subscription_status: 'inactive',
+              subscription_tier: 'free'
+            }, { onConflict: 'id' });
           }
         } catch (err) {
-          console.error('Error checking profile eligibility:', err);
-          // Don't throw - allow signup to continue
+          console.error('[SIGNUP] Profile creation error:', err);
+          // Final fallback
+          try {
+            await supabase.from('user_profiles').upsert({
+              id: data.user.id,
+              email: email.toLowerCase(),
+              full_name: fullName,
+              onboarding_completed: false,
+              subscription_status: 'inactive',
+              subscription_tier: 'free'
+            }, { onConflict: 'id' });
+          } catch {
+            // Profile likely exists from trigger
+          }
         }
       }
 
