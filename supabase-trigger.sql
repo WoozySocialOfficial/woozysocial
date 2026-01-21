@@ -6,8 +6,22 @@ DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON user_profi
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.user_profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  INSERT INTO public.user_profiles (
+    id,
+    email,
+    full_name,
+    onboarding_completed,
+    subscription_status,
+    subscription_tier
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    false,
+    'inactive',
+    'free'
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

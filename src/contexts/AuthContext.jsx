@@ -112,42 +112,10 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // CRITICAL: Create user profile - this is REQUIRED for invites and upgrades to work
+      // User profile is automatically created by database trigger
+      // Check if user is whitelisted and create Ayrshare profile if eligible
+      // This allows test/dev accounts to bypass payment during development
       if (data.user) {
-        console.log('[SIGNUP] Creating user profile for:', data.user.id);
-
-        try {
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert([
-              {
-                id: data.user.id,
-                email: email.toLowerCase(),
-                full_name: fullName,
-                onboarding_completed: false,
-                subscription_status: 'inactive',
-                subscription_tier: 'free'
-              },
-            ]);
-
-          // Check if error is NOT a duplicate key error
-          if (profileError && !profileError.message.includes('duplicate') && !profileError.code?.includes('23505')) {
-            console.error('[SIGNUP] Failed to create user profile:', profileError);
-            throw profileError;
-          }
-
-          console.log('[SIGNUP] User profile created successfully');
-        } catch (err) {
-          console.error('[SIGNUP] Profile insert error:', err);
-          // If profile creation fails and it's not a duplicate, throw error
-          if (err.message && !err.message.includes('duplicate')) {
-            console.error('[SIGNUP] Critical error - profile creation failed');
-            throw new Error('Failed to create user profile. Please contact support.');
-          }
-        }
-
-        // Check if user is whitelisted and create Ayrshare profile if eligible
-        // This allows test/dev accounts to bypass payment during development
         try {
           const response = await fetch(`${baseURL}/api/check-and-create-profile`, {
             method: 'POST',
