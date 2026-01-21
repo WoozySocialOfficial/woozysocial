@@ -103,29 +103,41 @@ module.exports = async function handler(req, res) {
 
     console.log("[TOKEN LOGIN] User found:", user.email);
 
-    // Create Supabase session using admin API
-    // Note: This requires service role key
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+    // Get the app URL for redirects
+    const appUrl = (process.env.APP_URL || process.env.FRONTEND_URL || 'https://api.woozysocial.com').trim();
+
+    // Generate a magic link that the user can be redirected to directly
+    // This is more reliable than trying to verify OTP manually
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: user.email,
       options: {
-        redirectTo: process.env.APP_URL || 'http://localhost:5173'
+        redirectTo: `${appUrl}/dashboard?welcome=true`
       }
     });
 
-    if (sessionError) {
-      logError("token-login-session", sessionError, { userId: user.id });
-      return sendError(
-        res,
-        "Failed to create session",
-        ErrorCodes.INTERNAL_ERROR
-      );
+    if (linkError) {
+      console.error("[TOKEN LOGIN] Failed to generate magic link:", linkError.message);
+      logError("token-login-link", linkError, { userId: user.id });
+
+      // Fallback: Return user info and redirect to login
+      // Users have passwords so they can login manually
+      return sendSuccess(res, {
+        message: "Token validated - please login with your credentials",
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name
+        },
+        fallbackToLogin: true,
+        loginUrl: `${appUrl}/login?email=${encodeURIComponent(user.email)}&verified=true`
+      });
     }
 
-    console.log("[TOKEN LOGIN] Session created successfully");
+    console.log("[TOKEN LOGIN] Magic link generated successfully");
 
-    // Return session info to frontend
-    // Frontend will use this to set the session
+    // Return the full action_link URL for direct browser redirect
+    // This is more reliable than manual OTP verification
     return sendSuccess(res, {
       message: "Token validated successfully",
       user: {
@@ -133,8 +145,10 @@ module.exports = async function handler(req, res) {
         email: user.email,
         full_name: user.full_name
       },
-      // Return the magic link properties for the frontend to use
-      session: sessionData.properties
+      // Return the magic link URL for direct browser redirect
+      magicLink: linkData.properties?.action_link,
+      // Also return fallback in case magic link doesn't work
+      fallbackLoginUrl: `${appUrl}/login?email=${encodeURIComponent(user.email)}&verified=true`
     });
 
   } catch (error) {

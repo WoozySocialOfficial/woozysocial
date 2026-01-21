@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginSEO } from '../SEO';
 import './AuthPages.css';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, resetPassword } = useAuth();
+
+  // Check for email and verified params from signup flow
+  const emailParam = searchParams.get('email');
+  const isVerified = searchParams.get('verified') === 'true';
 
   // Prefetch Dashboard chunk while user is on login page
   useEffect(() => {
     import('../DashboardContent');
   }, []);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(
+    isVerified ? 'Account verified! Please sign in with your password.' : ''
+  );
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
@@ -25,6 +33,7 @@ export const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     const { error } = await signIn(email, password);
@@ -141,6 +150,7 @@ export const LoginPage = () => {
           </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          {successMessage && <div className="auth-success">{successMessage}</div>}
           {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">

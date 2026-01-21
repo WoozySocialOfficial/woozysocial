@@ -46,45 +46,40 @@ export default function TokenLogin() {
         return;
       }
 
-      console.log('[TOKEN LOGIN] Token validated, creating session...');
-      setStatus('creating_session');
+      const responseData = data.data || data;
+      console.log('[TOKEN LOGIN] Token validated:', responseData);
 
-      // Use the magic link to sign in
-      // The backend returns a magic link token we can use
-      if (data.data.session && data.data.session.hashed_token) {
-        // Sign in with the token hash
-        const { error: signInError } = await supabase.auth.verifyOtp({
-          token_hash: data.data.session.hashed_token,
-          type: 'magiclink'
-        });
-
-        if (signInError) {
-          console.error('[TOKEN LOGIN] Sign in error:', signInError);
-          setError('Failed to create session');
-          setTimeout(() => {
-            navigate('/login?error=session_error');
-          }, 2000);
-          return;
-        }
-      } else {
-        // Fallback: Try to get session from user data
-        console.log('[TOKEN LOGIN] Using fallback auth method');
-
-        // The token is validated, user exists, just redirect
-        // The auth context will pick up the session
+      // Check if backend is telling us to go to login (fallback mode)
+      if (responseData.fallbackToLogin) {
+        console.log('[TOKEN LOGIN] Using fallback login redirect');
         setStatus('redirecting');
         setTimeout(() => {
-          window.location.href = '/dashboard?welcome=true';
+          window.location.href = responseData.loginUrl || '/login?verified=true';
         }, 1000);
         return;
       }
 
-      console.log('[TOKEN LOGIN] Session created successfully');
-      setStatus('success');
+      // If we have a magic link, redirect to it directly
+      // This is the most reliable way to create a session
+      if (responseData.magicLink) {
+        console.log('[TOKEN LOGIN] Redirecting to magic link...');
+        setStatus('creating_session');
 
-      // Redirect to dashboard with welcome message
+        // Small delay to show status, then redirect to Supabase magic link
+        setTimeout(() => {
+          window.location.href = responseData.magicLink;
+        }, 500);
+        return;
+      }
+
+      // Final fallback: redirect to login with email pre-filled
+      // Users have passwords so they can login manually
+      console.log('[TOKEN LOGIN] No magic link, redirecting to login');
+      setStatus('redirecting');
+
+      const fallbackUrl = responseData.fallbackLoginUrl || '/login?verified=true';
       setTimeout(() => {
-        window.location.href = '/dashboard?welcome=true';
+        window.location.href = fallbackUrl;
       }, 1000);
 
     } catch (err) {
