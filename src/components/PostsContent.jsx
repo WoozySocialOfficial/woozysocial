@@ -9,6 +9,8 @@ import { FaSearch, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, 
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { PostDetailPanel } from "./comments/PostDetailPanel";
+import { TableSkeleton } from "./ui/LoadingSpinner";
+import { formatTableDateTime } from "../utils/timezones";
 import "./PostsContent.css";
 
 const PLATFORM_ICONS = {
@@ -90,12 +92,6 @@ export const PostsContent = () => {
            content.match(new RegExp(`#\\w*${query}\\w*`, 'i')) ||
            platforms.includes(query);
   });
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
 
   const getPlatformIcons = (platforms) => {
     if (!platforms || !Array.isArray(platforms)) return null;
@@ -294,7 +290,7 @@ export const PostsContent = () => {
 
         <div className="posts-table-body">
           {loading ? (
-            <div className="posts-loading">Loading posts...</div>
+            <TableSkeleton rows={5} columns={4} />
           ) : filteredPosts.length === 0 ? (
             <div className="posts-empty">
               {searchQuery ? "No posts match your search" : `No ${activeTab} posts yet`}
@@ -348,7 +344,7 @@ export const PostsContent = () => {
                   )}
                 </div>
                 <div className="posts-date-col">
-                  {formatDate(post.scheduleDate || post.scheduled_date || post.created_at || post.postDate)}
+                  {formatTableDateTime(post.scheduleDate || post.scheduled_date || post.created_at || post.postDate)}
                 </div>
                 <div className="posts-content-col">
                   <div className="post-content-preview">

@@ -16,6 +16,7 @@ import { baseURL } from "../utils/constants";
 import { supabase } from "../utils/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
+import { LoadingOverlay } from "./ui/LoadingSpinner";
 import "./SocialAccounts.css";
 
 const PLATFORMS = [
@@ -267,11 +268,7 @@ export const SocialAccounts = () => {
         })}
       </div>
 
-      {loading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">Connecting...</div>
-        </div>
-      )}
+      <LoadingOverlay isVisible={loading} message="Connecting to platform..." />
     </div>
   );
 };

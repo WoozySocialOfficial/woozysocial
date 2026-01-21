@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
+import { LoadingContainer } from "../components/ui/LoadingSpinner";
 import "./Notifications.css";
 
 // Notification type configurations
@@ -364,10 +365,7 @@ export const Notifications = () => {
 
         <div className="notifications-content">
           {loading ? (
-            <div className="notifications-loading">
-              <span className="loading-spinner"></span>
-              <p>Loading notifications...</p>
-            </div>
+            <LoadingContainer message="Loading notifications..." />
           ) : filteredNotifications.length === 0 ? (
             <div className="notifications-empty">
               <span className="empty-icon">🔔</span>

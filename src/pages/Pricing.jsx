@@ -139,12 +139,6 @@ export const Pricing = () => {
     setError(null);
 
     try {
-      console.log('[PRICING] Creating checkout with:', {
-        userId: user.id,
-        tier: tierId,
-        billingPeriod: billingPeriod
-      });
-
       const response = await fetch(`${baseURL}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -190,7 +184,6 @@ export const Pricing = () => {
       return;
     }
 
-    console.log('[PRICING] Opening billing portal for user:', user.id);
     setLoading('manage');
     setError(null);
 
@@ -207,14 +200,12 @@ export const Pricing = () => {
       });
 
       const data = await response.json();
-      console.log('[PRICING] Portal response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to open billing portal');
       }
 
       if (data.data?.url) {
-        console.log('[PRICING] Redirecting to portal:', data.data.url);
         window.location.href = data.data.url;
       } else {
         throw new Error('No portal URL received');

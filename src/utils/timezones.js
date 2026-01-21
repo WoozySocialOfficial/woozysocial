@@ -162,3 +162,124 @@ export const formatDateOnlyInTimezone = (date, timezone) => {
     });
   }
 };
+
+// ===========================
+// UNIFIED DATE FORMATTERS
+// ===========================
+
+/**
+ * Format relative time (e.g., "Just now", "5m ago", "2h ago", "3d ago")
+ * @param {string|Date} dateStr - Date to format
+ * @returns {string} - Relative time string
+ */
+export const formatRelativeTime = (dateStr) => {
+  if (!dateStr) return '';
+
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format short date and time (e.g., "Jan 15, 2:30 PM")
+ * @param {string|Date} dateStr - Date to format
+ * @param {string} timezone - Optional timezone
+ * @returns {string} - Formatted date/time string
+ */
+export const formatShortDateTime = (dateStr, timezone) => {
+  if (!dateStr) return 'N/A';
+
+  try {
+    const date = new Date(dateStr);
+    const options = {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      ...(timezone && { timeZone: timezone })
+    };
+    return date.toLocaleString('en-US', options);
+  } catch {
+    return new Date(dateStr).toLocaleString();
+  }
+};
+
+/**
+ * Format full date and time for display (e.g., "Mon, Jan 15 at 2:30 PM")
+ * @param {string|Date} dateStr - Date to format
+ * @param {string} timezone - Optional timezone
+ * @returns {string} - Formatted date/time string
+ */
+export const formatFullDateTime = (dateStr, timezone) => {
+  if (!dateStr) return 'N/A';
+
+  try {
+    const date = new Date(dateStr);
+    const options = {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      ...(timezone && { timeZone: timezone })
+    };
+    return date.toLocaleString('en-US', options);
+  } catch {
+    return new Date(dateStr).toLocaleString();
+  }
+};
+
+/**
+ * Format date for tables and lists (e.g., "1/15/2024 2:30 PM")
+ * @param {string|Date} dateStr - Date to format
+ * @returns {string} - Formatted date/time string
+ */
+export const formatTableDateTime = (dateStr) => {
+  if (!dateStr) return 'N/A';
+
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'N/A';
+  }
+};
+
+/**
+ * Format schedule date with weekday (e.g., "Wed, Jan 15")
+ * @param {string|Date} dateStr - Date to format
+ * @param {string} timezone - Optional timezone
+ * @returns {string} - Formatted date string
+ */
+export const formatScheduleDate = (dateStr, timezone) => {
+  if (!dateStr) return '';
+
+  try {
+    const date = new Date(dateStr);
+    const options = {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      ...(timezone && { timeZone: timezone })
+    };
+    return date.toLocaleDateString('en-US', options);
+  } catch {
+    return new Date(dateStr).toLocaleDateString();
+  }
+};

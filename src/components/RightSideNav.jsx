@@ -105,6 +105,11 @@ const RightSideNav = () => {
         const data = await response.json();
         // API returns { success: true, data: { url: "..." } }
         const url = data.data?.url || data.url;
+
+        if (!url) {
+          throw new Error("No linking URL returned from server");
+        }
+
         const width = 800;
         const height = 800;
         const left = window.screen.width / 2 - width / 2;

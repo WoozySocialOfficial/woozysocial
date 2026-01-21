@@ -198,6 +198,9 @@ export const ComposeContent = () => {
   const convertDataUrlToFile = async (dataUrl) => {
     try {
       const res = await fetch(dataUrl);
+      if (!res.ok) {
+        throw new Error("Failed to convert data URL");
+      }
       const blob = await res.blob();
       const filename = `draft-media-${Date.now()}.${blob.type.split('/')[1]}`;
       return new File([blob], filename, { type: blob.type });

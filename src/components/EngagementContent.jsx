@@ -5,6 +5,7 @@ import { baseURL } from "../utils/constants";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaReply, FaTrash, FaSyncAlt } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
+import { LoadingContainer } from "./ui/LoadingSpinner";
 import "./EngagementContent.css";
 
 const PLATFORM_ICONS = {
@@ -183,7 +184,7 @@ export const EngagementContent = () => {
         <div className="posts-sidebar">
           <h3>Recent Posts</h3>
           {loading && posts.length === 0 ? (
-            <div className="loading">Loading posts...</div>
+            <LoadingContainer message="Loading posts..." size="sm" />
           ) : posts.length === 0 ? (
             <div className="empty-state">No published posts yet</div>
           ) : (
@@ -226,7 +227,7 @@ export const EngagementContent = () => {
               </div>
 
               {loading ? (
-                <div className="loading">Loading comments...</div>
+                <LoadingContainer message="Loading comments..." size="sm" />
               ) : comments.length === 0 ? (
                 <div className="empty-state">
                   <p>No comments yet on this post</p>

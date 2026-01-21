@@ -4,6 +4,7 @@ import { SiX } from "react-icons/si";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useInbox } from "../hooks/useInbox";
+import { LoadingContainer } from "./ui/LoadingSpinner";
 import "./SocialInboxContent.css";
 
 // Only DM-supported platforms
@@ -216,10 +217,7 @@ export const SocialInboxContent = () => {
           {/* Conversations List */}
           <div className="conversations-list">
             {loading && conversations.length === 0 ? (
-              <div className="loading-conversations">
-                <div className="loading-spinner"></div>
-                <p>Loading conversations...</p>
-              </div>
+              <LoadingContainer message="Loading conversations..." size="sm" />
             ) : filteredConversations.length === 0 ? (
               <div className="empty-conversations">
                 <p>No conversations found</p>
@@ -341,10 +339,7 @@ export const SocialInboxContent = () => {
               {/* Messages */}
               <div className="message-thread">
                 {messagesLoading ? (
-                  <div className="loading-messages">
-                    <div className="loading-spinner"></div>
-                    <p>Loading messages...</p>
-                  </div>
+                  <LoadingContainer message="Loading messages..." size="sm" />
                 ) : messages.length === 0 ? (
                   <div className="no-messages">
                     <p>No messages in this conversation</p>

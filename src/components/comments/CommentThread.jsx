@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseURL } from '../../utils/constants';
 import { supabase } from '../../utils/supabaseClient';
+import { formatRelativeTime } from '../../utils/timezones';
 import './CommentThread.css';
 
 const PRIORITY_CONFIG = {
@@ -127,18 +128,6 @@ export const CommentThread = ({
     };
   }, [postId, enableRealtime]);
 
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleDateString();
-  };
-
   const getPriorityConfig = (priority) => {
     return PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.normal;
   };
@@ -189,7 +178,7 @@ export const CommentThread = ({
                   </span>
                 )}
               </div>
-              <span className="comment-time">{formatTime(comment.created_at)}</span>
+              <span className="comment-time">{formatRelativeTime(comment.created_at)}</span>
             </div>
             <p className="comment-text">{comment.comment}</p>
             {comment.updated_at && comment.updated_at !== comment.created_at && (

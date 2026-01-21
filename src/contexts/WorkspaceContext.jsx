@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabaseClient';
+import { safeFetch, normalizeApiResponse } from '../utils/api';
 import {
   baseURL,
   TEAM_ROLES,
@@ -38,6 +39,9 @@ export const WorkspaceProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [workspaceMembership, setWorkspaceMembership] = useState(cachedData?.membership || null);
 
+  // Ref to track current fetch request and prevent race conditions
+  const fetchRequestIdRef = useRef(0);
+
   // Fetch user's workspaces via API
   const fetchUserWorkspaces = useCallback(async () => {
     if (!user) {
@@ -49,36 +53,56 @@ export const WorkspaceProvider = ({ children }) => {
       return;
     }
 
+    // Increment request ID to track this specific request
+    const requestId = ++fetchRequestIdRef.current;
+
     try {
       // Only show loading if no cached data
       if (!cachedData) setLoading(true);
 
-      // First, try to get workspaces via API
-      const listRes = await fetch(`${baseURL}/api/workspace/list?userId=${user.id}`);
-      const listData = await listRes.json();
+      // First, try to get workspaces via API using safeFetch
+      const { data: listData, error: listError } = await safeFetch(
+        `${baseURL}/api/workspace/list?userId=${user.id}`
+      );
+
+      // Check if this request is still current (prevents race conditions)
+      if (requestId !== fetchRequestIdRef.current) return;
+
+      if (listError) {
+        throw new Error(listError);
+      }
 
       // Handle both old format (listData.workspaces) and new format (listData.data.workspaces)
-      const responseData = listData.data || listData;
+      const responseData = normalizeApiResponse(listData);
       let workspaces = responseData.workspaces || [];
 
       // If no workspaces, auto-migrate the user
       if (workspaces.length === 0) {
-        const migrateRes = await fetch(`${baseURL}/api/workspace/migrate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id })
-        });
-        const migrateData = await migrateRes.json();
-        // Handle both old format (migrateData.workspace) and new format (migrateData.data.workspace)
-        const migrateResponse = migrateData.data || migrateData;
+        const { data: migrateData, error: migrateError } = await safeFetch(
+          `${baseURL}/api/workspace/migrate`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id })
+          }
+        );
 
-        if (migrateData.success && migrateResponse.workspace) {
-          workspaces = [{
-            ...migrateResponse.workspace,
-            membership: { role: 'owner' }
-          }];
+        // Check if this request is still current
+        if (requestId !== fetchRequestIdRef.current) return;
+
+        if (!migrateError && migrateData?.success) {
+          const migrateResponse = normalizeApiResponse(migrateData);
+          if (migrateResponse.workspace) {
+            workspaces = [{
+              ...migrateResponse.workspace,
+              membership: { role: 'owner' }
+            }];
+          }
         }
       }
+
+      // Final race condition check before updating state
+      if (requestId !== fetchRequestIdRef.current) return;
 
       setUserWorkspaces(workspaces);
 
@@ -105,12 +129,18 @@ export const WorkspaceProvider = ({ children }) => {
         sessionStorage.removeItem('woozy_workspace_cache');
       }
     } catch (error) {
+      // Only update state if this is still the current request
+      if (requestId !== fetchRequestIdRef.current) return;
+
       console.error('Error fetching workspaces:', error);
       setUserWorkspaces([]);
       setActiveWorkspace(null);
       setWorkspaceMembership(null);
     } finally {
-      setLoading(false);
+      // Only update loading if this is still the current request
+      if (requestId === fetchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [user]);
 
@@ -152,23 +182,24 @@ export const WorkspaceProvider = ({ children }) => {
     if (!user) return { data: null, error: 'User not authenticated' };
 
     try {
-      const res = await fetch(`${baseURL}/api/workspace/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          businessName: businessName
-        })
-      });
+      const { data, error: fetchError } = await safeFetch(
+        `${baseURL}/api/workspace/create`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            businessName: businessName
+          })
+        }
+      );
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create workspace');
+      if (fetchError || !data?.success) {
+        throw new Error(fetchError || data?.error || 'Failed to create workspace');
       }
 
       // Handle both old format (data.workspace) and new format (data.data.workspace)
-      const responseData = data.data || data;
+      const responseData = normalizeApiResponse(data);
 
       // Refresh workspaces and switch to the new one
       await fetchUserWorkspaces();
@@ -214,20 +245,21 @@ export const WorkspaceProvider = ({ children }) => {
     if (!user) return { data: null, error: 'User not authenticated' };
 
     try {
-      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          role,
-          userId: user.id
-        })
-      });
+      const { data, error: fetchError } = await safeFetch(
+        `${baseURL}/api/workspaces/${workspaceId}/invite`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            role,
+            userId: user.id
+          })
+        }
+      );
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create invitation');
+      if (fetchError || !data?.success) {
+        throw new Error(fetchError || data?.error || 'Failed to create invitation');
       }
 
       return { data: data.invitation, error: null };
@@ -242,19 +274,20 @@ export const WorkspaceProvider = ({ children }) => {
     if (!user) return { error: 'User not authenticated' };
 
     try {
-      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/remove-member`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId,
-          userId: user.id
-        })
-      });
+      const { data, error: fetchError } = await safeFetch(
+        `${baseURL}/api/workspaces/${workspaceId}/remove-member`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId,
+            userId: user.id
+          })
+        }
+      );
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to remove member');
+      if (fetchError || !data?.success) {
+        throw new Error(fetchError || data?.error || 'Failed to remove member');
       }
 
       return { error: null };
@@ -269,21 +302,22 @@ export const WorkspaceProvider = ({ children }) => {
     if (!user) return { error: 'User not authenticated' };
 
     try {
-      const res = await fetch(`${baseURL}/api/workspaces/${workspaceId}/update-member`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId,
-          userId: user.id,
-          role,
-          permissions
-        })
-      });
+      const { data, error: fetchError } = await safeFetch(
+        `${baseURL}/api/workspaces/${workspaceId}/update-member`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId,
+            userId: user.id,
+            role,
+            permissions
+          })
+        }
+      );
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to update member');
+      if (fetchError || !data?.success) {
+        throw new Error(fetchError || data?.error || 'Failed to update member');
       }
 
       return { error: null };
@@ -364,14 +398,15 @@ export const WorkspaceProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members?userId=${user.id}`);
-      const payload = await response.json();
+      const { data: payload, error: fetchError } = await safeFetch(
+        `${baseURL}/api/workspaces/${activeWorkspace.id}/members?userId=${user.id}`
+      );
 
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to fetch members');
+      if (fetchError) {
+        throw new Error(fetchError);
       }
 
-      const responseData = payload.data || payload;
+      const responseData = normalizeApiResponse(payload);
       setWorkspaceMembers(responseData.members || []);
       setMembersLoaded(true);
     } catch (error) {

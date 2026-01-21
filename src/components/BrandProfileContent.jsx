@@ -5,6 +5,7 @@ import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useUserBrandProfile } from "../hooks/useQueries";
 import { supabase } from "../utils/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { LoadingContainer } from "./ui/LoadingSpinner";
 import "./BrandProfileContent.css";
 
 const DRAFT_KEY = "brand_profile_draft";
@@ -200,8 +201,9 @@ export const BrandProfileContent = () => {
       <div className="brand-profile-container">
         <div className="brand-profile-header">
           <h1 className="page-title">Brand Profile</h1>
-          <p className="page-subtitle">Loading...</p>
+          <p className="page-subtitle">Define your brand to help AI generate better content</p>
         </div>
+        <LoadingContainer message="Loading brand profile..." />
       </div>
     );
   }

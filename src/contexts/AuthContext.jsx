@@ -114,8 +114,6 @@ export const AuthProvider = ({ children }) => {
 
       // Ensure profile exists via API (bypasses RLS, more reliable than trigger alone)
       if (data.user) {
-        console.log('[SIGNUP] User created, ensuring profile via API');
-
         try {
           const response = await fetch(`${baseURL}/api/check-and-create-profile`, {
             method: 'POST',
@@ -129,9 +127,7 @@ export const AuthProvider = ({ children }) => {
           });
 
           const result = await response.json();
-          if (response.ok) {
-            console.log('[SIGNUP] Profile ensured via API:', result.data);
-          } else {
+          if (!response.ok) {
             console.warn('[SIGNUP] API profile creation failed, trying fallback:', result);
             // Fallback to direct upsert
             await supabase.from('user_profiles').upsert({

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import '../components/auth/AuthPages.css';
 
 export default function TokenLogin() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { supabase } = useAuth();
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('validating');
 
@@ -24,7 +22,6 @@ export default function TokenLogin() {
   async function validateTokenAndLogin(token) {
     try {
       setStatus('validating');
-      console.log('[TOKEN LOGIN] Validating token...');
 
       // Call backend to validate token
       const response = await fetch('/api/auth/token-login', {
@@ -47,11 +44,9 @@ export default function TokenLogin() {
       }
 
       const responseData = data.data || data;
-      console.log('[TOKEN LOGIN] Token validated:', responseData);
 
       // Check if backend is telling us to go to login (fallback mode)
       if (responseData.fallbackToLogin) {
-        console.log('[TOKEN LOGIN] Using fallback login redirect');
         setStatus('redirecting');
         setTimeout(() => {
           window.location.href = responseData.loginUrl || '/login?verified=true';
@@ -62,7 +57,6 @@ export default function TokenLogin() {
       // If we have a magic link, redirect to it directly
       // This is the most reliable way to create a session
       if (responseData.magicLink) {
-        console.log('[TOKEN LOGIN] Redirecting to magic link...');
         setStatus('creating_session');
 
         // Small delay to show status, then redirect to Supabase magic link
@@ -74,7 +68,6 @@ export default function TokenLogin() {
 
       // Final fallback: redirect to login with email pre-filled
       // Users have passwords so they can login manually
-      console.log('[TOKEN LOGIN] No magic link, redirecting to login');
       setStatus('redirecting');
 
       const fallbackUrl = responseData.fallbackLoginUrl || '/login?verified=true';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 import RoleGuard from '../components/roles/RoleGuard';
@@ -42,8 +42,8 @@ export const Approvals = () => {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
 
-  const fetchPosts = async () => {
-    if (!user || !activeWorkspace?.id) return;
+  const fetchPosts = useCallback(async () => {
+    if (!user?.id || !activeWorkspace?.id) return;
 
     setLoading(true);
     try {
@@ -51,6 +51,11 @@ export const Approvals = () => {
       const res = await fetch(
         `${baseURL}/api/post/pending-approvals?workspaceId=${activeWorkspace.id}&userId=${user.id}${statusParam}`
       );
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+
       const data = await res.json();
 
       if (data.success) {
@@ -64,19 +69,25 @@ export const Approvals = () => {
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, activeWorkspace?.id, filter]);
 
-  const fetchComments = async (postId) => {
-    if (!postId) return;
+  const fetchComments = useCallback(async (postId) => {
+    if (!postId || !activeWorkspace?.id || !user?.id) return;
 
     setLoadingComments(true);
     try {
       const res = await fetch(
         `${baseURL}/api/post/comment?postId=${postId}&workspaceId=${activeWorkspace.id}&userId=${user.id}`
       );
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch comments');
+      }
+
       const data = await res.json();
       if (data.success) {
         // Handle both old format (data.comments) and new format (data.data.comments)
@@ -85,23 +96,24 @@ export const Approvals = () => {
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
+      setComments([]);
     } finally {
       setLoadingComments(false);
     }
-  };
+  }, [activeWorkspace?.id, user?.id]);
 
   useEffect(() => {
     fetchPosts();
-  }, [user, activeWorkspace, filter]);
+  }, [fetchPosts]);
 
   useEffect(() => {
-    if (selectedPost) {
+    if (selectedPost?.id) {
       fetchComments(selectedPost.id);
     }
-  }, [selectedPost]);
+  }, [selectedPost?.id, fetchComments]);
 
   const handleApprovalAction = async (action) => {
-    if (!selectedPost) return;
+    if (!selectedPost || !activeWorkspace?.id || !user?.id) return;
 
     setSubmitting(true);
     try {
@@ -116,6 +128,10 @@ export const Approvals = () => {
           comment: comment || undefined
         })
       });
+
+      if (!res.ok) {
+        throw new Error('Failed to update approval');
+      }
 
       const data = await res.json();
 
@@ -133,7 +149,7 @@ export const Approvals = () => {
   };
 
   const handleAddComment = async () => {
-    if (!selectedPost || !comment.trim()) return;
+    if (!selectedPost || !comment.trim() || !activeWorkspace?.id || !user?.id) return;
 
     setSubmitting(true);
     try {
@@ -147,6 +163,10 @@ export const Approvals = () => {
           comment: comment.trim()
         })
       });
+
+      if (!res.ok) {
+        throw new Error('Failed to add comment');
+      }
 
       const data = await res.json();
 

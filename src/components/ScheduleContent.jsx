@@ -9,6 +9,7 @@ import { SiX } from "react-icons/si";
 import { formatTimeInTimezone, formatDateOnlyInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import { PostDetailPanel } from "./comments/PostDetailPanel";
+import { LoadingContainer } from "./ui/LoadingSpinner";
 import "./ScheduleContent.css";
 
 const PLATFORM_ICONS = {
@@ -583,7 +584,7 @@ export const ScheduleContent = () => {
 
       <div className="schedule-content">
         {loading ? (
-          <div className="schedule-loading">Loading posts...</div>
+          <LoadingContainer message="Loading scheduled posts..." />
         ) : (
           <>
             {view === "week" && renderWeekView()}

@@ -4,6 +4,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 import { supabase } from "../utils/supabaseClient";
+import { formatRelativeTime } from "../utils/timezones";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import "./NotificationBell.css";
 
 // Notification type configurations
@@ -216,27 +218,46 @@ export const NotificationBell = () => {
       setFadingOutIds(prev => new Set(prev).add(notification.id));
 
       // Mark as read in backend
-      fetch(`${baseURL}/api/notifications/list`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.id,
-          notificationIds: [notification.id]
-        })
-      }).catch(err => console.error(err));
+      try {
+        const res = await fetch(`${baseURL}/api/notifications/list`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            notificationIds: [notification.id]
+          })
+        });
 
-      // After animation, update state
-      setTimeout(() => {
-        setNotifications(prev =>
-          prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        if (res.ok) {
+          // After animation, update state only on success
+          setTimeout(() => {
+            setNotifications(prev =>
+              prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+            );
+            setUnreadCount(prev => Math.max(0, prev - 1));
+            setFadingOutIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(notification.id);
+              return newSet;
+            });
+          }, 300); // Match CSS transition duration
+        } else {
+          // Remove from fading out if request failed
+          setFadingOutIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(notification.id);
+            return newSet;
+          });
+        }
+      } catch (err) {
+        console.error("Error marking notification as read:", err);
+        // Remove from fading out on error
         setFadingOutIds(prev => {
           const newSet = new Set(prev);
           newSet.delete(notification.id);
           return newSet;
         });
-      }, 300); // Match CSS transition duration
+      }
     }
 
     // Switch workspace if notification is from a different workspace
@@ -380,21 +401,6 @@ export const NotificationBell = () => {
     }
   };
 
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
   // Group notifications by date (only show unread in dropdown)
   const groupedNotifications = () => {
     const today = new Date();
@@ -442,7 +448,7 @@ export const NotificationBell = () => {
           {notification.message && (
             <div className="notification-message">{notification.message}</div>
           )}
-          <div className="notification-time">{formatTime(notification.created_at)}</div>
+          <div className="notification-time">{formatRelativeTime(notification.created_at)}</div>
         </div>
         {!notification.read && <span className="unread-dot" />}
       </div>
@@ -495,7 +501,7 @@ export const NotificationBell = () => {
             {loading && notifications.length === 0 ? (
               <div className="notification-empty">
                 <div className="notification-loading">
-                  <span className="loading-spinner"></span>
+                  <LoadingSpinner size="sm" />
                   <p>Loading...</p>
                 </div>
               </div>
