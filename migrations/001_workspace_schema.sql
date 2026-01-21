@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS brand_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID UNIQUE NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
   brand_name TEXT,
+  website_url TEXT,
   brand_description TEXT,
   tone_of_voice TEXT DEFAULT 'Professional',
   target_audience TEXT,
