@@ -234,27 +234,6 @@ export function useBrandProfile(workspaceId) {
   });
 }
 
-// Brand profile by user ID (for BrandProfileContent page)
-export function useUserBrandProfile(userId) {
-  return useQuery({
-    queryKey: ["userBrandProfile", userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('brand_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
-      }
-
-      return data || null;
-    },
-    enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes - brand profile rarely changes
-  });
-}
 
 // ============================================
 // CLIENT PORTAL

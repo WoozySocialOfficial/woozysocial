@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
-import { useUserBrandProfile } from "../hooks/useQueries";
+import { useBrandProfile } from "../hooks/useQueries";
 import { supabase } from "../utils/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { LoadingContainer } from "./ui/LoadingSpinner";
 import "./BrandProfileContent.css";
 
-const DRAFT_KEY = "brand_profile_draft";
+// Draft key is workspace-specific
+const getDraftKey = (workspaceId) => `brand_profile_draft_${workspaceId}`;
 
 export const BrandProfileContent = () => {
   const { user } = useAuth();
@@ -20,6 +21,9 @@ export const BrandProfileContent = () => {
   const autoSaveTimerRef = useRef(null);
   const hasLoadedData = useRef(false);
 
+  // Get the draft key for the current workspace
+  const draftKey = activeWorkspace?.id ? getDraftKey(activeWorkspace.id) : null;
+
   const [brandName, setBrandName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
@@ -29,11 +33,12 @@ export const BrandProfileContent = () => {
   const [brandValues, setBrandValues] = useState("");
   const [samplePosts, setSamplePosts] = useState("");
 
-  // Use React Query for brand profile (cached!)
-  const { data: profileData, isLoading } = useUserBrandProfile(user?.id);
+  // Use React Query for brand profile (cached!) - must use workspace_id
+  const { data: profileData, isLoading } = useBrandProfile(activeWorkspace?.id);
 
-  // Auto-save draft to localStorage
+  // Auto-save draft to localStorage (workspace-specific)
   const saveDraft = useCallback(() => {
+    if (!draftKey) return;
     const draft = {
       brandName,
       websiteUrl,
@@ -43,45 +48,49 @@ export const BrandProfileContent = () => {
       keyTopics,
       brandValues,
       samplePosts,
-      userId: user?.id,
+      workspaceId: activeWorkspace?.id,
       savedAt: new Date().toISOString()
     };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    localStorage.setItem(draftKey, JSON.stringify(draft));
     setHasDraft(true);
-  }, [brandName, websiteUrl, brandDescription, toneOfVoice, targetAudience, keyTopics, brandValues, samplePosts, user?.id]);
+  }, [brandName, websiteUrl, brandDescription, toneOfVoice, targetAudience, keyTopics, brandValues, samplePosts, activeWorkspace?.id, draftKey]);
 
   // Clear draft from localStorage
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(DRAFT_KEY);
+    if (!draftKey) return;
+    localStorage.removeItem(draftKey);
     setHasDraft(false);
-  }, []);
+  }, [draftKey]);
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage on mount / workspace change
   useEffect(() => {
-    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (!draftKey) return;
+    const savedDraft = localStorage.getItem(draftKey);
     if (savedDraft) {
       try {
         const draft = JSON.parse(savedDraft);
-        // Only load draft if it belongs to the current user
-        if (draft.userId === user?.id) {
+        // Verify the draft belongs to this workspace
+        if (draft.workspaceId === activeWorkspace?.id) {
           setHasDraft(true);
         }
       } catch (e) {
-        localStorage.removeItem(DRAFT_KEY);
+        localStorage.removeItem(draftKey);
       }
+    } else {
+      setHasDraft(false);
     }
-  }, [user?.id]);
+  }, [activeWorkspace?.id, draftKey]);
 
   // Populate form when data loads (from DB or draft)
   useEffect(() => {
-    if (hasLoadedData.current) return;
+    if (hasLoadedData.current || !draftKey) return;
 
     // Check for draft first
-    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    const savedDraft = localStorage.getItem(draftKey);
     if (savedDraft) {
       try {
         const draft = JSON.parse(savedDraft);
-        if (draft.userId === user?.id) {
+        if (draft.workspaceId === activeWorkspace?.id) {
           // Load from draft
           setBrandName(draft.brandName || "");
           setWebsiteUrl(draft.websiteUrl || "");
@@ -111,7 +120,7 @@ export const BrandProfileContent = () => {
       setSamplePosts(profileData.sample_posts || "");
       hasLoadedData.current = true;
     }
-  }, [profileData, user?.id]);
+  }, [profileData, activeWorkspace?.id, draftKey]);
 
   // Auto-save draft when form changes (debounced)
   useEffect(() => {
@@ -172,8 +181,7 @@ export const BrandProfileContent = () => {
       // Clear the draft since we saved successfully
       clearDraft();
 
-      // Invalidate both caches so next load is fresh
-      queryClient.invalidateQueries({ queryKey: ["userBrandProfile", user.id] });
+      // Invalidate cache so next load is fresh
       if (activeWorkspace?.id) {
         queryClient.invalidateQueries({ queryKey: ["brandProfile", activeWorkspace.id] });
       }
