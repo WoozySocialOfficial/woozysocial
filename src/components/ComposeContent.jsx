@@ -313,35 +313,37 @@ export const ComposeContent = () => {
     }
   }, [user, activeWorkspace?.id, post.text, mediaPreview, networks, scheduledDate, currentDraftId, toast]);
 
-  // DISABLED: Auto-save draft functionality (RLS issues)
-  // TODO: Re-enable when RLS policies are fixed
-  // useEffect(() => {
-  //   if (autoSaveTimerRef.current) {
-  //     clearTimeout(autoSaveTimerRef.current);
-  //   }
-  //   if (post.text || mediaPreview || Object.values(networks).some(v => v)) {
-  //     autoSaveTimerRef.current = setTimeout(() => {
-  //       saveDraft();
-  //     }, 30000);
-  //   }
-  //   return () => {
-  //     if (autoSaveTimerRef.current) {
-  //       clearTimeout(autoSaveTimerRef.current);
-  //     }
-  //   };
-  // }, [post.text, mediaPreview, networks, saveDraft]);
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
 
-  // DISABLED: Save when navigating away (RLS issues)
-  // useEffect(() => {
-  //   const handleBeforeUnload = () => {
-  //     saveDraft();
-  //   };
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //     saveDraft();
-  //   };
-  // }, [saveDraft]);
+    if (post.text || mediaPreview || Object.values(networks).some(v => v)) {
+      autoSaveTimerRef.current = setTimeout(() => {
+        saveDraft();
+      }, 30000);
+    }
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [post.text, mediaPreview, networks, saveDraft]);
+
+  // Save when navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveDraft();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      saveDraft();
+    };
+  }, [saveDraft]);
 
   // Calculate engagement score based on post content
   useEffect(() => {
