@@ -121,79 +121,6 @@ export const ComposeContent = () => {
     fetchBestTime();
   }, [user, activeWorkspace]);
 
-  // Load draft from sessionStorage if coming from Posts page
-  useEffect(() => {
-    const loadDraftData = sessionStorage.getItem("loadDraft");
-    if (loadDraftData) {
-      try {
-        const draft = JSON.parse(loadDraftData);
-
-        // Set the draft ID so we update instead of create new
-        setCurrentDraftId(draft.id);
-
-        // Check if this is editing a scheduled post
-        if (draft.isEditingScheduledPost) {
-          setIsEditingScheduledPost(true);
-        }
-
-        // Load caption
-        if (draft.caption) {
-          setPost(prev => ({ ...prev, text: draft.caption }));
-        }
-
-        // Load media preview
-        if (draft.media_urls && draft.media_urls.length > 0) {
-          const mediaUrl = draft.media_urls[0];
-          setMediaPreview(mediaUrl);
-
-          // Determine media type
-          const url = mediaUrl.toLowerCase();
-          if (url.includes('video') || url.endsWith('.mp4') || url.endsWith('.mov')) {
-            setMediaType('video');
-          } else {
-            setMediaType('image');
-          }
-
-          // If it's a data URL, we need to convert it back to a File object for upload
-          if (mediaUrl.startsWith('data:')) {
-            convertDataUrlToFile(mediaUrl).then(file => {
-              if (file) {
-                setPost(prev => ({ ...prev, media: file }));
-              }
-            });
-          }
-        }
-
-        // Load selected platforms
-        if (draft.platforms && draft.platforms.length > 0) {
-          const platformsObj = {};
-          Object.keys(networks).forEach(key => {
-            platformsObj[key] = draft.platforms.includes(key);
-          });
-          setNetworks(platformsObj);
-        }
-
-        // Load scheduled date
-        if (draft.scheduled_date) {
-          setScheduledDate(new Date(draft.scheduled_date));
-        }
-
-        // Clear from sessionStorage
-        sessionStorage.removeItem("loadDraft");
-
-        toast({
-          title: "Draft loaded",
-          description: "Continue editing your draft",
-          status: "info",
-          duration: 2000,
-          isClosable: true
-        });
-      } catch (error) {
-        console.error("Error loading draft:", error);
-      }
-    }
-  }, []); // Run once on mount
-
   // Helper function to convert data URL back to File object
   const convertDataUrlToFile = async (dataUrl) => {
     try {
@@ -209,6 +136,118 @@ export const ComposeContent = () => {
       return null;
     }
   };
+
+  // Helper function to load draft data into state
+  const loadDraftIntoState = useCallback((draft, showToast = true) => {
+    // Set the draft ID so we update instead of create new
+    setCurrentDraftId(draft.id);
+
+    // Check if this is editing a scheduled post
+    if (draft.isEditingScheduledPost) {
+      setIsEditingScheduledPost(true);
+    }
+
+    // Load caption
+    if (draft.caption) {
+      setPost(prev => ({ ...prev, text: draft.caption }));
+    }
+
+    // Load media preview
+    if (draft.media_urls && draft.media_urls.length > 0) {
+      const mediaUrl = draft.media_urls[0];
+      setMediaPreview(mediaUrl);
+
+      // Determine media type
+      const url = mediaUrl.toLowerCase();
+      if (url.includes('video') || url.endsWith('.mp4') || url.endsWith('.mov')) {
+        setMediaType('video');
+      } else {
+        setMediaType('image');
+      }
+
+      // If it's a data URL, we need to convert it back to a File object for upload
+      if (mediaUrl.startsWith('data:')) {
+        convertDataUrlToFile(mediaUrl).then(file => {
+          if (file) {
+            setPost(prev => ({ ...prev, media: file }));
+          }
+        });
+      }
+    }
+
+    // Load selected platforms
+    if (draft.platforms && draft.platforms.length > 0) {
+      const platformsObj = {};
+      Object.keys(networks).forEach(key => {
+        platformsObj[key] = draft.platforms.includes(key);
+      });
+      setNetworks(platformsObj);
+    }
+
+    // Load scheduled date
+    if (draft.scheduled_date) {
+      setScheduledDate(new Date(draft.scheduled_date));
+    }
+
+    if (showToast) {
+      toast({
+        title: "Draft loaded",
+        description: "Continue editing your draft",
+        status: "info",
+        duration: 2000,
+        isClosable: true
+      });
+    }
+  }, [networks, toast]);
+
+  // Load draft from sessionStorage if coming from Posts page
+  useEffect(() => {
+    const loadDraftData = sessionStorage.getItem("loadDraft");
+    if (loadDraftData) {
+      try {
+        const draft = JSON.parse(loadDraftData);
+        loadDraftIntoState(draft, true);
+        // Clear from sessionStorage
+        sessionStorage.removeItem("loadDraft");
+      } catch (error) {
+        console.error("Error loading draft:", error);
+      }
+    }
+  }, [loadDraftIntoState]);
+
+  // Auto-load most recent draft if compose is empty
+  useEffect(() => {
+    const loadRecentDraft = async () => {
+      // Skip if already have a draft loaded or sessionStorage draft exists
+      if (currentDraftId || sessionStorage.getItem("loadDraft")) return;
+      if (!user || !activeWorkspace?.id) return;
+
+      try {
+        // Fetch the most recent draft for this workspace
+        const { data: drafts, error } = await supabase
+          .from("post_drafts")
+          .select("*")
+          .eq("workspace_id", activeWorkspace.id)
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+
+        if (drafts && drafts.length > 0) {
+          const recentDraft = drafts[0];
+          // Only load if draft has content
+          if (recentDraft.caption || (recentDraft.media_urls && recentDraft.media_urls.length > 0)) {
+            loadDraftIntoState(recentDraft, true);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading recent draft:", error);
+      }
+    };
+
+    loadRecentDraft();
+  }, [user, activeWorkspace?.id, currentDraftId, loadDraftIntoState]);
 
   // Auto-save draft functionality
   const saveDraft = useCallback(async () => {
