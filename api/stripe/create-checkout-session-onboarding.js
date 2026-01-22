@@ -88,14 +88,13 @@ module.exports = async function handler(req, res) {
       billingPeriod = 'monthly'
     } = req.body;
 
-    // Validate required fields
+    // Validate required fields (workspaceName is optional, we'll get it from DB if missing)
     const validation = validateRequired(req.body, [
       "userId",
       "workspaceId",
       "tier",
       "email",
-      "fullName",
-      "workspaceName"
+      "fullName"
     ]);
 
     if (!validation.valid) {
@@ -104,6 +103,20 @@ module.exports = async function handler(req, res) {
         `Missing required fields: ${validation.missing.join(", ")}`,
         ErrorCodes.VALIDATION_ERROR
       );
+    }
+
+    // Get workspace name from database if not provided
+    let finalWorkspaceName = workspaceName;
+    if (!finalWorkspaceName) {
+      console.log("[ONBOARDING CHECKOUT] workspaceName not provided, fetching from database");
+      const { data: workspace } = await supabase
+        .from('workspaces')
+        .select('name')
+        .eq('id', workspaceId)
+        .single();
+
+      finalWorkspaceName = workspace?.name || 'My Business';
+      console.log("[ONBOARDING CHECKOUT] Using workspace name from DB:", finalWorkspaceName);
     }
 
     // Validate billing period
@@ -190,7 +203,7 @@ module.exports = async function handler(req, res) {
         metadata: {
           supabase_user_id: userId,
           workspace_id: workspaceId,
-          workspace_name: workspaceName,
+          workspace_name: finalWorkspaceName,
           tier: tier,
           billing_period: billingPeriod,
           onboarding: 'true'
@@ -199,7 +212,7 @@ module.exports = async function handler(req, res) {
       metadata: {
         supabase_user_id: userId,
         workspace_id: workspaceId,
-        workspace_name: workspaceName,
+        workspace_name: finalWorkspaceName,
         tier: tier,
         billing_period: billingPeriod,
         onboarding: 'true'
