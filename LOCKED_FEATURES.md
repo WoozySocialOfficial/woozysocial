@@ -102,6 +102,94 @@ These features are working and should NOT be touched unless explicitly requested
 - **Status**: WORKING
 - **Description**: Fixes workspaces missing Ayrshare profile keys
 
+### 19. Social Accounts Page
+- **File**: `src/components/SocialAccounts.jsx`
+- **Status**: WORKING
+- **Description**: Connect/disconnect social media accounts UI
+
+### 20. Dashboard Content
+- **File**: `src/components/DashboardContent.jsx`
+- **Status**: WORKING
+- **Description**: Main dashboard with stats and quick actions
+
+### 21. Posts Content / Posts List
+- **File**: `src/components/PostsContent.jsx`
+- **Status**: WORKING
+- **Description**: Posts list view (drafts, scheduled, history, failed)
+
+### 22. Schedule Content
+- **File**: `src/components/ScheduleContent.jsx`
+- **Status**: WORKING
+- **Description**: Calendar view for scheduled posts
+
+### 23. Settings Content
+- **File**: `src/components/SettingsContent.jsx`
+- **Status**: WORKING
+- **Description**: User and workspace settings
+
+### 24. Top Header / Navigation
+- **File**: `src/components/layout/TopHeader.jsx`
+- **File**: `src/components/layout/ClientHeader.jsx`
+- **Status**: WORKING
+- **Description**: Header navigation with workspace switcher
+
+### 25. Right Side Nav
+- **File**: `src/components/RightSideNav.jsx`
+- **Status**: WORKING
+- **Description**: Right sidebar with connected accounts
+
+### 26. Engagement Content
+- **File**: `src/components/EngagementContent.jsx`
+- **Status**: WORKING
+- **Description**: Social media engagement/analytics
+
+### 27. Social Inbox
+- **File**: `src/components/SocialInboxContent.jsx`
+- **Status**: WORKING
+- **Description**: Unified inbox for social messages
+
+### 28. Agency Team Management
+- **File**: `src/components/AgencyTeamContent.jsx`
+- **File**: `api/agency-team/*.js`
+- **Status**: WORKING
+- **Description**: Agency-level team roster management
+
+### 29. Approvals Page
+- **File**: `src/components/ApprovalsContent.jsx`
+- **Status**: WORKING
+- **Description**: Post approval queue for workspace owners
+
+### 30. Subscription Components
+- **File**: `src/components/subscription/SubscriptionGuard.jsx`
+- **File**: `src/components/subscription/FeatureGate.jsx`
+- **Status**: WORKING
+- **Description**: Subscription tier gating UI components
+
+### 31. Onboarding Flow
+- **File**: `src/components/onboarding/*.jsx`
+- **Status**: WORKING
+- **Description**: New user onboarding wizard
+
+### 32. Pricing Page
+- **File**: `src/components/PricingContent.jsx`
+- **Status**: WORKING
+- **Description**: Subscription pricing display
+
+### 33. useQueries Hook (All Functions)
+- **File**: `src/hooks/useQueries.js`
+- **Status**: WORKING
+- **Description**: All React Query hooks for data fetching
+
+### 34. Supabase Client
+- **File**: `src/utils/supabaseClient.js`
+- **Status**: WORKING
+- **Description**: Supabase client initialization
+
+### 35. API Utils
+- **File**: `api/_utils.js`
+- **Status**: WORKING
+- **Description**: Shared API utilities and helpers
+
 ---
 
 ## Rules
