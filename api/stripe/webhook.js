@@ -181,6 +181,8 @@ async function updateWorkspaceWithProfile(supabase, workspaceId, tier, workspace
         ayr_profile_key: ayrshareProfile.profileKey,
         ayr_ref_id: ayrshareProfile.refId,
         subscription_tier: tier,
+        plan_type: tier, // Keep plan_type in sync with subscription_tier
+        subscription_status: 'active', // Ensure status is active
         updated_at: new Date().toISOString(),
       })
       .eq("id", workspaceId)
@@ -211,13 +213,17 @@ async function createWorkspaceWithProfile(supabase, userId, tier, workspaceName)
     }
 
     // 2. Create workspace with profile key AND ref id
-    const { data: workspace, error: workspaceError } = await supabase
+    const { data: workspace, error: workspaceError} = await supabase
       .from("workspaces")
       .insert({
         name: workspaceName,
+        slug: workspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+        owner_id: userId,
         ayr_profile_key: ayrshareProfile.profileKey,
         ayr_ref_id: ayrshareProfile.refId,
         subscription_tier: tier,
+        plan_type: tier, // Keep plan_type in sync with subscription_tier
+        subscription_status: 'active',
         created_from_payment: true,
         created_at: new Date().toISOString(),
       })
@@ -387,6 +393,7 @@ module.exports = async function handler(req, res) {
             onboarding_status: profileCreationSucceeded ? 'completed' : 'profile_creation_failed',
             subscription_status: 'active',
             subscription_tier: tier,
+            plan_type: tier, // Keep plan_type in sync with subscription_tier
             updated_at: new Date().toISOString()
           };
 
