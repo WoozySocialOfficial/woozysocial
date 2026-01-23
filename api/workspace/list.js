@@ -46,6 +46,7 @@ module.exports = async function handler(req, res) {
           name,
           slug,
           logo_url,
+          timezone,
           ayr_profile_key,
           created_at
         )
