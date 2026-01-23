@@ -2050,7 +2050,7 @@ export const ComposeContent = () => {
               }}>
                 <strong>Selected Date & Time:</strong>
                 <div style={{ marginTop: '8px', fontSize: '16px', color: '#6465f1' }}>
-                  {formatDateInTimezone(tempScheduledDate, profile?.timezone || 'UTC')}
+                  {formatDateInTimezone(tempScheduledDate, activeWorkspace?.timezone || 'UTC')}
                 </div>
               </div>
             )}

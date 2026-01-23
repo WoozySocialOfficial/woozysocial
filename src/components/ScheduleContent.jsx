@@ -245,7 +245,7 @@ export const ScheduleContent = () => {
 
     filteredPosts.forEach(post => {
       if (post.scheduleDate) {
-        const dateKey = formatDateOnlyInTimezone(post.scheduleDate, profile?.timezone || 'UTC');
+        const dateKey = formatDateOnlyInTimezone(post.scheduleDate, activeWorkspace?.timezone || 'UTC');
 
         if (!grouped[dateKey]) {
           grouped[dateKey] = [];
@@ -267,7 +267,7 @@ export const ScheduleContent = () => {
   // Auto-scroll to current date in schedule view
   useEffect(() => {
     if (view === 'schedule' && !loading) {
-      const today = formatDateOnlyInTimezone(new Date(), profile?.timezone || 'UTC');
+      const today = formatDateOnlyInTimezone(new Date(), activeWorkspace?.timezone || 'UTC');
       const todaySection = document.querySelector(`[data-date="${today}"]`);
 
       if (todaySection) {
@@ -277,7 +277,7 @@ export const ScheduleContent = () => {
         }, 100);
       }
     }
-  }, [view, loading, profile?.timezone]);
+  }, [view, loading, activeWorkspace?.timezone]);
 
   const weekDates = getWeekDates();
   const monthDates = getMonthDates();
@@ -348,7 +348,7 @@ export const ScheduleContent = () => {
             {post.platforms.length > 3 && <span className="platform-more">+{post.platforms.length - 3}</span>}
           </div>
           <span className="post-time">
-            {formatTimeInTimezone(post.scheduleDate, profile?.timezone || 'UTC')}
+            {formatTimeInTimezone(post.scheduleDate, activeWorkspace?.timezone || 'UTC')}
           </span>
         </div>
       </div>
