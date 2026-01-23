@@ -26,24 +26,28 @@ export const SettingsContent = () => {
   // Load user profile data and workspace settings
   useEffect(() => {
     if (profile) {
-      setSettings({
+      setSettings(prevSettings => ({
         fullName: profile.full_name || "",
         email: profile.email || user?.email || "",
-        // IMPORTANT: Use WORKSPACE timezone, defaults to UTC
-        timezone: activeWorkspace?.timezone || "UTC",
+        // IMPORTANT: Use WORKSPACE timezone, but preserve existing value if workspace timezone is not set
+        // This prevents reverting to UTC after save if there's a timing issue
+        timezone: activeWorkspace?.timezone || prevSettings.timezone || "UTC",
         language: "English",
         theme: "Light",
         twoFactorEnabled: false,
         emailNotifications: profile.email_notifications ?? true,
         weeklySummaries: profile.weekly_summaries ?? true,
         teamActivityAlerts: profile.team_activity_alerts ?? true
-      });
+      }));
     }
   }, [profile, user, activeWorkspace]);
 
   const handleSaveProfile = async () => {
     setLoading(true);
     setSaveMessage("");
+
+    // Store the timezone being saved to ensure UI stays consistent
+    const savedTimezone = settings.timezone;
 
     try {
       // Update user profile (personal settings)
@@ -63,7 +67,7 @@ export const SettingsContent = () => {
       // Update workspace timezone (workspace-level setting)
       if (activeWorkspace) {
         const { error: workspaceError } = await updateWorkspace(activeWorkspace.id, {
-          timezone: settings.timezone
+          timezone: savedTimezone
         });
 
         if (workspaceError) {
@@ -75,6 +79,10 @@ export const SettingsContent = () => {
 
       setSaveMessage("Settings saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
+
+      // Note: updateWorkspace() will refresh activeWorkspace in the background
+      // The timezone is already correct in settings.timezone (savedTimezone)
+      // so the UI will stay on the saved value
     } catch (error) {
       setSaveMessage("Error saving settings");
     } finally {
