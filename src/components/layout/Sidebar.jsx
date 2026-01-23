@@ -9,7 +9,7 @@ import { useInboxUnreadCount } from "../../hooks/useInboxUnreadCount";
 export const Sidebar = () => {
   const location = useLocation();
   const { hasActiveProfile, hasTabAccess, subscriptionTier } = useAuth();
-  const { activeWorkspace, userWorkspaces, canAccessTab } = useWorkspace();
+  const { activeWorkspace, userWorkspaces, canAccessTab, workspaceMembership } = useWorkspace();
 
   // Get unread count for Social Inbox badge
   const { unreadCount } = useInboxUnreadCount(activeWorkspace?.id, !!activeWorkspace?.id);
@@ -31,11 +31,17 @@ export const Sidebar = () => {
     { name: "Team", path: "/team", tabName: "team", requiresSubscriptionOrTeam: true },
     { name: "Agency Team", path: "/agency-team", tabName: "agency-team", agencyOnly: true },
     { name: "Approvals", path: "/approvals", tabName: "approvals", requiresSubscriptionOrTeam: true },
-    { name: "Settings", path: "/settings", tabName: "settings" }
+    { name: "Settings", path: "/settings", tabName: "settings", ownerAdminOnly: true }
   ];
 
   // Filter menu items based on subscription tier, role, and team status
   const visibleMenuItems = menuItems.filter(item => {
+    // Owner/Admin-only items (like Settings)
+    if (item.ownerAdminOnly) {
+      const userRole = workspaceMembership?.role;
+      return userRole === 'owner' || userRole === 'admin';
+    }
+
     // Agency-only items require agency subscription tier
     // If user has agency tier, show the item (skip role-based checks for agency features)
     if (item.agencyOnly) {

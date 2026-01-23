@@ -31,6 +31,7 @@ const SocialInboxContent = lazy(() => import("./components/SocialInboxContent").
 const TeamContent = lazy(() => import("./components/TeamContent").then(m => ({ default: m.TeamContent })));
 const AgencyTeamContent = lazy(() => import("./components/AgencyTeamContent").then(m => ({ default: m.AgencyTeamContent })));
 const SettingsContent = lazy(() => import("./components/SettingsContent").then(m => ({ default: m.SettingsContent })));
+const ProfileSettings = lazy(() => import("./components/ProfileSettings").then(m => ({ default: m.ProfileSettings })));
 const EngagementContent = lazy(() => import("./components/EngagementContent").then(m => ({ default: m.EngagementContent })));
 const Approvals = lazy(() => import("./pages/Approvals").then(m => ({ default: m.Approvals })));
 const Pricing = lazy(() => import("./pages/Pricing"));
@@ -136,6 +137,7 @@ function App() {
                           <Route path="/approvals" element={<Approvals />} />
                           <Route path="/notifications" element={<Notifications />} />
                           <Route path="/settings" element={<SettingsContent />} />
+                          <Route path="/profile-settings" element={<ProfileSettings />} />
                           <Route path="/pricing" element={<Pricing />} />
                         </Routes>
                       </MainContent>

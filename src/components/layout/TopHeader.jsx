@@ -153,6 +153,15 @@ export const TopHeader = () => {
                 </div>
                 <div className="profile-dropdown-divider" />
                 <button
+                  className="profile-dropdown-item profile-settings-link"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    navigate('/profile-settings');
+                  }}
+                >
+                  Profile Settings
+                </button>
+                <button
                   className="profile-dropdown-item notifications-link"
                   onClick={() => {
                     setShowDropdown(false);
