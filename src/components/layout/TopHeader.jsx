@@ -68,11 +68,41 @@ export const TopHeader = () => {
     navigate('/login');
   };
 
-  const handleConnectSocialAccounts = () => {
-    if (!user || !activeWorkspace) return;
-    setShowDropdown(false);
-    // Navigate to connect-socials page (keeps users on woozysocial.com)
-    navigate('/connect-socials');
+  const handleConnectSocialAccounts = async () => {
+    if (!user || isLinking || !activeWorkspace) return;
+
+    try {
+      setIsLinking(true);
+      setShowDropdown(false);
+
+      const r = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
+      if (!r.ok) throw new Error("Failed to generate link");
+      const d = await r.json();
+      const url = d.data?.url || d.url;
+
+      const width = 900;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+
+      const popup = window.open(
+        url,
+        "AyrshareLink",
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+
+      // Poll to detect when popup closes
+      const pollTimer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollTimer);
+          setIsLinking(false);
+          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+        }
+      }, 500);
+    } catch (err) {
+      console.error("Error connecting social accounts:", err);
+      setIsLinking(false);
+    }
   };
 
   const handleManageSubscription = () => {

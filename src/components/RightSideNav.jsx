@@ -98,10 +98,50 @@ const RightSideNav = () => {
     return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
   }, [fetchActiveAccounts]);
 
-  const handleLinkSocialAccounts = () => {
+  const handleLinkSocialAccounts = async () => {
     if (!user || !activeWorkspace) return;
-    // Navigate to connect-socials page (keeps users on woozysocial.com)
-    navigate('/connect-socials');
+
+    try {
+      const response = await fetch(`${baseURL}/api/generate-jwt?userId=${user.id}&workspaceId=${activeWorkspace.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const url = data.data?.url || data.url;
+
+        if (!url) {
+          throw new Error("No linking URL returned from server");
+        }
+
+        const width = 800;
+        const height = 800;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        const popup = window.open(
+          url,
+          "LinkSocialAccounts",
+          `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
+        );
+
+        const poll = setInterval(async () => {
+          if (popup && popup.closed) {
+            clearInterval(poll);
+            await fetchActiveAccounts();
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+          }
+        }, 500);
+      } else {
+        throw new Error("Failed to generate JWT URL");
+      }
+    } catch (error) {
+      console.error("Error linking social accounts:", error);
+      toast({
+        title: "An error occurred.",
+        description: "Unable to link social accounts.",
+        status: "error",
+        duration: 3000,
+        isClosable: true
+      });
+    }
   };
 
   const handleSocialIconClick = (profileUrl) => {

@@ -117,13 +117,55 @@ export const SocialAccounts = () => {
   }, [fetchActiveAccounts]);
 
   /**
-   * Handles social account connection - navigates to connect-socials page
-   * This keeps users on woozysocial.com instead of showing ayrshare URL
+   * Handles social account connection via Ayrshare JWT popup
    */
-  const handleLink = () => {
+  const handleLink = async () => {
     if (!user || !activeWorkspace) return;
-    // Navigate to connect-socials page (keeps users on woozysocial.com)
-    navigate('/connect-socials');
+
+    try {
+      setLoading(true);
+      const r = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
+      if (!r.ok) {
+        const errorData = await r.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to generate link");
+      }
+      const d = await r.json();
+      const url = d.data?.url || d.url;
+
+      if (!url) {
+        throw new Error("No connection URL returned");
+      }
+
+      const width = 900;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+      const popup = window.open(
+        url,
+        "AyrshareLink",
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+
+      // Poll to detect when popup closes
+      const poll = setInterval(async () => {
+        if (popup && popup.closed) {
+          clearInterval(poll);
+          await fetchActiveAccounts();
+          setLoading(false);
+          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+        }
+      }, 500);
+    } catch (err) {
+      console.error("link error", err);
+      toast({
+        title: "Connection Error",
+        description: err.message || "Failed to connect social account. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true
+      });
+      setLoading(false);
+    }
   };
 
   const isLinked = (platName) => {

@@ -80,15 +80,67 @@ export const DashboardContent = () => {
   // Function to handle connecting a platform
   const handleConnectPlatform = async (platformName) => {
     if (!user) return;
-
-    // Prevent multiple simultaneous connections
     if (connectingPlatform) return;
 
-    setConnectingPlatform(platformName);
+    const queryParam = activeWorkspace?.id
+      ? `workspaceId=${activeWorkspace.id}`
+      : `userId=${user.id}`;
 
-    // Navigate to connect-socials page (keeps users on woozysocial.com)
-    navigate('/connect-socials');
-    setConnectingPlatform(null);
+    setConnectingPlatform(platformName);
+    try {
+      const res = await fetch(`${baseURL}/api/generate-jwt?${queryParam}`);
+      const data = await res.json();
+      const url = data.data?.url || data.url;
+
+      if (!res.ok || !url) {
+        toast({
+          title: "Connection failed",
+          description: data.error || "Failed to connect. Please try again.",
+          status: "error",
+          duration: 4000,
+          isClosable: true
+        });
+        setConnectingPlatform(null);
+        return;
+      }
+
+      const width = 600;
+      const height = 700;
+      const left = (window.screen.width - width) / 2;
+      const top = (window.screen.height - height) / 2;
+
+      const popup = window.open(
+        url,
+        'Connect Social Account',
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+      );
+
+      if (!popup || popup.closed) {
+        setPopupBlockedDialog({ isOpen: true, url });
+        setConnectingPlatform(null);
+        return;
+      }
+
+      const pollTimer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollTimer);
+          setConnectingPlatform(null);
+          setTimeout(() => {
+            refreshAccounts();
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+          }, 1000);
+        }
+      }, 500);
+    } catch (error) {
+      toast({
+        title: "Connection failed",
+        description: "Failed to connect. Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true
+      });
+      setConnectingPlatform(null);
+    }
   };
 
   const handleOpenInNewTab = () => {
