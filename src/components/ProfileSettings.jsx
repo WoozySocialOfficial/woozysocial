@@ -184,6 +184,18 @@ export const ProfileSettings = () => {
                 Email cannot be changed. Contact support if needed.
               </p>
             </div>
+            {saveMessage && (
+              <div className={`save-message ${saveMessage.includes('Error') ? 'error' : 'success'}`}>
+                {saveMessage}
+              </div>
+            )}
+            <button
+              className="save-button"
+              onClick={handleSaveAll}
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : 'Save Profile'}
+            </button>
           </div>
         </div>
 
@@ -337,22 +349,6 @@ export const ProfileSettings = () => {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Save Button at Bottom */}
-        <div className="settings-footer">
-          {saveMessage && (
-            <div className={`save-message ${saveMessage.includes('Error') ? 'error' : 'success'}`}>
-              {saveMessage}
-            </div>
-          )}
-          <button
-            className="save-button"
-            onClick={handleSaveAll}
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : 'Save Profile'}
-          </button>
         </div>
       </div>
     </div>
