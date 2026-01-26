@@ -80,12 +80,20 @@
       "maxDuration": 60,
       "memory": 1024
     },
+    "api/scheduler.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "api/stripe/webhook.js": {
       "maxDuration": 30,
       "memory": 1024
     }
   },
   "crons": [
+    {
+      "path": "/api/scheduler",
+      "schedule": "* * * * *"
+    },
     {
       "path": "/api/health",
       "schedule": "*/5 * * * *"
