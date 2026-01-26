@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -37,6 +38,7 @@ const PLATFORMS = [
 export const SocialAccounts = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
+  const navigate = useNavigate();
   const [activeAccounts, setActiveAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -115,96 +117,13 @@ export const SocialAccounts = () => {
   }, [fetchActiveAccounts]);
 
   /**
-   * ⚠️ CRITICAL FUNCTION - DO NOT MODIFY ⚠️
-   * Handles social account connection via Ayrshare JWT
-   * See CRITICAL_FEATURES.md for details
+   * Handles social account connection - navigates to connect-socials page
+   * This keeps users on woozysocial.com instead of showing ayrshare URL
    */
-  const handleLink = async () => {
+  const handleLink = () => {
     if (!user || !activeWorkspace) return;
-
-    try {
-      setLoading(true);
-      const r = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
-      if (!r.ok) {
-        const errorData = await r.json().catch(() => ({}));
-        console.error("Generate JWT error:", errorData);
-        throw new Error(errorData.error || "Failed to generate link");
-      }
-      const d = await r.json();
-      // ⚠️ CRITICAL: API returns { success: true, data: { url: "..." } }
-      // Always use d.data?.url || d.url pattern to handle nested response
-      const url = d.data?.url || d.url;
-
-      if (!url) {
-        console.error("No URL in response:", d);
-        throw new Error("No connection URL returned");
-      }
-
-      const width = 900;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
-      const popup = window.open(
-        url,
-        "AyrshareLink",
-        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
-      );
-
-      const start = Date.now();
-      const timeoutMs = 60_000; // 60s
-      const pollInterval = 2000;
-      const initialLen = activeAccounts.length;
-
-      const poll = setInterval(async () => {
-        if (popup && popup.closed) {
-          clearInterval(poll);
-          await fetchActiveAccounts();
-          setLoading(false);
-          // Notify other components
-          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-          return;
-        }
-
-        try {
-          const rr = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
-          if (rr.ok) {
-            const dd = await rr.json();
-            // API returns { success: true, data: { accounts, activeSocialAccounts } }
-            const responseData = dd.data || dd;
-            const accounts = responseData.activeSocialAccounts || responseData.accounts || [];
-            if (Array.isArray(accounts)) {
-              if (accounts.length !== initialLen) {
-                setActiveAccounts(accounts);
-                clearInterval(poll);
-                if (popup && !popup.closed) popup.close();
-                setLoading(false);
-                window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-              }
-            }
-          }
-        } catch (err) {
-          console.warn("poll error", err);
-        }
-
-        if (Date.now() - start > timeoutMs) {
-          clearInterval(poll);
-          await fetchActiveAccounts();
-          if (popup && !popup.closed) popup.close();
-          setLoading(false);
-          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-        }
-      }, pollInterval);
-    } catch (err) {
-      console.error("link error", err);
-      toast({
-        title: "Connection Error",
-        description: err.message || "Failed to connect social account. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true
-      });
-      setLoading(false);
-    }
+    // Navigate to connect-socials page (keeps users on woozysocial.com)
+    navigate('/connect-socials');
   };
 
   const isLinked = (platName) => {

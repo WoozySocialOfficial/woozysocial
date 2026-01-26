@@ -46,6 +46,9 @@ const ClientCalendar = lazy(() => import("./pages/client/ClientCalendar").then(m
 // 404 page
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Connect socials page (full page iframe)
+const ConnectSocials = lazy(() => import("./pages/ConnectSocials"));
+
 // Loading fallback component
 const PageLoader = () => (
   <div style={{
@@ -90,6 +93,16 @@ function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/auth/token-login" element={<TokenLogin />} />
+
+              {/* Connect Socials - Full page iframe (protected but no sidebar) */}
+              <Route
+                path="/connect-socials"
+                element={
+                  <ProtectedRoute>
+                    <ConnectSocials />
+                  </ProtectedRoute>
+                }
+              />
 
             {/* Client Portal Routes */}
             <Route

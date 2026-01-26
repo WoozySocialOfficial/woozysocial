@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Heading,
@@ -54,6 +55,7 @@ const socialColors = {
 
 const RightSideNav = () => {
   const toast = useToast();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [activeAccounts, setActiveAccounts] = useState([]);
@@ -96,88 +98,10 @@ const RightSideNav = () => {
     return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
   }, [fetchActiveAccounts]);
 
-  const handleLinkSocialAccounts = async () => {
+  const handleLinkSocialAccounts = () => {
     if (!user || !activeWorkspace) return;
-
-    try {
-      const response = await fetch(`${baseURL}/api/generate-jwt?userId=${user.id}&workspaceId=${activeWorkspace.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        // API returns { success: true, data: { url: "..." } }
-        const url = data.data?.url || data.url;
-
-        if (!url) {
-          throw new Error("No linking URL returned from server");
-        }
-
-        const width = 800;
-        const height = 800;
-        const left = window.screen.width / 2 - width / 2;
-        const top = window.screen.height / 2 - height / 2;
-        // Open the Ayrshare linking URL in a centered popup
-        const popup = window.open(
-          url,
-          "LinkSocialAccounts",
-          `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-        );
-
-        // Poll the user accounts endpoint until a new account appears or timeout.
-        const start = Date.now();
-        const timeoutMs = 60_000; // 60 seconds
-        const pollInterval = 2000; // 2 seconds
-
-        const initialLen = activeAccounts.length;
-
-        const poll = setInterval(async () => {
-          // If popup closed, stop polling and refresh once more
-          if (popup && popup.closed) {
-            clearInterval(poll);
-            await fetchActiveAccounts();
-            // Notify other components
-            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-            return;
-          }
-
-          try {
-            const r = await fetch(`${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`);
-            if (r.ok) {
-              const d = await r.json();
-              const accounts = d.activeSocialAccounts || d.accounts || [];
-              if (Array.isArray(accounts)) {
-                // If accounts changed, update and stop polling
-                if (accounts.length !== initialLen) {
-                  setActiveAccounts(accounts);
-                  clearInterval(poll);
-                  if (popup && !popup.closed) popup.close();
-                  window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-                }
-              }
-            }
-          } catch (err) {
-            console.warn("Polling user accounts failed:", err);
-          }
-
-          if (Date.now() - start > timeoutMs) {
-            clearInterval(poll);
-            // final refresh
-            await fetchActiveAccounts();
-            if (popup && !popup.closed) popup.close();
-            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-          }
-        }, pollInterval);
-      } else {
-        throw new Error("Failed to generate JWT URL");
-      }
-    } catch (error) {
-      console.error("Error linking social accounts:", error);
-      toast({
-        title: "An error occurred.",
-        description: "Unable to link social accounts.",
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
-    }
+    // Navigate to connect-socials page (keeps users on woozysocial.com)
+    navigate('/connect-socials');
   };
 
   const handleSocialIconClick = (profileUrl) => {

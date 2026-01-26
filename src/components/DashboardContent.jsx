@@ -84,72 +84,11 @@ export const DashboardContent = () => {
     // Prevent multiple simultaneous connections
     if (connectingPlatform) return;
 
-    const queryParam = activeWorkspace?.id
-      ? `workspaceId=${activeWorkspace.id}`
-      : `userId=${user.id}`;
-
     setConnectingPlatform(platformName);
-    try {
-      const res = await fetch(`${baseURL}/api/generate-jwt?${queryParam}`);
-      const data = await res.json();
-      // API returns { success: true, data: { url: "..." } }
-      const url = data.data?.url || data.url;
 
-      if (!res.ok || !url) {
-        console.error("Failed to get JWT URL:", data);
-        toast({
-          title: "Connection failed",
-          description: data.error || "Failed to connect. Please try again.",
-          status: "error",
-          duration: 4000,
-          isClosable: true
-        });
-        setConnectingPlatform(null);
-        return;
-      }
-
-      // Open in popup window instead of iframe (Ayrshare blocks iframe embedding)
-      const width = 600;
-      const height = 700;
-      const left = (window.screen.width - width) / 2;
-      const top = (window.screen.height - height) / 2;
-
-      const popup = window.open(
-        url,
-        'Connect Social Account',
-        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-      );
-
-      // Check if popup was blocked
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        setPopupBlockedDialog({ isOpen: true, url });
-        setConnectingPlatform(null);
-        return;
-      }
-
-      // Poll to detect when popup closes
-      const pollTimer = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(pollTimer);
-          setConnectingPlatform(null);
-          // Refresh accounts after popup closes and notify other components
-          setTimeout(() => {
-            refreshAccounts();
-            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-          }, 1000);
-        }
-      }, 500);
-    } catch (error) {
-      console.error("Error connecting platform:", error);
-      toast({
-        title: "Connection failed",
-        description: "Failed to connect. Please try again.",
-        status: "error",
-        duration: 4000,
-        isClosable: true
-      });
-      setConnectingPlatform(null);
-    }
+    // Navigate to connect-socials page (keeps users on woozysocial.com)
+    navigate('/connect-socials');
+    setConnectingPlatform(null);
   };
 
   const handleOpenInNewTab = () => {
