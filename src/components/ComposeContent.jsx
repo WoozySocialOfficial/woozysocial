@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "./ComposeContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
 import { FaTiktok, FaThreads, FaBluesky, FaSnapchat } from "react-icons/fa6";
@@ -20,6 +21,7 @@ import { MediaUploadModal } from "./compose/MediaUploadModal";
 import { InstagramPreview } from "./compose/previews/InstagramPreview";
 
 export const ComposeContent = () => {
+  const navigate = useNavigate();
   const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
   const { activeWorkspace } = useWorkspace();
 
