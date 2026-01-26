@@ -10,7 +10,6 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 24px;
   padding: 8px;
   border-radius: 50%;
   transition: all 0.2s ease;
@@ -19,14 +18,22 @@
   justify-content: center;
   width: 44px;
   height: 44px;
+  color: #6b7280;
 }
 
 .notification-bell:hover {
   background-color: rgba(175, 171, 249, 0.1);
+  color: #114C5A;
 }
 
 .notification-bell:active {
   transform: scale(0.95);
+}
+
+.bell-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
 }
 
 .notification-badge {

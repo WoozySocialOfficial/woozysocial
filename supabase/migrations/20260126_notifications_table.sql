@@ -1,32 +1,66 @@
 -- =====================================================
 -- Notifications System
 -- =====================================================
--- This migration creates the notifications table and supporting functions
+-- This migration creates/updates the notifications table and supporting functions
 -- for the in-app notification system with optional email delivery
 -- =====================================================
 
--- 1. Create notifications table if it doesn't exist
-CREATE TABLE IF NOT EXISTS public.notifications (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  workspace_id uuid NULL,
-  post_id uuid NULL,
-  type text NOT NULL,
-  title text NOT NULL,
-  message text NOT NULL,
-  read boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  read_at timestamp with time zone NULL,
-  action_url text NULL,
-  metadata jsonb NULL,
-  CONSTRAINT notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id)
-    REFERENCES auth.users (id) ON DELETE CASCADE,
-  CONSTRAINT notifications_workspace_id_fkey FOREIGN KEY (workspace_id)
-    REFERENCES workspaces (id) ON DELETE CASCADE,
-  CONSTRAINT notifications_post_id_fkey FOREIGN KEY (post_id)
-    REFERENCES posts (id) ON DELETE SET NULL,
-  CONSTRAINT notifications_type_check CHECK (type IN (
+-- 1. Check if table exists and add missing columns
+DO $$
+BEGIN
+  -- Create table if it doesn't exist
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'notifications') THEN
+    CREATE TABLE public.notifications (
+      id uuid NOT NULL DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL,
+      workspace_id uuid NULL,
+      post_id uuid NULL,
+      type text NOT NULL,
+      title text NOT NULL,
+      message text NOT NULL,
+      read boolean DEFAULT false,
+      created_at timestamp with time zone DEFAULT now(),
+      read_at timestamp with time zone NULL,
+      action_url text NULL,
+      metadata jsonb NULL,
+      CONSTRAINT notifications_pkey PRIMARY KEY (id),
+      CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES auth.users (id) ON DELETE CASCADE,
+      CONSTRAINT notifications_workspace_id_fkey FOREIGN KEY (workspace_id)
+        REFERENCES workspaces (id) ON DELETE CASCADE,
+      CONSTRAINT notifications_post_id_fkey FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE SET NULL
+    );
+  ELSE
+    -- Table exists, add missing columns if needed
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = 'public'
+                   AND table_name = 'notifications'
+                   AND column_name = 'read_at') THEN
+      ALTER TABLE public.notifications ADD COLUMN read_at timestamp with time zone NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = 'public'
+                   AND table_name = 'notifications'
+                   AND column_name = 'action_url') THEN
+      ALTER TABLE public.notifications ADD COLUMN action_url text NULL;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_schema = 'public'
+                   AND table_name = 'notifications'
+                   AND column_name = 'metadata') THEN
+      ALTER TABLE public.notifications ADD COLUMN metadata jsonb NULL;
+    END IF;
+  END IF;
+
+  -- Drop old constraint if exists and recreate with new types
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'notifications_type_check') THEN
+    ALTER TABLE public.notifications DROP CONSTRAINT notifications_type_check;
+  END IF;
+
+  ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
     'approval_request',
     'approval_approved',
     'approval_rejected',
@@ -39,8 +73,8 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     'weekly_summary',
     'comment_mention',
     'post_comment'
-  ))
-);
+  ));
+END $$;
 
 COMMENT ON TABLE public.notifications IS 'In-app notifications for users';
 COMMENT ON COLUMN public.notifications.user_id IS 'User who receives the notification';
