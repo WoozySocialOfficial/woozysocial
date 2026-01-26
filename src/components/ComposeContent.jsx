@@ -970,12 +970,12 @@ export const ComposeContent = () => {
                   <div className="fb-post-text">{post.text}</div>
                 )}
 
-                {mediaPreview && (
+                {mediaPreviews.length > 0 && mediaPreviews[0] && (
                   <div className="fb-post-media">
-                    {mediaType === "image" ? (
-                      <img src={mediaPreview} alt="Preview" />
+                    {mediaPreviews[0].type === "image" ? (
+                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
                     ) : (
-                      <video src={mediaPreview} controls />
+                      <video src={mediaPreviews[0].dataUrl} controls />
                     )}
                   </div>
                 )}
@@ -1053,12 +1053,12 @@ export const ComposeContent = () => {
                     <div className="tweet-text">{post.text}</div>
                   )}
 
-                  {mediaPreview && (
+                  {mediaPreviews.length > 0 && mediaPreviews[0] && (
                     <div className="tweet-media">
-                      {mediaType === "image" ? (
-                        <img src={mediaPreview} alt="Preview" />
+                      {mediaPreviews[0].type === "image" ? (
+                        <img src={mediaPreviews[0].dataUrl} alt="Preview" />
                       ) : (
-                        <video src={mediaPreview} controls />
+                        <video src={mediaPreviews[0].dataUrl} controls />
                       )}
                     </div>
                   )}
@@ -1131,12 +1131,12 @@ export const ComposeContent = () => {
                   <div className="linkedin-post-text">{post.text}</div>
                 )}
 
-                {mediaPreview && (
+                {mediaPreviews.length > 0 && mediaPreviews[0] && (
                   <div className="linkedin-post-media">
-                    {mediaType === "image" ? (
-                      <img src={mediaPreview} alt="Preview" />
+                    {mediaPreviews[0].type === "image" ? (
+                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
                     ) : (
-                      <video src={mediaPreview} controls />
+                      <video src={mediaPreviews[0].dataUrl} controls />
                     )}
                   </div>
                 )}
@@ -1208,12 +1208,12 @@ export const ComposeContent = () => {
                   <div className="thread-text">{post.text}</div>
                 )}
 
-                {mediaPreview && (
+                {mediaPreviews.length > 0 && mediaPreviews[0] && (
                   <div className="thread-media">
-                    {mediaType === "image" ? (
-                      <img src={mediaPreview} alt="Preview" />
+                    {mediaPreviews[0].type === "image" ? (
+                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
                     ) : (
-                      <video src={mediaPreview} controls />
+                      <video src={mediaPreviews[0].dataUrl} controls />
                     )}
                   </div>
                 )}
@@ -1263,12 +1263,12 @@ export const ComposeContent = () => {
 
             {/* TikTok Video Content */}
             <div className="tiktok-video">
-              {mediaPreview && (
+              {mediaPreviews.length > 0 && mediaPreviews[0] && (
                 <div className="tiktok-video-bg">
-                  {mediaType === "image" ? (
-                    <img src={mediaPreview} alt="Preview" />
+                  {mediaPreviews[0].type === "image" ? (
+                    <img src={mediaPreviews[0].dataUrl} alt="Preview" />
                   ) : (
-                    <video src={mediaPreview} controls style={{ width: '100%', height: 'auto' }} />
+                    <video src={mediaPreviews[0].dataUrl} controls style={{ width: '100%', height: 'auto' }} />
                   )}
                 </div>
               )}
