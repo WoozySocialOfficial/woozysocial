@@ -19,6 +19,7 @@ import { CommentThread } from "./comments/CommentThread";
 import { CommentInput } from "./comments/CommentInput";
 import { MediaUploadModal } from "./compose/MediaUploadModal";
 import { InstagramPreview } from "./compose/previews/InstagramPreview";
+import { TwitterPreview } from "./compose/previews/TwitterPreview";
 
 export const ComposeContent = () => {
   const navigate = useNavigate();
@@ -917,81 +918,11 @@ export const ComposeContent = () => {
 
       case "twitter":
         return (
-          <div className="platform-preview twitter-preview">
-            {/* Status Bar */}
-            <div className="status-bar">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* Twitter Header */}
-            <div className="twitter-header">
-              {getAccountInfo('twitter').profilePicture ? (
-                <img src={getAccountInfo('twitter').profilePicture} alt="Profile" className="twitter-avatar-small-img" />
-              ) : (
-                <div className="twitter-avatar-small">👤</div>
-              )}
-              <span className="twitter-logo">𝕏</span>
-              <span className="twitter-settings">⚙️</span>
-            </div>
-
-            {/* Timeline Tabs */}
-            <div className="twitter-tabs">
-              <div className="twitter-tab active">For you</div>
-              <div className="twitter-tab">Following</div>
-            </div>
-
-            {/* Tweet */}
-            <div className="twitter-feed">
-              <div className="tweet">
-                {getAccountInfo('twitter').profilePicture ? (
-                  <img src={getAccountInfo('twitter').profilePicture} alt="Profile" className="tweet-avatar-img" />
-                ) : (
-                  <div className="tweet-avatar">👤</div>
-                )}
-                <div className="tweet-content">
-                  <div className="tweet-header">
-                    <span className="tweet-name">{getAccountInfo('twitter').username}</span>
-                    <span className="tweet-handle">@{getAccountInfo('twitter').username.toLowerCase().replace(/\s+/g, '')} · now</span>
-                  </div>
-
-                  {post.text && (
-                    <div className="tweet-text">{post.text}</div>
-                  )}
-
-                  {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                    <div className="tweet-media">
-                      {mediaPreviews[0].type === "image" ? (
-                        <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                      ) : (
-                        <video src={mediaPreviews[0].dataUrl} controls />
-                      )}
-                    </div>
-                  )}
-
-                  <div className="tweet-actions">
-                    <span>💬 0</span>
-                    <span>🔁 0</span>
-                    <span>♡ 0</span>
-                    <span>📊 0</span>
-                    <span>↗</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Twitter Bottom Nav */}
-            <div className="twitter-nav">
-              <span>🏠</span>
-              <span>🔍</span>
-              <span>🔔</span>
-              <span>✉️</span>
-            </div>
-          </div>
+          <TwitterPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('twitter')}
+          />
         );
 
       case "linkedin":
@@ -2037,8 +1968,8 @@ export const ComposeContent = () => {
             </select>
           </div>
           <div className="preview-container">
-            {/* Instagram has its own device mockup, skip wrapper */}
-            {selectedPreviewPlatform === 'instagram' ? (
+            {/* Instagram and Twitter have their own device mockups, skip wrapper */}
+            {selectedPreviewPlatform === 'instagram' || selectedPreviewPlatform === 'twitter' ? (
               renderPlatformPreview()
             ) : (
               <div className="phone-mockup">
