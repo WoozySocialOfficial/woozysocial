@@ -1,0 +1,200 @@
+/* Media Carousel Styles */
+
+.media-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000000;
+}
+
+.carousel-media {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-image,
+.carousel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Navigation Buttons */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-prev {
+  left: 8px;
+}
+
+.carousel-next {
+  right: 8px;
+}
+
+/* Indicators - Default Style */
+.carousel-indicators {
+  position: absolute;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.carousel-indicators .indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.carousel-indicators .indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.carousel-indicators .indicator.active {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Instagram-specific indicators (top center with shadow) */
+.carousel-indicators-instagram {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.carousel-indicators-instagram .indicator {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-indicators-instagram .indicator.active {
+  width: 7px;
+  height: 7px;
+}
+
+/* Facebook-specific indicators (bottom center, larger) */
+.carousel-indicators-facebook {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.carousel-indicators-facebook .indicator {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.carousel-indicators-facebook .indicator.active {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* LinkedIn-specific indicators (bottom center) */
+.carousel-indicators-linkedin {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.carousel-indicators-linkedin .indicator {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.carousel-indicators-linkedin .indicator.active {
+  background: #0A66C2;
+  border-color: #0A66C2;
+}
+
+/* Twitter-specific indicators (minimal, bottom left) */
+.carousel-indicators-twitter {
+  bottom: 8px;
+  left: 8px;
+}
+
+.carousel-indicators-twitter .indicator {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.carousel-indicators-twitter .indicator.active {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* TikTok-specific indicators (side dots) */
+.carousel-indicators-tiktok {
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+.carousel-indicators-tiktok .indicator {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.carousel-indicators-tiktok .indicator.active {
+  background: #FE2C55;
+}
+
+/* Counter (Instagram style) */
+.carousel-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .carousel-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .carousel-counter {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}

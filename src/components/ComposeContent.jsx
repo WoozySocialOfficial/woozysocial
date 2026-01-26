@@ -17,6 +17,7 @@ import FeatureGate from "./subscription/FeatureGate";
 import { CommentThread } from "./comments/CommentThread";
 import { CommentInput } from "./comments/CommentInput";
 import { MediaUploadModal } from "./compose/MediaUploadModal";
+import { InstagramPreview } from "./compose/previews/InstagramPreview";
 
 export const ComposeContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, isWhitelisted } = useAuth();
@@ -810,116 +811,11 @@ export const ComposeContent = () => {
     switch (selectedPreviewPlatform) {
       case "instagram":
         return (
-          <div className="platform-preview instagram-preview">
-            {/* Instagram Status Bar */}
-            <div className="status-bar">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* Instagram Header */}
-            <div className="instagram-header">
-              <span className="header-logo">Instagram</span>
-              <div className="header-icons">
-                <span>♡</span>
-                <span>✈</span>
-              </div>
-            </div>
-
-            {/* Stories Row */}
-            <div className="instagram-stories">
-              <div className="story-item">
-                <div className="story-avatar active">
-                  <div className="story-avatar-inner">👤</div>
-                </div>
-                <span className="story-name">Your story</span>
-              </div>
-              <div className="story-item">
-                <div className="story-avatar">
-                  <div className="story-avatar-inner">👤</div>
-                </div>
-                <span className="story-name">friend1</span>
-              </div>
-              <div className="story-item">
-                <div className="story-avatar">
-                  <div className="story-avatar-inner">👤</div>
-                </div>
-                <span className="story-name">friend2</span>
-              </div>
-            </div>
-
-            {/* Post */}
-            <div className="instagram-post">
-              <div className="post-header">
-                <div className="post-profile">
-                  {getAccountInfo('instagram').profilePicture ? (
-                    <img src={getAccountInfo('instagram').profilePicture} alt="Profile" className="preview-avatar-img" />
-                  ) : (
-                    <div className="preview-avatar">👤</div>
-                  )}
-                  <div className="preview-username">{getAccountInfo('instagram').username}</div>
-                </div>
-                <div className="preview-menu">⋯</div>
-              </div>
-
-              {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                <div className="post-media">
-                  {mediaPreviews[0].type === "image" ? (
-                    <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                  ) : (
-                    <video src={mediaPreviews[0].dataUrl} controls style={{ width: '100%', height: 'auto' }} />
-                  )}
-                  {mediaPreviews.length > 1 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      background: 'rgba(0, 0, 0, 0.6)',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}>
-                      +{mediaPreviews.length - 1}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="post-actions">
-                <div className="action-icons">
-                  <span>♡</span>
-                  <span>💬</span>
-                  <span>✈</span>
-                </div>
-                <span>🔖</span>
-              </div>
-
-              <div className="post-likes">Be the first to like this</div>
-
-              {post.text && (
-                <div className="post-caption">
-                  <span className="caption-username">{getAccountInfo('instagram').username}</span> {post.text}
-                </div>
-              )}
-
-              <div className="post-time">JUST NOW</div>
-            </div>
-
-            {/* Instagram Bottom Nav */}
-            <div className="instagram-nav">
-              <span>🏠</span>
-              <span>🔍</span>
-              <span>➕</span>
-              <span>❤️</span>
-              <span>👤</span>
-            </div>
-          </div>
+          <InstagramPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('instagram')}
+          />
         );
 
       case "facebook":
