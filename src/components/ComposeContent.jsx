@@ -21,6 +21,9 @@ import { MediaUploadModal } from "./compose/MediaUploadModal";
 import { InstagramPreview } from "./compose/previews/InstagramPreview";
 import { TwitterPreview } from "./compose/previews/TwitterPreview";
 import { FacebookPreview } from "./compose/previews/FacebookPreview";
+import { LinkedInPreview } from "./compose/previews/LinkedInPreview";
+import { TikTokPreview } from "./compose/previews/TikTokPreview";
+import { ThreadsPreview } from "./compose/previews/ThreadsPreview";
 
 export const ComposeContent = () => {
   const navigate = useNavigate();
@@ -842,238 +845,29 @@ export const ComposeContent = () => {
 
       case "linkedin":
         return (
-          <div className="platform-preview linkedin-preview">
-            {/* Status Bar */}
-            <div className="status-bar">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* LinkedIn Header */}
-            <div className="linkedin-header">
-              <div className="linkedin-search">
-                <span>🔍</span>
-                <span className="search-text">Search</span>
-              </div>
-              <div className="linkedin-header-icons">
-                <span>💬</span>
-              </div>
-            </div>
-
-            {/* LinkedIn Feed */}
-            <div className="linkedin-feed">
-              <div className="linkedin-post">
-                <div className="linkedin-post-header">
-                  <div className="linkedin-profile">
-                    {getAccountInfo('linkedin').profilePicture ? (
-                      <img src={getAccountInfo('linkedin').profilePicture} alt="Profile" className="preview-avatar-img" />
-                    ) : (
-                      <div className="preview-avatar">👤</div>
-                    )}
-                    <div className="linkedin-meta">
-                      <div className="preview-username">{getAccountInfo('linkedin').username}</div>
-                      <div className="linkedin-headline">{profile?.business_name || 'Your Business'}</div>
-                      <div className="preview-timestamp">Just now · 🌍</div>
-                    </div>
-                  </div>
-                  <div className="preview-menu">⋯</div>
-                </div>
-
-                {post.text && (
-                  <div className="linkedin-post-text">{post.text}</div>
-                )}
-
-                {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                  <div className="linkedin-post-media">
-                    {mediaPreviews[0].type === "image" ? (
-                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                    ) : (
-                      <video src={mediaPreviews[0].dataUrl} controls />
-                    )}
-                  </div>
-                )}
-
-                <div className="linkedin-post-stats">
-                  <span>Be the first to react</span>
-                </div>
-
-                <div className="linkedin-post-actions">
-                  <button>👍 Like</button>
-                  <button>💬 Comment</button>
-                  <button>🔁 Repost</button>
-                  <button>↗ Send</button>
-                </div>
-              </div>
-            </div>
-
-            {/* LinkedIn Bottom Nav */}
-            <div className="linkedin-nav">
-              <span>🏠<br/>Home</span>
-              <span>👥<br/>Network</span>
-              <span>➕<br/>Post</span>
-              <span>🔔<br/>Notifications</span>
-              <span>💼<br/>Jobs</span>
-            </div>
-          </div>
+          <LinkedInPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('linkedin')}
+          />
         );
 
       case "threads":
         return (
-          <div className="platform-preview threads-preview">
-            {/* Status Bar */}
-            <div className="status-bar">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* Threads Header */}
-            <div className="threads-header">
-              <span className="threads-logo">@</span>
-              <div className="threads-header-icons">
-                <span>♡</span>
-              </div>
-            </div>
-
-            {/* Threads Feed */}
-            <div className="threads-feed">
-              <div className="thread-post">
-                <div className="thread-post-header">
-                  <div className="thread-profile">
-                    {getAccountInfo('threads').profilePicture ? (
-                      <img src={getAccountInfo('threads').profilePicture} alt="Profile" className="preview-avatar-img" />
-                    ) : (
-                      <div className="preview-avatar">👤</div>
-                    )}
-                    <div className="thread-meta">
-                      <span className="preview-username">{getAccountInfo('threads').username}</span>
-                      <span className="thread-verified">✓</span>
-                    </div>
-                  </div>
-                  <div className="thread-time">now</div>
-                </div>
-
-                {post.text && (
-                  <div className="thread-text">{post.text}</div>
-                )}
-
-                {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                  <div className="thread-media">
-                    {mediaPreviews[0].type === "image" ? (
-                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                    ) : (
-                      <video src={mediaPreviews[0].dataUrl} controls />
-                    )}
-                  </div>
-                )}
-
-                <div className="thread-actions">
-                  <span>♡</span>
-                  <span>💬</span>
-                  <span>🔁</span>
-                  <span>↗</span>
-                </div>
-
-                <div className="thread-stats">
-                  <span>0 replies · 0 likes</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Threads Bottom Nav */}
-            <div className="threads-nav">
-              <span>🏠</span>
-              <span>🔍</span>
-              <span>✏️</span>
-              <span>❤️</span>
-              <span>👤</span>
-            </div>
-          </div>
+          <ThreadsPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('threads')}
+          />
         );
 
       case "tiktok":
         return (
-          <div className="platform-preview tiktok-preview">
-            {/* Status Bar */}
-            <div className="status-bar tiktok-status">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* TikTok Header */}
-            <div className="tiktok-header">
-              <span>Following</span>
-              <span className="tiktok-tab-active">For You</span>
-            </div>
-
-            {/* TikTok Video Content */}
-            <div className="tiktok-video">
-              {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                <div className="tiktok-video-bg">
-                  {mediaPreviews[0].type === "image" ? (
-                    <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                  ) : (
-                    <video src={mediaPreviews[0].dataUrl} controls style={{ width: '100%', height: 'auto' }} />
-                  )}
-                </div>
-              )}
-
-              {/* User Info & Caption */}
-              <div className="tiktok-info">
-                <div className="tiktok-user">
-                  <span className="tiktok-username">@yourusername</span>
-                  <button className="tiktok-follow">Follow</button>
-                </div>
-                {post.text && (
-                  <div className="tiktok-caption">{post.text}</div>
-                )}
-                <div className="tiktok-sound">🎵 Original sound - yourusername</div>
-              </div>
-
-              {/* Right Sidebar Actions */}
-              <div className="tiktok-sidebar">
-                <div className="tiktok-sidebar-item">
-                  <div className="tiktok-avatar">👤</div>
-                </div>
-                <div className="tiktok-sidebar-item">
-                  <span>♡</span>
-                  <span className="count">12.3K</span>
-                </div>
-                <div className="tiktok-sidebar-item">
-                  <span>💬</span>
-                  <span className="count">234</span>
-                </div>
-                <div className="tiktok-sidebar-item">
-                  <span>🔖</span>
-                  <span className="count">567</span>
-                </div>
-                <div className="tiktok-sidebar-item">
-                  <span>↗</span>
-                  <span className="count">89</span>
-                </div>
-              </div>
-            </div>
-
-            {/* TikTok Bottom Nav */}
-            <div className="tiktok-nav">
-              <span>🏠<br/>Home</span>
-              <span>👥<br/>Friends</span>
-              <span className="tiktok-create">➕</span>
-              <span>💬<br/>Inbox</span>
-              <span>👤<br/>Profile</span>
-            </div>
-          </div>
+          <TikTokPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('tiktok')}
+          />
         );
 
       default:
@@ -1884,7 +1678,7 @@ export const ComposeContent = () => {
           </div>
           <div className="preview-container">
             {/* Instagram, Twitter, and Facebook have their own device mockups, skip wrapper */}
-            {selectedPreviewPlatform === 'instagram' || selectedPreviewPlatform === 'twitter' || selectedPreviewPlatform === 'facebook' ? (
+            {['instagram', 'twitter', 'facebook', 'linkedin', 'tiktok', 'threads'].includes(selectedPreviewPlatform) ? (
               renderPlatformPreview()
             ) : (
               <div className="phone-mockup">

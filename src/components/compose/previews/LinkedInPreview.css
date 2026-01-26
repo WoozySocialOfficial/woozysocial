@@ -1,0 +1,388 @@
+/* LinkedIn Preview Styles */
+
+.linkedin-preview-v2 {
+  width: 375px;
+  height: 812px;
+  background: #F3F2EF;
+  border-radius: 40px;
+  border: 12px solid #1F1F1F;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Status Bar */
+.li-status-bar {
+  height: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  background: #FFFFFF;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.li-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: -0.3px;
+}
+
+.li-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 30px;
+  background: #1F1F1F;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+.li-status-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #000000;
+}
+
+/* App Header */
+.li-header {
+  height: 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E0E0E0;
+  flex-shrink: 0;
+}
+
+.li-search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #EDF3F8;
+  padding: 8px 12px;
+  border-radius: 4px;
+  max-width: 280px;
+}
+
+.li-search-icon {
+  width: 16px;
+  height: 16px;
+  color: #666666;
+}
+
+.li-search-text {
+  font-size: 14px;
+  color: #666666;
+}
+
+.li-header-icon {
+  width: 24px;
+  height: 24px;
+  color: #666666;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+/* Feed */
+.li-feed {
+  flex: 1;
+  overflow-y: auto;
+  background: #F3F2EF;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.li-feed::-webkit-scrollbar {
+  display: none;
+}
+
+/* Post */
+.li-post {
+  background: #FFFFFF;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+}
+
+/* Post Header */
+.li-post-header {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  position: relative;
+}
+
+.li-avatar-container {
+  flex-shrink: 0;
+}
+
+.li-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #E0E0E0;
+}
+
+.li-avatar-default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666666;
+}
+
+.li-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.li-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.li-headline {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.li-more-icon {
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.li-more-icon:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Post Text */
+.li-text {
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(0, 0, 0, 0.9);
+  padding: 0 16px 12px 16px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Media Container */
+.li-media-container {
+  width: 100%;
+  max-height: 468px;
+  background: #000000;
+  position: relative;
+}
+
+/* Engagement Bar */
+.li-engagement-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.li-reactions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.li-reaction-icons {
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.li-reaction-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #FFFFFF;
+  margin-left: -4px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+}
+
+.li-reaction-icon:first-child {
+  margin-left: 0;
+}
+
+.li-reaction-like {
+  background: #0A66C2;
+}
+
+.li-reaction-celebrate {
+  background: #6DAB3C;
+}
+
+.li-reaction-love {
+  background: #DF704D;
+}
+
+.li-reaction-count {
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.li-reaction-count:hover {
+  color: #0A66C2;
+  text-decoration: underline;
+}
+
+.li-engagement-right {
+  display: flex;
+  gap: 12px;
+}
+
+.li-engagement-text {
+  cursor: pointer;
+}
+
+.li-engagement-text:hover {
+  color: #0A66C2;
+  text-decoration: underline;
+}
+
+/* Action Buttons */
+.li-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 4px 8px 8px 8px;
+}
+
+.li-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.li-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.li-action-btn.active {
+  color: #0A66C2;
+}
+
+/* Bottom Navigation */
+.li-nav {
+  height: 50px;
+  background: #FFFFFF;
+  border-top: 1px solid #E0E0E0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.li-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.li-nav-item svg {
+  width: 22px;
+  height: 22px;
+}
+
+.li-nav-item:hover {
+  color: #000000;
+}
+
+.li-nav-active {
+  color: #000000;
+}
+
+.li-nav-active svg {
+  fill: #000000;
+}
+
+.li-nav-avatar,
+.li-nav-avatar-default {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #E0E0E0;
+  border: 1px solid #000000;
+}
+
+.li-nav-avatar-default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .linkedin-preview-v2 {
+    width: 100%;
+    max-width: 375px;
+    height: auto;
+    min-height: 600px;
+    border-radius: 20px;
+    border-width: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .linkedin-preview-v2 {
+    border-radius: 0;
+    border-width: 0;
+    max-width: 100%;
+  }
+
+  .li-status-bar {
+    padding: 0 16px;
+  }
+
+  .li-header {
+    padding: 0 12px;
+  }
+}
