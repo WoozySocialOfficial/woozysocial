@@ -231,7 +231,7 @@ module.exports = async function handler(req, res) {
       hasUploadedFiles: !!uploadedFiles.media
     });
 
-    // If files were uploaded, upload to Supabase Storage first
+    // If files were uploaded, upload to Supabase Storage first (in parallel for speed)
     if (uploadedFiles.media) {
       const filesToUpload = Array.isArray(uploadedFiles.media)
         ? uploadedFiles.media
@@ -239,9 +239,17 @@ module.exports = async function handler(req, res) {
 
       console.log('[post] File upload detected:', filesToUpload.length, 'file(s)');
 
-      for (const file of filesToUpload) {
-        console.log('[post] Uploading file:', file.filename);
-        const uploadResult = await uploadMediaToStorage(supabase, file, userId, workspaceId);
+      // Upload all files in parallel to avoid timeout
+      const uploadPromises = filesToUpload.map(file =>
+        uploadMediaToStorage(supabase, file, userId, workspaceId)
+      );
+
+      const uploadResults = await Promise.all(uploadPromises);
+
+      // Check for any failures
+      for (let i = 0; i < uploadResults.length; i++) {
+        const uploadResult = uploadResults[i];
+        const file = filesToUpload[i];
 
         if (!uploadResult.success) {
           return sendError(
