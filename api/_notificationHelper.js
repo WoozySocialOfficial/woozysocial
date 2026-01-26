@@ -80,22 +80,54 @@ async function createNotification({
 
     console.log(`[Notification] Created in-app notification for user ${userId}: ${title}`);
 
-    // 2. Check if user wants email notifications
+    // 2. Get user profile and notification preferences
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('email, full_name, email_notifications')
+      .select('email, full_name')
       .eq('id', userId)
       .single();
 
     if (profileError || !profile) {
-      console.warn('[Notification] Could not fetch user profile for email check:', profileError);
+      console.warn('[Notification] Could not fetch user profile:', profileError);
       return { success: true, notification, emailSent: false };
     }
 
-    // 3. Send email only if user has email notifications enabled AND emailData provided
-    let emailSent = false;
+    // Get notification preferences
+    const { data: prefs, error: prefsError } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
 
-    if (profile.email_notifications && emailData) {
+    if (prefsError) {
+      console.warn('[Notification] Could not fetch notification preferences:', prefsError);
+      // Default to not sending email if preferences not found
+      return { success: true, notification, emailSent: false };
+    }
+
+    // 3. Check if user wants email for this specific notification type
+    let emailSent = false;
+    let shouldSendEmail = false;
+
+    // Map notification types to preference columns
+    const emailPreferenceMap = {
+      'approval_request': prefs.email_approval_requests,
+      'approval_approved': prefs.email_post_approved,
+      'approval_rejected': prefs.email_post_rejected,
+      'post_approved': prefs.email_post_approved,
+      'post_rejected': prefs.email_post_rejected,
+      'team_invite': prefs.email_workspace_invites,
+      'workspace_invite': prefs.email_workspace_invites,
+      'new_comment': prefs.email_new_comments,
+      'comment_mention': prefs.email_new_comments,
+      'post_comment': prefs.email_new_comments,
+      'inbox_message': prefs.email_inbox_messages,
+      'inbox_mention': prefs.email_inbox_messages
+    };
+
+    shouldSendEmail = emailPreferenceMap[type] !== false; // Default to true if not in map
+
+    if (shouldSendEmail && emailData) {
       // Check if Resend is configured
       if (!process.env.RESEND_API_KEY) {
         console.warn('[Notification] Resend API key not configured, skipping email');
@@ -118,8 +150,8 @@ async function createNotification({
         console.error('[Notification] Failed to send email:', emailError);
         // Don't fail the whole operation if email fails - in-app notification already created
       }
-    } else if (!profile.email_notifications && emailData) {
-      console.log(`[Notification] User ${userId} has email notifications disabled, skipping email`);
+    } else if (!shouldSendEmail && emailData) {
+      console.log(`[Notification] User ${userId} has email notifications disabled for type '${type}', skipping email`);
     }
 
     return {
