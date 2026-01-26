@@ -90,7 +90,7 @@ export const InstagramPreview = ({ post, mediaPreviews = [], accountInfo }) => {
               <MediaCarousel
                 media={mediaPreviews}
                 platform="instagram"
-                showControls={false}  // Instagram uses swipe, not arrows
+                showControls={true}  // Enable arrow controls for web preview
                 showIndicators={true}
                 showCounter={mediaPreviews.length > 1}
               />

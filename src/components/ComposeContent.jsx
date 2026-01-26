@@ -2035,16 +2035,21 @@ export const ComposeContent = () => {
             </select>
           </div>
           <div className="preview-container">
-            <div className="phone-mockup">
-              <div className="phone-notch">
-                <div className="notch-line" />
-                <div className="notch-line" />
-              </div>
+            {/* Instagram has its own device mockup, skip wrapper */}
+            {selectedPreviewPlatform === 'instagram' ? (
+              renderPlatformPreview()
+            ) : (
+              <div className="phone-mockup">
+                <div className="phone-notch">
+                  <div className="notch-line" />
+                  <div className="notch-line" />
+                </div>
 
-              <div className="phone-content">
-                {renderPlatformPreview()}
+                <div className="phone-content">
+                  {renderPlatformPreview()}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
