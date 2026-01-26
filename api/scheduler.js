@@ -6,7 +6,8 @@ const {
   sendSuccess,
   sendError,
   logError,
-  getWorkspaceProfileKey
+  getWorkspaceProfileKey,
+  invalidateWorkspaceCache
 } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
@@ -146,6 +147,10 @@ module.exports = async function handler(req, res) {
         }
 
         console.log(`[Scheduler] Post ${post.id} published successfully`);
+
+        // Invalidate cache after successful post
+        await invalidateWorkspaceCache(post.workspace_id);
+
         results.success.push({
           postId: post.id,
           ayrPostId

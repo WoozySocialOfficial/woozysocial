@@ -10,7 +10,8 @@ const {
   sendError,
   logError,
   validateRequired,
-  isValidUUID
+  isValidUUID,
+  invalidateWorkspaceCache
 } = require("../_utils");
 const {
   verifyWorkspaceMembership,
@@ -377,6 +378,9 @@ module.exports = async function handler(req, res) {
           comment: systemComment
         });
       }
+
+      // Invalidate cache after approval action
+      await invalidateWorkspaceCache(workspaceId);
 
       return sendSuccess(res, {
         status: newStatus,

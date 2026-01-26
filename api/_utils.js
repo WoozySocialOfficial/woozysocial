@@ -666,6 +666,65 @@ function parseMentions(commentText, workspaceMembers) {
   return Array.from(mentionedIds);
 }
 
+// ============================================
+// CACHE INVALIDATION
+// ============================================
+
+/**
+ * Invalidate Vercel KV cache for post history
+ * @param {string} profileKey - Ayrshare profile key to invalidate cache for
+ * @returns {Promise<boolean>} - Returns true if cache was invalidated
+ */
+async function invalidatePostHistoryCache(profileKey) {
+  if (!profileKey) {
+    return false;
+  }
+
+  let kv;
+  try {
+    kv = require("@vercel/kv").kv;
+  } catch (e) {
+    // KV not available (development or not installed)
+    return false;
+  }
+
+  if (!kv) {
+    return false;
+  }
+
+  try {
+    const cacheKey = `ayrshare:history:${profileKey}`;
+    await kv.del(cacheKey);
+    console.log(`[Cache] Invalidated post history cache for profile: ${profileKey.substring(0, 8)}...`);
+    return true;
+  } catch (error) {
+    logError('cache.invalidate', error, { profileKey: profileKey.substring(0, 8) + '...' });
+    return false;
+  }
+}
+
+/**
+ * Invalidate post history cache for a workspace
+ * @param {string} workspaceId - Workspace ID to invalidate cache for
+ * @returns {Promise<boolean>} - Returns true if cache was invalidated
+ */
+async function invalidateWorkspaceCache(workspaceId) {
+  if (!workspaceId) {
+    return false;
+  }
+
+  try {
+    const profileKey = await getWorkspaceProfileKey(workspaceId);
+    if (profileKey) {
+      return await invalidatePostHistoryCache(profileKey);
+    }
+    return false;
+  } catch (error) {
+    logError('cache.invalidateWorkspace', error, { workspaceId });
+    return false;
+  }
+}
+
 module.exports = {
   // Existing exports
   getSupabase,
@@ -703,5 +762,9 @@ module.exports = {
   isServiceConfigured,
 
   // Request wrapper
-  withErrorHandler
+  withErrorHandler,
+
+  // Cache invalidation
+  invalidatePostHistoryCache,
+  invalidateWorkspaceCache
 };

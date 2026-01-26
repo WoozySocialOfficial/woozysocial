@@ -11,7 +11,8 @@ const {
   logError,
   validateRequired,
   applyRateLimit,
-  isServiceConfigured
+  isServiceConfigured,
+  invalidateWorkspaceCache
 } = require("./_utils");
 const { hasFeature } = require("./_utils-access-control");
 const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPostUpdatedNotification } = require("./notifications/helpers");
@@ -413,6 +414,9 @@ module.exports = async function handler(req, res) {
           ]);
         }
 
+        // Invalidate cache after updating post
+        await invalidateWorkspaceCache(workspaceId);
+
         return sendSuccess(res, {
           status: 'updated',
           postId: updatedPost.id,
@@ -458,6 +462,9 @@ module.exports = async function handler(req, res) {
           ]);
         }
 
+      // Invalidate cache after creating post pending approval
+      await invalidateWorkspaceCache(workspaceId);
+
       return sendSuccess(res, {
         status: 'pending_approval',
         message: 'Post scheduled and awaiting approval',
@@ -494,6 +501,9 @@ module.exports = async function handler(req, res) {
 
         console.log('[post] Scheduled post updated successfully:', updatedPost.id);
 
+        // Invalidate cache after updating scheduled post
+        await invalidateWorkspaceCache(workspaceId);
+
         return sendSuccess(res, {
           status: 'scheduled',
           postId: updatedPost.id,
@@ -524,6 +534,9 @@ module.exports = async function handler(req, res) {
         }
 
         console.log('[post] Scheduled post saved successfully:', savedPost?.id);
+
+        // Invalidate cache after creating scheduled post
+        await invalidateWorkspaceCache(workspaceId);
 
         return sendSuccess(res, {
           status: 'scheduled',
@@ -721,6 +734,10 @@ module.exports = async function handler(req, res) {
     }
 
     console.log('[POST] Returning success response');
+
+    // Invalidate cache after successful post
+    await invalidateWorkspaceCache(workspaceId);
+
     return sendSuccess(res, {
       status: isScheduled ? 'scheduled' : 'posted',
       postId: response.data.posts?.[0]?.id || response.data.id || response.data.postId,
