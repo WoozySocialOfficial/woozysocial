@@ -20,6 +20,7 @@ import { CommentInput } from "./comments/CommentInput";
 import { MediaUploadModal } from "./compose/MediaUploadModal";
 import { InstagramPreview } from "./compose/previews/InstagramPreview";
 import { TwitterPreview } from "./compose/previews/TwitterPreview";
+import { FacebookPreview } from "./compose/previews/FacebookPreview";
 
 export const ComposeContent = () => {
   const navigate = useNavigate();
@@ -823,97 +824,11 @@ export const ComposeContent = () => {
 
       case "facebook":
         return (
-          <div className="platform-preview facebook-preview">
-            {/* Status Bar */}
-            <div className="status-bar">
-              <span className="status-time">9:41</span>
-              <div className="status-icons">
-                <span>📶</span>
-                <span>📡</span>
-                <span>🔋</span>
-              </div>
-            </div>
-
-            {/* Facebook Header */}
-            <div className="facebook-header">
-              <span className="fb-logo">facebook</span>
-              <div className="fb-header-icons">
-                <span>🔍</span>
-                <span>💬</span>
-              </div>
-            </div>
-
-            {/* Feed Tabs */}
-            <div className="facebook-tabs">
-              <div className="fb-tab active">
-                <span>🏠</span>
-                <span>Home</span>
-              </div>
-              <div className="fb-tab">
-                <span>📺</span>
-                <span>Watch</span>
-              </div>
-              <div className="fb-tab">
-                <span>🛍️</span>
-                <span>Marketplace</span>
-              </div>
-            </div>
-
-            {/* Facebook Post */}
-            <div className="facebook-feed">
-              <div className="fb-post">
-                <div className="fb-post-header">
-                  <div className="fb-post-profile">
-                    {getAccountInfo('facebook').profilePicture ? (
-                      <img src={getAccountInfo('facebook').profilePicture} alt="Profile" className="preview-avatar-img" />
-                    ) : (
-                      <div className="preview-avatar">👤</div>
-                    )}
-                    <div className="fb-post-meta">
-                      <div className="preview-username">{getAccountInfo('facebook').username}</div>
-                      <div className="preview-timestamp">Just now · 🌍</div>
-                    </div>
-                  </div>
-                  <div className="preview-menu">⋯</div>
-                </div>
-
-                {post.text && (
-                  <div className="fb-post-text">{post.text}</div>
-                )}
-
-                {mediaPreviews.length > 0 && mediaPreviews[0] && (
-                  <div className="fb-post-media">
-                    {mediaPreviews[0].type === "image" ? (
-                      <img src={mediaPreviews[0].dataUrl} alt="Preview" />
-                    ) : (
-                      <video src={mediaPreviews[0].dataUrl} controls />
-                    )}
-                  </div>
-                )}
-
-                <div className="fb-post-engagement">
-                  <span>Be the first to react</span>
-                  <span>0 comments</span>
-                </div>
-
-                <div className="fb-post-actions">
-                  <button>👍 Like</button>
-                  <button>💬 Comment</button>
-                  <button>↗ Share</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Facebook Bottom Nav */}
-            <div className="facebook-nav">
-              <span>🏠</span>
-              <span>👥</span>
-              <span>📺</span>
-              <span>🛍️</span>
-              <span>🔔</span>
-              <span>☰</span>
-            </div>
-          </div>
+          <FacebookPreview
+            post={post}
+            mediaPreviews={mediaPreviews}
+            accountInfo={getAccountInfo('facebook')}
+          />
         );
 
       case "twitter":
@@ -1968,8 +1883,8 @@ export const ComposeContent = () => {
             </select>
           </div>
           <div className="preview-container">
-            {/* Instagram and Twitter have their own device mockups, skip wrapper */}
-            {selectedPreviewPlatform === 'instagram' || selectedPreviewPlatform === 'twitter' ? (
+            {/* Instagram, Twitter, and Facebook have their own device mockups, skip wrapper */}
+            {selectedPreviewPlatform === 'instagram' || selectedPreviewPlatform === 'twitter' || selectedPreviewPlatform === 'facebook' ? (
               renderPlatformPreview()
             ) : (
               <div className="phone-mockup">
