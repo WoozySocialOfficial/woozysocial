@@ -1007,3 +1007,398 @@ body.dark {
 .dark [style*="background-color: #fff"] {
   background-color: var(--card-bg) !important;
 }
+
+/* ===== Additional Component Overrides ===== */
+
+/* Compose Content - Hashtag popover, action buttons, dropdowns */
+[data-theme="dark"] .hashtag-popover,
+[data-theme="dark"] .emoji-picker,
+[data-theme="dark"] .mention-dropdown,
+[data-theme="dark"] .ai-suggestions,
+[data-theme="dark"] .ai-section,
+[data-theme="dark"] .media-item,
+[data-theme="dark"] .media-preview,
+[data-theme="dark"] .link-preview,
+[data-theme="dark"] .link-preview-card,
+[data-theme="dark"] .timezone-dropdown,
+[data-theme="dark"] .time-picker,
+[data-theme="dark"] .date-picker,
+[data-theme="dark"] .schedule-options,
+[data-theme="dark"] .queue-section,
+.dark .hashtag-popover,
+.dark .emoji-picker,
+.dark .mention-dropdown,
+.dark .ai-suggestions,
+.dark .ai-section,
+.dark .media-item,
+.dark .media-preview,
+.dark .link-preview,
+.dark .link-preview-card,
+.dark .timezone-dropdown,
+.dark .time-picker,
+.dark .date-picker,
+.dark .schedule-options,
+.dark .queue-section {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Schedule Content - Calendar cells and list views */
+[data-theme="dark"] .fc,
+[data-theme="dark"] .fc-theme-standard,
+[data-theme="dark"] .fc-scrollgrid,
+[data-theme="dark"] .fc-daygrid-day,
+[data-theme="dark"] .fc-col-header-cell,
+[data-theme="dark"] .fc-timegrid-slot,
+[data-theme="dark"] .schedule-list,
+[data-theme="dark"] .schedule-item,
+[data-theme="dark"] .queue-list,
+[data-theme="dark"] .queue-item,
+[data-theme="dark"] .list-view-item,
+[data-theme="dark"] .list-view-container,
+[data-theme="dark"] .post-queue-item,
+.dark .fc,
+.dark .fc-theme-standard,
+.dark .fc-scrollgrid,
+.dark .fc-daygrid-day,
+.dark .fc-col-header-cell,
+.dark .fc-timegrid-slot,
+.dark .schedule-list,
+.dark .schedule-item,
+.dark .queue-list,
+.dark .queue-item,
+.dark .list-view-item,
+.dark .list-view-container,
+.dark .post-queue-item {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* FullCalendar dark mode */
+[data-theme="dark"] .fc .fc-button,
+.dark .fc .fc-button {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .fc .fc-button:hover,
+.dark .fc .fc-button:hover {
+  background-color: var(--bg-hover);
+}
+
+[data-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active,
+.dark .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: var(--accent-secondary);
+}
+
+[data-theme="dark"] .fc-daygrid-day-number,
+[data-theme="dark"] .fc-col-header-cell-cushion,
+.dark .fc-daygrid-day-number,
+.dark .fc-col-header-cell-cushion {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .fc-day-today,
+.dark .fc-day-today {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Assets Content */
+[data-theme="dark"] .assets-header,
+[data-theme="dark"] .assets-grid,
+[data-theme="dark"] .asset-item,
+[data-theme="dark"] .asset-preview,
+[data-theme="dark"] .folder-item,
+[data-theme="dark"] .upload-modal,
+[data-theme="dark"] .upload-preview,
+[data-theme="dark"] .media-library,
+[data-theme="dark"] .media-grid,
+.dark .assets-header,
+.dark .assets-grid,
+.dark .asset-item,
+.dark .asset-preview,
+.dark .folder-item,
+.dark .upload-modal,
+.dark .upload-preview,
+.dark .media-library,
+.dark .media-grid {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Analytics Content */
+[data-theme="dark"] .analytics-header,
+[data-theme="dark"] .analytics-grid,
+[data-theme="dark"] .metric-item,
+[data-theme="dark"] .chart-container,
+[data-theme="dark"] .data-table,
+[data-theme="dark"] .analytics-filter,
+.dark .analytics-header,
+.dark .analytics-grid,
+.dark .metric-item,
+.dark .chart-container,
+.dark .data-table,
+.dark .analytics-filter {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Automation Content */
+[data-theme="dark"] .automation-header,
+[data-theme="dark"] .automation-list,
+[data-theme="dark"] .automation-item,
+[data-theme="dark"] .rule-card,
+[data-theme="dark"] .trigger-card,
+.dark .automation-header,
+.dark .automation-list,
+.dark .automation-item,
+.dark .rule-card,
+.dark .trigger-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Social Accounts */
+[data-theme="dark"] .social-accounts-content,
+[data-theme="dark"] .social-account-card,
+[data-theme="dark"] .connect-btn,
+[data-theme="dark"] .account-item,
+.dark .social-accounts-content,
+.dark .social-account-card,
+.dark .connect-btn,
+.dark .account-item {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Notification Bell dropdown */
+[data-theme="dark"] .notification-bell-dropdown,
+[data-theme="dark"] .notification-panel,
+[data-theme="dark"] .notification-list,
+[data-theme="dark"] .notification-empty,
+.dark .notification-bell-dropdown,
+.dark .notification-panel,
+.dark .notification-list,
+.dark .notification-empty {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Loading states */
+[data-theme="dark"] .loading-container,
+[data-theme="dark"] .loading-card,
+[data-theme="dark"] .skeleton,
+[data-theme="dark"] .skeleton-loader,
+.dark .loading-container,
+.dark .loading-card,
+.dark .skeleton,
+.dark .skeleton-loader {
+  background-color: var(--card-bg) !important;
+}
+
+/* Confirm dialogs */
+[data-theme="dark"] .confirm-dialog,
+[data-theme="dark"] .confirm-modal,
+[data-theme="dark"] .dialog-content,
+.dark .confirm-dialog,
+.dark .confirm-modal,
+.dark .dialog-content {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Comment input and mentions */
+[data-theme="dark"] .comment-input-container,
+[data-theme="dark"] .comment-input-wrapper,
+[data-theme="dark"] .mentions-list,
+[data-theme="dark"] .mention-item,
+[data-theme="dark"] .post-detail-panel,
+.dark .comment-input-container,
+.dark .comment-input-wrapper,
+.dark .mentions-list,
+.dark .mention-item,
+.dark .post-detail-panel {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Link shortener */
+[data-theme="dark"] .link-shortener-container,
+[data-theme="dark"] .shortened-link,
+[data-theme="dark"] .link-history,
+.dark .link-shortener-container,
+.dark .shortened-link,
+.dark .link-history {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Media upload modal */
+[data-theme="dark"] .media-upload-modal,
+[data-theme="dark"] .upload-dropzone,
+[data-theme="dark"] .media-tabs,
+[data-theme="dark"] .media-tab,
+[data-theme="dark"] .media-search,
+.dark .media-upload-modal,
+.dark .upload-dropzone,
+.dark .media-tabs,
+.dark .media-tab,
+.dark .media-search {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Workspace modals */
+[data-theme="dark"] .create-workspace-modal,
+[data-theme="dark"] .workspace-form,
+[data-theme="dark"] .invite-client-modal,
+[data-theme="dark"] .provision-modal,
+[data-theme="dark"] .workspace-team-provision-modal,
+.dark .create-workspace-modal,
+.dark .workspace-form,
+.dark .invite-client-modal,
+.dark .provision-modal,
+.dark .workspace-team-provision-modal {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Workspace switcher dropdown */
+[data-theme="dark"] .workspace-dropdown-menu,
+[data-theme="dark"] .workspace-list,
+[data-theme="dark"] .workspace-option,
+[data-theme="dark"] .add-workspace-btn,
+.dark .workspace-dropdown-menu,
+.dark .workspace-list,
+.dark .workspace-option,
+.dark .add-workspace-btn {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .workspace-option:hover,
+[data-theme="dark"] .add-workspace-btn:hover,
+.dark .workspace-option:hover,
+.dark .add-workspace-btn:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Client sidebar and header */
+[data-theme="dark"] .client-sidebar,
+[data-theme="dark"] .client-header,
+[data-theme="dark"] .client-nav-item,
+.dark .client-sidebar,
+.dark .client-header,
+.dark .client-nav-item {
+  background-color: var(--sidebar-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Invite member modal */
+[data-theme="dark"] .invite-member-modal,
+[data-theme="dark"] .invite-form,
+[data-theme="dark"] .role-select,
+.dark .invite-member-modal,
+.dark .invite-form,
+.dark .role-select {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Agency team modal */
+[data-theme="dark"] .add-agency-team-modal,
+[data-theme="dark"] .agency-form,
+.dark .add-agency-team-modal,
+.dark .agency-form {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Calendar post modal */
+[data-theme="dark"] .calendar-modal,
+[data-theme="dark"] .calendar-modal-content,
+[data-theme="dark"] .post-preview-modal,
+.dark .calendar-modal,
+.dark .calendar-modal-content,
+.dark .post-preview-modal {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Onboarding tour */
+[data-theme="dark"] .onboarding-tooltip,
+[data-theme="dark"] .tour-step,
+.dark .onboarding-tooltip,
+.dark .tour-step {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Profile settings page */
+[data-theme="dark"] .profile-settings-content,
+[data-theme="dark"] .profile-form,
+[data-theme="dark"] .appearance-section,
+[data-theme="dark"] .theme-option,
+.dark .profile-settings-content,
+.dark .profile-form,
+.dark .appearance-section,
+.dark .theme-option {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary);
+}
+
+/* Warning/info banners should have subtle dark backgrounds */
+[data-theme="dark"] .warning-banner,
+[data-theme="dark"] .info-banner,
+[data-theme="dark"] .alert-warning,
+[data-theme="dark"] .alert-info,
+.dark .warning-banner,
+.dark .info-banner,
+.dark .alert-warning,
+.dark .alert-info {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+  color: var(--warning);
+}
+
+/* Success banners */
+[data-theme="dark"] .success-banner,
+[data-theme="dark"] .alert-success,
+.dark .success-banner,
+.dark .alert-success {
+  background-color: rgba(74, 222, 128, 0.1) !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+  color: var(--success);
+}
+
+/* Error banners */
+[data-theme="dark"] .error-banner,
+[data-theme="dark"] .alert-error,
+[data-theme="dark"] .alert-danger,
+.dark .error-banner,
+.dark .alert-error,
+.dark .alert-danger {
+  background-color: rgba(248, 113, 113, 0.1) !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+  color: var(--error);
+}
