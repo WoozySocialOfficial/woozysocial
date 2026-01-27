@@ -357,3 +357,76 @@
     font-size: 14px;
   }
 }
+
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+[data-theme="dark"] .posts-search-input,
+.dark .posts-search-input {
+  background: #18181b !important;
+  background-color: #18181b !important;
+  backdrop-filter: none !important;
+  border-color: #3f3f46 !important;
+}
+
+[data-theme="dark"] .posts-search-input .search-icon,
+.dark .posts-search-input .search-icon {
+  color: #a1a1aa !important;
+}
+
+[data-theme="dark"] .posts-search-input input,
+.dark .posts-search-input input {
+  color: #fafafa !important;
+}
+
+[data-theme="dark"] .posts-search-input input::placeholder,
+.dark .posts-search-input input::placeholder {
+  color: #71717a !important;
+}
+
+[data-theme="dark"] .posts-table-container,
+.dark .posts-table-container {
+  background: #18181b !important;
+  background-color: #18181b !important;
+  backdrop-filter: none !important;
+  border-color: #3f3f46 !important;
+}
+
+[data-theme="dark"] .posts-table-header,
+.dark .posts-table-header {
+  color: #fafafa !important;
+  border-bottom-color: #3f3f46 !important;
+}
+
+[data-theme="dark"] .posts-table-row,
+.dark .posts-table-row {
+  border-bottom-color: #27272a !important;
+}
+
+[data-theme="dark"] .posts-table-row:hover,
+.dark .posts-table-row:hover {
+  background-color: #1f1f23 !important;
+}
+
+[data-theme="dark"] .posts-date-col,
+.dark .posts-date-col {
+  color: #a1a1aa !important;
+}
+
+[data-theme="dark"] .post-content-preview,
+.dark .post-content-preview {
+  color: #d4d4d8 !important;
+}
+
+[data-theme="dark"] .no-media,
+.dark .no-media {
+  color: #52525b !important;
+}
+
+[data-theme="dark"] .posts-loading,
+[data-theme="dark"] .posts-empty,
+.dark .posts-loading,
+.dark .posts-empty {
+  color: #71717a !important;
+}
