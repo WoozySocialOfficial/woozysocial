@@ -1648,11 +1648,180 @@
   .compose-title,
   .preview-title,
   .prediction-title {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .socials-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .compose-content {
+    padding: 16px;
+  }
+
+  .compose-card,
+  .preview-card,
+  .prediction-card {
+    padding: 16px;
+  }
+
+  .compose-form-section {
+    gap: 16px;
+  }
+
+  .compose-textarea {
+    min-height: 120px;
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-buttons button {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .media-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+
+  .quick-actions {
+    gap: 10px;
+  }
+
+  .quick-action-btn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .prediction-metrics {
+    gap: 12px;
+  }
+
+  .metric-item {
+    padding: 12px;
+  }
+
+  .phone-mockup {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+
+  .best-time-item {
+    padding: 10px 12px;
+  }
+
+  .performance-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .compose-title,
+  .preview-title,
+  .prediction-title {
+    font-size: 20px;
+  }
+
+  .compose-content {
+    padding: 12px;
+  }
+
+  .compose-card,
+  .preview-card,
+  .prediction-card {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .socials-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .social-btn {
+    padding: 8px;
+    font-size: 12px;
+    min-height: 44px;
+  }
+
+  .compose-textarea {
+    min-height: 100px;
+    font-size: 14px;
+  }
+
+  .media-upload-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  .form-buttons button {
+    padding: 14px 16px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .media-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
+  .phone-mockup {
+    transform: scale(0.75);
+    max-width: 100%;
+  }
+
+  .quick-action-btn {
+    padding: 14px 12px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .prediction-metrics {
+    gap: 8px;
+  }
+
+  .metric-item {
+    padding: 10px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+  }
+
+  .performance-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-box {
+    padding: 10px;
+  }
+
+  .stat-box .stat-value {
+    font-size: 18px;
+  }
+
+  .best-time-item {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .compose-comments {
+    padding: 12px;
   }
 }
 

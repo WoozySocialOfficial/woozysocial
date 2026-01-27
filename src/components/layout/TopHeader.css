@@ -271,14 +271,53 @@
 }
 
 @media (max-width: 480px) {
+  .top-header {
+    height: 56px;
+    padding: 8px 12px;
+  }
+
   .mobile-nav {
     width: 90vw;
     padding: 16px;
   }
 
+  .mobile-nav-header {
+    margin-bottom: 20px;
+  }
+
+  .mobile-nav-header img {
+    height: 50px !important;
+  }
+
   .mobile-nav-item {
-    padding: 10px 14px;
+    padding: 14px 16px;
     font-size: 15px;
+    min-height: 48px;
+  }
+
+  .mobile-nav-close {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .top-header .profile-avatar {
+    height: 32px;
+    min-width: 32px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .profile-dropdown {
+    min-width: 200px;
+    right: -8px;
+  }
+
+  .profile-dropdown-item {
+    padding: 14px 16px;
+    min-height: 48px;
   }
 }
 

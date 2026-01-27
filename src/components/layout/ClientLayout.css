@@ -9,3 +9,28 @@
   padding: 30px;
   min-height: calc(100vh - 70px);
 }
+
+/* Tablet - Sidebar hidden */
+@media (max-width: 1024px) {
+  .client-main-content {
+    margin-left: 0;
+    padding: 24px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .client-main-content {
+    margin-left: 0;
+    margin-top: 60px;
+    padding: 16px;
+    min-height: calc(100vh - 60px);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .client-main-content {
+    padding: 12px;
+  }
+}
