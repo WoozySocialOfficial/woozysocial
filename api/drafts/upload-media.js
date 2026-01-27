@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import Busboy from "busboy";
+const { createClient } = require("@supabase/supabase-js");
+const Busboy = require("busboy");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -87,7 +87,7 @@ async function uploadFileToStorage(file, workspaceId, userId) {
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -138,4 +138,4 @@ export default async function handler(req, res) {
     console.error("Error in upload-media:", error);
     return res.status(500).json({ error: "Internal server error", details: error.message });
   }
-}
+};
