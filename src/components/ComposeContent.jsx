@@ -270,6 +270,40 @@ export const ComposeContent = () => {
     isSavingRef.current = true;
 
     try {
+      // Separate data URLs (local files) from HTTP URLs (already uploaded)
+      const dataUrlPreviews = mediaPreviews.filter(p => p.dataUrl && p.dataUrl.startsWith('data:'));
+      const httpUrlPreviews = mediaPreviews.filter(p => p.dataUrl && p.dataUrl.startsWith('http'));
+
+      let uploadedUrls = httpUrlPreviews.map(p => p.dataUrl);
+
+      // Upload local media files to storage if any exist
+      if (dataUrlPreviews.length > 0 && post.media && post.media.length > 0) {
+        const formData = new FormData();
+        formData.append("workspaceId", activeWorkspace.id);
+        formData.append("userId", user.id);
+
+        // Add files to FormData
+        post.media.forEach((file) => {
+          if (file instanceof File) {
+            formData.append("media", file);
+          }
+        });
+
+        // Upload media files
+        const uploadRes = await fetch(`${baseURL}/api/drafts/upload-media`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (uploadRes.ok) {
+          const uploadJson = await uploadRes.json();
+          uploadedUrls = [...uploadedUrls, ...(uploadJson.urls || [])];
+        } else {
+          // If upload fails, just save text without media
+          console.warn("[Draft] Media upload failed, saving text only");
+        }
+      }
+
       const res = await fetch(`${baseURL}/api/drafts/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -278,7 +312,7 @@ export const ComposeContent = () => {
           userId: user.id,
           draftId: currentDraftId || null,
           caption: post.text,
-          mediaUrls: mediaPreviews.map(p => p.dataUrl),
+          mediaUrls: uploadedUrls,
           platforms: selectedPlatforms,
           scheduledDate: scheduledDate ? scheduledDate.toISOString() : null
         })
