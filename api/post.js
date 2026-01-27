@@ -634,6 +634,61 @@ module.exports = async function handler(req, res) {
       });
       logError('post.ayrshare_request', axiosError, { platforms });
 
+      // IMPORTANT: Check if Ayrshare returned a post ID even though there was an error
+      // Sometimes Ayrshare successfully posts but returns a 400 error afterwards
+      const responseData = axiosError.response?.data;
+      const ayrPostId = responseData?.posts?.[0]?.id
+        || responseData?.id
+        || responseData?.postId
+        || responseData?.refId;
+
+      if (ayrPostId) {
+        // Post actually succeeded despite the error - save as successful
+        console.log('[POST] Post succeeded despite error response - ayr_post_id:', ayrPostId);
+
+        if (supabase) {
+          const postRecord = {
+            user_id: userId,
+            workspace_id: workspaceId,
+            created_by: userId,
+            ayr_post_id: ayrPostId,
+            caption: text,
+            media_urls: mediaUrls || [],
+            status: isScheduled ? 'scheduled' : 'posted',
+            scheduled_at: isScheduled ? new Date(scheduledDate).toISOString() : null,
+            posted_at: isScheduled ? null : new Date().toISOString(),
+            platforms: platforms,
+            approval_status: 'approved',
+            requires_approval: false
+          };
+
+          const { data: savedPost, error: dbError } = await supabase
+            .from("posts")
+            .insert([postRecord])
+            .select()
+            .single();
+
+          if (dbError) {
+            console.error('[POST] Database save error:', dbError);
+            logError('post.save_success_with_warning', dbError);
+          } else {
+            console.log('[POST] Post saved as successful despite error response:', savedPost?.id);
+          }
+        }
+
+        // Invalidate cache
+        await invalidateWorkspaceCache(workspaceId);
+
+        // Return success even though Ayrshare returned an error
+        return sendSuccess(res, {
+          status: isScheduled ? 'scheduled' : 'posted',
+          postId: ayrPostId,
+          platforms: platforms,
+          warning: 'Post succeeded but Ayrshare returned an error response'
+        });
+      }
+
+      // No post ID found - post actually failed
       // Save failed post to database
       if (supabase) {
         const { error: dbErr } = await supabase.from("posts").insert([{
@@ -652,7 +707,6 @@ module.exports = async function handler(req, res) {
 
       // Include actual Ayrshare error in the response for better debugging
       // Ayrshare can return errors in different formats
-      const responseData = axiosError.response?.data;
       let ayrshareError = responseData?.message
         || responseData?.error
         || (responseData?.errors ? JSON.stringify(responseData.errors) : null)
