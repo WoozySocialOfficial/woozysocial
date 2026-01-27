@@ -224,7 +224,7 @@ export const TopHeader = () => {
       <div className={`mobile-nav ${mobileNavOpen ? 'open' : ''}`}>
         <div className="mobile-nav-header">
           <img
-            src="/assets/woozysocial.png"
+            src="/assets/woozydark.png"
             alt="Woozy Social"
             style={{ height: '75px', objectFit: 'contain' }}
           />
