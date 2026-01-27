@@ -634,17 +634,24 @@ module.exports = async function handler(req, res) {
       });
       logError('post.ayrshare_request', axiosError, { platforms });
 
-      // IMPORTANT: Check if Ayrshare returned a post ID even though there was an error
-      // Sometimes Ayrshare successfully posts but returns a 400 error afterwards
+      // IMPORTANT: Check if Ayrshare returned success data despite HTTP 400 status
+      // Ayrshare has a quirk where it returns HTTP 400 with a success response body
       const responseData = axiosError.response?.data;
-      const ayrPostId = responseData?.posts?.[0]?.id
+
+      // Check multiple indicators that the post actually succeeded
+      const isActuallySuccessful = responseData?.status === 'success'
+        || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
+        || responseData?.postIds?.length > 0;
+
+      const ayrPostId = responseData?.postIds?.[0]?.id
+        || responseData?.posts?.[0]?.id
         || responseData?.id
         || responseData?.postId
         || responseData?.refId;
 
-      if (ayrPostId) {
-        // Post actually succeeded despite the error - save as successful
-        console.log('[POST] Post succeeded despite error response - ayr_post_id:', ayrPostId);
+      if (isActuallySuccessful && ayrPostId) {
+        // Post actually succeeded despite HTTP 400 - save as successful
+        console.log('[POST] Post succeeded despite HTTP 400 error - status:', responseData?.status, 'ayr_post_id:', ayrPostId);
 
         if (supabase) {
           const postRecord = {
@@ -679,12 +686,12 @@ module.exports = async function handler(req, res) {
         // Invalidate cache
         await invalidateWorkspaceCache(workspaceId);
 
-        // Return success even though Ayrshare returned an error
+        // Return success even though Ayrshare returned HTTP 400
         return sendSuccess(res, {
           status: isScheduled ? 'scheduled' : 'posted',
           postId: ayrPostId,
           platforms: platforms,
-          warning: 'Post succeeded but Ayrshare returned an error response'
+          warning: 'Post succeeded (Ayrshare returned HTTP 400 with success body)'
         });
       }
 
