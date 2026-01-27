@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
 
     console.log('[DELETE POST] Attempting to delete post:', { postId, workspaceId });
 
-    // Delete from Ayrshare
+    // Delete from Ayrshare FIRST - this is the critical operation
     let ayrshareDeleted = false;
     let ayrshareError = null;
 
@@ -85,10 +85,19 @@ module.exports = async function handler(req, res) {
       } else {
         ayrshareError = response.data;
         console.warn('[DELETE POST] Unexpected Ayrshare response:', response.data);
+
+        // Don't proceed with database delete if Ayrshare failed
+        return sendError(
+          res,
+          "Failed to delete post from social media platforms",
+          ErrorCodes.EXTERNAL_API_ERROR,
+          {
+            message: "Post could not be deleted from social media. Database was not modified.",
+            ayrshareError: response.data
+          }
+        );
       }
     } catch (axiosError) {
-      // Some posts might not exist on Ayrshare anymore (already deleted, failed posts, etc.)
-      // We'll still try to delete from our database
       const statusCode = axiosError.response?.status;
       const responseData = axiosError.response?.data;
 
@@ -99,12 +108,23 @@ module.exports = async function handler(req, res) {
       });
 
       // 404 means post doesn't exist on Ayrshare (already deleted or never existed)
-      // This is actually OK - we can still clean up our database
+      // This is OK - we can still clean up our database
       if (statusCode === 404) {
-        console.log('[DELETE POST] Post not found on Ayrshare (404), continuing with database cleanup');
+        console.log('[DELETE POST] Post not found on Ayrshare (404 - may already be deleted), proceeding with database cleanup');
         ayrshareDeleted = true; // Treat as success for database cleanup
       } else {
-        ayrshareError = responseData || axiosError.message;
+        // Any other error - STOP and return error
+        // Don't delete from database if we can't delete from social media
+        return sendError(
+          res,
+          "Failed to delete post from social media platforms",
+          ErrorCodes.EXTERNAL_API_ERROR,
+          {
+            message: "Post could not be deleted from social media. Please try again or delete manually from the platform. Database was not modified.",
+            statusCode,
+            ayrshareError: responseData || axiosError.message
+          }
+        );
       }
     }
 

@@ -121,7 +121,7 @@ export const PostDetailPanel = ({
 
       if (response.ok && data.success) {
         // Success - show message and close panel
-        alert('Post deleted successfully');
+        alert('✅ Post deleted successfully from social media and database');
         setShowDeleteModal(false);
         onClose();
 
@@ -133,15 +133,23 @@ export const PostDetailPanel = ({
         // Refresh the page or update the list
         window.location.reload(); // Simple approach - could be improved with state management
       } else {
-        // Error from API
+        // Error from API - show detailed error and DON'T close modal
         const errorMsg = data.data?.message || data.error || 'Failed to delete post';
-        alert(`Error: ${errorMsg}`);
+        const detailedError = data.data?.ayrshareError
+          ? `${errorMsg}\n\nDetails: ${JSON.stringify(data.data.ayrshareError)}`
+          : errorMsg;
+
+        alert(`❌ Delete Failed\n\n${detailedError}\n\nThe post was NOT deleted. Please try again or delete manually from the social platform.`);
+
+        // Keep modal open so user can try again
+        setIsDeleting(false);
+        return; // Don't close modal or refresh
       }
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Failed to delete post. Please try again.');
-    } finally {
+      alert('❌ Network Error\n\nFailed to delete post. Please check your connection and try again.');
       setIsDeleting(false);
+      return; // Don't close modal
     }
   };
 
