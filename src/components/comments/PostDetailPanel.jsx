@@ -3,6 +3,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, Fa
 import { SiX } from 'react-icons/si';
 import { CommentThread } from './CommentThread';
 import { CommentInput } from './CommentInput';
+import { AnalyticsSection } from '../analytics/AnalyticsSection';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useNavigate } from 'react-router-dom';
 import { DeleteConfirmationModal } from '../modals/DeleteConfirmationModal';
@@ -211,6 +212,15 @@ export const PostDetailPanel = ({
               })}
             </div>
           </div>
+        )}
+
+        {/* Analytics Section - Only for posted posts */}
+        {post.status === 'posted' && (post.ayr_post_id || post.id) && post.workspace_id && (
+          <AnalyticsSection
+            postId={post.ayr_post_id || post.id}
+            workspaceId={post.workspace_id}
+            platforms={post.platforms || []}
+          />
         )}
 
         {/* Schedule Date */}
