@@ -39,8 +39,7 @@ export const InstagramPreview = ({ post, mediaPreviews = [], accountInfo }) => {
 
       {/* App Header */}
       <div className="ig-header">
-        <svg className="ig-logo" width="105" height="29" viewBox="0 0 105 29" fill="none">
-          <path d="M26.1 0.1C11.8 0.1 0.1 11.8 0.1 26.1C0.1 40.4 11.8 52.1 26.1 52.1C40.4 52.1 52.1 40.4 52.1 26.1C52.1 11.8 40.4 0.1 26.1 0.1Z" fill="currentColor" opacity="0"/>
+        <svg className="ig-logo" width="120" height="29" viewBox="0 0 120 29" fill="none">
           <text x="0" y="22" fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fontSize="24" fontWeight="600" fill="currentColor">Instagram</text>
         </svg>
         <div className="ig-header-icons">
