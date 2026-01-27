@@ -1,4 +1,4 @@
-/* Delete Confirmation Modal Styles */
+/* Delete Confirmation Modal Styles - Theme Aware */
 
 .delete-modal-overlay {
   position: fixed;
@@ -11,14 +11,20 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+[data-theme="dark"] .delete-modal-overlay,
+.dark .delete-modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
 .delete-modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: var(--bg-secondary, #ffffff);
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--border-color, transparent);
   max-width: 520px;
   width: 90%;
   max-height: 90vh;
@@ -30,7 +36,7 @@
 .delete-modal-header {
   padding: 24px 24px 16px;
   text-align: center;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
 }
 
 .delete-icon-wrapper {
@@ -43,7 +49,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary, #1f2937);
 }
 
 .delete-modal-content {
@@ -51,13 +57,20 @@
 }
 
 .warning-message {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--error, #ef4444);
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 20px;
-  color: #991b1b;
+  color: var(--error, #991b1b);
   font-size: 14px;
+}
+
+[data-theme="dark"] .warning-message,
+.dark .warning-message {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--error);
+  color: #fca5a5;
 }
 
 .warning-message strong {
@@ -72,17 +85,17 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-tertiary, #6b7280);
   margin-bottom: 8px;
 }
 
 .preview-text {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-tertiary, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 6px;
   padding: 12px;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary, #374151);
   line-height: 1.5;
   margin: 0;
   font-style: italic;
@@ -94,7 +107,7 @@
 
 .delete-details p {
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary, #374151);
   margin-bottom: 8px;
 }
 
@@ -105,13 +118,13 @@
 
 .delete-details li {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-tertiary, #6b7280);
   margin-bottom: 4px;
 }
 
 .delete-option {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-tertiary, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 20px;
@@ -129,6 +142,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
+  accent-color: var(--accent-secondary, #5951e5);
 }
 
 .checkbox-label input[type="checkbox"]:disabled {
@@ -139,12 +153,12 @@
 .checkbox-label span {
   font-size: 14px;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--text-primary, #1f2937);
 }
 
 .option-description {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-tertiary, #6b7280);
   margin: 0;
   padding-left: 28px;
 }
@@ -157,53 +171,61 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-secondary, #374151);
   margin-bottom: 8px;
 }
 
 .confirmation-input strong {
-  color: #ef4444;
+  color: var(--error, #ef4444);
   font-weight: 600;
 }
 
 .confirmation-input input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #e5e7eb;
+  background: var(--input-bg, #ffffff);
+  border: 2px solid var(--input-border, #e5e7eb);
   border-radius: 6px;
   font-size: 16px;
   font-family: monospace;
+  color: var(--text-primary, #000000);
   transition: all 0.2s;
 }
 
 .confirmation-input input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent-primary, #afabf9);
 }
 
 .confirmation-input input.valid {
-  border-color: #10b981;
-  background: #f0fdf4;
+  border-color: var(--success, #10b981);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+[data-theme="dark"] .confirmation-input input.valid,
+.dark .confirmation-input input.valid {
+  background: rgba(74, 222, 128, 0.15);
 }
 
 .confirmation-input input:disabled {
-  background: #f3f4f6;
+  background: var(--bg-hover, #f3f4f6);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .delete-modal-actions {
   display: flex;
   gap: 12px;
   padding: 16px 24px 24px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color, #e5e7eb);
 }
 
 .delete-modal-actions button {
   flex: 1;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
@@ -214,13 +236,13 @@
 }
 
 .btn-cancel {
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db !important;
+  background: var(--bg-tertiary, white);
+  color: var(--text-primary, #374151);
+  border: 1px solid var(--border-color, #d1d5db) !important;
 }
 
 .btn-cancel:hover:not(:disabled) {
-  background: #f9fafb;
+  background: var(--bg-hover, #f9fafb);
 }
 
 .btn-cancel:disabled {
@@ -229,7 +251,7 @@
 }
 
 .btn-delete {
-  background: #ef4444;
+  background: var(--error, #ef4444);
   color: white;
 }
 
@@ -237,9 +259,20 @@
   background: #dc2626;
 }
 
+[data-theme="dark"] .btn-delete:hover:not(:disabled),
+.dark .btn-delete:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
 .btn-delete:disabled {
   background: #fca5a5;
   cursor: not-allowed;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .btn-delete:disabled,
+.dark .btn-delete:disabled {
+  background: #7f1d1d;
 }
 
 .spinner {
@@ -274,73 +307,6 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  .delete-modal {
-    background: #1f2937;
-  }
-
-  .delete-modal-header {
-    border-bottom-color: #374151;
-  }
-
-  .delete-modal-header h2 {
-    color: #f9fafb;
-  }
-
-  .preview-text {
-    background: #374151;
-    border-color: #4b5563;
-    color: #e5e7eb;
-  }
-
-  .delete-details p,
-  .confirmation-input label {
-    color: #e5e7eb;
-  }
-
-  .delete-details li {
-    color: #d1d5db;
-  }
-
-  .delete-option {
-    background: #374151;
-    border-color: #4b5563;
-  }
-
-  .checkbox-label span {
-    color: #f9fafb;
-  }
-
-  .option-description {
-    color: #d1d5db;
-  }
-
-  .confirmation-input input {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-
-  .confirmation-input input:disabled {
-    background: #4b5563;
-  }
-
-  .delete-modal-actions {
-    border-top-color: #374151;
-  }
-
-  .btn-cancel {
-    background: #374151;
-    color: #f9fafb;
-    border-color: #4b5563 !important;
-  }
-
-  .btn-cancel:hover:not(:disabled) {
-    background: #4b5563;
   }
 }
 
