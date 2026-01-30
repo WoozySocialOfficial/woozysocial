@@ -44,8 +44,16 @@ module.exports = async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
 
+    // Get workspace_id (first workspace for now - TODO: map from platform account)
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('id')
+      .limit(1)
+      .single();
+
     // Store raw webhook event for debugging
     await supabase.from('inbox_webhook_events').insert({
+      workspace_id: workspace?.id,
       event_type: payload.type || payload.action,
       platform: payload.platform,
       payload: payload,
@@ -148,7 +156,10 @@ async function handleComment(payload, supabase) {
   // Mark webhook as processed
   await supabase
     .from('inbox_webhook_events')
-    .update({ processed: true })
+    .update({
+      processed: true,
+      processed_at: new Date().toISOString()
+    })
     .eq('payload->>commentId', commentId || id)
     .eq('platform', platform);
 }
@@ -176,53 +187,60 @@ async function handleMessage(payload, supabase) {
     threadId
   } = payload;
 
-  // Create or find conversation
-  const conversationExternalId = conversationId || threadId || `${platform}_${from || sender}`;
+  // Find workspace_id from the payload or first available workspace
+  // TODO: Map platform account to workspace_id properly
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .limit(1)
+    .single();
+
+  const workspaceId = workspace?.id;
+
+  if (!workspaceId) {
+    console.error('[WEBHOOK] No workspace found for message');
+    return;
+  }
+
+  // Create or find conversation using ayrshare_conversation_id
+  const ayrshareConversationId = conversationId || threadId || `${platform}_${from || sender}`;
 
   let conversation;
   const { data: existingConv } = await supabase
     .from('inbox_conversations')
     .select('id')
-    .eq('external_id', conversationExternalId)
+    .eq('ayrshare_conversation_id', ayrshareConversationId)
     .eq('platform', platform)
+    .eq('workspace_id', workspaceId)
     .single();
 
   if (existingConv) {
     conversation = existingConv;
 
-    // Update last message time
+    // Update last message info (unread_count will be updated by trigger)
     await supabase
       .from('inbox_conversations')
       .update({
+        last_message_text: text || message,
         last_message_at: timestamp || created_at || new Date().toISOString(),
+        last_message_sender: from || sender,
         updated_at: new Date().toISOString()
       })
       .eq('id', existingConv.id);
   } else {
-    // Find workspace_id from the payload or first available workspace
-    // TODO: Map platform account to workspace_id properly
-    const { data: workspaces } = await supabase
-      .from('workspaces')
-      .select('id')
-      .limit(1)
-      .single();
-
-    const workspaceId = workspaces?.id;
-
-    if (!workspaceId) {
-      console.error('[WEBHOOK] No workspace found for conversation');
-      return;
-    }
-
     // Create new conversation
     const { data: newConv, error: convError } = await supabase
       .from('inbox_conversations')
       .insert({
         workspace_id: workspaceId,
-        external_id: conversationExternalId,
         platform: platform,
-        participant_username: from || sender,
-        last_message_at: timestamp || created_at || new Date().toISOString()
+        ayrshare_conversation_id: ayrshareConversationId,
+        correspondent_username: from || sender,
+        correspondent_name: from || sender,
+        last_message_text: text || message,
+        last_message_at: timestamp || created_at || new Date().toISOString(),
+        last_message_sender: from || sender,
+        unread_count: 1
       })
       .select('id')
       .single();
@@ -240,13 +258,12 @@ async function handleMessage(payload, supabase) {
     .from('inbox_messages')
     .insert({
       conversation_id: conversation.id,
-      external_id: messageId || id,
-      platform: platform,
+      ayrshare_message_id: messageId || id,
+      platform_message_id: messageId || id,
+      sender_type: 'correspondent', // Message from follower/customer TO us
+      sender_name: from || sender,
       message_text: text || message,
-      sender_username: from || sender,
-      recipient_username: to || recipient,
-      is_from_user: false, // Message is coming TO us
-      created_at: timestamp || created_at || new Date().toISOString()
+      sent_at: timestamp || created_at || new Date().toISOString()
     });
 
   if (messageError && messageError.code !== '23505') { // Ignore duplicates
@@ -259,7 +276,10 @@ async function handleMessage(payload, supabase) {
   // Mark webhook as processed
   await supabase
     .from('inbox_webhook_events')
-    .update({ processed: true })
+    .update({
+      processed: true,
+      processed_at: new Date().toISOString()
+    })
     .eq('payload->>messageId', messageId || id)
     .eq('platform', platform);
 }
@@ -303,7 +323,10 @@ async function handleAnalytics(payload, supabase) {
   // Mark webhook as processed
   await supabase
     .from('inbox_webhook_events')
-    .update({ processed: true })
+    .update({
+      processed: true,
+      processed_at: new Date().toISOString()
+    })
     .eq('payload->>postId', postId)
     .eq('event_type', 'analytics');
 }

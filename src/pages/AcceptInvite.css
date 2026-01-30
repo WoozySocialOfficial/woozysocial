@@ -35,13 +35,13 @@
 .invite-title {
   font-size: 32px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
 .invite-subtitle {
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -76,20 +76,20 @@
 .detail-label {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .detail-value {
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   font-weight: 500;
 }
 
 .detail-value.role-badge {
   background: white;
-  color: #114C5A;
+  color: #7c3aed;
   padding: 6px 16px;
   border-radius: 8px;
   border: 2px solid #afabf9;
@@ -98,7 +98,7 @@
 
 .detail-description {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.8;
   line-height: 1.5;
   margin-top: 4px;
@@ -143,7 +143,7 @@
 
 .accept-button {
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .accept-button:hover:not(:disabled) {
@@ -168,13 +168,13 @@
 }
 
 .back-button {
-  background: #114C5A;
+  background: #7c3aed;
   color: #afabf9;
   margin-top: 24px;
 }
 
 .back-button:hover {
-  background: #0d3a47;
+  background: #6d28d9;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(17, 76, 90, 0.2);
 }
@@ -184,7 +184,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid #F1F6F4;
-  border-top: 4px solid #114C5A;
+  border-top: 4px solid #7c3aed;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
@@ -198,7 +198,7 @@
 .loading-text {
   text-align: center;
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
 }
 
@@ -217,7 +217,7 @@
 
 .error-message {
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.8;
   margin: 0 0 24px 0;
   line-height: 1.5;

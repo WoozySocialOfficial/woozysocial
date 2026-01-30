@@ -61,13 +61,13 @@
 .provision-modal-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 4px 0;
 }
 
 .provision-modal-subtitle {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -76,7 +76,7 @@
   background: transparent;
   border: none;
   font-size: 24px;
-  color: #114C5A;
+  color: #7c3aed;
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -102,7 +102,7 @@
 .provision-empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .provision-empty-state p {
@@ -139,13 +139,13 @@
 .provision-section-header h3 {
   font-size: 16px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0;
 }
 
 .provision-section-info {
   font-size: 12px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   flex: 1;
 }
@@ -154,7 +154,7 @@
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background: transparent;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 6px;
@@ -222,7 +222,7 @@
 }
 
 .provision-member-checkbox:hover .checkmark {
-  border-color: #114C5A;
+  border-color: #7c3aed;
 }
 
 .provision-member-checkbox input:checked ~ .checkmark {
@@ -238,7 +238,7 @@
   top: 3px;
   width: 5px;
   height: 10px;
-  border: solid #114C5A;
+  border: solid #7c3aed;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -259,13 +259,13 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .provision-member-email {
   display: block;
   font-size: 12px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin-top: 2px;
 }
@@ -273,7 +273,7 @@
 .provision-member-dept {
   display: block;
   font-size: 11px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.5;
   margin-top: 2px;
 }
@@ -293,7 +293,7 @@
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background: #ffffff;
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-radius: 8px;
@@ -309,7 +309,7 @@
 
 .provision-role-select:focus {
   outline: none;
-  border-color: #114C5A;
+  border-color: #7c3aed;
 }
 
 /* Error Message */
@@ -349,7 +349,7 @@
 
 .provision-skip-button {
   background: transparent;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .provision-skip-button:hover:not(:disabled) {
@@ -359,7 +359,7 @@
 .provision-submit-button,
 .provision-done-button {
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .provision-submit-button:hover:not(:disabled),
@@ -426,7 +426,7 @@
 .results-details h4 {
   font-size: 14px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 12px 0;
 }
 
@@ -449,7 +449,7 @@
 }
 
 .result-email {
-  color: #114C5A;
+  color: #7c3aed;
   font-weight: 500;
 }
 
