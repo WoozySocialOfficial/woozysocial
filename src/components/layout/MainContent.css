@@ -34,3 +34,9 @@
     min-height: calc(100vh - 60px);
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .main-content,
+.dark .main-content {
+  background-color: #0f172a;
+}

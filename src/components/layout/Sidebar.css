@@ -140,3 +140,43 @@
     display: none;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .sidebar,
+.dark .sidebar {
+  background: #111827;
+  border-right-color: #374151;
+}
+
+[data-theme="dark"] .sidebar .sidebar-logo-text,
+.dark .sidebar .sidebar-logo-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .sidebar .menu-item-text,
+.dark .sidebar .menu-item-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .sidebar .menu-item:hover,
+.dark .sidebar .menu-item:hover {
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .sidebar .menu-item.active,
+.dark .sidebar .menu-item.active {
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .sidebar .menu-item:hover .menu-item-text,
+[data-theme="dark"] .sidebar .menu-item.active .menu-item-text,
+.dark .sidebar .menu-item:hover .menu-item-text,
+.dark .sidebar .menu-item.active .menu-item-text {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .sidebar .menu-item-badge,
+.dark .sidebar .menu-item-badge {
+  background-color: #7c3aed;
+  color: #ffffff;
+}

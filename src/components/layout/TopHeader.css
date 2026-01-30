@@ -348,3 +348,117 @@
   }
 }
 
+/* Dark Mode Styles */
+[data-theme="dark"] .top-header,
+.dark .top-header {
+  background-color: #111827;
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .top-header .profile-avatar,
+.dark .top-header .profile-avatar {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .top-header .profile-avatar:hover,
+.dark .top-header .profile-avatar:hover {
+  background-color: #6d28d9;
+}
+
+[data-theme="dark"] .profile-dropdown,
+.dark .profile-dropdown {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .profile-dropdown-name,
+.dark .profile-dropdown-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .profile-dropdown-email,
+.dark .profile-dropdown-email {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .profile-dropdown-divider,
+.dark .profile-dropdown-divider {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .profile-dropdown-item,
+.dark .profile-dropdown-item {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .profile-dropdown-item.notifications-link,
+.dark .profile-dropdown-item.notifications-link {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .profile-dropdown-item.notifications-link:hover,
+.dark .profile-dropdown-item.notifications-link:hover {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .profile-dropdown-item.connect-accounts,
+.dark .profile-dropdown-item.connect-accounts {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .profile-dropdown-item.connect-accounts:hover,
+.dark .profile-dropdown-item.connect-accounts:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .profile-dropdown-item.manage-subscription,
+.dark .profile-dropdown-item.manage-subscription {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .profile-dropdown-item.manage-subscription:hover,
+.dark .profile-dropdown-item.manage-subscription:hover {
+  background-color: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .profile-dropdown-item.sign-out,
+.dark .profile-dropdown-item.sign-out {
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .profile-dropdown-item.sign-out:hover,
+.dark .profile-dropdown-item.sign-out:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .theme-toggle-btn,
+.dark .theme-toggle-btn {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover,
+.dark .theme-toggle-btn:hover {
+  background-color: #374151;
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .mobile-nav,
+.dark .mobile-nav {
+  background: #111827;
+}
+
+[data-theme="dark"] .mobile-nav-item,
+.dark .mobile-nav-item {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .mobile-nav-item:hover,
+[data-theme="dark"] .mobile-nav-item.active,
+.dark .mobile-nav-item:hover,
+.dark .mobile-nav-item.active {
+  border-color: #7c3aed;
+  color: #a78bfa;
+}
+

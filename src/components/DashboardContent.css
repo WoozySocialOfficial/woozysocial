@@ -486,3 +486,165 @@
     font-size: 14px;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .dashboard-content,
+.dark .dashboard-content {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .dashboard-title,
+.dark .dashboard-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dashboard-subtitle,
+.dark .dashboard-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Stats Cards */
+[data-theme="dark"] .stat-card,
+.dark .stat-card {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .stat-label,
+.dark .stat-label {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .stat-value,
+.dark .stat-value {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .stat-value.skeleton,
+.dark .stat-value.skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+}
+
+/* Dark Mode Section Headers */
+[data-theme="dark"] .section-title,
+.dark .section-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .section-subtitle,
+.dark .section-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Quick Actions */
+[data-theme="dark"] .quick-actions-section,
+.dark .quick-actions-section {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .action-btn,
+.dark .action-btn {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .action-btn.primary,
+.dark .action-btn.primary {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .action-btn:hover,
+.dark .action-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark Mode Recent Posts */
+[data-theme="dark"] .recent-posts-section,
+.dark .recent-posts-section {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .post-item,
+.dark .post-item {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .post-text,
+.dark .post-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .post-status,
+[data-theme="dark"] .post-platforms,
+.dark .post-status,
+.dark .post-platforms {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .post-date,
+.dark .post-date {
+  color: #6b7280;
+}
+
+/* Dark Mode Social Accounts */
+[data-theme="dark"] .social-accounts-section,
+.dark .social-accounts-section {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .social-account-item,
+.dark .social-account-item {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .social-account-item:hover,
+.dark .social-account-item:hover {
+  background-color: #4b5563;
+}
+
+[data-theme="dark"] .social-account-item.clickable:hover,
+.dark .social-account-item.clickable:hover {
+  background-color: rgba(124, 58, 237, 0.15);
+  border-color: #7c3aed;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+[data-theme="dark"] .account-name,
+.dark .account-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .account-status,
+.dark .account-status {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .status-badge.inactive,
+.dark .status-badge.inactive {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .status-badge.active,
+.dark .status-badge.active {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .connect-button,
+.dark .connect-button {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .connect-button:hover:not(:disabled),
+.dark .connect-button:hover:not(:disabled) {
+  background-color: #6d28d9;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.4);
+}

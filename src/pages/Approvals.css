@@ -481,3 +481,265 @@
   margin-top: 10px;
   border: 1px solid;
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .approvals-page,
+.dark .approvals-page {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .approvals-header h1,
+.dark .approvals-header h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .approvals-header p,
+.dark .approvals-header p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .filter-tab,
+.dark .filter-tab {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .filter-tab:hover,
+.dark .filter-tab:hover {
+  border-color: #7c3aed;
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .filter-tab.active,
+.dark .filter-tab.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .loading-state,
+[data-theme="dark"] .empty-state,
+.dark .loading-state,
+.dark .empty-state {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .post-card,
+.dark .post-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .post-card:hover,
+.dark .post-card:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .post-card.selected,
+.dark .post-card.selected {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .platform-icon,
+.dark .platform-icon {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .post-preview,
+.dark .post-preview {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .post-card-footer,
+.dark .post-card-footer {
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] .post-date,
+.dark .post-date {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .comment-count,
+.dark .comment-count {
+  color: #a78bfa;
+  background: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .post-detail,
+.dark .post-detail {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .detail-header,
+.dark .detail-header {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .detail-header h3,
+.dark .detail-header h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .close-detail,
+.dark .close-detail {
+  background: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .close-detail:hover,
+.dark .close-detail:hover {
+  background: #4b5563;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .detail-section,
+.dark .detail-section {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .detail-section label,
+.dark .detail-section label {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .post-full-content,
+.dark .post-full-content {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .platform-tag,
+.dark .platform-tag {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .detail-section p,
+.dark .detail-section p {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .comments-section,
+.dark .comments-section {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .comments-section label,
+.dark .comments-section label {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .comment,
+.dark .comment {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .comment.system-comment,
+.dark .comment.system-comment {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border-left-color: #7c3aed;
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+[data-theme="dark"] .comment-author,
+.dark .comment-author {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .comment-time,
+.dark .comment-time {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .comment-text,
+.dark .comment-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .loading-comments,
+[data-theme="dark"] .no-comments,
+.dark .loading-comments,
+.dark .no-comments {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #6b7280;
+}
+
+[data-theme="dark"] .add-comment textarea,
+.dark .add-comment textarea {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .add-comment textarea:focus,
+.dark .add-comment textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .btn-add-comment,
+.dark .btn-add-comment {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .btn-add-comment:hover:not(:disabled),
+.dark .btn-add-comment:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+[data-theme="dark"] .approval-actions,
+.dark .approval-actions {
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] .btn-reject,
+.dark .btn-reject {
+  background: #1f2937;
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .btn-reject:hover:not(:disabled),
+.dark .btn-reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .btn-changes,
+.dark .btn-changes {
+  background: #1f2937;
+  border-color: #d97706;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .btn-changes:hover:not(:disabled),
+.dark .btn-changes:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .btn-approve,
+.dark .btn-approve {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .btn-approve:hover:not(:disabled),
+.dark .btn-approve:hover:not(:disabled) {
+  background: #059669;
+}
