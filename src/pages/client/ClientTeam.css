@@ -1,0 +1,33 @@
+.client-team-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.client-team-header {
+  margin-bottom: 24px;
+}
+
+.client-team-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  margin: 0 0 8px 0;
+}
+
+.client-team-header p {
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .client-team-header h1,
+.dark .client-team-header h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .client-team-header p,
+.dark .client-team-header p {
+  color: var(--text-secondary);
+}

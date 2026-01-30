@@ -44,6 +44,10 @@ const ClientDashboard = lazy(() => import("./pages/client/ClientDashboard").then
 const ClientApprovals = lazy(() => import("./pages/client/ClientApprovals").then(m => ({ default: m.ClientApprovals })));
 const ClientApproved = lazy(() => import("./pages/client/ClientApproved").then(m => ({ default: m.ClientApproved })));
 const ClientCalendar = lazy(() => import("./pages/client/ClientCalendar").then(m => ({ default: m.ClientCalendar })));
+const ClientAnalytics = lazy(() => import("./pages/client/ClientAnalytics").then(m => ({ default: m.ClientAnalytics })));
+const ClientBrandProfile = lazy(() => import("./pages/client/ClientBrandProfile").then(m => ({ default: m.ClientBrandProfile })));
+const ClientSocialInbox = lazy(() => import("./pages/client/ClientSocialInbox").then(m => ({ default: m.ClientSocialInbox })));
+const ClientTeam = lazy(() => import("./pages/client/ClientTeam").then(m => ({ default: m.ClientTeam })));
 
 // 404 page
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -107,6 +111,10 @@ function App() {
                         <Route path="/approvals" element={<ClientApprovals />} />
                         <Route path="/approved" element={<ClientApproved />} />
                         <Route path="/calendar" element={<ClientCalendar />} />
+                        <Route path="/team" element={<ClientTeam />} />
+                        <Route path="/brand-profile" element={<ClientBrandProfile />} />
+                        <Route path="/social-inbox" element={<ClientSocialInbox />} />
+                        <Route path="/analytics" element={<ClientAnalytics />} />
                         <Route path="/notifications" element={<Notifications />} />
                       </Routes>
                     </ClientLayout>

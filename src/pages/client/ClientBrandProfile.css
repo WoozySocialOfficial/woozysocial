@@ -1,0 +1,33 @@
+.client-brand-profile-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.client-brand-profile-header {
+  margin-bottom: 24px;
+}
+
+.client-brand-profile-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  margin: 0 0 8px 0;
+}
+
+.client-brand-profile-header p {
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .client-brand-profile-header h1,
+.dark .client-brand-profile-header h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .client-brand-profile-header p,
+.dark .client-brand-profile-header p {
+  color: var(--text-secondary);
+}

@@ -10,7 +10,11 @@ export const ClientSidebar = () => {
     { name: "Dashboard", path: "/client/dashboard" },
     { name: "Pending Approvals", path: "/client/approvals" },
     { name: "Approved Posts", path: "/client/approved" },
-    { name: "Calendar", path: "/client/calendar" }
+    { name: "Calendar", path: "/client/calendar" },
+    { name: "Team", path: "/client/team" },
+    { name: "Brand Profile", path: "/client/brand-profile" },
+    { name: "Social Inbox", path: "/client/social-inbox" },
+    { name: "Analytics", path: "/client/analytics" }
   ];
 
   return (
