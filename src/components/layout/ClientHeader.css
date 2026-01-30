@@ -130,3 +130,93 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-header,
+.dark .client-header {
+  background-color: #111827;
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .client-profile-avatar,
+.dark .client-profile-avatar {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .client-profile-avatar:hover,
+.dark .client-profile-avatar:hover {
+  background-color: #6d28d9;
+}
+
+[data-theme="dark"] .client-profile-dropdown,
+.dark .client-profile-dropdown {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .client-dropdown-name,
+.dark .client-dropdown-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .client-dropdown-email,
+.dark .client-dropdown-email {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .client-dropdown-role,
+.dark .client-dropdown-role {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .client-dropdown-divider,
+.dark .client-dropdown-divider {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .client-dropdown-item,
+.dark .client-dropdown-item {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .client-dropdown-item.profile-settings-link,
+.dark .client-dropdown-item.profile-settings-link {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .client-dropdown-item.profile-settings-link:hover,
+.dark .client-dropdown-item.profile-settings-link:hover {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .client-dropdown-item.notifications-link,
+.dark .client-dropdown-item.notifications-link {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .client-dropdown-item.notifications-link:hover,
+.dark .client-dropdown-item.notifications-link:hover {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .client-dropdown-item.connect-accounts,
+.dark .client-dropdown-item.connect-accounts {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .client-dropdown-item.connect-accounts:hover,
+.dark .client-dropdown-item.connect-accounts:hover {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .client-dropdown-item.sign-out,
+.dark .client-dropdown-item.sign-out {
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .client-dropdown-item.sign-out:hover,
+.dark .client-dropdown-item.sign-out:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}

@@ -481,3 +481,237 @@
     font-size: 12px;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .team-container,
+.dark .team-container {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .team-title,
+.dark .team-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .team-subtitle,
+.dark .team-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Team Section */
+[data-theme="dark"] .team-section,
+.dark .team-section {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .section-title,
+.dark .section-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .section-subtitle,
+.dark .section-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Buttons */
+[data-theme="dark"] .add-member-button,
+.dark .add-member-button {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .add-member-button:hover,
+.dark .add-member-button:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .add-client-button,
+.dark .add-client-button {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .add-client-button:hover,
+.dark .add-client-button:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+/* Dark Mode Member Cards */
+[data-theme="dark"] .member-card,
+.dark .member-card {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-card:hover,
+.dark .member-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .member-card.expired,
+.dark .member-card.expired {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .member-avatar,
+.dark .member-avatar {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-avatar.pending,
+.dark .member-avatar.pending {
+  background-color: #f59e0b;
+  border-color: #d97706;
+}
+
+[data-theme="dark"] .member-avatar.owner,
+.dark .member-avatar.owner {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #6d28d9;
+}
+
+[data-theme="dark"] .member-name,
+.dark .member-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .member-email,
+.dark .member-email {
+  color: #9ca3af;
+}
+
+/* Dark Mode Member Role */
+[data-theme="dark"] .member-role,
+.dark .member-role {
+  color: #ffffff;
+  background-color: #7c3aed;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-role.pending-badge,
+.dark .member-role.pending-badge {
+  background-color: #fbbf24;
+  border-color: #d97706;
+  color: #000000;
+}
+
+[data-theme="dark"] .member-role.owner-role,
+.dark .member-role.owner-role {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .owner-badge,
+.dark .owner-badge {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* Dark Mode Role Dropdown */
+[data-theme="dark"] .role-dropdown,
+.dark .role-dropdown {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .role-dropdown:hover,
+.dark .role-dropdown:hover {
+  background-color: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .role-dropdown:focus,
+.dark .role-dropdown:focus {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+}
+
+/* Dark Mode Action Buttons */
+[data-theme="dark"] .remove-button,
+.dark .remove-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+  background-color: transparent;
+}
+
+[data-theme="dark"] .remove-button:hover,
+.dark .remove-button:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .leave-workspace-button,
+.dark .leave-workspace-button {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .leave-workspace-button:hover,
+.dark .leave-workspace-button:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+}
+
+[data-theme="dark"] .resend-button,
+.dark .resend-button {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .resend-button:hover,
+.dark .resend-button:hover {
+  background-color: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .cancel-button,
+.dark .cancel-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+  background-color: transparent;
+}
+
+[data-theme="dark"] .cancel-button:hover,
+.dark .cancel-button:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* Dark Mode Info Box */
+[data-theme="dark"] .team-info-box,
+.dark .team-info-box {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .info-text,
+.dark .info-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .info-subtext,
+.dark .info-subtext {
+  color: #9ca3af;
+}
+
+/* Dark Mode Invite Meta */
+[data-theme="dark"] .invite-meta,
+.dark .invite-meta {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .invite-expiry.expired,
+.dark .invite-expiry.expired {
+  color: #fca5a5;
+}

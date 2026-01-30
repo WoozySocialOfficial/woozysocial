@@ -433,3 +433,151 @@
     font-size: 14px;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .calendar-modal-overlay,
+.dark .calendar-modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="dark"] .calendar-post-modal,
+.dark .calendar-post-modal {
+  background: #1f2937;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark Mode Header Bar */
+[data-theme="dark"] .modal-header-bar,
+.dark .modal-header-bar {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .modal-close-btn,
+.dark .modal-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .modal-close-btn:hover,
+.dark .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Dark Mode Navigation Arrows */
+[data-theme="dark"] .nav-arrow,
+.dark .nav-arrow {
+  background: rgba(31, 41, 55, 0.95);
+  border-color: #4b5563;
+  color: #a78bfa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .nav-arrow:hover:not(:disabled),
+.dark .nav-arrow:hover:not(:disabled) {
+  background: #374151;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark Mode Body Content */
+[data-theme="dark"] .section-label,
+.dark .section-label {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .post-caption-text,
+.dark .post-caption-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .scheduled-time-text,
+.dark .scheduled-time-text {
+  color: #e5e7eb;
+}
+
+/* Dark Mode Platforms List */
+[data-theme="dark"] .platform-chip-modal,
+.dark .platform-chip-modal {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .platform-chip-modal:hover,
+.dark .platform-chip-modal:hover {
+  background: #4b5563;
+}
+
+/* Dark Mode Comments Section */
+[data-theme="dark"] .comments-section-modal,
+.dark .comments-section-modal {
+  background: #374151;
+}
+
+/* Dark Mode Approval Section */
+[data-theme="dark"] .modal-approval-section,
+.dark .modal-approval-section {
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] .feedback-textarea,
+.dark .feedback-textarea {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .feedback-textarea:focus,
+.dark .feedback-textarea:focus {
+  border-color: #7c3aed;
+  background: #1f2937;
+}
+
+/* Dark Mode Approval Action Buttons */
+[data-theme="dark"] .approval-btn-reject,
+.dark .approval-btn-reject {
+  background: #1f2937;
+  color: #fca5a5;
+  border-color: #dc2626;
+}
+
+[data-theme="dark"] .approval-btn-reject:hover:not(:disabled),
+.dark .approval-btn-reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .approval-btn-changes,
+.dark .approval-btn-changes {
+  background: #1f2937;
+  color: #fbbf24;
+  border-color: #d97706;
+}
+
+[data-theme="dark"] .approval-btn-changes:hover:not(:disabled),
+.dark .approval-btn-changes:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="dark"] .approval-btn-approve,
+.dark .approval-btn-approve {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .approval-btn-approve:hover:not(:disabled),
+.dark .approval-btn-approve:hover:not(:disabled) {
+  background: #059669;
+  border-color: #059669;
+}
+
+/* Dark Mode Status Banner */
+[data-theme="dark"] .status-banner-modal.approved,
+.dark .status-banner-modal.approved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .status-banner-modal.rejected,
+.dark .status-banner-modal.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
