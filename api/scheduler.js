@@ -225,6 +225,39 @@ module.exports = async function handler(req, res) {
 
         console.log(`[Scheduler] Successfully locked post ${post.id} for processing`);
 
+        // Check if post already has ayr_post_id (was sent to Ayrshare with scheduleDate)
+        // In this case, Ayrshare handled the scheduling, we just need to update status
+        if (post.ayr_post_id) {
+          console.log(`[Scheduler] Post ${post.id} already sent to Ayrshare (ayr_post_id: ${post.ayr_post_id}), updating status to posted`);
+
+          const { error: updateError } = await supabase
+            .from('posts')
+            .update({
+              status: 'posted',
+              posted_at: new Date().toISOString(),
+              last_error: null
+            })
+            .eq('id', post.id);
+
+          if (updateError) {
+            console.error(`[Scheduler] Error updating post ${post.id}:`, updateError);
+            logError('scheduler.update_scheduled', updateError, { postId: post.id });
+          } else {
+            console.log(`[Scheduler] Post ${post.id} status updated to posted`);
+          }
+
+          // Invalidate cache after updating status
+          await invalidateWorkspaceCache(post.workspace_id);
+
+          results.success.push({
+            postId: post.id,
+            ayrPostId: post.ayr_post_id,
+            note: 'Status updated (post was already scheduled in Ayrshare)'
+          });
+
+          continue; // Skip to next post - don't send again
+        }
+
         // Get profile key for the workspace
         const profileKey = await getWorkspaceProfileKey(post.workspace_id);
 
