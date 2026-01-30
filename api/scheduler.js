@@ -210,20 +210,20 @@ module.exports = async function handler(req, res) {
 
         // CRITICAL: Set status to 'processing' to prevent race conditions
         // This prevents concurrent scheduler runs from picking up the same post
-        const { error: lockError } = await supabase
+        const { data: lockData, error: lockError, count } = await supabase
           .from('posts')
           .update({ status: 'processing' })
           .eq('id', post.id)
-          .eq('status', 'scheduled'); // Only update if still scheduled
+          .eq('status', 'scheduled') // Only update if still scheduled
+          .select();
 
-        if (lockError) {
-          console.error(`[Scheduler] Failed to lock post ${post.id}:`, lockError);
-          results.failed.push({
-            postId: post.id,
-            error: 'Failed to acquire processing lock'
-          });
-          continue;
+        // If no rows were updated, another scheduler instance already locked this post
+        if (lockError || !lockData || lockData.length === 0) {
+          console.warn(`[Scheduler] Post ${post.id} already being processed by another instance - skipping`);
+          continue; // Don't add to results, just skip silently
         }
+
+        console.log(`[Scheduler] Successfully locked post ${post.id} for processing`);
 
         // Get profile key for the workspace
         const profileKey = await getWorkspaceProfileKey(post.workspace_id);
