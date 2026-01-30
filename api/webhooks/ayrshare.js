@@ -124,9 +124,9 @@ async function handleComment(payload, supabase) {
     return;
   }
 
-  // Insert comment
+  // Insert engagement comment from social media follower
   const { error: commentError } = await supabase
-    .from('post_comments')
+    .from('social_engagement_comments')
     .insert({
       post_id: post.id,
       workspace_id: post.workspace_id,
@@ -199,10 +199,26 @@ async function handleMessage(payload, supabase) {
       })
       .eq('id', existingConv.id);
   } else {
+    // Find workspace_id from the payload or first available workspace
+    // TODO: Map platform account to workspace_id properly
+    const { data: workspaces } = await supabase
+      .from('workspaces')
+      .select('id')
+      .limit(1)
+      .single();
+
+    const workspaceId = workspaces?.id;
+
+    if (!workspaceId) {
+      console.error('[WEBHOOK] No workspace found for conversation');
+      return;
+    }
+
     // Create new conversation
     const { data: newConv, error: convError } = await supabase
       .from('inbox_conversations')
       .insert({
+        workspace_id: workspaceId,
         external_id: conversationExternalId,
         platform: platform,
         participant_username: from || sender,

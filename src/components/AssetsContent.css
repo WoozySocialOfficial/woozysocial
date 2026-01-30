@@ -12,13 +12,13 @@
 .assets-title {
   font-size: 32px;
   font-weight: 700;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 8px 0;
 }
 
 .assets-subtitle {
   font-size: 16px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.7;
   margin: 0;
 }
@@ -41,7 +41,7 @@
 .section-title {
   font-size: 24px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   margin: 0;
 }
 
@@ -64,7 +64,7 @@
 
 .upload-button {
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
 }
 
 .upload-button:hover {
@@ -75,7 +75,7 @@
 
 .refresh-button {
   background: transparent;
-  color: #114C5A;
+  color: #000000;
 }
 
 .refresh-button:hover {
@@ -100,7 +100,7 @@
 
 .asset-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(17, 76, 90, 0.15);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
 }
 
 .asset-preview {
@@ -130,7 +130,7 @@
 .asset-name {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -138,14 +138,14 @@
 
 .asset-meta {
   font-size: 12px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.6;
 }
 
 .empty-state {
   text-align: center;
   padding: 80px 20px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.5;
 }
 

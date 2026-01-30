@@ -48,7 +48,7 @@
 
 .view-btn.active {
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-weight: 600;
 }
@@ -265,7 +265,7 @@
 /* More posts indicator for week view (when posts overflow) */
 .more-posts-indicator {
   font-size: 10px;
-  color: #114C5A;
+  color: #000000;
   font-weight: 600;
   padding: 3px 6px;
   background: #e0f2fe;
@@ -298,7 +298,7 @@
 
 .schedule-day-header {
   padding: 16px 20px;
-  background: #114C5A;
+  background: #7c3aed;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -313,7 +313,7 @@
 
 .schedule-day-count {
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 13px;
@@ -494,8 +494,8 @@
 }
 
 .filter-tab.active {
-  background: #114C5A;
-  border-color: #114C5A;
+  background: #7c3aed;
+  border-color: #7c3aed;
   color: white;
 }
 
@@ -795,7 +795,7 @@
 
 .comment-input-section textarea:focus {
   outline: none;
-  border-color: #114C5A;
+  border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(17, 76, 90, 0.1);
 }
 

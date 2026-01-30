@@ -10,7 +10,7 @@
 .calendar-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
@@ -98,11 +98,11 @@
 
 .calendar-day.today {
   background: #eff6ff;
-  border: 2px solid #114C5A;
+  border: 2px solid #7c3aed;
 }
 
 .calendar-day.selected {
-  background: #114C5A;
+  background: #7c3aed;
   color: #ffffff;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .calendar-day.has-posts.selected {
-  background: #114C5A;
+  background: #7c3aed;
 }
 
 .day-number {
@@ -292,7 +292,7 @@
 .post-time {
   font-size: 13px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin-bottom: 8px;
 }
 

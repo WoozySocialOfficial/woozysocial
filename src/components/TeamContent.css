@@ -11,13 +11,13 @@
 .team-title {
   font-size: 32px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
 .team-subtitle {
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -43,13 +43,13 @@
 .section-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 4px 0;
 }
 
 .section-subtitle {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin: 0;
 }
@@ -63,7 +63,7 @@
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
   font-family: inherit;
 }
 
@@ -86,13 +86,13 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background: #114C5A;
+  background: #7c3aed;
   color: #ffffff;
   font-family: inherit;
 }
 
 .add-client-button:hover {
-  background: #0d3a47;
+  background: #6d28d9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(17, 76, 90, 0.3);
 }
@@ -135,7 +135,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,13 +154,13 @@
 .member-name {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0;
 }
 
 .member-email {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin: 0;
 }
@@ -174,7 +174,7 @@
 .member-role {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background-color: #afabf9;
   padding: 8px 16px;
   border-radius: 8px;
@@ -184,7 +184,7 @@
 .role-dropdown {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background-color: #afabf9;
   padding: 8px 16px;
   border-radius: 8px;
@@ -254,13 +254,13 @@
 .info-text {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
 .info-subtext {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -285,7 +285,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
 }
 
@@ -319,7 +319,7 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-family: inherit;
   display: flex;
@@ -328,7 +328,7 @@
 }
 
 .resend-button:hover {
-  background-color: #0d3a47;
+  background-color: #6d28d9;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(17, 76, 90, 0.2);
 }
@@ -354,13 +354,13 @@
 /* Owner styles */
 .member-avatar.owner {
   background-color: #afabf9;
-  color: #114C5A;
-  border: 3px solid #114C5A;
+  color: #7c3aed;
+  border: 3px solid #7c3aed;
 }
 
 .owner-badge {
   display: inline-block;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-size: 11px;
   font-weight: 700;
@@ -372,7 +372,7 @@
 }
 
 .member-role.owner-role {
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-weight: 700;
 }

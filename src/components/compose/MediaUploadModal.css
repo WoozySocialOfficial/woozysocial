@@ -63,7 +63,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .modal-close-button {
@@ -124,14 +124,14 @@
 }
 
 .drop-zone-content svg {
-  color: #114C5A;
+  color: #7c3aed;
   margin-bottom: 8px;
 }
 
 .drop-zone-text {
   font-size: 18px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0;
 }
 
@@ -148,7 +148,7 @@
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Inter', sans-serif;
@@ -252,7 +252,7 @@
 .file-name {
   font-size: 12px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -271,7 +271,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #114C5A;
+  background: #7c3aed;
   color: white;
   display: flex;
   align-items: center;
@@ -317,7 +317,7 @@
 
 .upload-info-item {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .upload-info-item strong {
@@ -328,7 +328,7 @@
 .processing-indicator {
   text-align: center;
   padding: 12px;
-  color: #114C5A;
+  color: #7c3aed;
   font-size: 14px;
   font-weight: 600;
   background: #F1F6F4;
@@ -370,7 +370,7 @@
 
 .btn-confirm {
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
   border: 2px solid transparent;
 }
 

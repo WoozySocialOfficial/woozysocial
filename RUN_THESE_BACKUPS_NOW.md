@@ -32,7 +32,12 @@ git checkout main
 ```bash
 git log --oneline -1
 ```
-**Write down the commit hash here:** _________________________
+**Write down the commit hash here:** 
+```
+PS C:\Users\mageb\OneDrive\Desktop\woozy(13-01)\woozysocial> git log --oneline -1
+7f44997 (HEAD -> main, tag: v1.0-stable-jan30, origin/main, origin/backup-2026-01-30-before-critical-fixes, origin/HEAD, backup-2026-01-30-before-critical-fixes) Add comprehensive backup and rollback strategy before critical fixes
+PS C:\Users\mageb\OneDrive\Desktop\woozy(13-01)\woozysocial> 
+```
 
 ### 4. Database Backup via Supabase
 

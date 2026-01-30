@@ -11,13 +11,13 @@
 .agency-team-title {
   font-size: 32px;
   font-weight: 700;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 8px 0;
 }
 
 .agency-team-subtitle {
   font-size: 16px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.7;
   margin: 0;
   max-width: 600px;
@@ -48,13 +48,13 @@
 .section-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 4px 0;
 }
 
 .section-subtitle {
   font-size: 14px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.6;
   margin: 0;
 }
@@ -68,7 +68,7 @@
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
   font-family: inherit;
 }
 
@@ -97,7 +97,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #114C5A;
+  border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(17, 76, 90, 0.1);
 }
 
@@ -109,7 +109,7 @@
   cursor: pointer;
   border: 2px solid rgba(0, 0, 0, 0.2);
   background: transparent;
-  color: #114C5A;
+  color: #000000;
   font-family: inherit;
   transition: all 0.2s;
 }
@@ -157,7 +157,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,7 +188,7 @@
 .member-name {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   margin: 0;
   display: flex;
   align-items: center;
@@ -197,14 +197,14 @@
 
 .member-email {
   font-size: 14px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.6;
   margin: 0;
 }
 
 .member-department {
   font-size: 13px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.5;
   margin: 0;
 }
@@ -238,7 +238,7 @@
 .role-dropdown {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   background-color: #afabf9;
   padding: 8px 16px;
   border-radius: 8px;
@@ -266,13 +266,13 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #ffffff;
   font-family: inherit;
 }
 
 .edit-button:hover {
-  background-color: #0d3a47;
+  background-color: #6d28d9;
   transform: translateY(-1px);
 }
 
@@ -306,13 +306,13 @@
 .info-text {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 8px 0;
 }
 
 .info-subtext {
   font-size: 14px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.7;
   margin: 0;
 }
@@ -323,20 +323,20 @@
 }
 
 .upgrade-icon {
-  color: #114C5A;
+  color: #000000;
   margin-bottom: 20px;
 }
 
 .upgrade-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 12px 0;
 }
 
 .upgrade-text {
   font-size: 16px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.7;
   margin: 0 0 24px 0;
   max-width: 400px;
@@ -353,7 +353,7 @@
   text-decoration: none;
   transition: all 0.2s;
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
   border: 2px solid rgba(0, 0, 0, 0.4);
 }
 
@@ -371,7 +371,7 @@
 .info-section-title {
   font-size: 20px;
   font-weight: 700;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 24px 0;
 }
 
@@ -391,7 +391,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -404,13 +404,13 @@
 .step-content h4 {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
   margin: 0 0 4px 0;
 }
 
 .step-content p {
   font-size: 14px;
-  color: #114C5A;
+  color: #000000;
   opacity: 0.7;
   margin: 0;
 }

@@ -109,7 +109,7 @@
   top: -6px;
   right: -6px;
   background: #afabf9;
-  color: #114C5A;
+  color: #000000;
   border-radius: 50%;
   min-width: 20px;
   height: 20px;
@@ -140,7 +140,7 @@
 .preview-label {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #000000;
 }
 
 .btn-clear-all {
@@ -177,7 +177,7 @@
 }
 
 .media-thumbnails::-webkit-scrollbar-thumb {
-  background: #114C5A;
+  background: #7c3aed;
   border-radius: 3px;
 }
 
@@ -248,7 +248,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #114C5A;
+  background: #7c3aed;
   color: white;
   display: flex;
   align-items: center;
@@ -262,7 +262,7 @@
   flex-shrink: 0;
   width: 80px;
   height: 80px;
-  border: 2px dashed rgba(17, 76, 90, 0.4);
+  border: 2px dashed rgba(124, 58, 237, 0.4);
   border-radius: 8px;
   background: transparent;
   display: flex;
@@ -271,7 +271,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  color: #114C5A;
+  color: #000000;
   gap: 2px;
 }
 

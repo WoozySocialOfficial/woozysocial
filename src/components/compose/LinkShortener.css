@@ -10,7 +10,7 @@
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .link-shortener-input-row {
@@ -30,7 +30,7 @@
 
 .link-shortener-input:focus {
   outline: none;
-  border-color: #114C5A;
+  border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(17, 76, 90, 0.1);
 }
 
@@ -41,7 +41,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -90,7 +90,7 @@
 }
 
 .link-shortener-copy-btn {
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #ffffff;
 }
 
@@ -100,7 +100,7 @@
 
 .link-shortener-insert-btn {
   background-color: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .link-shortener-insert-btn:hover {
