@@ -100,7 +100,7 @@ export const PostSettings = ({
                 <span>Thread Post</span>
               </label>
               <p className="setting-description">
-                Break long posts into threaded tweets (Twitter/X)
+                Break long posts into threaded tweets (Twitter/X). <strong>Tip:</strong> Add blank lines (double Enter) between paragraphs to ensure each tweet stays under 280 characters.
               </p>
 
               {/* Show thread numbering option if thread is enabled */}
@@ -142,7 +142,7 @@ export const PostSettings = ({
               </select>
               <p className="setting-description">
                 {instagramType === 'feed' && 'Standard Instagram post that appears in feeds'}
-                {instagramType === 'story' && 'Temporary post that disappears after 24 hours'}
+                {instagramType === 'story' && 'Temporary post that disappears after 24 hours. Images must be between 320px and 1920px wide.'}
                 {instagramType === 'reel' && 'Short-form video content (requires video)'}
               </p>
             </div>

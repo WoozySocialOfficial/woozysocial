@@ -666,8 +666,13 @@ module.exports = async function handler(req, res) {
       }
 
       if (settings.instagramType === 'story') {
+        // Instagram Stories have specific dimension requirements
+        // Width must be between 320px and 1920px
+        // We can't check actual dimensions server-side without downloading the image
+        // but we can add a note to the validation
         postData.instagramOptions = { stories: true };
         console.log('[POST] - Instagram Story mode enabled');
+        console.log('[POST] - Note: Instagram Stories require image width between 320px and 1920px');
       } else if (settings.instagramType === 'reel') {
         // Only set reel options if not auto-detected
         // Ayrshare auto-detects videos as reels, so we only need to specify if forcing
@@ -675,6 +680,20 @@ module.exports = async function handler(req, res) {
         console.log('[POST] - Instagram Reel mode enabled');
       }
       // 'feed' is default, no special options needed
+    }
+
+    // Twitter thread validation
+    if (settings.threadPost && hasTwitter) {
+      // Ayrshare breaks threads on line breaks, not character count
+      // Warn if any paragraph between line breaks exceeds 280 characters
+      const paragraphs = text.split('\n\n');
+      const longParagraphs = paragraphs.filter(p => p.length > 280);
+
+      if (longParagraphs.length > 0) {
+        const maxLength = Math.max(...longParagraphs.map(p => p.length));
+        console.warn(`[POST] Thread contains paragraphs longer than 280 chars. Longest: ${maxLength} chars`);
+        console.warn('[POST] This may cause Ayrshare to fail the thread. Consider adding more line breaks.');
+      }
     }
 
     console.log('[POST] Post settings applied. Final postData:', {
