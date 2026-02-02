@@ -2385,22 +2385,23 @@ export const ComposeContent = () => {
                     style={{
                       padding: '15px',
                       marginBottom: '10px',
-                      border: '2px solid #e5e7eb',
+                      border: '2px solid #3f3f46',
                       borderRadius: '10px',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      backgroundColor: '#f9fafb'
+                      backgroundColor: '#27272a',
+                      color: '#fafafa'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#6465f1';
-                      e.currentTarget.style.backgroundColor = '#f5f3ff';
+                      e.currentTarget.style.borderColor = '#9333EA';
+                      e.currentTarget.style.backgroundColor = '#3f3f46';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.backgroundColor = '#f9fafb';
+                      e.currentTarget.style.borderColor = '#3f3f46';
+                      e.currentTarget.style.backgroundColor = '#27272a';
                     }}
                   >
-                    <div style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ fontSize: '14px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
                       {variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '')}
                     </div>
                   </div>
