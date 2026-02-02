@@ -10,7 +10,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { baseURL } from "../utils/constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
-import { useConnectedAccounts } from "../hooks/useQueries";
+import { useConnectedAccounts, useInvalidateQueries } from "../hooks/useQueries";
 import { supabase, uploadMediaDirect } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
@@ -111,6 +111,9 @@ export const ComposeContent = () => {
   const { data: accountsData } = useConnectedAccounts(activeWorkspace?.id, user?.id);
   const connectedAccounts = accountsData?.accounts || [];
   const accountDetails = accountsData?.accountDetails || [];
+
+  // Cache invalidation helpers
+  const { invalidatePosts, invalidateAccounts } = useInvalidateQueries();
 
   // Helper to get account info for a platform
   const getAccountInfo = (platform) => {
@@ -466,6 +469,9 @@ export const ComposeContent = () => {
 
       setLastSaved(new Date());
       console.log("[Draft] Saved successfully, id:", json.data?.id || currentDraftId);
+
+      // Invalidate cache so Posts page shows the new/updated draft immediately
+      invalidatePosts(activeWorkspace?.id);
     } catch (error) {
       console.error("Error saving draft:", error);
       // Show error toast so user knows draft didn't save
@@ -509,6 +515,17 @@ export const ComposeContent = () => {
       saveDraft();
     };
   }, [saveDraft]);
+
+  // Listen for social accounts updates from other components
+  useEffect(() => {
+    const handleAccountsUpdated = () => {
+      // Invalidate connected accounts cache so newly connected accounts appear immediately
+      invalidateAccounts(activeWorkspace?.id || user?.id);
+    };
+
+    window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
+    return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
+  }, [activeWorkspace?.id, user?.id, invalidateAccounts]);
 
   // Calculate engagement score based on post content - ENHANCED VERSION
   useEffect(() => {
@@ -824,6 +841,49 @@ export const ComposeContent = () => {
     setTempScheduledDate(date);
   };
 
+  // Helper to get best time score for a given hour
+  const getBestTimeScore = (hour) => {
+    if (!bestTimes || bestTimes.length === 0) return 0;
+
+    const selectedDay = tempScheduledDate ? tempScheduledDate.toLocaleDateString('en-US', { weekday: 'long' }) : null;
+
+    // Find matching best time entries for this hour
+    const matchingTimes = bestTimes.filter(bt => {
+      const timeHour = parseInt(bt.time.split(':')[0]);
+      const isPM = bt.time.includes('PM');
+      const is12Hour = timeHour === 12;
+      let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
+
+      // Check if this hour matches and day matches (if selected)
+      return hour24 === hour && (!selectedDay || bt.day === selectedDay);
+    });
+
+    return matchingTimes.length > 0 ? matchingTimes[0].score : 0;
+  };
+
+  // Quick select a best time
+  const handleQuickSelectBestTime = (bestTime) => {
+    const timeHour = parseInt(bestTime.time.split(':')[0]);
+    const isPM = bestTime.time.includes('PM');
+    const is12Hour = timeHour === 12;
+    let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
+
+    // Find the next occurrence of this day
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const targetDayIndex = dayNames.indexOf(bestTime.day);
+    const today = new Date();
+    const currentDayIndex = today.getDay();
+
+    let daysUntilTarget = targetDayIndex - currentDayIndex;
+    if (daysUntilTarget <= 0) daysUntilTarget += 7; // Next week if today or past
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+    targetDate.setHours(hour24, 0, 0, 0);
+
+    setTempScheduledDate(targetDate);
+  };
+
   const handleConfirmSchedule = async () => {
     if (!tempScheduledDate || !user) return;
 
@@ -905,6 +965,9 @@ export const ComposeContent = () => {
           duration: 4000,
           isClosable: true
         });
+
+        // Invalidate cache so Schedule page shows the new post immediately
+        invalidatePosts(activeWorkspace?.id);
 
         // Reset form completely
         setPost({ text: "", media: [] });
@@ -2275,35 +2338,143 @@ export const ComposeContent = () => {
       )}
 
       {/* Schedule Modal */}
-      <Modal isOpen={isOpen} onClose={handleCancelSchedule}>
+      <Modal isOpen={isOpen} onClose={handleCancelSchedule} size="xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Schedule Post</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <DatePicker
-              selected={tempScheduledDate}
-              onChange={handleDateSelect}
-              showTimeSelect
-              timeIntervals={15}
-              dateFormat="Pp"
-              minDate={new Date()}
-              inline
-            />
-            {tempScheduledDate && (
-              <div style={{
-                marginTop: '20px',
-                padding: '15px',
-                backgroundColor: '#f0f4ff',
-                borderRadius: '8px',
-                border: '1px solid #6465f1'
-              }}>
-                <strong>Selected Date & Time:</strong>
-                <div style={{ marginTop: '8px', fontSize: '16px', color: '#6465f1' }}>
-                  {formatDateInTimezone(tempScheduledDate, activeWorkspace?.timezone || 'UTC')}
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>
+              {/* Left: Date/Time Picker */}
+              <div>
+                <DatePicker
+                  selected={tempScheduledDate}
+                  onChange={handleDateSelect}
+                  showTimeSelect
+                  timeIntervals={15}
+                  dateFormat="Pp"
+                  minDate={new Date()}
+                  inline
+                />
+                {tempScheduledDate && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f0f4ff',
+                    borderRadius: '8px',
+                    border: '1px solid #6465f1'
+                  }}>
+                    <strong>Selected Date & Time:</strong>
+                    <div style={{ marginTop: '8px', fontSize: '16px', color: '#6465f1' }}>
+                      {formatDateInTimezone(tempScheduledDate, activeWorkspace?.timezone || 'UTC')}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Right: Best Times Visualization */}
+              <div style={{
+                borderLeft: '1px solid #e5e7eb',
+                paddingLeft: '20px'
+              }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  marginBottom: '12px',
+                  color: '#374151'
+                }}>
+                  Best Times to Post
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  marginBottom: '16px'
+                }}>
+                  {hasRealData ? 'Based on your analytics' : 'Industry averages'}
+                </div>
+
+                {/* Top 5 Best Times as Clickable Cards */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {bestTimes.slice(0, 5).map((time, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleQuickSelectBestTime(time)}
+                      style={{
+                        padding: '12px',
+                        backgroundColor: idx === 0 ? '#ddd6fe' : '#f3f4f6',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: '2px solid transparent',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                        e.currentTarget.style.borderColor = idx === 0 ? '#7c3aed' : '#d1d5db';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateX(0)';
+                        e.currentTarget.style.borderColor = 'transparent';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                          fontWeight: '600',
+                          color: idx === 0 ? '#7c3aed' : '#6b7280',
+                          fontSize: '12px',
+                          minWidth: '20px'
+                        }}>
+                          #{idx + 1}
+                        </span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: '#1f2937'
+                          }}>
+                            {time.day} at {time.time}
+                          </div>
+                          {time.avgEngagement && (
+                            <div style={{
+                              fontSize: '11px',
+                              color: '#6b7280',
+                              marginTop: '2px'
+                            }}>
+                              Avg {time.avgEngagement} engagements
+                            </div>
+                          )}
+                        </div>
+                        <div style={{
+                          width: '40px',
+                          height: '6px',
+                          backgroundColor: '#e5e7eb',
+                          borderRadius: '3px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            width: `${time.score}%`,
+                            height: '100%',
+                            backgroundColor: idx === 0 ? '#7c3aed' : '#10b981',
+                            transition: 'width 0.3s'
+                          }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {bestTimes.length === 0 && (
+                  <div style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    color: '#9ca3af',
+                    fontSize: '13px'
+                  }}>
+                    Loading best times...
+                  </div>
+                )}
+              </div>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" onClick={handleCancelSchedule} mr={3}>
