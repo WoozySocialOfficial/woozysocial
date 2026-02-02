@@ -112,9 +112,16 @@ export const PostsContent = () => {
     const mediaUrls = post.mediaUrls || post.media_urls || [];
     if (!mediaUrls.length) return <span className="no-media">No media</span>;
 
+    const firstMedia = mediaUrls[0];
+    const isVideo = firstMedia?.match(/\.(mp4|mov|avi|webm|mkv)(\?|$)/i);
+
     return (
       <div className="media-preview">
-        <img src={mediaUrls[0]} alt="Post media" />
+        {isVideo ? (
+          <video src={firstMedia} alt="Post media" muted />
+        ) : (
+          <img src={firstMedia} alt="Post media" />
+        )}
         {mediaUrls.length > 1 && (
           <span className="media-count">+{mediaUrls.length - 1}</span>
         )}
