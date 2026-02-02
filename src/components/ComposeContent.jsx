@@ -338,29 +338,44 @@ export const ComposeContent = () => {
 
       // Upload local media files to storage if any exist
       if (dataUrlPreviews.length > 0 && post.media && post.media.length > 0) {
-        const formData = new FormData();
-        formData.append("workspaceId", activeWorkspace.id);
-        formData.append("userId", user.id);
+        const MAX_VERCEL_SIZE = 4 * 1024 * 1024; // 4MB
+        const largeFiles = post.media.filter(f => f instanceof File && f.size > MAX_VERCEL_SIZE);
+        const smallFiles = post.media.filter(f => f instanceof File && f.size <= MAX_VERCEL_SIZE);
 
-        // Add files to FormData
-        post.media.forEach((file) => {
-          if (file instanceof File) {
-            formData.append("media", file);
+        // Upload large files directly to Supabase (bypass Vercel limit)
+        if (largeFiles.length > 0) {
+          console.log('[Draft] Uploading large files directly to Supabase...');
+          for (const file of largeFiles) {
+            const result = await uploadMediaDirect(file, user.id, activeWorkspace.id);
+            if (result.success && result.publicUrl) {
+              uploadedUrls.push(result.publicUrl);
+            } else {
+              console.warn('[Draft] Large file upload failed:', result.error);
+            }
           }
-        });
+        }
 
-        // Upload media files
-        const uploadRes = await fetch(`${baseURL}/api/drafts/upload-media`, {
-          method: "POST",
-          body: formData
-        });
+        // Upload small files via API (normal flow)
+        if (smallFiles.length > 0) {
+          const formData = new FormData();
+          formData.append("workspaceId", activeWorkspace.id);
+          formData.append("userId", user.id);
 
-        if (uploadRes.ok) {
-          const uploadJson = await uploadRes.json();
-          uploadedUrls = [...uploadedUrls, ...(uploadJson.urls || [])];
-        } else {
-          // If upload fails, just save text without media
-          console.warn("[Draft] Media upload failed, saving text only");
+          smallFiles.forEach((file) => {
+            formData.append("media", file);
+          });
+
+          const uploadRes = await fetch(`${baseURL}/api/drafts/upload-media`, {
+            method: "POST",
+            body: formData
+          });
+
+          if (uploadRes.ok) {
+            const uploadJson = await uploadRes.json();
+            uploadedUrls = [...uploadedUrls, ...(uploadJson.urls || [])];
+          } else {
+            console.warn("[Draft] Small file upload failed, saving text only");
+          }
         }
       }
 
