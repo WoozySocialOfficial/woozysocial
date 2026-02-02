@@ -1298,6 +1298,11 @@ export const ComposeContent = () => {
         }
         // Mark progress as complete
         setPostingProgress({ step: 'complete', percent: 100, estimatedTime: 0 });
+        // Clear auto-save timer to prevent "draft save failed" error after success
+        if (autoSaveTimerRef.current) {
+          clearTimeout(autoSaveTimerRef.current);
+          autoSaveTimerRef.current = null;
+        }
         // Reset form completely
         setPost({ text: "", media: [] });
         setNetworks({
