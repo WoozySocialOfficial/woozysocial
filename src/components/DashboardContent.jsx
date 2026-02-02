@@ -27,9 +27,20 @@ const PLATFORM_ICONS = {
   snapchat: SiSnapchat
 };
 
+// Status labels and colors (matching Approvals page)
+const STATUS_CONFIG = {
+  pending: { label: 'Pending Approval', color: '#afabf9', textColor: '#114C5A' },
+  approved: { label: 'Approved', color: '#10b981', textColor: '#FFFFFF' },
+  rejected: { label: 'Rejected', color: '#ef4444', textColor: '#FFFFFF' },
+  changes_requested: { label: 'Change Requested', color: '#f59e0b', textColor: '#FFFFFF' },
+  scheduled: { label: 'Scheduled', color: '#3b82f6', textColor: '#FFFFFF' },
+  posted: { label: 'Posted', color: '#10b981', textColor: '#FFFFFF' },
+  failed: { label: 'Failed', color: '#ef4444', textColor: '#FFFFFF' }
+};
+
 export const DashboardContent = () => {
   const { user } = useAuth();
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, workspaceMembership, canApprovePost } = useWorkspace();
   const navigate = useNavigate();
   const toast = useToast();
   const { invalidateAccounts } = useInvalidateQueries();
@@ -186,6 +197,46 @@ export const DashboardContent = () => {
     return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
   }, []);
 
+  // Helper function to handle post click navigation
+  const handlePostClick = (post) => {
+    const approvalStatus = post.approval_status;
+    const postStatus = post.status;
+
+    // Priority 1: Check approval status first
+    if (approvalStatus === 'pending' && canApprovePost) {
+      // Admin/owner → go to approvals page
+      navigate('/approvals');
+    } else if (approvalStatus === 'changes_requested') {
+      // Anyone → go to compose to edit
+      navigate(`/compose?editDraft=${post.id}`);
+    } else if (approvalStatus === 'rejected') {
+      // Rejected → go to compose to revise
+      navigate(`/compose?editDraft=${post.id}`);
+    }
+    // Priority 2: Check post status
+    else if (postStatus === 'scheduled') {
+      navigate('/schedule');
+    } else if (postStatus === 'posted') {
+      navigate('/schedule');
+    } else if (postStatus === 'failed') {
+      navigate('/posts');
+    }
+    // Default: go to schedule
+    else {
+      navigate('/schedule');
+    }
+  };
+
+  // Helper function to determine display status
+  const getDisplayStatus = (post) => {
+    // Approval status takes priority
+    if (post.approval_status && post.approval_status !== 'approved') {
+      return post.approval_status;
+    }
+    // Then post status
+    return post.status || 'scheduled';
+  };
+
   return (
     <div className="dashboard-content">
       {/* Header */}
@@ -266,20 +317,44 @@ export const DashboardContent = () => {
                 recentPosts.map((post) => {
                   const platform = post.platforms?.[0]?.toLowerCase();
                   const Icon = PLATFORM_ICONS[platform] || FaInstagram;
-                  const postDate = new Date(post.created || post.scheduleDate);
+                  const postDate = new Date(post.created || post.scheduleDate || post.scheduled_for);
+                  const displayStatus = getDisplayStatus(post);
+                  const statusConfig = STATUS_CONFIG[displayStatus] || {
+                    label: displayStatus,
+                    color: '#6b7280',
+                    textColor: '#FFFFFF'
+                  };
 
                   return (
-                    <div key={post.id} className="post-item">
+                    <div
+                      key={post.id}
+                      className="post-item clickable"
+                      onClick={() => handlePostClick(post)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className={`post-icon ${platform || 'instagram'}`}>
                         <Icon size={20} />
                       </div>
                       <div className="post-content">
                         <div className="post-text">
-                          {post.post?.substring(0, 60)}{post.post?.length > 60 ? '...' : ''}
+                          {(post.post || post.caption || post.content || 'No content')?.substring(0, 60)}
+                          {(post.post || post.caption || post.content || '')?.length > 60 ? '...' : ''}
                         </div>
                         <div className="post-meta">
-                          <span className={`post-status ${post.status === 'success' ? 'success' : 'pending'}`}>
-                            Status: {post.status || 'scheduled'}
+                          <span
+                            className="post-status-badge"
+                            style={{
+                              backgroundColor: statusConfig.color,
+                              color: statusConfig.textColor,
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontWeight: '600',
+                              fontSize: '11px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}
+                          >
+                            {statusConfig.label}
                           </span>
                           <span className="post-platforms">
                             {post.platforms?.length || 0} platform{post.platforms?.length !== 1 ? 's' : ''}
