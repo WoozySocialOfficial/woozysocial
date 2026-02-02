@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button } from "@chakra-ui/react";
 import { formatDateInTimezone } from "../../utils/timezones";
 import "./ScheduleModal.css";
+import "./ScheduleModalCompact.css";
 
 export const ScheduleModal = ({
   isOpen,
@@ -144,8 +145,46 @@ export const ScheduleModal = ({
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
+  // Generate 15-minute time slots
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const hour12 = hour % 12 || 12;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        slots.push({ time24, time12, hour, minute });
+      }
+    }
+    return slots;
+  };
+
+  // Get engagement score for a given time
+  const getEngagementForTime = (hour, minute) => {
+    if (!bestTimes || bestTimes.length === 0) return null;
+
+    const selectedDay = selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long' }) : null;
+
+    // Find best times matching this hour (within same hour slot)
+    const matchingTimes = bestTimes.filter(bt => {
+      const timeHour = parseInt(bt.time.split(':')[0]);
+      const isPM = bt.time.includes('PM');
+      const is12Hour = timeHour === 12;
+      let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
+
+      return hour24 === hour && (!selectedDay || bt.day === selectedDay);
+    });
+
+    return matchingTimes.length > 0 ? matchingTimes[0] : null;
+  };
+
+  const timeSlots = generateTimeSlots();
+  const currentTimeSlot = timeSlots.find(slot => slot.time24 === selectedTime);
+  const currentEngagement = currentTimeSlot ? getEngagementForTime(currentTimeSlot.hour, currentTimeSlot.minute) : null;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} size="2xl" isCentered>
+    <Modal isOpen={isOpen} onClose={handleCancel} size="lg" isCentered>
       <ModalOverlay bg="rgba(0, 0, 0, 0.6)" backdropFilter="blur(4px)" />
       <ModalContent className="schedule-modal-geist">
         <ModalHeader className="schedule-modal-header">
@@ -157,9 +196,9 @@ export const ScheduleModal = ({
         <ModalCloseButton />
 
         <ModalBody className="schedule-modal-body">
-          <div className="schedule-grid">
-            {/* Left: Calendar */}
-            <div className="calendar-section">
+          <div className="schedule-grid-compact">
+            {/* Left: Calendar & Time */}
+            <div className="calendar-section-compact">
               {/* Month navigation */}
               <div className="calendar-header">
                 <button
@@ -206,68 +245,71 @@ export const ScheduleModal = ({
                 ))}
               </div>
 
-              {/* Time input */}
-              <div className="time-selector">
+              {/* Time selector with 15-min increments */}
+              <div className="time-selector-compact">
                 <label className="time-label">Time</label>
-                <input
-                  type="time"
+                <select
                   value={selectedTime}
                   onChange={handleTimeChange}
-                  className="time-input"
-                />
+                  className="time-select"
+                >
+                  {timeSlots.map(slot => (
+                    <option key={slot.time24} value={slot.time24}>
+                      {slot.time12}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Right: Best Times */}
-            <div className="best-times-section">
-              <div className="best-times-header">
-                <div className="best-times-title">Suggested Times</div>
-                <div className="best-times-source">
-                  {hasRealData ? 'Your data' : 'Industry avg'}
+            {/* Right: Best Time Highlight */}
+            <div className="best-time-highlight">
+              <div className="highlight-header">
+                <div className="highlight-title">Suggested</div>
+                <div className="highlight-source">
+                  {hasRealData ? 'Your data' : 'Industry'}
                 </div>
               </div>
 
-              <div className="best-times-list">
-                {bestTimes.slice(0, 5).map((time, idx) => (
-                  <button
-                    key={idx}
-                    className={`best-time-card ${idx === 0 ? 'top-pick' : ''}`}
-                    onClick={() => handleQuickSelectBestTime(time)}
-                  >
-                    <div className="best-time-content">
-                      <div className="best-time-main">
-                        <span className="best-time-rank">#{idx + 1}</span>
-                        <div className="best-time-info">
-                          <div className="best-time-day">{time.day}</div>
-                          <div className="best-time-time">{time.time}</div>
-                        </div>
-                      </div>
-                      {time.avgEngagement && (
-                        <div className="best-time-stats">
-                          {time.avgEngagement} avg
-                        </div>
-                      )}
+              {currentEngagement ? (
+                <div className="engagement-display">
+                  <div className="engagement-time">{currentEngagement.time}</div>
+                  <div className="engagement-label">Best time to post</div>
+                  {currentEngagement.avgEngagement && (
+                    <div className="engagement-value">
+                      ~{currentEngagement.avgEngagement} engagements
                     </div>
-                    <div className="best-time-score">
-                      <div className="score-bar-bg">
-                        <div className="score-bar-fill" style={{ width: `${time.score}%` }}></div>
-                      </div>
+                  )}
+                  <div className="engagement-score">
+                    <div className="score-bar-bg">
+                      <div className="score-bar-fill" style={{ width: `${currentEngagement.score}%` }}></div>
                     </div>
-                  </button>
-                ))}
-              </div>
+                    <div className="score-text">{currentEngagement.score}% optimal</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-engagement">
+                  <div className="selected-time-display">{currentTimeSlot?.time12 || '9:00 AM'}</div>
+                  <div className="no-engagement-text">No data for this time</div>
+                </div>
+              )}
+
+              {bestTimes.length > 0 && (
+                <div className="quick-picks">
+                  <div className="quick-picks-label">Quick picks:</div>
+                  {bestTimes.slice(0, 3).map((time, idx) => (
+                    <button
+                      key={idx}
+                      className="quick-pick-btn"
+                      onClick={() => handleQuickSelectBestTime(time)}
+                    >
+                      {time.day} {time.time}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Selected datetime display */}
-          {selectedDate && (
-            <div className="selected-datetime">
-              <div className="selected-datetime-label">Scheduled for</div>
-              <div className="selected-datetime-value">
-                {formatDateInTimezone(selectedDate, timezone)}
-              </div>
-            </div>
-          )}
         </ModalBody>
 
         <ModalFooter className="schedule-modal-footer">

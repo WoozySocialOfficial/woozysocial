@@ -5,7 +5,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  max-width: 900px !important;
+  max-width: 720px !important;
 }
 
 .schedule-modal-header {
@@ -35,11 +35,23 @@
   gap: 32px;
 }
 
+.schedule-grid-compact {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 24px;
+}
+
 /* Calendar Section */
 .calendar-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.calendar-section-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .calendar-header {
@@ -169,6 +181,12 @@
 .time-selector {
   margin-top: 16px;
   padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.time-selector-compact {
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid #f3f4f6;
 }
 
