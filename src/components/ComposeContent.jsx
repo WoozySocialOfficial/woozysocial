@@ -2383,25 +2383,25 @@ export const ComposeContent = () => {
                     key={index}
                     onClick={() => handleSelectVariation(variation)}
                     style={{
-                      padding: '15px',
-                      marginBottom: '10px',
-                      border: '2px solid #3f3f46',
-                      borderRadius: '10px',
+                      padding: '16px',
+                      marginBottom: '12px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      backgroundColor: '#27272a',
-                      color: '#fafafa'
+                      backgroundColor: '#ffffff',
+                      color: '#111827'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = '#9333EA';
-                      e.currentTarget.style.backgroundColor = '#3f3f46';
+                      e.currentTarget.style.backgroundColor = '#f5f3ff';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#3f3f46';
-                      e.currentTarget.style.backgroundColor = '#27272a';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.backgroundColor = '#ffffff';
                     }}
                   >
-                    <div style={{ fontSize: '14px', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                    <div style={{ fontSize: '15px', whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#111827', fontWeight: '400' }}>
                       {variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '')}
                     </div>
                   </div>
