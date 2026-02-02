@@ -48,9 +48,17 @@ module.exports = async function handler(req, res) {
     const endpoint = `${BASE_AYRSHARE}/analytics/post/${postId}`;
     console.log('Full URL:', endpoint);
 
-    // Try the API call
+    // Try the API call using POST with JSON body (correct format)
+    const endpoint2 = `${BASE_AYRSHARE}/analytics/post`;
+    const requestBody = {
+      id: postId,
+      platforms: ["tiktok", "instagram"] // Test with specific platforms
+    };
+
+    console.log('Request body:', JSON.stringify(requestBody));
+
     try {
-      const response = await axios.get(endpoint, {
+      const response = await axios.post(endpoint2, requestBody, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
@@ -66,7 +74,8 @@ module.exports = async function handler(req, res) {
         success: true,
         message: "Analytics API call successful",
         postId,
-        endpoint,
+        endpoint: endpoint2,
+        requestBody,
         responseStatus: response.status,
         responseData: response.data,
         diagnostic: {
@@ -92,7 +101,8 @@ module.exports = async function handler(req, res) {
         success: false,
         message: "Ayrshare API call failed",
         postId,
-        endpoint,
+        endpoint: endpoint2,
+        requestBody,
         error: {
           status,
           responseData,
