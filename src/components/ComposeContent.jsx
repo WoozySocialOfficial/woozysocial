@@ -59,6 +59,11 @@ export const ComposeContent = () => {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [postingProgress, setPostingProgress] = useState({
+    step: '',        // 'uploading' | 'saving' | 'publishing'
+    percent: 0,
+    estimatedTime: 0
+  });
   const [selectedPreviewPlatform, setSelectedPreviewPlatform] = useState("instagram");
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [isEditingScheduledPost, setIsEditingScheduledPost] = useState(false); // Track if editing a scheduled post
@@ -1038,6 +1043,14 @@ export const ComposeContent = () => {
 
     setIsLoading(true);
 
+    // Calculate estimated time based on media and platforms
+    const mediaCount = post.media?.length || 0;
+    const platformCount = Object.values(networks).filter(Boolean).length;
+    const estimatedTotal = 3 + (mediaCount * 3) + (platformCount * 2);
+
+    // Start progress tracking
+    setPostingProgress({ step: 'uploading', percent: 10, estimatedTime: estimatedTotal });
+
     // Use JSON for requests without file uploads (better Vercel compatibility)
     const hasFileUpload = Array.isArray(post.media) && post.media.length > 0 && post.media[0] instanceof File;
     let scheduledTime = null;
@@ -1085,6 +1098,9 @@ export const ComposeContent = () => {
           formData.append("postId", currentDraftId);
         }
 
+        // Update progress to publishing
+        setPostingProgress(prev => ({ ...prev, step: 'publishing', percent: 50, estimatedTime: Math.ceil(prev.estimatedTime * 0.5) }));
+
         response = await fetch(`${baseURL}/api/post`, {
           method: "POST",
           body: formData
@@ -1092,6 +1108,9 @@ export const ComposeContent = () => {
       } else {
         // Use JSON for text-only or URL media posts
         const mediaUrl = mediaPreviews.length > 0 ? mediaPreviews.map(p => p.dataUrl).filter(url => url.startsWith('http')) : null;
+
+        // Update progress to publishing
+        setPostingProgress(prev => ({ ...prev, step: 'publishing', percent: 50, estimatedTime: Math.ceil(prev.estimatedTime * 0.5) }));
 
         response = await fetch(`${baseURL}/api/post`, {
           method: "POST",
@@ -1154,6 +1173,8 @@ export const ComposeContent = () => {
             isClosable: true
           });
         }
+        // Mark progress as complete
+        setPostingProgress({ step: 'complete', percent: 100, estimatedTime: 0 });
         // Reset form completely
         setPost({ text: "", media: [] });
         setNetworks({
@@ -1223,6 +1244,10 @@ export const ComposeContent = () => {
       });
     } finally {
       setIsLoading(false);
+      // Reset progress after a short delay to show completion
+      setTimeout(() => {
+        setPostingProgress({ step: '', percent: 0, estimatedTime: 0 });
+      }, 500);
     }
   };
 
@@ -1360,6 +1385,31 @@ export const ComposeContent = () => {
 
   return (
     <div className="compose-content">
+      {/* Posting Progress Modal */}
+      {isLoading && postingProgress.step && (
+        <div className="posting-progress-overlay">
+          <div className="posting-progress-modal">
+            <div className="progress-spinner"></div>
+            <p className="progress-step">
+              {postingProgress.step === 'uploading' && 'Uploading media...'}
+              {postingProgress.step === 'publishing' && 'Publishing to platforms...'}
+              {postingProgress.step === 'complete' && 'Complete!'}
+            </p>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${postingProgress.percent}%` }}
+              />
+            </div>
+            <p className="progress-time">
+              {postingProgress.step === 'complete'
+                ? 'Done!'
+                : `~${postingProgress.estimatedTime}s remaining`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Subscription Banner */}
       {!canPost && (
         <SubscriptionGuard
