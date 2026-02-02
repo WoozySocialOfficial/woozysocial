@@ -54,30 +54,39 @@ module.exports = async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(period));
 
-    // Fetch post history from Ayrshare
-    const headers = {
-      Authorization: `Bearer ${apiKey}`,
-      "Profile-Key": profileKey,
-    };
-
+    // Fetch posts from database with cached analytics
+    const supabase = getSupabase();
     let posts = [];
-    try {
-      const response = await axios.get(`${AYRSHARE_API}/history`, {
-        headers,
-        params: {
-          lastDays: parseInt(period),
-          status: "success"
-        },
-        timeout: 15000,
-      });
 
-      posts = response.data || [];
-      if (!Array.isArray(posts)) {
-        posts = posts.posts || [];
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, caption, content, platforms, posted_at, created_at, analytics, ayr_post_id')
+          .eq('workspace_id', workspaceId)
+          .eq('status', 'posted')
+          .not('analytics', 'is', null)
+          .gte('posted_at', startDate.toISOString())
+          .order('posted_at', { ascending: false });
+
+        if (error) {
+          console.error('[ANALYTICS] Database error:', error);
+        } else {
+          console.log(`[ANALYTICS] Found ${data?.length || 0} posts with analytics`);
+          // Transform database posts to match expected format
+          posts = (data || []).map(post => ({
+            id: post.ayr_post_id || post.id,
+            post: post.caption || post.content || '',
+            platforms: post.platforms || [],
+            created: post.posted_at || post.created_at,
+            publishDate: post.posted_at || post.created_at,
+            analytics: post.analytics || {}
+          }));
+        }
+      } catch (error) {
+        console.error('[ANALYTICS] Error fetching posts from database:', error);
+        posts = [];
       }
-    } catch (error) {
-      console.error("Error fetching Ayrshare history:", error.message);
-      posts = [];
     }
 
     // Process posts into analytics data
@@ -144,12 +153,16 @@ function processAnalytics(posts, periodDays, timezone = 'UTC') {
 
       platformMap[platformLower].posts++;
 
-      // Extract engagement from post analytics if available
-      const analytics = post.analytics?.[platformLower] || post[platformLower] || {};
-      const likes = analytics.likes || analytics.like_count || 0;
-      const comments = analytics.comments || analytics.comment_count || 0;
-      const shares = analytics.shares || analytics.share_count || analytics.retweets || 0;
-      const impressions = analytics.impressions || analytics.views || 0;
+      // Extract engagement from post analytics (Ayrshare format)
+      // Ayrshare returns: { instagram: { analytics: { likeCount, commentsCount, ... } } }
+      const platformData = post.analytics?.[platformLower] || post[platformLower] || {};
+      const analytics = platformData.analytics || platformData;
+
+      // Handle both camelCase (Ayrshare) and snake_case formats
+      const likes = analytics.likeCount || analytics.likes || analytics.like_count || 0;
+      const comments = analytics.commentsCount || analytics.comments || analytics.comment_count || 0;
+      const shares = analytics.shareCount || analytics.sharesCount || analytics.shares || analytics.share_count || analytics.retweets || 0;
+      const impressions = analytics.viewsCount || analytics.videoViews || analytics.impressions || analytics.views || 0;
 
       platformMap[platformLower].likes += likes;
       platformMap[platformLower].comments += comments;
@@ -184,8 +197,14 @@ function processAnalytics(posts, periodDays, timezone = 'UTC') {
       let totalEng = 0;
       const platforms = post.platforms || [];
       platforms.forEach(platform => {
-        const analytics = post.analytics?.[platform.toLowerCase()] || post[platform.toLowerCase()] || {};
-        totalEng += (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+        const platformData = post.analytics?.[platform.toLowerCase()] || post[platform.toLowerCase()] || {};
+        const analytics = platformData.analytics || platformData;
+
+        const likes = analytics.likeCount || analytics.likes || 0;
+        const comments = analytics.commentsCount || analytics.comments || 0;
+        const shares = analytics.shareCount || analytics.sharesCount || analytics.shares || 0;
+
+        totalEng += likes + comments + shares;
       });
       return {
         id: post.id,
