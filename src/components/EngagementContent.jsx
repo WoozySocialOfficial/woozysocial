@@ -63,15 +63,21 @@ export const EngagementContent = () => {
   const syncComments = useCallback(async () => {
     if (!selectedPost || !activeWorkspace) return;
 
+    // Skip if post doesn't have ayr_post_id (failed posts, drafts, etc.)
+    if (!selectedPost.ayr_post_id) {
+      console.log('[ENGAGEMENT] Skipping sync - post has no ayr_post_id:', selectedPost.id);
+      return;
+    }
+
     try {
-      console.log('[ENGAGEMENT] Syncing comments from Ayrshare for post:', selectedPost.id);
+      console.log('[ENGAGEMENT] Syncing comments from Ayrshare for post:', selectedPost.ayr_post_id);
       const response = await fetch(`${baseURL}/api/sync-comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          postId: selectedPost.id,
+          postId: selectedPost.ayr_post_id,
           workspaceId: activeWorkspace.id
         })
       });
@@ -94,9 +100,9 @@ export const EngagementContent = () => {
       // First, sync comments from Ayrshare
       await syncComments();
 
-      // Then fetch from database
+      // Then fetch from database (use ayr_post_id, not database UUID)
       const response = await fetch(
-        `${baseURL}/api/comments/${selectedPost.id}?workspaceId=${activeWorkspace.id}`
+        `${baseURL}/api/comments/${selectedPost.ayr_post_id}?workspaceId=${activeWorkspace.id}`
       );
 
       if (!response.ok) {
