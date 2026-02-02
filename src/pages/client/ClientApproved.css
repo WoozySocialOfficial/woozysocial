@@ -179,3 +179,101 @@
     font-size: 28px;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-approved,
+.dark .client-approved {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .header-content h1,
+.dark .header-content h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .header-content p,
+.dark .header-content p {
+  color: #9ca3af;
+}
+
+/* Dark Mode Filter Buttons */
+[data-theme="dark"] .filter-btn,
+.dark .filter-btn {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-color: transparent;
+}
+
+[data-theme="dark"] .filter-btn:hover,
+.dark .filter-btn:hover {
+  border-color: #7c3aed;
+  color: #a78bfa;
+  background: #252f3f;
+}
+
+[data-theme="dark"] .filter-btn.active,
+.dark .filter-btn.active {
+  border-color: #7c3aed;
+  color: #a78bfa;
+  background: #252f3f;
+}
+
+/* Dark Mode Loading and Empty States */
+[data-theme="dark"] .loading-state,
+[data-theme="dark"] .empty-state,
+.dark .loading-state,
+.dark .empty-state {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+/* Dark Mode History Cards */
+[data-theme="dark"] .history-card,
+.dark .history-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .history-card:hover,
+.dark .history-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .card-media,
+.dark .card-media {
+  background: #111827;
+}
+
+[data-theme="dark"] .status-badge.approved,
+.dark .status-badge.approved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .status-badge.rejected,
+.dark .status-badge.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .card-caption,
+.dark .card-caption {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .card-meta,
+.dark .card-meta {
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] .meta-label,
+.dark .meta-label {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .meta-value,
+.dark .meta-value {
+  color: #9ca3af;
+}

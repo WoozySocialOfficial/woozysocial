@@ -1,0 +1,21 @@
+.client-profile-settings-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Ensure settings container fits within client layout */
+.client-profile-settings-page .settings-container {
+  padding: 0;
+}
+
+/* Adjust header spacing for client portal */
+.client-profile-settings-page .settings-header {
+  margin-bottom: 32px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .client-profile-settings-page,
+.dark .client-profile-settings-page {
+  background: transparent;
+}

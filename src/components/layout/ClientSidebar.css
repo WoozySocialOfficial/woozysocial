@@ -55,7 +55,7 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -137,4 +137,48 @@
 .client-menu-item.active .client-menu-item-text {
   color: #afabf9;
   opacity: 1;
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-sidebar,
+.dark .client-sidebar {
+  background: #111827;
+  border-right-color: #374151;
+}
+
+[data-theme="dark"] .client-workspace-name,
+.dark .client-workspace-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .client-workspace-role,
+.dark .client-workspace-role {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .client-workspace-avatar,
+.dark .client-workspace-avatar {
+  background-color: #7c3aed;
+}
+
+[data-theme="dark"] .client-menu-item-text,
+.dark .client-menu-item-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .client-menu-item:hover,
+.dark .client-menu-item:hover {
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .client-menu-item.active,
+.dark .client-menu-item.active {
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .client-menu-item:hover .client-menu-item-text,
+[data-theme="dark"] .client-menu-item.active .client-menu-item-text,
+.dark .client-menu-item:hover .client-menu-item-text,
+.dark .client-menu-item.active .client-menu-item-text {
+  color: #a78bfa;
 }

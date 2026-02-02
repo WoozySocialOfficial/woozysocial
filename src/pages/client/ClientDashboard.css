@@ -175,7 +175,7 @@
 }
 
 .action-badge {
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -303,4 +303,166 @@
   .stat-label {
     font-size: 14px;
   }
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-dashboard,
+.dark .client-dashboard {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .loading-state,
+.dark .loading-state {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .dashboard-header h1,
+.dark .dashboard-header h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dashboard-header p,
+.dark .dashboard-header p {
+  color: #9ca3af;
+}
+
+/* Dark Mode Stats Cards */
+[data-theme="dark"] .stat-card,
+.dark .stat-card {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .stat-card:hover,
+.dark .stat-card:hover {
+  background: #252f3f;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .stat-card.pending .stat-icon,
+.dark .stat-card.pending .stat-icon {
+  background-color: rgba(251, 191, 36, 0.15);
+}
+
+[data-theme="dark"] .stat-card.changes .stat-icon,
+.dark .stat-card.changes .stat-icon {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .stat-card.approved .stat-icon,
+.dark .stat-card.approved .stat-icon {
+  background-color: rgba(34, 197, 94, 0.15);
+}
+
+[data-theme="dark"] .stat-card.rejected .stat-icon,
+.dark .stat-card.rejected .stat-icon {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .stat-number,
+.dark .stat-number {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .stat-label,
+.dark .stat-label {
+  color: #9ca3af;
+}
+
+/* Dark Mode Quick Actions */
+[data-theme="dark"] .quick-actions-section,
+.dark .quick-actions-section {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .quick-actions-section h2,
+.dark .quick-actions-section h2 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .quick-actions-section > p,
+.dark .quick-actions-section > p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .quick-action-card,
+.dark .quick-action-card {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .quick-action-card:first-child,
+.dark .quick-action-card:first-child {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .quick-action-card:hover,
+.dark .quick-action-card:hover {
+  background-color: #4b5563;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .quick-action-card:first-child:hover,
+.dark .quick-action-card:first-child:hover {
+  background-color: #6d28d9;
+}
+
+[data-theme="dark"] .action-badge,
+.dark .action-badge {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* Dark Mode Recent Activity */
+[data-theme="dark"] .recent-activity-section,
+.dark .recent-activity-section {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .recent-activity-section h2,
+.dark .recent-activity-section h2 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .recent-activity-section > p,
+.dark .recent-activity-section > p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .empty-activity,
+.dark .empty-activity {
+  background: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .activity-item,
+.dark .activity-item {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .activity-item:hover,
+.dark .activity-item:hover {
+  background-color: #4b5563;
+}
+
+[data-theme="dark"] .activity-caption,
+.dark .activity-caption {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .activity-date,
+.dark .activity-date {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .activity-platforms,
+.dark .activity-platforms {
+  color: #9ca3af;
 }

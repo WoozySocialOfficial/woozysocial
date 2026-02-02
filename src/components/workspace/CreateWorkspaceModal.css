@@ -33,7 +33,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .modal-close {
@@ -50,7 +50,7 @@
 }
 
 .modal-close:hover {
-  color: #114C5A;
+  color: #7c3aed;
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -74,7 +74,7 @@
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .form-group input {
@@ -85,7 +85,7 @@
   border-radius: 8px;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #114C5A;
+  color: #7c3aed;
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
@@ -96,7 +96,7 @@
 }
 
 .form-group input::placeholder {
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.5;
 }
 
@@ -141,7 +141,7 @@
 
 .btn-secondary:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.05);
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .btn-primary {

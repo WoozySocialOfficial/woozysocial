@@ -142,7 +142,7 @@
 }
 
 .auth-link {
-  color: #114C5A;
+  color: #7c3aed;
   font-weight: 600;
   background: none;
   border: none;
@@ -171,7 +171,7 @@
 .forgot-password-link {
   background: none;
   border: none;
-  color: #114C5A;
+  color: #7c3aed;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;

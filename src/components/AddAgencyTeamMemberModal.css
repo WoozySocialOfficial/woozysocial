@@ -62,7 +62,7 @@
 .agency-modal-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0;
 }
 
@@ -70,7 +70,7 @@
   background: transparent;
   border: none;
   font-size: 24px;
-  color: #114C5A;
+  color: #7c3aed;
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -98,7 +98,7 @@
   display: block;
   font-size: 15px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin-bottom: 8px;
 }
 
@@ -114,7 +114,7 @@
   border: 2px solid rgba(0, 0, 0, 0.4);
   border-radius: 10px;
   font-size: 15px;
-  color: #114C5A;
+  color: #7c3aed;
   background-color: #ffffff !important;
   background: #ffffff !important;
   transition: all 0.2s;
@@ -131,7 +131,7 @@
 .agency-form-select:focus,
 .agency-form-textarea:focus {
   outline: none;
-  border-color: #114C5A;
+  border-color: #7c3aed;
   background-color: #ffffff;
   box-shadow: 0 0 0 4px rgba(17, 76, 90, 0.1);
 }
@@ -143,7 +143,7 @@
 
 .agency-form-input::placeholder,
 .agency-form-textarea::placeholder {
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.5;
 }
 
@@ -155,9 +155,9 @@
 .agency-form-select:-webkit-autofill:hover,
 .agency-form-select:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
-  -webkit-text-fill-color: #114C5A !important;
+  -webkit-text-fill-color: #7c3aed !important;
   background-color: #ffffff !important;
-  caret-color: #114C5A;
+  caret-color: #7c3aed;
 }
 
 .agency-form-input:disabled,
@@ -172,7 +172,7 @@
 .agency-field-note {
   display: block;
   font-size: 12px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin-top: 6px;
   font-style: italic;
@@ -182,7 +182,7 @@
 .agency-role-description {
   margin-top: 8px;
   font-size: 13px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   line-height: 1.5;
   padding: 12px 16px;
@@ -232,7 +232,7 @@
 
 .agency-cancel-button {
   background: transparent;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .agency-cancel-button:hover:not(:disabled) {
@@ -241,7 +241,7 @@
 
 .agency-submit-button {
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
 }
 
 .agency-submit-button:hover:not(:disabled) {

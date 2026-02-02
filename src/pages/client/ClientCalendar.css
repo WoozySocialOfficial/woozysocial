@@ -10,7 +10,7 @@
 .calendar-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
@@ -98,11 +98,11 @@
 
 .calendar-day.today {
   background: #eff6ff;
-  border: 2px solid #114C5A;
+  border: 2px solid #7c3aed;
 }
 
 .calendar-day.selected {
-  background: #114C5A;
+  background: #7c3aed;
   color: #ffffff;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .calendar-day.has-posts.selected {
-  background: #114C5A;
+  background: #7c3aed;
 }
 
 .day-number {
@@ -292,7 +292,7 @@
 .post-time {
   font-size: 13px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin-bottom: 8px;
 }
 
@@ -353,4 +353,170 @@
     max-height: 100vh;
     border-radius: 0;
   }
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-calendar,
+.dark .client-calendar {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .calendar-header h1,
+.dark .calendar-header h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .calendar-header p,
+.dark .calendar-header p {
+  color: #9ca3af;
+}
+
+/* Dark Mode Calendar Main */
+[data-theme="dark"] .calendar-main,
+.dark .calendar-main {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .calendar-nav h2,
+.dark .calendar-nav h2 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .nav-btn,
+.dark .nav-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .nav-btn:hover,
+.dark .nav-btn:hover {
+  background: #4b5563;
+}
+
+/* Dark Mode Calendar Grid */
+[data-theme="dark"] .calendar-day-header,
+.dark .calendar-day-header {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .calendar-day:hover:not(.empty),
+.dark .calendar-day:hover:not(.empty) {
+  background: #374151;
+}
+
+[data-theme="dark"] .calendar-day.today,
+.dark .calendar-day.today {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .calendar-day.selected,
+.dark .calendar-day.selected {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .calendar-day.selected .day-number,
+.dark .calendar-day.selected .day-number {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .calendar-day.has-posts,
+.dark .calendar-day.has-posts {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+[data-theme="dark"] .calendar-day.has-posts.selected,
+.dark .calendar-day.has-posts.selected {
+  background: #7c3aed;
+}
+
+[data-theme="dark"] .day-number,
+.dark .day-number {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .more-posts,
+.dark .more-posts {
+  color: #9ca3af;
+}
+
+/* Dark Mode Legend */
+[data-theme="dark"] .calendar-legend,
+.dark .calendar-legend {
+  border-top-color: #374151;
+}
+
+[data-theme="dark"] .legend-item,
+.dark .legend-item {
+  color: #9ca3af;
+}
+
+/* Dark Mode Modal */
+[data-theme="dark"] .modal-overlay,
+.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .posts-modal,
+.dark .posts-modal {
+  background: #1f2937;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .modal-header,
+.dark .modal-header {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .modal-header h3,
+.dark .modal-header h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .modal-close,
+.dark .modal-close {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .modal-close:hover,
+.dark .modal-close:hover {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .no-posts,
+.dark .no-posts {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .modal-post,
+.dark .modal-post {
+  background: #374151;
+}
+
+[data-theme="dark"] .modal-post:hover,
+.dark .modal-post:hover {
+  background: #4b5563;
+}
+
+[data-theme="dark"] .post-time,
+.dark .post-time {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .post-caption,
+.dark .post-caption {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .post-media img,
+.dark .post-media img {
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .post-platforms,
+.dark .post-platforms {
+  color: #9ca3af;
 }

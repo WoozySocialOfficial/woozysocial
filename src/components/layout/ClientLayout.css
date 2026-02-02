@@ -34,3 +34,14 @@
     padding: 12px;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .client-layout,
+.dark .client-layout {
+  background-color: #0f172a;
+}
+
+[data-theme="dark"] .client-main-content,
+.dark .client-main-content {
+  background-color: transparent;
+}

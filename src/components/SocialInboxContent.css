@@ -811,3 +811,399 @@
     max-width: 85%;
   }
 }
+
+/* Dark Mode Styles */
+[data-theme="dark"] .social-inbox-container,
+.dark .social-inbox-container {
+  color: #e5e7eb;
+}
+
+/* Dark Mode Header */
+[data-theme="dark"] .inbox-title,
+.dark .inbox-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .inbox-subtitle,
+.dark .inbox-subtitle {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .stat-badge,
+.dark .stat-badge {
+  background: #374151;
+}
+
+[data-theme="dark"] .stat-badge.unread,
+.dark .stat-badge.unread {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+[data-theme="dark"] .stat-number,
+.dark .stat-number {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .stat-label,
+.dark .stat-label {
+  color: #9ca3af;
+}
+
+/* Dark Mode Sidebar */
+[data-theme="dark"] .inbox-sidebar,
+.dark .inbox-sidebar {
+  background: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .platform-filter-section,
+.dark .platform-filter-section {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .filter-title,
+.dark .filter-title {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .platform-filter-btn:hover,
+.dark .platform-filter-btn:hover {
+  background: #374151;
+}
+
+[data-theme="dark"] .platform-filter-btn.active,
+.dark .platform-filter-btn.active {
+  background: #7c3aed;
+  color: white;
+}
+
+[data-theme="dark"] .filter-name,
+.dark .filter-name {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .platform-filter-btn.active .filter-name,
+.dark .platform-filter-btn.active .filter-name {
+  color: white;
+}
+
+[data-theme="dark"] .filter-count,
+.dark .filter-count {
+  background: #4b5563;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .platform-filter-btn.active .filter-count,
+.dark .platform-filter-btn.active .filter-count {
+  background: #6d28d9;
+  color: #ffffff;
+}
+
+/* Dark Mode Message Filter */
+[data-theme="dark"] .message-filter-section,
+.dark .message-filter-section {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .filter-tabs,
+.dark .filter-tabs {
+  background: #374151;
+}
+
+[data-theme="dark"] .filter-tab,
+.dark .filter-tab {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .filter-tab.active,
+.dark .filter-tab.active {
+  background: #7c3aed;
+  color: white;
+}
+
+/* Dark Mode Conversations List */
+[data-theme="dark"] .empty-conversations,
+.dark .empty-conversations {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .conversation-item:hover,
+.dark .conversation-item:hover {
+  background: #374151;
+}
+
+[data-theme="dark"] .conversation-item.active,
+.dark .conversation-item.active {
+  background: rgba(124, 58, 237, 0.15);
+  border-left-color: #7c3aed;
+}
+
+[data-theme="dark"] .conversation-item.unread,
+.dark .conversation-item.unread {
+  background: rgba(251, 191, 36, 0.1);
+}
+
+[data-theme="dark"] .conversation-item.unread.active,
+.dark .conversation-item.unread.active {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+[data-theme="dark"] .conversation-avatar,
+.dark .conversation-avatar {
+  background: #374151;
+}
+
+[data-theme="dark"] .platform-badge,
+.dark .platform-badge {
+  background: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .conversation-sender,
+.dark .conversation-sender {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .conversation-time,
+.dark .conversation-time {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .conversation-preview,
+.dark .conversation-preview {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .conversation-item.unread .conversation-preview,
+.dark .conversation-item.unread .conversation-preview {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .unread-indicator,
+.dark .unread-indicator {
+  background: #7c3aed;
+}
+
+/* Dark Mode Messages Panel */
+[data-theme="dark"] .inbox-messages,
+.dark .inbox-messages {
+  background: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .message-thread-header,
+.dark .message-thread-header {
+  border-bottom-color: #374151;
+  background: #374151;
+}
+
+[data-theme="dark"] .thread-avatar,
+.dark .thread-avatar {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .thread-user-name,
+.dark .thread-user-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .thread-platform,
+.dark .thread-platform {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .message-thread,
+.dark .message-thread {
+  background: #111827;
+}
+
+[data-theme="dark"] .message-bubble.incoming .message-content,
+.dark .message-bubble.incoming .message-content {
+  background: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .message-bubble.outgoing .message-content,
+.dark .message-bubble.outgoing .message-content {
+  background: #7c3aed;
+}
+
+[data-theme="dark"] .message-bubble.incoming .message-text,
+.dark .message-bubble.incoming .message-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .message-bubble.incoming .message-time,
+.dark .message-bubble.incoming .message-time {
+  color: #6b7280;
+}
+
+/* Dark Mode Reply Section */
+[data-theme="dark"] .message-reply-section,
+.dark .message-reply-section {
+  border-top-color: #374151;
+  background: #1f2937;
+}
+
+[data-theme="dark"] .reply-textarea,
+.dark .reply-textarea {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .reply-textarea:focus,
+.dark .reply-textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .reply-btn,
+.dark .reply-btn {
+  background: #7c3aed;
+}
+
+[data-theme="dark"] .reply-btn:hover,
+.dark .reply-btn:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.5);
+}
+
+/* Dark Mode Empty States */
+[data-theme="dark"] .empty-message-state,
+.dark .empty-message-state {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .empty-text,
+.dark .empty-text {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .empty-subtext,
+.dark .empty-subtext {
+  color: #6b7280;
+}
+
+/* Dark Mode Header Actions */
+[data-theme="dark"] .refresh-btn,
+.dark .refresh-btn {
+  background: #7c3aed;
+}
+
+[data-theme="dark"] .refresh-btn:hover:not(:disabled),
+.dark .refresh-btn:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+/* Dark Mode Error Banner */
+[data-theme="dark"] .inbox-error-banner,
+.dark .inbox-error-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .inbox-error-banner button,
+.dark .inbox-error-banner button {
+  color: #fca5a5;
+}
+
+/* Dark Mode Loading States */
+[data-theme="dark"] .loading-conversations,
+[data-theme="dark"] .loading-messages,
+.dark .loading-conversations,
+.dark .loading-messages {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .loading-spinner,
+.dark .loading-spinner {
+  border-color: #4b5563;
+  border-top-color: #7c3aed;
+}
+
+[data-theme="dark"] .no-messages,
+.dark .no-messages {
+  color: #6b7280;
+}
+
+/* Dark Mode Scrollbar */
+[data-theme="dark"] .conversations-list::-webkit-scrollbar-track,
+[data-theme="dark"] .message-thread::-webkit-scrollbar-track,
+.dark .conversations-list::-webkit-scrollbar-track,
+.dark .message-thread::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="dark"] .conversations-list::-webkit-scrollbar-thumb,
+[data-theme="dark"] .message-thread::-webkit-scrollbar-thumb,
+.dark .conversations-list::-webkit-scrollbar-thumb,
+.dark .message-thread::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+[data-theme="dark"] .conversations-list::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .message-thread::-webkit-scrollbar-thumb:hover,
+.dark .conversations-list::-webkit-scrollbar-thumb:hover,
+.dark .message-thread::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Dark Mode Misc */
+[data-theme="dark"] .reply-warning,
+.dark .reply-warning {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .reply-disabled,
+.dark .reply-disabled {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+[data-theme="dark"] .reply-disabled p,
+.dark .reply-disabled p {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .reply-hint,
+.dark .reply-hint {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .unread-badge,
+.dark .unread-badge {
+  background: #ef4444;
+}
+
+[data-theme="dark"] .avatar-placeholder,
+.dark .avatar-placeholder {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .thread-avatar span,
+.dark .thread-avatar span {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .you-prefix,
+.dark .you-prefix {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .username,
+.dark .username {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .inbox-empty-state h2,
+.dark .inbox-empty-state h2 {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .inbox-empty-state p,
+.dark .inbox-empty-state p {
+  color: #9ca3af;
+}

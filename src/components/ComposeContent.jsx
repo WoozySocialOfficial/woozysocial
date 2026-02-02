@@ -18,6 +18,7 @@ import FeatureGate from "./subscription/FeatureGate";
 import { CommentThread } from "./comments/CommentThread";
 import { CommentInput } from "./comments/CommentInput";
 import { MediaUploadModal } from "./compose/MediaUploadModal";
+import { PostSettings } from "./compose/PostSettings";
 import { InstagramPreview } from "./compose/previews/InstagramPreview";
 import { TwitterPreview } from "./compose/previews/TwitterPreview";
 import { FacebookPreview } from "./compose/previews/FacebookPreview";
@@ -95,6 +96,14 @@ export const ComposeContent = () => {
   const [urlToShorten, setUrlToShorten] = useState("");
   const [shortenedLink, setShortenedLink] = useState(null);
   const [isShorteningLink, setIsShorteningLink] = useState(false);
+
+  // Post settings state (Phase 4)
+  const [postSettings, setPostSettings] = useState({
+    shortenLinks: false,
+    threadPost: false,
+    threadNumber: true,
+    instagramType: 'feed'
+  });
 
   // Use React Query for connected accounts
   const { data: accountsData } = useConnectedAccounts(activeWorkspace?.id, user?.id);
@@ -686,6 +695,9 @@ export const ComposeContent = () => {
         formData.append("networks", JSON.stringify(networks));
         formData.append("scheduledDate", tempScheduledDate.toISOString());
 
+        // Add post settings (Phase 4)
+        formData.append("postSettings", JSON.stringify(postSettings));
+
         // If editing a scheduled post, include the postId
         if (isEditingScheduledPost && currentDraftId) {
           formData.append("postId", currentDraftId);
@@ -707,6 +719,7 @@ export const ComposeContent = () => {
             mediaUrl: mediaPreviews.length > 0 ? mediaPreviews.map(p => p.dataUrl).filter(url => url.startsWith('http')) : null,
             networks: JSON.stringify(networks),
             scheduledDate: tempScheduledDate.toISOString(),
+            postSettings: postSettings, // Phase 4
             // If editing a scheduled post, include the postId
             ...(isEditingScheduledPost && currentDraftId && { postId: currentDraftId })
           })
@@ -1093,6 +1106,9 @@ export const ComposeContent = () => {
           formData.append("scheduledDate", scheduledTime.toISOString());
         }
 
+        // Add post settings (Phase 4)
+        formData.append("postSettings", JSON.stringify(postSettings));
+
         // If editing a scheduled post, include the postId
         if (isEditingScheduledPost && currentDraftId) {
           formData.append("postId", currentDraftId);
@@ -1122,6 +1138,7 @@ export const ComposeContent = () => {
             mediaUrl,
             networks: JSON.stringify(networks),
             scheduledDate: scheduledTime ? scheduledTime.toISOString() : null,
+            postSettings: postSettings, // Phase 4
             // If editing a scheduled post, include the postId
             ...(isEditingScheduledPost && currentDraftId && { postId: currentDraftId })
           })
@@ -1669,6 +1686,13 @@ export const ComposeContent = () => {
                 )}
               </div>
             )}
+
+            {/* Post Settings (Phase 4) */}
+            <PostSettings
+              selectedPlatforms={Object.keys(networks).filter(k => networks[k])}
+              settings={postSettings}
+              onSettingsChange={setPostSettings}
+            />
           </div>
         </div>
 

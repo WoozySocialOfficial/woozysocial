@@ -103,6 +103,15 @@ export const ClientHeader = () => {
               </div>
               <div className="client-dropdown-divider" />
               <button
+                className="client-dropdown-item profile-settings-link"
+                onClick={() => {
+                  setShowDropdown(false);
+                  navigate('/client/profile-settings');
+                }}
+              >
+                Profile Settings
+              </button>
+              <button
                 className="client-dropdown-item notifications-link"
                 onClick={() => {
                   setShowDropdown(false);
@@ -118,6 +127,7 @@ export const ClientHeader = () => {
               >
                 {isLinking ? 'Opening...' : 'Connect Social Accounts'}
               </button>
+              <div className="client-dropdown-divider" />
               <button className="client-dropdown-item sign-out" onClick={handleLogout}>
                 Sign Out
               </button>

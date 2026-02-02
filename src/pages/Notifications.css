@@ -35,7 +35,7 @@
 }
 
 .mark-all-read-btn {
-  background: #114C5A;
+  background: #7c3aed;
   color: white;
   border: none;
   padding: 10px 16px;
@@ -47,7 +47,7 @@
 }
 
 .mark-all-read-btn:hover {
-  background: #0d3a44;
+  background: #6d28d9;
 }
 
 .notifications-filters {
@@ -76,9 +76,9 @@
 }
 
 .filter-btn.active {
-  background: #114C5A;
+  background: #7c3aed;
   color: white;
-  border-color: #114C5A;
+  border-color: #7c3aed;
 }
 
 .notifications-content {
@@ -98,7 +98,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e5e7eb;
-  border-top-color: #114C5A;
+  border-top-color: #7c3aed;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -242,7 +242,7 @@
   transform: translateY(-50%);
   width: 10px;
   height: 10px;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   border-radius: 50%;
 }
 
@@ -285,4 +285,140 @@
     height: 44px;
     font-size: 20px;
   }
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .notifications-page,
+.dark .notifications-page {
+  background-color: #0f172a;
+}
+
+[data-theme="dark"] .notifications-container,
+.dark .notifications-container {
+  background: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .notifications-header,
+.dark .notifications-header {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .notifications-header h1,
+.dark .notifications-header h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .mark-all-read-btn,
+.dark .mark-all-read-btn {
+  background: #7c3aed;
+}
+
+[data-theme="dark"] .mark-all-read-btn:hover,
+.dark .mark-all-read-btn:hover {
+  background: #6d28d9;
+}
+
+[data-theme="dark"] .notifications-filters,
+.dark .notifications-filters {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .filter-btn,
+.dark .filter-btn {
+  background: transparent;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .filter-btn:hover,
+.dark .filter-btn:hover {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .filter-btn.active,
+.dark .filter-btn.active {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .loading-spinner,
+.dark .loading-spinner {
+  border-color: #4b5563;
+  border-top-color: #7c3aed;
+}
+
+[data-theme="dark"] .notifications-loading p,
+.dark .notifications-loading p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notifications-empty,
+.dark .notifications-empty {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .notifications-empty p,
+.dark .notifications-empty p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notif-group,
+.dark .notif-group {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .notif-group-header,
+.dark .notif-group-header {
+  background: #111827;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notif-item,
+.dark .notif-item {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .notif-item:hover,
+.dark .notif-item:hover {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .notif-item.notif-unread,
+.dark .notif-item.notif-unread {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .notif-item.notif-unread:hover,
+.dark .notif-item.notif-unread:hover {
+  background-color: rgba(124, 58, 237, 0.2);
+}
+
+[data-theme="dark"] .notif-icon,
+.dark .notif-icon {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .notif-title,
+.dark .notif-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .notif-message,
+.dark .notif-message {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notif-time,
+.dark .notif-time {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .notif-unread-dot,
+.dark .notif-unread-dot {
+  background-color: #7c3aed;
 }

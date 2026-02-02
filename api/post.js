@@ -217,9 +217,24 @@ module.exports = async function handler(req, res) {
       console.log('[POST] JSON parsed, keys:', Object.keys(body));
     }
 
-    const { text, networks, scheduledDate, userId, workspaceId, postId } = body;
+    const { text, networks, scheduledDate, userId, workspaceId, postId, postSettings } = body;
     let { mediaUrl } = body;
     let mediaUrls = [];
+
+    // Parse postSettings (Phase 4)
+    let settings = {};
+    if (postSettings) {
+      if (typeof postSettings === 'string') {
+        try {
+          settings = JSON.parse(postSettings);
+        } catch (e) {
+          console.error('[POST] Failed to parse postSettings:', e);
+        }
+      } else {
+        settings = postSettings;
+      }
+    }
+    console.log('[POST] Post settings parsed:', settings);
 
     console.log('[POST] Extracted params:', {
       hasText: !!text,
@@ -373,6 +388,7 @@ module.exports = async function handler(req, res) {
             scheduled_at: new Date(scheduledDate).toISOString(),
             platforms: platforms,
             approval_status: 'pending', // Reset for re-approval
+            post_settings: settings, // Phase 4: Save post settings
             updated_at: new Date().toISOString()
           })
           .eq('id', postId)
@@ -435,7 +451,8 @@ module.exports = async function handler(req, res) {
           scheduled_at: new Date(scheduledDate).toISOString(),
           platforms: platforms,
           approval_status: 'pending',
-          requires_approval: true
+          requires_approval: true,
+          post_settings: settings // Phase 4: Save post settings
         }]).select().single();
 
         if (saveError) {
@@ -487,6 +504,7 @@ module.exports = async function handler(req, res) {
             platforms: platforms,
             status: 'scheduled',
             approval_status: 'approved',
+            post_settings: settings, // Phase 4: Save post settings
             updated_at: new Date().toISOString()
           })
           .eq('id', postId)
@@ -524,7 +542,8 @@ module.exports = async function handler(req, res) {
           scheduled_at: new Date(scheduledDate).toISOString(),
           platforms: platforms,
           approval_status: 'approved',
-          requires_approval: false
+          requires_approval: false,
+          post_settings: settings // Phase 4: Save post settings
         }]).select().single();
 
         if (saveError) {
@@ -603,6 +622,144 @@ module.exports = async function handler(req, res) {
       postData.mediaUrls = mediaUrls;
     }
 
+    // Apply post settings (Phase 4)
+    console.log('[POST] Applying post settings...');
+
+    // Auto-shorten links
+    if (settings.shortenLinks) {
+      postData.shortenLinks = true;
+      console.log('[POST] - shortenLinks enabled');
+    }
+
+    // Twitter thread options
+    const hasTwitter = platforms.some(p => ['twitter', 'x'].includes(p.toLowerCase()));
+    if (settings.threadPost && hasTwitter) {
+      postData.twitterOptions = {
+        thread: true,
+        threadNumber: settings.threadNumber !== false
+      };
+      console.log('[POST] - Twitter thread options:', postData.twitterOptions);
+    }
+
+    // Instagram post type options (case-insensitive platform check)
+    const hasInstagram = platforms.some(p => p.toLowerCase() === 'instagram');
+    if (settings.instagramType && hasInstagram) {
+      // Check if media contains videos
+      const hasVideo = mediaUrls && mediaUrls.length > 0 && mediaUrls.some(url => {
+        const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+        return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+      });
+
+      const hasImage = mediaUrls && mediaUrls.length > 0 && mediaUrls.some(url => {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+      });
+
+      // Validate mixed media - Instagram doesn't support video + photos in same post
+      if (hasVideo && hasImage) {
+        console.error('[POST] Mixed media detected (video + photos) - not supported by Instagram');
+        return sendError(
+          res,
+          "Instagram does not support mixing videos and photos in the same post. Please use either videos only or photos only.",
+          ErrorCodes.VALIDATION_ERROR
+        );
+      }
+
+      if (settings.instagramType === 'story') {
+        // Instagram Stories have specific dimension requirements
+        // Width must be between 320px and 1920px
+        // We can't check actual dimensions server-side without downloading the image
+        // but we can add a note to the validation
+        postData.instagramOptions = { stories: true };
+        console.log('[POST] - Instagram Story mode enabled');
+        console.log('[POST] - Note: Instagram Stories require image width between 320px and 1920px');
+      } else if (settings.instagramType === 'reel') {
+        // Only set reel options if not auto-detected
+        // Ayrshare auto-detects videos as reels, so we only need to specify if forcing
+        postData.instagramOptions = { reels: true, shareReelsFeed: true };
+        console.log('[POST] - Instagram Reel mode enabled');
+      }
+      // 'feed' is default, no special options needed
+    }
+
+    // Twitter thread auto-splitting
+    if (settings.threadPost && hasTwitter) {
+      // Ayrshare breaks threads on double line breaks (\n\n)
+      // If any paragraph exceeds 280 chars, auto-split at sentence boundaries
+      const paragraphs = text.split('\n\n');
+      const processedParagraphs = [];
+
+      for (const paragraph of paragraphs) {
+        if (paragraph.length <= 280) {
+          // Paragraph is fine, keep as-is
+          processedParagraphs.push(paragraph);
+        } else {
+          // Paragraph too long - split at sentence boundaries
+          console.log(`[POST] Auto-splitting long paragraph (${paragraph.length} chars) for thread`);
+
+          // Split on sentence endings (. ! ?) followed by space or newline
+          const sentences = paragraph.split(/([.!?])\s+/).filter(s => s.trim().length > 0);
+
+          let currentChunk = '';
+          for (let i = 0; i < sentences.length; i++) {
+            const sentence = sentences[i];
+
+            // Check if adding this sentence would exceed limit
+            if (currentChunk.length + sentence.length + 1 > 280) {
+              // Save current chunk if it has content
+              if (currentChunk.trim().length > 0) {
+                processedParagraphs.push(currentChunk.trim());
+                currentChunk = sentence;
+              } else {
+                // Single sentence is too long, split at word boundaries
+                const words = sentence.split(' ');
+                let wordChunk = '';
+                for (const word of words) {
+                  if (wordChunk.length + word.length + 1 > 280) {
+                    if (wordChunk.trim().length > 0) {
+                      processedParagraphs.push(wordChunk.trim());
+                      wordChunk = word;
+                    } else {
+                      // Single word too long, just add it (truncation handled by Twitter)
+                      processedParagraphs.push(word);
+                    }
+                  } else {
+                    wordChunk += (wordChunk.length > 0 ? ' ' : '') + word;
+                  }
+                }
+                if (wordChunk.trim().length > 0) {
+                  currentChunk = wordChunk;
+                }
+              }
+            } else {
+              currentChunk += (currentChunk.length > 0 ? ' ' : '') + sentence;
+            }
+          }
+
+          // Add final chunk
+          if (currentChunk.trim().length > 0) {
+            processedParagraphs.push(currentChunk.trim());
+          }
+        }
+      }
+
+      // Rejoin paragraphs with double line breaks
+      const processedText = processedParagraphs.join('\n\n');
+
+      if (processedText !== text) {
+        console.log(`[POST] Text auto-split for threading: ${paragraphs.length} → ${processedParagraphs.length} paragraphs`);
+        postData.post = processedText;
+      }
+    }
+
+    console.log('[POST] Post settings applied. Final postData:', {
+      platforms: postData.platforms,
+      hasMedia: !!postData.mediaUrls,
+      shortenLinks: postData.shortenLinks,
+      twitterOptions: postData.twitterOptions,
+      instagramOptions: postData.instagramOptions
+    });
+
     // Send to Ayrshare
     console.log('[POST] Sending to Ayrshare...', {
       endpoint: `${BASE_AYRSHARE}/post`,
@@ -666,7 +823,8 @@ module.exports = async function handler(req, res) {
             posted_at: isScheduled ? null : new Date().toISOString(),
             platforms: platforms,
             approval_status: 'approved',
-            requires_approval: false
+            requires_approval: false,
+            post_settings: settings // Phase 4: Save post settings
           };
 
           const { data: savedPost, error: dbError } = await supabase
@@ -707,7 +865,8 @@ module.exports = async function handler(req, res) {
           status: 'failed',
           scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
           platforms: platforms,
-          last_error: axiosError.response?.data?.message || axiosError.message
+          last_error: axiosError.response?.data?.message || axiosError.message,
+          post_settings: settings // Phase 4: Save post settings
         }]);
         if (dbErr) logError('post.save_failed', dbErr);
       }
@@ -743,7 +902,8 @@ module.exports = async function handler(req, res) {
           status: 'failed',
           scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
           platforms: platforms,
-          last_error: response.data.message || 'Post failed'
+          last_error: response.data.message || 'Post failed',
+          post_settings: settings // Phase 4: Save post settings
         }]);
         if (dbErr) logError('post.save_failed', dbErr);
       }
@@ -773,7 +933,8 @@ module.exports = async function handler(req, res) {
         posted_at: isScheduled ? null : new Date().toISOString(),
         platforms: platforms,
         approval_status: 'approved',
-        requires_approval: false
+        requires_approval: false,
+        post_settings: settings // Phase 4: Save post settings
       };
       console.log('[POST] Post record to save:', {
         ...postRecord,

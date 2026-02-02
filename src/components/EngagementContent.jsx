@@ -59,12 +59,42 @@ export const EngagementContent = () => {
     }
   }, [user, activeWorkspace, selectedPost]);
 
+  // Sync comments from Ayrshare for selected post
+  const syncComments = useCallback(async () => {
+    if (!selectedPost || !activeWorkspace) return;
+
+    try {
+      console.log('[ENGAGEMENT] Syncing comments from Ayrshare for post:', selectedPost.id);
+      const response = await fetch(`${baseURL}/api/sync-comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          postId: selectedPost.id,
+          workspaceId: activeWorkspace.id
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[ENGAGEMENT] Synced comments:', data.data);
+      }
+    } catch (error) {
+      console.error('[ENGAGEMENT] Error syncing comments:', error);
+    }
+  }, [selectedPost, activeWorkspace]);
+
   // Fetch comments for selected post
   const fetchComments = useCallback(async () => {
     if (!selectedPost || !activeWorkspace) return;
 
     setLoading(true);
     try {
+      // First, sync comments from Ayrshare
+      await syncComments();
+
+      // Then fetch from database
       const response = await fetch(
         `${baseURL}/api/comments/${selectedPost.id}?workspaceId=${activeWorkspace.id}`
       );
@@ -87,7 +117,7 @@ export const EngagementContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedPost, activeWorkspace]);
+  }, [selectedPost, activeWorkspace, syncComments]);
 
   useEffect(() => {
     fetchPosts();

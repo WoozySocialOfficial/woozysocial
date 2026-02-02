@@ -11,13 +11,13 @@
 .team-title {
   font-size: 32px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
 .team-subtitle {
   font-size: 16px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -43,13 +43,13 @@
 .section-title {
   font-size: 24px;
   font-weight: 700;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 4px 0;
 }
 
 .section-subtitle {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin: 0;
 }
@@ -63,7 +63,7 @@
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
   background: #afabf9;
-  color: #114C5A;
+  color: #7c3aed;
   font-family: inherit;
 }
 
@@ -86,13 +86,13 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background: #114C5A;
+  background: #7c3aed;
   color: #ffffff;
   font-family: inherit;
 }
 
 .add-client-button:hover {
-  background: #0d3a47;
+  background: #6d28d9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(17, 76, 90, 0.3);
 }
@@ -135,7 +135,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,13 +154,13 @@
 .member-name {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0;
 }
 
 .member-email {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.6;
   margin: 0;
 }
@@ -174,7 +174,7 @@
 .member-role {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background-color: #afabf9;
   padding: 8px 16px;
   border-radius: 8px;
@@ -184,7 +184,7 @@
 .role-dropdown {
   font-size: 14px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   background-color: #afabf9;
   padding: 8px 16px;
   border-radius: 8px;
@@ -254,13 +254,13 @@
 .info-text {
   font-size: 16px;
   font-weight: 600;
-  color: #114C5A;
+  color: #7c3aed;
   margin: 0 0 8px 0;
 }
 
 .info-subtext {
   font-size: 14px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
   margin: 0;
 }
@@ -285,7 +285,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #114C5A;
+  color: #7c3aed;
   opacity: 0.7;
 }
 
@@ -319,7 +319,7 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid rgba(0, 0, 0, 0.4);
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-family: inherit;
   display: flex;
@@ -328,7 +328,7 @@
 }
 
 .resend-button:hover {
-  background-color: #0d3a47;
+  background-color: #6d28d9;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(17, 76, 90, 0.2);
 }
@@ -354,13 +354,13 @@
 /* Owner styles */
 .member-avatar.owner {
   background-color: #afabf9;
-  color: #114C5A;
-  border: 3px solid #114C5A;
+  color: #7c3aed;
+  border: 3px solid #7c3aed;
 }
 
 .owner-badge {
   display: inline-block;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-size: 11px;
   font-weight: 700;
@@ -372,7 +372,7 @@
 }
 
 .member-role.owner-role {
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: #afabf9;
   font-weight: 700;
 }
@@ -480,4 +480,238 @@
   .member-email {
     font-size: 12px;
   }
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .team-container,
+.dark .team-container {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .team-title,
+.dark .team-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .team-subtitle,
+.dark .team-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Team Section */
+[data-theme="dark"] .team-section,
+.dark .team-section {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .section-title,
+.dark .section-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .section-subtitle,
+.dark .section-subtitle {
+  color: #9ca3af;
+}
+
+/* Dark Mode Buttons */
+[data-theme="dark"] .add-member-button,
+.dark .add-member-button {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .add-member-button:hover,
+.dark .add-member-button:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .add-client-button,
+.dark .add-client-button {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .add-client-button:hover,
+.dark .add-client-button:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+/* Dark Mode Member Cards */
+[data-theme="dark"] .member-card,
+.dark .member-card {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-card:hover,
+.dark .member-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .member-card.expired,
+.dark .member-card.expired {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .member-avatar,
+.dark .member-avatar {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-avatar.pending,
+.dark .member-avatar.pending {
+  background-color: #f59e0b;
+  border-color: #d97706;
+}
+
+[data-theme="dark"] .member-avatar.owner,
+.dark .member-avatar.owner {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #6d28d9;
+}
+
+[data-theme="dark"] .member-name,
+.dark .member-name {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .member-email,
+.dark .member-email {
+  color: #9ca3af;
+}
+
+/* Dark Mode Member Role */
+[data-theme="dark"] .member-role,
+.dark .member-role {
+  color: #ffffff;
+  background-color: #7c3aed;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .member-role.pending-badge,
+.dark .member-role.pending-badge {
+  background-color: #fbbf24;
+  border-color: #d97706;
+  color: #000000;
+}
+
+[data-theme="dark"] .member-role.owner-role,
+.dark .member-role.owner-role {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .owner-badge,
+.dark .owner-badge {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* Dark Mode Role Dropdown */
+[data-theme="dark"] .role-dropdown,
+.dark .role-dropdown {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .role-dropdown:hover,
+.dark .role-dropdown:hover {
+  background-color: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .role-dropdown:focus,
+.dark .role-dropdown:focus {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+}
+
+/* Dark Mode Action Buttons */
+[data-theme="dark"] .remove-button,
+.dark .remove-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+  background-color: transparent;
+}
+
+[data-theme="dark"] .remove-button:hover,
+.dark .remove-button:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .leave-workspace-button,
+.dark .leave-workspace-button {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .leave-workspace-button:hover,
+.dark .leave-workspace-button:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+}
+
+[data-theme="dark"] .resend-button,
+.dark .resend-button {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .resend-button:hover,
+.dark .resend-button:hover {
+  background-color: #6d28d9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+[data-theme="dark"] .cancel-button,
+.dark .cancel-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+  background-color: transparent;
+}
+
+[data-theme="dark"] .cancel-button:hover,
+.dark .cancel-button:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* Dark Mode Info Box */
+[data-theme="dark"] .team-info-box,
+.dark .team-info-box {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+[data-theme="dark"] .info-text,
+.dark .info-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .info-subtext,
+.dark .info-subtext {
+  color: #9ca3af;
+}
+
+/* Dark Mode Invite Meta */
+[data-theme="dark"] .invite-meta,
+.dark .invite-meta {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .invite-expiry.expired,
+.dark .invite-expiry.expired {
+  color: #fca5a5;
 }

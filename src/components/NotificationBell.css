@@ -101,7 +101,7 @@
 .mark-all-read {
   background: none;
   border: none;
-  color: #114C5A;
+  color: #7c3aed;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -196,7 +196,7 @@
   width: 24px;
   height: 24px;
   border: 2px solid #e5e7eb;
-  border-top-color: #114C5A;
+  border-top-color: #7c3aed;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -285,7 +285,7 @@
   transform: translateY(-50%);
   width: 8px;
   height: 8px;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   border-radius: 50%;
 }
 
@@ -299,7 +299,7 @@
 .view-all-btn {
   width: 100%;
   padding: 10px 16px;
-  background-color: #114C5A;
+  background-color: #7c3aed;
   color: white;
   border: none;
   border-radius: 8px;
@@ -310,7 +310,7 @@
 }
 
 .view-all-btn:hover {
-  background-color: #0d3a44;
+  background-color: #6d28d9;
 }
 
 /* Mobile responsive */
@@ -371,11 +371,11 @@
   }
 
   .notification-item.unread {
-    background-color: #1e3a5f;
+    background-color: rgba(124, 58, 237, 0.15);
   }
 
   .notification-item.unread:hover {
-    background-color: #1e4976;
+    background-color: rgba(124, 58, 237, 0.2);
   }
 
   .notification-title {
@@ -398,4 +398,147 @@
   .notification-empty p {
     color: #d1d5db;
   }
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] .notification-bell-btn,
+.dark .notification-bell-btn {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notification-bell-btn:hover,
+.dark .notification-bell-btn:hover {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .notification-badge,
+.dark .notification-badge {
+  border-color: #111827;
+}
+
+[data-theme="dark"] .notification-dropdown,
+.dark .notification-dropdown {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .notification-header,
+.dark .notification-header {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .notification-header h3,
+.dark .notification-header h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .mark-all-read,
+.dark .mark-all-read {
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .mark-all-read:hover,
+.dark .mark-all-read:hover {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-track,
+.dark .notification-list::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb,
+.dark .notification-list::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb:hover,
+.dark .notification-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+[data-theme="dark"] .notification-group,
+.dark .notification-group {
+  border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .notification-group-header,
+.dark .notification-group-header {
+  background: #111827;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notification-empty,
+.dark .notification-empty {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .notification-empty p,
+.dark .notification-empty p {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .loading-spinner,
+.dark .loading-spinner {
+  border-color: #4b5563;
+  border-top-color: #7c3aed;
+}
+
+[data-theme="dark"] .notification-item,
+.dark .notification-item {
+  border-color: #374151;
+}
+
+[data-theme="dark"] .notification-item:hover,
+.dark .notification-item:hover {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .notification-item.unread,
+.dark .notification-item.unread {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .notification-item.unread:hover,
+.dark .notification-item.unread:hover {
+  background-color: rgba(124, 58, 237, 0.2);
+}
+
+[data-theme="dark"] .notification-title,
+.dark .notification-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .notification-message,
+.dark .notification-message {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .notification-time,
+.dark .notification-time {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .unread-dot,
+.dark .unread-dot {
+  background-color: #7c3aed;
+}
+
+[data-theme="dark"] .notification-footer,
+.dark .notification-footer {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .view-all-btn,
+.dark .view-all-btn {
+  background-color: #7c3aed;
+}
+
+[data-theme="dark"] .view-all-btn:hover,
+.dark .view-all-btn:hover {
+  background-color: #6d28d9;
 }
