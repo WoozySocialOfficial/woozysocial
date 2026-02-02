@@ -11,7 +11,7 @@ import { baseURL } from "../utils/constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useConnectedAccounts } from "../hooks/useQueries";
-import { supabase } from "../utils/supabaseClient";
+import { supabase, uploadMediaDirect } from "../utils/supabaseClient";
 import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import FeatureGate from "./subscription/FeatureGate";
@@ -1136,37 +1136,82 @@ export const ComposeContent = () => {
       let response;
 
       if (hasFileUpload) {
-        // Use FormData for file uploads
-        const formData = new FormData();
-        formData.append("text", post.text);
-        formData.append("userId", user.id);
-        formData.append("workspaceId", activeWorkspace.id);
+        // Check if any file exceeds 4MB (Vercel limit) - upload directly to Supabase
+        const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB
+        const hasLargeFile = post.media.some(file => file.size > VERCEL_LIMIT);
 
-        // Append each file with 'media' field name (busboy will collect into array)
-        post.media.forEach((file) => {
-          formData.append("media", file);
-        });
+        if (hasLargeFile) {
+          // Upload all files directly to Supabase (bypasses Vercel limit)
+          console.log('[handleSubmit] Large file detected, uploading directly to Supabase...');
+          const uploadedUrls = [];
 
-        formData.append("networks", JSON.stringify(networks));
-        if (scheduledTime) {
-          formData.append("scheduledDate", scheduledTime.toISOString());
+          for (let i = 0; i < post.media.length; i++) {
+            const file = post.media[i];
+            setPostingProgress(prev => ({
+              ...prev,
+              step: 'uploading',
+              percent: Math.round(10 + (i / post.media.length) * 40),
+              estimatedTime: Math.max(1, prev.estimatedTime - 1)
+            }));
+
+            const result = await uploadMediaDirect(file, user.id, activeWorkspace.id);
+            if (!result.success) {
+              throw new Error(`Failed to upload ${file.name}: ${result.error}`);
+            }
+            uploadedUrls.push(result.publicUrl);
+          }
+
+          // Update progress to publishing
+          setPostingProgress(prev => ({ ...prev, step: 'publishing', percent: 60, estimatedTime: Math.ceil(prev.estimatedTime * 0.4) }));
+
+          // Send URLs to API (not files)
+          response = await fetch(`${baseURL}/api/post`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: post.text,
+              userId: user.id,
+              workspaceId: activeWorkspace.id,
+              mediaUrl: uploadedUrls,
+              networks: JSON.stringify(networks),
+              scheduledDate: scheduledTime ? scheduledTime.toISOString() : null,
+              postSettings: postSettings,
+              ...(isEditingScheduledPost && currentDraftId && { postId: currentDraftId })
+            })
+          });
+        } else {
+          // Small files - use FormData (original flow)
+          const formData = new FormData();
+          formData.append("text", post.text);
+          formData.append("userId", user.id);
+          formData.append("workspaceId", activeWorkspace.id);
+
+          // Append each file with 'media' field name (busboy will collect into array)
+          post.media.forEach((file) => {
+            formData.append("media", file);
+          });
+
+          formData.append("networks", JSON.stringify(networks));
+          if (scheduledTime) {
+            formData.append("scheduledDate", scheduledTime.toISOString());
+          }
+
+          // Add post settings (Phase 4)
+          formData.append("postSettings", JSON.stringify(postSettings));
+
+          // If editing a scheduled post, include the postId
+          if (isEditingScheduledPost && currentDraftId) {
+            formData.append("postId", currentDraftId);
+          }
+
+          // Update progress to publishing
+          setPostingProgress(prev => ({ ...prev, step: 'publishing', percent: 50, estimatedTime: Math.ceil(prev.estimatedTime * 0.5) }));
+
+          response = await fetch(`${baseURL}/api/post`, {
+            method: "POST",
+            body: formData
+          });
         }
-
-        // Add post settings (Phase 4)
-        formData.append("postSettings", JSON.stringify(postSettings));
-
-        // If editing a scheduled post, include the postId
-        if (isEditingScheduledPost && currentDraftId) {
-          formData.append("postId", currentDraftId);
-        }
-
-        // Update progress to publishing
-        setPostingProgress(prev => ({ ...prev, step: 'publishing', percent: 50, estimatedTime: Math.ceil(prev.estimatedTime * 0.5) }));
-
-        response = await fetch(`${baseURL}/api/post`, {
-          method: "POST",
-          body: formData
-        });
       } else {
         // Use JSON for text-only or URL media posts
         const mediaUrl = mediaPreviews.length > 0 ? mediaPreviews.map(p => p.dataUrl).filter(url => url.startsWith('http')) : null;
