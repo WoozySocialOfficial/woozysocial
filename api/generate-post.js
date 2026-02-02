@@ -249,20 +249,26 @@ WRITE LIKE A REAL PERSON:
 ═══ YOUR TASK ═══
 Generate 3 DISTINCT variations for: "${prompt}"
 
+KEEP IT SHORT AND CATCHY:
+- Captions should be punchy, not essays
+- 1-3 sentences max for most posts
+- Get to the point fast
+- Leave some mystery - don't over-explain
+- Less is more
+
 Each variation MUST:
-- Sound like a real human wrote it (NOT corporate, NOT AI-generated)
-- Start with something interesting (skip generic openers)
-- Be ready to copy-paste (no placeholders like [your name])
+- Be SHORT and memorable (not long-winded)
+- Sound like a real human (not corporate)
+- Start with a hook that grabs attention
+- Be ready to copy-paste (no placeholders)
 - Match the brand voice if provided
-- Follow platform character limits strictly
 - Use minimal emojis (0-2 max, only if natural)
-- End naturally, not with forced engagement bait
 - Put hashtags at the END only (not inline)
 
-Each variation should use a DIFFERENT angle:
-- Variation 1: Personal/relatable angle
-- Variation 2: Helpful/informative angle
-- Variation 3: Opinion/perspective angle
+Each variation should use a DIFFERENT style:
+- Variation 1: Quick and punchy (1-2 sentences)
+- Variation 2: Slightly longer but still concise
+- Variation 3: Question or bold statement
 
 FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
 
