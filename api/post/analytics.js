@@ -76,9 +76,22 @@ module.exports = async function handler(req, res) {
     }
 
     // Fetch analytics from Ayrshare using the correct endpoint
+    // API requires POST with JSON body: {"id": "postId", "platforms": [...]}
     try {
-      const response = await axios.get(
-        `${BASE_AYRSHARE}/analytics/post/${postId}`,
+      const requestBody = {
+        id: postId
+      };
+
+      // Add platforms if we have them from the database
+      if (post && post.platforms && post.platforms.length > 0) {
+        requestBody.platforms = post.platforms;
+      }
+
+      console.log('[ANALYTICS] Request body:', JSON.stringify(requestBody));
+
+      const response = await axios.post(
+        `${BASE_AYRSHARE}/analytics/post`,
+        requestBody,
         {
           headers: {
             "Content-Type": "application/json",

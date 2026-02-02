@@ -96,9 +96,12 @@ module.exports = async function handler(req, res) {
 
     for (const post of postsToSync) {
       try {
-        // Fetch analytics from Ayrshare
-        const response = await axios.get(
-          `${BASE_AYRSHARE}/analytics/post/${post.ayr_post_id}`,
+        // Fetch analytics from Ayrshare using POST with JSON body
+        const response = await axios.post(
+          `${BASE_AYRSHARE}/analytics/post`,
+          {
+            id: post.ayr_post_id
+          },
           {
             headers: {
               "Content-Type": "application/json",
