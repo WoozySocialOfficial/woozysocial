@@ -75,11 +75,12 @@ module.exports = async function handler(req, res) {
       post = data;
     }
 
-    // Fetch analytics from Ayrshare
+    // Fetch analytics from Ayrshare using the correct endpoint
     try {
       const response = await axios.get(
-        `${BASE_AYRSHARE}/analytics/post/${postId}`,
+        `${BASE_AYRSHARE}/analytics/social`,
         {
+          params: { id: postId },
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
