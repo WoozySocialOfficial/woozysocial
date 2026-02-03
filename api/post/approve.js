@@ -133,8 +133,9 @@ module.exports = async function handler(req, res) {
       // For approve/reject/changes_requested, only admins and clients can do it
       if (action === 'mark_resolved') {
         // Editors, admins, and clients can mark changes as resolved
-        const canEdit = checkPermission(member, 'canEditPosts');
-        if (!canEdit.success) {
+        // Use canCreatePosts since editors have this permission
+        const canCreate = checkPermission(member, 'canCreatePosts');
+        if (!canCreate.success) {
           return sendError(res, "You don't have permission to mark changes as resolved", ErrorCodes.FORBIDDEN);
         }
       } else {
