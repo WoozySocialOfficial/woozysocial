@@ -53,14 +53,31 @@ export default async function handler(req, res) {
         .update(draftData)
         .eq("id", draftId)
         .eq("workspace_id", workspaceId)
-        .select()
-        .single();
+        .select();
 
-      if (error) {
+      // If update fails or returns no rows (draft was deleted), create new draft
+      if (error && error.code !== 'PGRST116') {
         console.error("Error updating draft:", error);
         return res.status(500).json({ error: "Failed to update draft" });
       }
-      result = data;
+
+      if (!data || data.length === 0) {
+        // Draft doesn't exist, create a new one instead
+        console.log("Draft not found, creating new draft instead");
+        const { data: newData, error: createError } = await supabase
+          .from("post_drafts")
+          .insert([draftData])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("Error creating draft:", createError);
+          return res.status(500).json({ error: "Failed to create draft" });
+        }
+        result = newData;
+      } else {
+        result = data[0];
+      }
     } else {
       // CREATE new draft
       const { data, error } = await supabase
