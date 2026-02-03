@@ -58,7 +58,7 @@ export const CalendarPostModal = ({ posts, selectedDate, currentPostIndex, onClo
 
   // Helper to get account info for a specific platform
   const getAccountInfo = (platform) => {
-    if (!connectedAccounts) return null;
+    if (!connectedAccounts || !Array.isArray(connectedAccounts)) return null;
 
     const platformMap = {
       'instagram': 'instagram',
