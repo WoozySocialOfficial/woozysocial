@@ -461,6 +461,19 @@ export const ComposeContent = () => {
             console.warn("[Draft] Small file upload failed, saving text only");
           }
         }
+
+        // IMPORTANT: Clear File objects after successful upload to prevent 413 errors
+        if ((largeFiles.length > 0 || smallFiles.length > 0) && uploadedUrls.length > 0) {
+          console.log('[Draft] Clearing File objects after upload, updating previews with URLs');
+          // Clear the media array (File objects)
+          setPost(prev => ({ ...prev, media: [] }));
+          // Update previews to use the uploaded URLs
+          setMediaPreviews(uploadedUrls.map((url, idx) => ({
+            dataUrl: url,
+            type: url.match(/\.(mp4|mov|avi|webm|mkv)$/i) ? 'video' : 'image',
+            id: idx
+          })));
+        }
       }
 
       // NEW: Check if editing a scheduled post
