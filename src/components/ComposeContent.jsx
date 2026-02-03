@@ -360,6 +360,7 @@ export const ComposeContent = () => {
     if (draft.scheduled_date) {
       const schedDate = new Date(draft.scheduled_date);
       setScheduledDate(schedDate);
+      setTempScheduledDate(schedDate); // Also set temp for consistency
       console.log('[loadDraft] Loaded scheduled date:', schedDate);
     }
 
@@ -940,6 +941,22 @@ export const ComposeContent = () => {
       autoSaveTimerRef.current = null;
     }
 
+    // IMPORTANT: When editing a scheduled post, ONLY update the state with new schedule time
+    // The actual Ayrshare update will happen when user clicks "Save Changes" or "Mark Changes as Resolved"
+    if (isEditingScheduledPost) {
+      setTempScheduledDate(scheduleDate);
+      setScheduledDate(scheduleDate); // Also update scheduledDate for display
+      onClose();
+      toast({
+        title: "Schedule time updated",
+        description: `New schedule: ${scheduleDate.toLocaleString()}. Click "Save Changes" to confirm.`,
+        status: "info",
+        duration: 3000,
+        isClosable: true
+      });
+      return; // Don't send to API yet
+    }
+
     setIsLoading(true);
     setTempScheduledDate(scheduleDate); // Update state for backward compatibility
     onClose();
@@ -1341,7 +1358,8 @@ export const ComposeContent = () => {
       return;
     }
 
-    if (!scheduledDate) {
+    const finalScheduledDate = scheduledDate || tempScheduledDate;
+    if (!finalScheduledDate) {
       toast({
         title: "Missing schedule date",
         description: "Please select a date and time",
@@ -1413,7 +1431,7 @@ export const ComposeContent = () => {
           caption: post.text,
           mediaUrls: uploadedUrls,
           platforms: selectedPlatforms,
-          scheduledDate: scheduledDate.toISOString(),
+          scheduledDate: finalScheduledDate.toISOString(),
           postSettings: postSettings
         })
       });
@@ -1427,7 +1445,7 @@ export const ComposeContent = () => {
 
       toast({
         title: "Post updated successfully!",
-        description: `Your post has been updated and will be published on ${scheduledDate.toLocaleString()}`,
+        description: `Your post has been updated and will be published on ${finalScheduledDate.toLocaleString()}`,
         status: "success",
         duration: 5000,
         isClosable: true
@@ -1467,8 +1485,106 @@ export const ComposeContent = () => {
       return;
     }
 
+    // Validate required fields
+    const selectedPlatforms = Object.keys(networks).filter(k => networks[k]);
+    if (!post.text || selectedPlatforms.length === 0) {
+      toast({
+        title: "Missing required fields",
+        description: "Please add caption and select at least one platform",
+        status: "warning",
+        duration: 3000,
+        isClosable: true
+      });
+      return;
+    }
+
+    const finalScheduledDate = scheduledDate || tempScheduledDate;
+    if (!finalScheduledDate) {
+      toast({
+        title: "Missing schedule date",
+        description: "Please select a date and time",
+        status: "warning",
+        duration: 3000,
+        isClosable: true
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setPostingProgress({ step: 'saving', percent: 10, estimatedTime: 10 });
+
     try {
-      const response = await fetch(`${baseURL}/api/post/approve`, {
+      // Step 1: Save the changes (same logic as handleSaveScheduledPost)
+      let uploadedUrls = mediaPreviews
+        .map(p => p.dataUrl)
+        .filter(url => url && url.startsWith('http'));
+
+      // Handle file uploads
+      const hasNewFiles = Array.isArray(post.media) && post.media.length > 0 && post.media[0] instanceof File;
+      if (hasNewFiles) {
+        setPostingProgress({ step: 'uploading', percent: 30, estimatedTime: 8 });
+
+        const MAX_VERCEL_SIZE = 4 * 1024 * 1024; // 4MB
+        const largeFiles = post.media.filter(f => f instanceof File && f.size > MAX_VERCEL_SIZE);
+        const smallFiles = post.media.filter(f => f instanceof File && f.size <= MAX_VERCEL_SIZE);
+
+        // Upload large files directly
+        if (largeFiles.length > 0) {
+          for (const file of largeFiles) {
+            const result = await uploadMediaDirect(file, user.id, activeWorkspace.id);
+            if (result.success && result.publicUrl) {
+              uploadedUrls.push(result.publicUrl);
+            }
+          }
+        }
+
+        // Upload small files via API
+        if (smallFiles.length > 0) {
+          const formData = new FormData();
+          formData.append("workspaceId", activeWorkspace.id);
+          formData.append("userId", user.id);
+          smallFiles.forEach((file) => {
+            formData.append("media", file);
+          });
+
+          const uploadRes = await fetch(`${baseURL}/api/drafts/upload-media`, {
+            method: "POST",
+            body: formData
+          });
+
+          if (uploadRes.ok) {
+            const uploadJson = await uploadRes.json();
+            uploadedUrls = [...uploadedUrls, ...(uploadJson.urls || [])];
+          }
+        }
+      }
+
+      // Update the post
+      setPostingProgress({ step: 'updating', percent: 50, estimatedTime: 5 });
+
+      const updateResponse = await fetch(`${baseURL}/api/post/update-scheduled`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: currentDraftId,
+          workspaceId: activeWorkspace.id,
+          caption: post.text,
+          mediaUrls: uploadedUrls,
+          platforms: selectedPlatforms,
+          scheduledDate: finalScheduledDate.toISOString(),
+          postSettings: postSettings
+        })
+      });
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        throw new Error(errorData.error || 'Failed to update post');
+      }
+
+      // Step 2: Mark as resolved
+      setPostingProgress({ step: 'resolving', percent: 80, estimatedTime: 2 });
+
+      const approveResponse = await fetch(`${baseURL}/api/post/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1480,24 +1596,30 @@ export const ComposeContent = () => {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!approveResponse.ok) {
+        const errorData = await approveResponse.json();
         throw new Error(errorData.error || 'Failed to mark as resolved');
       }
 
+      setPostingProgress({ step: 'complete', percent: 100, estimatedTime: 0 });
+
       toast({
-        title: "Changes marked as resolved",
+        title: "Changes saved and marked as resolved",
         description: "This post has been sent back for approval",
         status: "success",
         duration: 4000,
         isClosable: true
       });
 
-      // Navigate back to schedule page
+      // Clear form and navigate
+      clearForm();
       navigate('/schedule');
 
     } catch (error) {
       console.error('Error marking as resolved:', error);
+
+      setPostingProgress({ step: 'idle', percent: 0, estimatedTime: 0 });
+
       toast({
         title: "Failed to mark as resolved",
         description: error.message,
@@ -1505,6 +1627,8 @@ export const ComposeContent = () => {
         duration: 4000,
         isClosable: true
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
