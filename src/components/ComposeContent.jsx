@@ -1546,8 +1546,28 @@ export const ComposeContent = () => {
         isClosable: true
       });
 
-      // Clear form and navigate
-      clearForm();
+      // Clear autosave timer
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Reset form completely
+      setCurrentDraftId(null);
+      setPost({ text: "", media: [] });
+      setNetworks({
+        threads: false, telegram: false, twitter: false, googleBusiness: false,
+        pinterest: false, tiktok: false, snapchat: false, instagram: false,
+        bluesky: false, youtube: false, linkedin: false, facebook: false, reddit: false
+      });
+      setMediaPreviews([]);
+      setScheduledDate(null);
+      setTempScheduledDate(null);
+      setLastSaved(null);
+      setIsEditingScheduledPost(false);
+
+      // Invalidate cache and navigate
+      invalidatePosts(activeWorkspace?.id);
       navigate('/schedule');
 
     } catch (error) {
@@ -1708,8 +1728,28 @@ export const ComposeContent = () => {
         isClosable: true
       });
 
-      // Clear form and navigate
-      clearForm();
+      // Clear autosave timer
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Reset form completely
+      setCurrentDraftId(null);
+      setPost({ text: "", media: [] });
+      setNetworks({
+        threads: false, telegram: false, twitter: false, googleBusiness: false,
+        pinterest: false, tiktok: false, snapchat: false, instagram: false,
+        bluesky: false, youtube: false, linkedin: false, facebook: false, reddit: false
+      });
+      setMediaPreviews([]);
+      setScheduledDate(null);
+      setTempScheduledDate(null);
+      setLastSaved(null);
+      setIsEditingScheduledPost(false);
+
+      // Invalidate cache and navigate
+      invalidatePosts(activeWorkspace?.id);
       navigate('/schedule');
 
     } catch (error) {
