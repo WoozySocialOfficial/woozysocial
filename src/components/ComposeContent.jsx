@@ -535,10 +535,17 @@ export const ComposeContent = () => {
   }, [user, activeWorkspace?.id, post.text, mediaPreviews, networks, scheduledDate, currentDraftId, isEditingScheduledPost, postSettings, toast, supabase, invalidatePosts]);
 
   // Auto-save draft every 30 seconds when there's content
+  // DISABLED for editing scheduled posts - no need to autosave existing posts
   useEffect(() => {
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
+
+    // Skip autosave when editing scheduled posts
+    if (isEditingScheduledPost) {
+      return;
+    }
+
     if (post.text || mediaPreviews.length > 0 || Object.values(networks).some(v => v)) {
       autoSaveTimerRef.current = setTimeout(() => {
         saveDraft();
@@ -549,10 +556,16 @@ export const ComposeContent = () => {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [post.text, mediaPreviews, networks, saveDraft]);
+  }, [post.text, mediaPreviews, networks, saveDraft, isEditingScheduledPost]);
 
   // Save draft when navigating away
+  // DISABLED for editing scheduled posts - no need to autosave existing posts
   useEffect(() => {
+    // Skip autosave when editing scheduled posts
+    if (isEditingScheduledPost) {
+      return;
+    }
+
     const handleBeforeUnload = () => {
       saveDraft();
     };
@@ -561,7 +574,7 @@ export const ComposeContent = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       saveDraft();
     };
-  }, [saveDraft]);
+  }, [saveDraft, isEditingScheduledPost]);
 
   // Listen for social accounts updates from other components
   useEffect(() => {
