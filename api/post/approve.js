@@ -128,10 +128,21 @@ module.exports = async function handler(req, res) {
 
       const member = membershipCheck.member;
 
-      // Check if user has permission to approve posts (role-based)
-      const permissionCheck = checkPermission(member, 'canApprovePosts');
-      if (!permissionCheck.success) {
-        return sendError(res, "Only admins and clients can approve posts", ErrorCodes.FORBIDDEN);
+      // Check if user has permission based on the action
+      // For 'mark_resolved', editors can do it (they're just marking changes as done)
+      // For approve/reject/changes_requested, only admins and clients can do it
+      if (action === 'mark_resolved') {
+        // Editors, admins, and clients can mark changes as resolved
+        const canEdit = checkPermission(member, 'canEditPosts');
+        if (!canEdit.success) {
+          return sendError(res, "You don't have permission to mark changes as resolved", ErrorCodes.FORBIDDEN);
+        }
+      } else {
+        // For actual approval actions, only admins and clients
+        const permissionCheck = checkPermission(member, 'canApprovePosts');
+        if (!permissionCheck.success) {
+          return sendError(res, "Only admins and clients can approve posts", ErrorCodes.FORBIDDEN);
+        }
       }
 
       // Check if approval workflows are enabled for this workspace
