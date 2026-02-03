@@ -1432,26 +1432,54 @@ export const ComposeContent = () => {
         }
       }
 
-      // Call update endpoint
+      // Update the post
       setPostingProgress({ step: 'updating', percent: 60, estimatedTime: 5 });
 
-      const response = await fetch(`${baseURL}/api/post/update-scheduled`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: currentDraftId,
-          workspaceId: activeWorkspace.id,
-          caption: post.text,
-          mediaUrls: uploadedUrls,
-          platforms: selectedPlatforms,
-          scheduledDate: finalScheduledDate.toISOString(),
-          postSettings: postSettings
-        })
-      });
+      // IMPORTANT: If post is pending approval, ONLY update database, don't touch Ayrshare
+      // Posts pending approval haven't been sent to Ayrshare yet (no ayr_post_id)
+      if (approvalStatus === 'pending' || approvalStatus === 'changes_requested') {
+        console.log('[Save] Post is pending approval, updating database only (not Ayrshare)');
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update post');
+        // Update directly in Supabase
+        const { error } = await supabase
+          .from('posts')
+          .update({
+            caption: post.text,
+            media_urls: uploadedUrls,
+            platforms: selectedPlatforms,
+            scheduled_at: finalScheduledDate.toISOString(),
+            post_settings: postSettings,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentDraftId)
+          .eq('workspace_id', activeWorkspace.id);
+
+        if (error) {
+          console.error('[Save] Database update error:', error);
+          throw new Error(error.message || 'Failed to update post in database');
+        }
+      } else {
+        // Post is already scheduled/posted to Ayrshare - use update-scheduled endpoint
+        console.log('[Save] Post is scheduled, updating via update-scheduled endpoint');
+
+        const response = await fetch(`${baseURL}/api/post/update-scheduled`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            postId: currentDraftId,
+            workspaceId: activeWorkspace.id,
+            caption: post.text,
+            mediaUrls: uploadedUrls,
+            platforms: selectedPlatforms,
+            scheduledDate: finalScheduledDate.toISOString(),
+            postSettings: postSettings
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update post');
+        }
       }
 
       setPostingProgress({ step: 'complete', percent: 100, estimatedTime: 0 });
@@ -1572,26 +1600,28 @@ export const ComposeContent = () => {
         }
       }
 
-      // Update the post
+      // Update the post - ALWAYS use database update for mark resolved
+      // Posts with changes_requested are always pending approval (not in Ayrshare yet)
       setPostingProgress({ step: 'updating', percent: 50, estimatedTime: 5 });
 
-      const updateResponse = await fetch(`${baseURL}/api/post/update-scheduled`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: currentDraftId,
-          workspaceId: activeWorkspace.id,
-          caption: post.text,
-          mediaUrls: uploadedUrls,
-          platforms: selectedPlatforms,
-          scheduledDate: finalScheduledDate.toISOString(),
-          postSettings: postSettings
-        })
-      });
+      console.log('[Mark Resolved] Updating database only (post pending approval)');
 
-      if (!updateResponse.ok) {
-        const errorData = await updateResponse.json();
-        throw new Error(errorData.error || 'Failed to update post');
+      const { error: updateError } = await supabase
+        .from('posts')
+        .update({
+          caption: post.text,
+          media_urls: uploadedUrls,
+          platforms: selectedPlatforms,
+          scheduled_at: finalScheduledDate.toISOString(),
+          post_settings: postSettings,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentDraftId)
+        .eq('workspace_id', activeWorkspace.id);
+
+      if (updateError) {
+        console.error('[Mark Resolved] Database update error:', updateError);
+        throw new Error(updateError.message || 'Failed to update post in database');
       }
 
       // Step 2: Mark as resolved
