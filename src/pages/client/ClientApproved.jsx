@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClientApprovedPosts } from "../../hooks/useQueries";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
+import { ApprovedPostModal } from "../../components/client/ApprovedPostModal";
 import "./ClientApproved.css";
 
 export const ClientApproved = () => {
@@ -13,6 +14,8 @@ export const ClientApproved = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [filter, setFilter] = useState("all"); // all, approved, rejected
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [selectedPost, setSelectedPost] = useState(null);
   const [highlightedPostId, setHighlightedPostId] = useState(null);
   const postRefs = useRef({});
 
@@ -27,6 +30,12 @@ export const ClientApproved = () => {
     if (filter === "approved") return post.approval_status === "approved";
     if (filter === "rejected") return post.approval_status === "rejected";
     return true;
+  });
+
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    const dateA = new Date(a.reviewed_at || a.scheduled_at || a.created_at || 0);
+    const dateB = new Date(b.reviewed_at || b.scheduled_at || b.created_at || 0);
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
   });
 
   // Handle deep-link from dashboard activity click
@@ -103,42 +112,53 @@ export const ClientApproved = () => {
           <p>View your approved and rejected posts.</p>
         </div>
 
-        <div className="filter-buttons">
+        <div className="filter-row">
+          <div className="filter-buttons">
+            <button
+              className={`filter-btn ${filter === "all" ? "active" : ""}`}
+              onClick={() => setFilter("all")}
+            >
+              All
+            </button>
+            <button
+              className={`filter-btn ${filter === "approved" ? "active" : ""}`}
+              onClick={() => setFilter("approved")}
+            >
+              ✅ Approved
+            </button>
+            <button
+              className={`filter-btn ${filter === "rejected" ? "active" : ""}`}
+              onClick={() => setFilter("rejected")}
+            >
+              ❌ Rejected
+            </button>
+          </div>
           <button
-            className={`filter-btn ${filter === "all" ? "active" : ""}`}
-            onClick={() => setFilter("all")}
+            className="sort-toggle"
+            onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
+            title={sortOrder === "newest" ? "Showing newest first" : "Showing oldest first"}
           >
-            All
-          </button>
-          <button
-            className={`filter-btn ${filter === "approved" ? "active" : ""}`}
-            onClick={() => setFilter("approved")}
-          >
-            ✅ Approved
-          </button>
-          <button
-            className={`filter-btn ${filter === "rejected" ? "active" : ""}`}
-            onClick={() => setFilter("rejected")}
-          >
-            ❌ Rejected
+            {sortOrder === "newest" ? <FaSortAmountDown /> : <FaSortAmountUp />}
+            <span>{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
           </button>
         </div>
       </div>
 
       {loading ? (
         <div className="loading-state">Loading post history...</div>
-      ) : filteredPosts.length === 0 ? (
+      ) : sortedPosts.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">📭</span>
           <p>No posts found in your history.</p>
         </div>
       ) : (
         <div className="posts-grid">
-          {filteredPosts.map((post) => (
+          {sortedPosts.map((post) => (
             <div
               key={post.id}
               ref={(el) => { postRefs.current[post.id] = el; }}
               className={`history-card ${highlightedPostId === post.id ? 'highlighted' : ''}`}
+              onClick={() => setSelectedPost(post)}
             >
               {post.media_urls?.length > 0 && (
                 <div className="card-media">
@@ -185,6 +205,14 @@ export const ClientApproved = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Post Detail Modal */}
+      {selectedPost && (
+        <ApprovedPostModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+        />
       )}
     </div>
   );

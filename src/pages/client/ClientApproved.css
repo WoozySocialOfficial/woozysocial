@@ -25,9 +25,37 @@
   margin: 0;
 }
 
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .filter-buttons {
   display: flex;
   gap: 8px;
+}
+
+/* Sort Toggle */
+.client-approved .sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.client-approved .sort-toggle:hover {
+  border-color: #afabf9;
+  color: #afabf9;
 }
 
 .filter-btn {
@@ -84,6 +112,7 @@
   border-radius: 10px;
   overflow: hidden;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .history-card:hover {
@@ -209,6 +238,20 @@
 [data-theme="dark"] .header-content p,
 .dark .header-content p {
   color: #9ca3af;
+}
+
+/* Dark Mode Sort Toggle */
+[data-theme="dark"] .client-approved .sort-toggle,
+.dark .client-approved .sort-toggle {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .client-approved .sort-toggle:hover,
+.dark .client-approved .sort-toggle:hover {
+  border-color: #7c3aed;
+  color: #a78bfa;
 }
 
 /* Dark Mode Filter Buttons */

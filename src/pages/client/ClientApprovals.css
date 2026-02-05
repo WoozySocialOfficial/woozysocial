@@ -20,11 +20,20 @@
   margin: 0;
 }
 
+/* Tabs Row */
+.approvals-tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 /* Tabs */
 .approvals-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
 }
 
 .approval-tab {
@@ -66,6 +75,28 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+/* Sort Toggle */
+.sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sort-toggle:hover {
+  border-color: #afabf9;
+  color: #afabf9;
 }
 
 /* Content Layout */
@@ -600,6 +631,20 @@
 .dark .tab-badge {
   background: #7c3aed;
   color: #ffffff;
+}
+
+/* Dark Mode Sort Toggle */
+[data-theme="dark"] .sort-toggle,
+.dark .sort-toggle {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .sort-toggle:hover,
+.dark .sort-toggle:hover {
+  border-color: #7c3aed;
+  color: #a78bfa;
 }
 
 /* Dark Mode Posts List */

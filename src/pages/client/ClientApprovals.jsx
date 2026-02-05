@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { usePendingApprovals, useInvalidateQueries } from "../../hooks/useQueries";
 import { baseURL } from "../../utils/constants";
 import { useToast } from "@chakra-ui/react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit, FaChevronLeft, FaChevronRight, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { CommentThread } from "../../components/comments/CommentThread";
@@ -22,6 +22,7 @@ export const ClientApprovals = () => {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [sortOrder, setSortOrder] = useState("newest");
 
   // Use React Query for cached data fetching
   const {
@@ -171,6 +172,12 @@ export const ClientApprovals = () => {
     return IconComponent ? <IconComponent /> : null;
   };
 
+  const sortedPosts = [...posts].sort((a, b) => {
+    const dateA = new Date(a.scheduled_at || a.created_at || 0);
+    const dateB = new Date(b.scheduled_at || b.created_at || 0);
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+  });
+
   return (
     <div className="client-approvals">
       <div className="approvals-header">
@@ -178,27 +185,37 @@ export const ClientApprovals = () => {
         <p>Review and approve posts before they go live on your social media.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="approvals-tabs">
-        {tabs.map((tab) => {
-          const IconComponent = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              className={`approval-tab ${activeTab === tab.id ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setSelectedPost(null);
-              }}
-            >
-              <span className="tab-icon"><IconComponent /></span>
-              <span className="tab-label">{tab.label}</span>
-              {tab.id === "pending" && posts.length > 0 && activeTab === "pending" && (
-                <span className="tab-badge">{posts.length}</span>
-              )}
-            </button>
-          );
-        })}
+      {/* Tabs + Sort */}
+      <div className="approvals-tabs-row">
+        <div className="approvals-tabs">
+          {tabs.map((tab) => {
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                className={`approval-tab ${activeTab === tab.id ? "active" : ""}`}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setSelectedPost(null);
+                }}
+              >
+                <span className="tab-icon"><IconComponent /></span>
+                <span className="tab-label">{tab.label}</span>
+                {tab.id === "pending" && posts.length > 0 && activeTab === "pending" && (
+                  <span className="tab-badge">{posts.length}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          className="sort-toggle"
+          onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
+          title={sortOrder === "newest" ? "Showing newest first" : "Showing oldest first"}
+        >
+          {sortOrder === "newest" ? <FaSortAmountDown /> : <FaSortAmountUp />}
+          <span>{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
+        </button>
       </div>
 
       <div className="approvals-content">
@@ -206,7 +223,7 @@ export const ClientApprovals = () => {
         <div className="posts-list">
           {loading ? (
             <div className="loading-state">Loading posts...</div>
-          ) : posts.length === 0 ? (
+          ) : sortedPosts.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">✨</span>
               <p>No {activeTab === "pending" ? "posts awaiting approval" :
@@ -215,7 +232,7 @@ export const ClientApprovals = () => {
                      "rejected posts"}</p>
             </div>
           ) : (
-            posts.map((post) => (
+            sortedPosts.map((post) => (
               <div
                 key={post.id}
                 className={`post-item ${selectedPost?.id === post.id ? "selected" : ""}`}
