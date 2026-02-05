@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePendingApprovals, useInvalidateQueries } from "../../hooks/useQueries";
@@ -13,6 +14,7 @@ export const ClientApprovals = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
   const toast = useToast();
+  const location = useLocation();
   const { invalidatePosts } = useInvalidateQueries();
   const [selectedPost, setSelectedPost] = useState(null);
   const [activeTab, setActiveTab] = useState("pending");
@@ -33,12 +35,32 @@ export const ClientApprovals = () => {
     { id: "rejected", label: "Rejected", icon: FaTimes }
   ];
 
-  // Auto-select first post when posts change
+  // Handle deep-link from dashboard activity click
   useEffect(() => {
-    if (posts.length > 0 && !selectedPost) {
+    const navState = location.state;
+    if (!navState?.postId || loading || posts.length === 0) return;
+
+    // Switch to the correct tab if specified
+    if (navState.tab && navState.tab !== activeTab) {
+      setActiveTab(navState.tab);
+      return; // Tab change will trigger refetch, selection happens on next run
+    }
+
+    // Find and select the target post
+    const targetPost = posts.find(p => p.id === navState.postId);
+    if (targetPost) {
+      setSelectedPost(targetPost);
+      // Clear the location state so refreshing doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, posts, loading, activeTab]);
+
+  // Auto-select first post when posts change (only if no deep-link)
+  useEffect(() => {
+    if (posts.length > 0 && !selectedPost && !location.state?.postId) {
       setSelectedPost(posts[0]);
     }
-  }, [posts, selectedPost]);
+  }, [posts, selectedPost, location.state?.postId]);
 
   // Refresh function that invalidates cache
   const fetchPosts = () => {

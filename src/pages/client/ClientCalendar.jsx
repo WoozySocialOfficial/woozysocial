@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClientCalendarPosts, useInvalidateQueries } from "../../hooks/useQueries";
@@ -8,9 +9,11 @@ import "./ClientCalendar.css";
 export const ClientCalendar = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
+  const location = useLocation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedPosts, setSelectedPosts] = useState([]);
+  const [deepLinkPostIndex, setDeepLinkPostIndex] = useState(null);
   const { invalidatePosts } = useInvalidateQueries();
 
   // Use React Query for cached data fetching
@@ -48,6 +51,51 @@ export const ClientCalendar = () => {
     invalidatePosts(activeWorkspace?.id);
     refetch();
   };
+
+  // Handle deep-link from dashboard activity click
+  useEffect(() => {
+    const navState = location.state;
+    if (!navState?.postId || loading || posts.length === 0) return;
+
+    // Find the target post
+    const targetPost = posts.find(p => p.id === navState.postId);
+    if (!targetPost) return;
+
+    const postDateStr = targetPost.schedule_date || targetPost.scheduled_at;
+    if (!postDateStr) return;
+
+    const postDate = new Date(postDateStr);
+
+    // Navigate to the correct month if needed
+    if (
+      postDate.getMonth() !== currentDate.getMonth() ||
+      postDate.getFullYear() !== currentDate.getFullYear()
+    ) {
+      setCurrentDate(new Date(postDate.getFullYear(), postDate.getMonth(), 1));
+    }
+
+    // Find all posts for that date
+    const dayDate = new Date(postDate.getFullYear(), postDate.getMonth(), postDate.getDate());
+    const postsOnDate = posts.filter((p) => {
+      if (!p.schedule_date) return false;
+      const pDate = new Date(p.schedule_date);
+      return (
+        pDate.getDate() === dayDate.getDate() &&
+        pDate.getMonth() === dayDate.getMonth() &&
+        pDate.getFullYear() === dayDate.getFullYear()
+      );
+    });
+
+    if (postsOnDate.length > 0) {
+      const targetIndex = postsOnDate.findIndex(p => p.id === navState.postId);
+      setSelectedDate(dayDate);
+      setSelectedPosts(postsOnDate);
+      setDeepLinkPostIndex(targetIndex >= 0 ? targetIndex : 0);
+    }
+
+    // Clear the location state
+    window.history.replaceState({}, document.title);
+  }, [location.state, posts, loading]);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -99,6 +147,7 @@ export const ClientCalendar = () => {
     if (datePosts.length > 0) {
       setSelectedDate(date);
       setSelectedPosts(datePosts);
+      setDeepLinkPostIndex(null);
     }
   };
 
@@ -209,10 +258,11 @@ export const ClientCalendar = () => {
         <CalendarPostModal
           posts={selectedPosts}
           selectedDate={selectedDate}
-          currentPostIndex={0}
+          currentPostIndex={deepLinkPostIndex !== null ? deepLinkPostIndex : 0}
           onClose={() => {
             setSelectedDate(null);
             setSelectedPosts([]);
+            setDeepLinkPostIndex(null);
           }}
           onPostUpdated={handlePostUpdated}
         />

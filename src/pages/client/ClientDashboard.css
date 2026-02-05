@@ -220,16 +220,42 @@
 
 .activity-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 16px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.activity-item:hover {
-  background-color: #e9ecef;
+.activity-item.clickable {
+  cursor: pointer;
+}
+
+.activity-item.clickable:hover {
+  background-color: #e2e6ea;
+  transform: translateX(2px);
+}
+
+.activity-item.clickable:focus-visible {
+  outline: 2px solid #afabf9;
+  outline-offset: 2px;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-arrow {
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.activity-item.clickable:hover .activity-arrow {
+  color: #6b7280;
+  transform: translateX(3px);
 }
 
 .activity-caption {
@@ -447,9 +473,20 @@
   background-color: #374151;
 }
 
-[data-theme="dark"] .activity-item:hover,
-.dark .activity-item:hover {
+[data-theme="dark"] .activity-item.clickable:hover,
+.dark .activity-item.clickable:hover {
   background-color: #4b5563;
+  transform: translateX(2px);
+}
+
+[data-theme="dark"] .activity-arrow,
+.dark .activity-arrow {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .activity-item.clickable:hover .activity-arrow,
+.dark .activity-item.clickable:hover .activity-arrow {
+  color: #9ca3af;
 }
 
 [data-theme="dark"] .activity-caption,

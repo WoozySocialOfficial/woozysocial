@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClientApprovedPosts } from "../../hooks/useQueries";
@@ -10,7 +11,10 @@ import "./ClientApproved.css";
 export const ClientApproved = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
+  const location = useLocation();
   const [filter, setFilter] = useState("all"); // all, approved, rejected
+  const [highlightedPostId, setHighlightedPostId] = useState(null);
+  const postRefs = useRef({});
 
   // Use React Query for cached data fetching
   const { data: posts = [], isLoading: loading } = useClientApprovedPosts(
@@ -24,6 +28,40 @@ export const ClientApproved = () => {
     if (filter === "rejected") return post.approval_status === "rejected";
     return true;
   });
+
+  // Handle deep-link from dashboard activity click
+  useEffect(() => {
+    const navState = location.state;
+    if (!navState?.postId || loading || posts.length === 0) return;
+
+    // Set the filter to match the post's status
+    if (navState.filter && navState.filter !== filter) {
+      setFilter(navState.filter);
+    }
+
+    // Highlight the target post
+    setHighlightedPostId(navState.postId);
+
+    // Clear the location state
+    window.history.replaceState({}, document.title);
+
+    // Auto-remove highlight after 3 seconds
+    const timer = setTimeout(() => {
+      setHighlightedPostId(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [location.state, posts, loading]);
+
+  // Scroll to highlighted post once rendered
+  useEffect(() => {
+    if (highlightedPostId && postRefs.current[highlightedPostId]) {
+      postRefs.current[highlightedPostId].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [highlightedPostId, filteredPosts]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
@@ -97,7 +135,11 @@ export const ClientApproved = () => {
       ) : (
         <div className="posts-grid">
           {filteredPosts.map((post) => (
-            <div key={post.id} className="history-card">
+            <div
+              key={post.id}
+              ref={(el) => { postRefs.current[post.id] = el; }}
+              className={`history-card ${highlightedPostId === post.id ? 'highlighted' : ''}`}
+            >
               {post.media_urls?.length > 0 && (
                 <div className="card-media">
                   <img src={post.media_urls[0]} alt="Post media" />

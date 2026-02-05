@@ -1,13 +1,15 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClientDashboardStats } from "../../hooks/useQueries";
+import { FaChevronRight } from "react-icons/fa";
 import "./ClientDashboard.css";
 
 export const ClientDashboard = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Use React Query for cached data fetching
   const { data, isLoading: loading } = useClientDashboardStats(
@@ -50,6 +52,40 @@ export const ClientDashboard = () => {
       case 'approved': return 'Approved';
       case 'rejected': return 'Rejected';
       default: return status;
+    }
+  };
+
+  const handleActivityClick = (post) => {
+    const status = post.status;
+
+    if (status === 'pending_approval' || status === 'changes_requested') {
+      navigate('/client/approvals', {
+        state: {
+          postId: post.id,
+          tab: status === 'pending_approval' ? 'pending' : 'changes_requested'
+        }
+      });
+    } else if (status === 'approved' || status === 'rejected') {
+      navigate('/client/approved', {
+        state: {
+          postId: post.id,
+          filter: status
+        }
+      });
+    } else if (status === 'scheduled') {
+      navigate('/client/calendar', {
+        state: {
+          postId: post.id,
+          scheduledDate: post.scheduled_at || post.schedule_date
+        }
+      });
+    } else if (status === 'posted') {
+      navigate('/client/approved', {
+        state: {
+          postId: post.id,
+          filter: 'approved'
+        }
+      });
     }
   };
 
@@ -137,7 +173,19 @@ export const ClientDashboard = () => {
         ) : (
           <div className="activity-list">
             {recentActivity.map((post) => (
-              <div key={post.id} className="activity-item">
+              <div
+                key={post.id}
+                className="activity-item clickable"
+                onClick={() => handleActivityClick(post)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleActivityClick(post);
+                  }
+                }}
+              >
                 <div className="activity-content">
                   <div className="activity-caption">
                     {post.caption?.substring(0, 80) || 'No caption'}
@@ -159,6 +207,9 @@ export const ClientDashboard = () => {
                       </span>
                     )}
                   </div>
+                </div>
+                <div className="activity-arrow">
+                  <FaChevronRight size={14} />
                 </div>
               </div>
             ))}
