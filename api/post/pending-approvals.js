@@ -67,7 +67,6 @@ module.exports = async function handler(req, res) {
         user_id,
         created_by,
         ayr_post_id,
-        reviewed_at,
         post_approvals (
           approval_status,
           reviewed_at,
@@ -121,12 +120,17 @@ module.exports = async function handler(req, res) {
     const postsWithMeta = (posts || []).map(post => {
       const creatorId = post.created_by || post.user_id;
       const creator = creatorProfiles[creatorId] || null;
+      // Extract reviewed_at from post_approvals join
+      const latestApproval = post.post_approvals?.sort((a, b) =>
+        new Date(b.reviewed_at || 0) - new Date(a.reviewed_at || 0)
+      )[0];
       return {
         ...post,
         // Map to frontend expected field names
         post: post.caption,
         schedule_date: post.scheduled_at,
         media_url: post.media_urls?.[0] || null,
+        reviewed_at: latestApproval?.reviewed_at || null,
         commentCount: post.post_comments?.length || 0,
         post_comments: undefined, // Remove the array, just keep count
         // Add creator info
