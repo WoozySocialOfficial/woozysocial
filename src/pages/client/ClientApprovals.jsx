@@ -8,6 +8,7 @@ import { useToast } from "@chakra-ui/react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
+import { CommentThread } from "../../components/comments/CommentThread";
 import "./ClientApprovals.css";
 
 export const ClientApprovals = () => {
@@ -375,6 +376,18 @@ export const ClientApprovals = () => {
                       {getPlatformIcon(platform)} {platform}
                     </span>
                   ))}
+                </div>
+              </div>
+
+              {/* Comments & Feedback Thread */}
+              <div className="detail-comments">
+                <h3>Comments & Feedback</h3>
+                <div className="comments-scroll-container">
+                  <CommentThread
+                    postId={selectedPost.id}
+                    workspaceId={activeWorkspace?.id}
+                    enableRealtime={true}
+                  />
                 </div>
               </div>
 

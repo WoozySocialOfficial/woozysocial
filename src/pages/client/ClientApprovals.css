@@ -359,6 +359,7 @@
 
 .detail-caption h3,
 .detail-platforms h3,
+.detail-comments h3,
 .detail-comment h3 {
   font-size: 14px;
   font-weight: 600;
@@ -399,6 +400,44 @@
   font-size: 14px;
   color: #000000;
   text-transform: capitalize;
+}
+
+/* Comments & Feedback Section */
+.detail-comments {
+  margin-bottom: 24px;
+}
+
+.comments-scroll-container {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.comments-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comments-scroll-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.comments-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Override CommentThread max-height since we handle scrolling in the wrapper */
+.comments-scroll-container .comment-thread {
+  max-height: none;
+  overflow-y: visible;
+  padding: 0;
 }
 
 .detail-comment {
@@ -676,9 +715,11 @@
 
 [data-theme="dark"] .detail-caption h3,
 [data-theme="dark"] .detail-platforms h3,
+[data-theme="dark"] .detail-comments h3,
 [data-theme="dark"] .detail-comment h3,
 .dark .detail-caption h3,
 .dark .detail-platforms h3,
+.dark .detail-comments h3,
 .dark .detail-comment h3 {
   color: #9ca3af;
 }
@@ -693,6 +734,60 @@
 .dark .platform-tag {
   background: #374151;
   color: #e5e7eb;
+}
+
+/* Dark Mode Comments Section */
+[data-theme="dark"] .comments-scroll-container,
+.dark .comments-scroll-container {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .comments-scroll-container::-webkit-scrollbar-thumb,
+.dark .comments-scroll-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+[data-theme="dark"] .comments-scroll-container::-webkit-scrollbar-thumb:hover,
+.dark .comments-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+[data-theme="dark"] .comments-scroll-container .comment,
+.dark .comments-scroll-container .comment {
+  background: #1f2937;
+}
+
+[data-theme="dark"] .comments-scroll-container .comment:hover,
+.dark .comments-scroll-container .comment:hover {
+  background: #252f3f;
+}
+
+[data-theme="dark"] .comments-scroll-container .comment.system-comment,
+.dark .comments-scroll-container .comment.system-comment {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+[data-theme="dark"] .comments-scroll-container .comment-author,
+.dark .comments-scroll-container .comment-author {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .comments-scroll-container .comment-text,
+.dark .comments-scroll-container .comment-text {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .comments-scroll-container .comment-time,
+.dark .comments-scroll-container .comment-time {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .comments-scroll-container .no-comments,
+[data-theme="dark"] .comments-scroll-container .loading-comments,
+.dark .comments-scroll-container .no-comments,
+.dark .comments-scroll-container .loading-comments {
+  color: #6b7280;
 }
 
 [data-theme="dark"] .detail-comment textarea,
