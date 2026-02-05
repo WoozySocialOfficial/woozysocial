@@ -5,7 +5,7 @@ import { baseURL } from "../utils/constants";
 import { useDrafts, usePosts, useInvalidateQueries } from "../hooks/useQueries";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaSnapchat, FaTrash, FaSyncAlt } from "react-icons/fa";
+import { FaSearch, FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaTrash, FaSyncAlt } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { PostDetailPanel } from "./comments/PostDetailPanel";
@@ -18,10 +18,7 @@ const PLATFORM_ICONS = {
   instagram: FaInstagram,
   linkedin: FaLinkedinIn,
   youtube: FaYoutube,
-  reddit: FaReddit,
-  telegram: FaTelegram,
   pinterest: FaPinterest,
-  snapchat: FaSnapchat,
   tiktok: FaTiktok,
   twitter: SiX,
   "x/twitter": SiX,

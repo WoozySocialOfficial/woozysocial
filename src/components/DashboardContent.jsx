@@ -7,9 +7,8 @@ import { useConnectedAccounts, useDashboardStats, useInvalidateQueries } from ".
 import { baseURL } from "../utils/constants";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import "./DashboardContent.css";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
-import { SiSnapchat } from "react-icons/si";
 import { FaBluesky } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
 
@@ -20,11 +19,8 @@ const PLATFORM_ICONS = {
   youtube: FaYoutube,
   tiktok: FaTiktok,
   twitter: SiX,
-  telegram: FaTelegram,
   pinterest: FaPinterest,
-  reddit: FaReddit,
-  bluesky: FaBluesky,
-  snapchat: SiSnapchat
+  bluesky: FaBluesky
 };
 
 // Status labels and colors (matching Approvals page)
@@ -75,11 +71,8 @@ export const DashboardContent = () => {
     { name: "Twitter/X", icon: SiX, key: "twitter", color: "#000000" },
     { name: "TikTok", icon: FaTiktok, key: "tiktok", color: "#000000" },
     { name: "YouTube", icon: FaYoutube, key: "youtube", color: "#FF0000" },
-    { name: "Telegram", icon: FaTelegram, key: "telegram", color: "#0088cc" },
     { name: "Pinterest", icon: FaPinterest, key: "pinterest", color: "#BD081C" },
-    { name: "Reddit", icon: FaReddit, key: "reddit", color: "#FF4500" },
-    { name: "BlueSky", icon: FaBluesky, key: "bluesky", color: "#1185FE" },
-    { name: "Snapchat", icon: SiSnapchat, key: "snapchat", color: "#FFFC00" }
+    { name: "BlueSky", icon: FaBluesky, key: "bluesky", color: "#1185FE" }
   ];
 
   // Function to refresh connected accounts (uses React Query cache invalidation)

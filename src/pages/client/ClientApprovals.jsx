@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { usePendingApprovals, useInvalidateQueries } from "../../hooks/useQueries";
 import { baseURL } from "../../utils/constants";
 import { useToast } from "@chakra-ui/react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit, FaChevronLeft, FaChevronRight, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaCheck, FaTimes, FaClock, FaEdit, FaChevronLeft, FaChevronRight, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { CommentThread } from "../../components/comments/CommentThread";
@@ -162,8 +162,6 @@ export const ClientApprovals = () => {
     twitter: SiX,
     "x/twitter": SiX,
     bluesky: SiBluesky,
-    reddit: FaReddit,
-    telegram: FaTelegram,
     pinterest: FaPinterest,
     threads: FaThreads
   };

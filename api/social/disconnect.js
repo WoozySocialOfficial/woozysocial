@@ -17,7 +17,7 @@ const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
 const VALID_PLATFORMS = [
   'facebook', 'instagram', 'twitter', 'linkedin',
-  'youtube', 'tiktok', 'pinterest', 'reddit', 'telegram'
+  'youtube', 'tiktok', 'pinterest'
 ];
 
 module.exports = async function handler(req, res) {

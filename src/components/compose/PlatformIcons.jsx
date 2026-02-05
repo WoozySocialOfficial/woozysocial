@@ -5,10 +5,7 @@ import {
   FaLinkedinIn,
   FaYoutube,
   FaTiktok,
-  FaReddit,
   FaPinterest,
-  FaSnapchatGhost,
-  FaTelegram,
   FaHome,
   FaSearch,
   FaPlus,
@@ -78,10 +75,7 @@ export const PlatformBrandIcons = {
   youtube: FaYoutube,
   tiktok: FaTiktok,
   threads: SiThreads,
-  reddit: FaReddit,
   pinterest: FaPinterest,
-  snapchat: FaSnapchatGhost,
-  telegram: FaTelegram,
   bluesky: FaBluesky,
 };
 

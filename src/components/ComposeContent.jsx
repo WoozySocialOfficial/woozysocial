@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ComposeContent.css";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaGoogle } from "react-icons/fa";
-import { FaTiktok, FaThreads, FaBluesky, FaSnapchat } from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaGoogle } from "react-icons/fa";
+import { FaTiktok, FaThreads, FaBluesky } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
 import { useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure } from "@chakra-ui/react";
 import DatePicker from "react-datepicker";
@@ -44,18 +44,15 @@ export const ComposeContent = () => {
   const [post, setPost] = useState({ text: "", media: [] });
   const [networks, setNetworks] = useState({
     threads: false,
-    telegram: false,
     twitter: false,
     googleBusiness: false,
     pinterest: false,
     tiktok: false,
-    snapchat: false,
     instagram: false,
     bluesky: false,
     youtube: false,
     linkedin: false,
-    facebook: false,
-    reddit: false
+    facebook: false
   });
   const [mediaPreviews, setMediaPreviews] = useState([]);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
@@ -735,10 +732,7 @@ export const ComposeContent = () => {
     'youtube': 'youtube',
     'tiktok': 'tiktok',
     'pinterest': 'pinterest',
-    'reddit': 'reddit',
-    'telegram': 'telegram',
     'bluesky': 'bluesky',
-    'snapchat': 'snapchat',
     'threads': 'threads',
     'google business': 'googleBusiness'
   };
@@ -764,18 +758,15 @@ export const ComposeContent = () => {
 
   const socialNetworks = [
     { name: "threads", displayName: "Threads", icon: FaThreads, color: "#000000" },
-    { name: "telegram", displayName: "Telegram", icon: FaTelegram, color: "#0088cc" },
     { name: "twitter", displayName: "Twitter", icon: SiX, color: "#000000" },
     { name: "googleBusiness", displayName: "Google Business", icon: FaGoogle, color: "#4285F4" },
     { name: "pinterest", displayName: "Pinterest", icon: FaPinterest, color: "#BD081C" },
     { name: "tiktok", displayName: "TikTok", icon: FaTiktok, color: "#000000" },
-    { name: "snapchat", displayName: "Snapchat", icon: FaSnapchat, color: "#FFFC00" },
     { name: "instagram", displayName: "Instagram", icon: FaInstagram, color: "#E4405F" },
     { name: "bluesky", displayName: "BlueSky", icon: FaBluesky, color: "#1185FE" },
     { name: "youtube", displayName: "Youtube", icon: FaYoutube, color: "#FF0000" },
     { name: "linkedin", displayName: "LinkedIn", icon: FaLinkedinIn, color: "#0A66C2" },
-    { name: "facebook", displayName: "Facebook", icon: FaFacebookF, color: "#1877F2" },
-    { name: "reddit", displayName: "Reddit", icon: FaReddit, color: "#FF4500" }
+    { name: "facebook", displayName: "Facebook", icon: FaFacebookF, color: "#1877F2" }
   ].map(network => ({
     ...network,
     linked: isLinked(network.name)
@@ -1112,19 +1103,16 @@ export const ComposeContent = () => {
         setPost({ text: "", media: [] });
         setNetworks({
           threads: false,
-          telegram: false,
-          twitter: false,
+              twitter: false,
           googleBusiness: false,
           pinterest: false,
           tiktok: false,
-          snapchat: false,
-          instagram: false,
+              instagram: false,
           bluesky: false,
           youtube: false,
           linkedin: false,
           facebook: false,
-          reddit: false
-        });
+            });
         setMediaPreviews([]);
         setScheduledDate(null);
         setTempScheduledDate(null);
@@ -1559,9 +1547,9 @@ export const ComposeContent = () => {
       setCurrentDraftId(null);
       setPost({ text: "", media: [] });
       setNetworks({
-        threads: false, telegram: false, twitter: false, googleBusiness: false,
-        pinterest: false, tiktok: false, snapchat: false, instagram: false,
-        bluesky: false, youtube: false, linkedin: false, facebook: false, reddit: false
+        threads: false, twitter: false, googleBusiness: false,
+        pinterest: false, tiktok: false, instagram: false,
+        bluesky: false, youtube: false, linkedin: false, facebook: false
       });
       setMediaPreviews([]);
       setScheduledDate(null);
@@ -1741,9 +1729,9 @@ export const ComposeContent = () => {
       setCurrentDraftId(null);
       setPost({ text: "", media: [] });
       setNetworks({
-        threads: false, telegram: false, twitter: false, googleBusiness: false,
-        pinterest: false, tiktok: false, snapchat: false, instagram: false,
-        bluesky: false, youtube: false, linkedin: false, facebook: false, reddit: false
+        threads: false, twitter: false, googleBusiness: false,
+        pinterest: false, tiktok: false, instagram: false,
+        bluesky: false, youtube: false, linkedin: false, facebook: false
       });
       setMediaPreviews([]);
       setScheduledDate(null);
@@ -1978,19 +1966,16 @@ export const ComposeContent = () => {
         setPost({ text: "", media: [] });
         setNetworks({
           threads: false,
-          telegram: false,
-          twitter: false,
+              twitter: false,
           googleBusiness: false,
           pinterest: false,
           tiktok: false,
-          snapchat: false,
-          instagram: false,
+              instagram: false,
           bluesky: false,
           youtube: false,
           linkedin: false,
           facebook: false,
-          reddit: false
-        });
+            });
         setMediaPreviews([]);
         setScheduledDate(null);
         setLastSaved(null);

@@ -5,10 +5,7 @@ import {
   FaInstagram,
   FaLinkedinIn,
   FaYoutube,
-  FaReddit,
-  FaTelegram,
-  FaPinterest,
-  FaSnapchat
+  FaPinterest
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
@@ -27,9 +24,6 @@ const PLATFORMS = [
   { name: "Instagram", icon: FaInstagram, color: "#E4405F" },
   { name: "LinkedIn", icon: FaLinkedinIn, color: "#0A66C2" },
   { name: "Pinterest", icon: FaPinterest, color: "#BD081C" },
-  { name: "Reddit", icon: FaReddit, color: "#FF4500" },
-  { name: "Snapchat", icon: FaSnapchat, color: "#FFFC00" },
-  { name: "Telegram", icon: FaTelegram, color: "#0088cc" },
   { name: "TikTok", icon: FaTiktok, color: "#000000" },
   { name: "Youtube", icon: FaYoutube, color: "#FF0000" },
   { name: "X/Twitter", icon: SiX, color: "#000000" }

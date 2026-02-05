@@ -18,9 +18,9 @@ import {
   Cell,
   Legend
 } from "recharts";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { FaTiktok, FaBluesky } from "react-icons/fa6";
-import { SiX, SiSnapchat } from "react-icons/si";
+import { SiX } from "react-icons/si";
 import "./AnalyticsContent.css";
 
 const PLATFORM_ICONS = {
@@ -30,11 +30,8 @@ const PLATFORM_ICONS = {
   youtube: FaYoutube,
   tiktok: FaTiktok,
   twitter: SiX,
-  telegram: FaTelegram,
   pinterest: FaPinterest,
-  reddit: FaReddit,
-  bluesky: FaBluesky,
-  snapchat: SiSnapchat
+  bluesky: FaBluesky
 };
 
 const PLATFORM_COLORS = {
@@ -44,11 +41,8 @@ const PLATFORM_COLORS = {
   youtube: "#FF0000",
   tiktok: "#000000",
   twitter: "#000000",
-  telegram: "#0088cc",
   pinterest: "#BD081C",
-  reddit: "#FF4500",
-  bluesky: "#1185FE",
-  snapchat: "#FFFC00"
+  bluesky: "#1185FE"
 };
 
 const CHART_COLORS = ["#afabf9", "#7c3aed", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];

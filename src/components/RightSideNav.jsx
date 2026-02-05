@@ -21,8 +21,6 @@ import {
   FaLinkedinIn,
   FaPinterest,
   FaYoutube,
-  FaTelegram,
-  FaReddit,
   FaTiktok
 } from "react-icons/fa6";
 import { baseURL } from "../utils/constants";
@@ -36,9 +34,7 @@ const socialIcons = {
   linkedin: FaLinkedinIn,
   tiktok: FaTiktok,
   pinterest: FaPinterest,
-  youtube: FaYoutube,
-  telegram: FaTelegram,
-  reddit: FaReddit
+  youtube: FaYoutube
 };
 
 const socialColors = {
@@ -48,9 +44,7 @@ const socialColors = {
   linkedin: "#0A66C2",
   tiktok: "#000000",
   pinterest: "#BD081C",
-  youtube: "#FF0000",
-  telegram: "#0088cc",
-  reddit: "#FF4500"
+  youtube: "#FF0000"
 };
 
 const RightSideNav = () => {

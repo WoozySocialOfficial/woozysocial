@@ -1,6 +1,6 @@
 import React from "react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest } from "react-icons/fa";
-import { FaTiktok, FaThreads, FaBluesky, FaSnapchat } from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
+import { FaTiktok, FaThreads, FaBluesky } from "react-icons/fa6";
 import { SiX, SiGooglemybusiness } from "react-icons/si";
 
 /**
@@ -9,18 +9,15 @@ import { SiX, SiGooglemybusiness } from "react-icons/si";
 
 const SOCIAL_NETWORKS = [
   { name: "threads", displayName: "Threads", icon: FaThreads, color: "#000000" },
-  { name: "telegram", displayName: "Telegram", icon: FaTelegram, color: "#0088cc" },
   { name: "twitter", displayName: "Twitter/X", icon: SiX, color: "#000000" },
   { name: "googleBusiness", displayName: "Google", icon: SiGooglemybusiness, color: "#4285F4" },
   { name: "pinterest", displayName: "Pinterest", icon: FaPinterest, color: "#BD081C" },
   { name: "tiktok", displayName: "TikTok", icon: FaTiktok, color: "#000000" },
-  { name: "snapchat", displayName: "Snapchat", icon: FaSnapchat, color: "#FFFC00" },
   { name: "instagram", displayName: "Instagram", icon: FaInstagram, color: "#E4405F" },
   { name: "bluesky", displayName: "BlueSky", icon: FaBluesky, color: "#1185FE" },
   { name: "youtube", displayName: "Youtube", icon: FaYoutube, color: "#FF0000" },
   { name: "linkedin", displayName: "LinkedIn", icon: FaLinkedinIn, color: "#0A66C2" },
-  { name: "facebook", displayName: "Facebook", icon: FaFacebookF, color: "#1877F2" },
-  { name: "reddit", displayName: "Reddit", icon: FaReddit, color: "#FF4500" }
+  { name: "facebook", displayName: "Facebook", icon: FaFacebookF, color: "#1877F2" }
 ];
 
 export const SocialNetworkSelector = ({

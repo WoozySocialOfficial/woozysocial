@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaCheck, FaTimes } from 'react-icons/fa';
 import { FaTiktok, FaThreads } from 'react-icons/fa6';
 import { SiX, SiBluesky } from 'react-icons/si';
 import { useConnectedAccounts } from '../../hooks/useQueries';
@@ -23,8 +23,6 @@ const PLATFORM_ICONS = {
   twitter: SiX,
   'x/twitter': SiX,
   bluesky: SiBluesky,
-  reddit: FaReddit,
-  telegram: FaTelegram,
   pinterest: FaPinterest,
   threads: FaThreads
 };

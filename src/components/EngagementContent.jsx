@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaReply, FaTrash, FaSyncAlt } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReply, FaTrash, FaSyncAlt } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { LoadingContainer } from "./ui/LoadingSpinner";
@@ -13,8 +13,6 @@ const PLATFORM_ICONS = {
   instagram: FaInstagram,
   linkedin: FaLinkedinIn,
   youtube: FaYoutube,
-  reddit: FaReddit,
-  telegram: FaTelegram,
   tiktok: FaTiktok,
   twitter: SiX,
   "x/twitter": SiX,

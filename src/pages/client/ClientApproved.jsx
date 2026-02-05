@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useClientApprovedPosts } from "../../hooks/useQueries";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaCheck, FaTimes, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { ApprovedPostModal } from "../../components/client/ApprovedPostModal";
@@ -93,8 +93,6 @@ export const ClientApproved = () => {
     twitter: SiX,
     "x/twitter": SiX,
     bluesky: SiBluesky,
-    reddit: FaReddit,
-    telegram: FaTelegram,
     pinterest: FaPinterest,
     threads: FaThreads
   };

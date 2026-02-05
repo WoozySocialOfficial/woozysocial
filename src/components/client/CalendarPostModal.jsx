@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaReddit, FaTelegram, FaPinterest, FaCheck, FaTimes, FaEdit, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaCheck, FaTimes, FaEdit, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { FaTiktok, FaThreads } from 'react-icons/fa6';
 import { SiX, SiBluesky } from 'react-icons/si';
 import { CommentThread } from '../comments/CommentThread';
@@ -26,8 +26,6 @@ const PLATFORM_ICONS = {
   twitter: SiX,
   'x/twitter': SiX,
   bluesky: SiBluesky,
-  reddit: FaReddit,
-  telegram: FaTelegram,
   pinterest: FaPinterest,
   threads: FaThreads
 };

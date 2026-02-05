@@ -215,7 +215,7 @@ function normalizeAnalytics(data, postId) {
   const byPlatform = {};
 
   // List of possible social media platform keys
-  const platformKeys = ['instagram', 'tiktok', 'facebook', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest', 'reddit'];
+  const platformKeys = ['instagram', 'tiktok', 'facebook', 'twitter', 'x', 'linkedin', 'youtube', 'pinterest'];
 
   // Iterate through each platform in the response
   Object.keys(data).forEach(key => {

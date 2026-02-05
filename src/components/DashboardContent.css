@@ -222,21 +222,8 @@
   background-color: #BD081C;
 }
 
-.post-icon.reddit {
-  background-color: #FF4500;
-}
-
-.post-icon.telegram {
-  background-color: #0088cc;
-}
-
 .post-icon.bluesky {
   background-color: #1185FE;
-}
-
-.post-icon.snapchat {
-  background-color: #FFFC00;
-  color: #000 !important;
 }
 
 .post-content {
