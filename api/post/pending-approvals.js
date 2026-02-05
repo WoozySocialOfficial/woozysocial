@@ -121,7 +121,11 @@ module.exports = async function handler(req, res) {
       const creatorId = post.created_by || post.user_id;
       const creator = creatorProfiles[creatorId] || null;
       // Extract reviewed_at from post_approvals join
-      const latestApproval = post.post_approvals?.sort((a, b) =>
+      // PostgREST may return a single object (if unique constraint) or an array
+      const approvals = post.post_approvals
+        ? (Array.isArray(post.post_approvals) ? post.post_approvals : [post.post_approvals])
+        : [];
+      const latestApproval = approvals.sort((a, b) =>
         new Date(b.reviewed_at || 0) - new Date(a.reviewed_at || 0)
       )[0];
       return {
