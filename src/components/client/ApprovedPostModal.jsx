@@ -211,18 +211,18 @@ export const ApprovedPostModal = ({ post, onClose }) => {
           </div>
 
           {/* Analytics */}
-          {post.ayr_post_id && (
+          {post.status === 'posted' && (post.ayr_post_id || post.id) && (
             <div className="approved-analytics-section">
               <AnalyticsSection
-                postId={post.ayr_post_id}
+                postId={post.ayr_post_id || post.id}
                 workspaceId={activeWorkspace?.id}
                 platforms={post.platforms || []}
               />
             </div>
           )}
 
-          {/* No analytics fallback for posts without ayr_post_id */}
-          {!post.ayr_post_id && (
+          {/* No analytics fallback for posts that haven't been posted yet */}
+          {post.status !== 'posted' && (
             <div className="approved-no-analytics">
               <span className="no-analytics-icon">📊</span>
               <p>Analytics not available for this post</p>

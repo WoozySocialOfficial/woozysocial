@@ -22,7 +22,8 @@ export const ClientApprovals = () => {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
-  const [sortOrder, setSortOrder] = useState("newest");
+  const [sortBy, setSortBy] = useState("scheduled_newest");
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   // Use React Query for cached data fetching
   const {
@@ -172,10 +173,19 @@ export const ClientApprovals = () => {
     return IconComponent ? <IconComponent /> : null;
   };
 
+  const SORT_OPTIONS = [
+    { id: "scheduled_newest", label: "Scheduled: Newest", field: "scheduled_at", dir: "desc" },
+    { id: "scheduled_oldest", label: "Scheduled: Oldest", field: "scheduled_at", dir: "asc" },
+    { id: "created_newest", label: "Created: Newest", field: "created_at", dir: "desc" },
+    { id: "created_oldest", label: "Created: Oldest", field: "created_at", dir: "asc" }
+  ];
+
+  const activeSortOption = SORT_OPTIONS.find(o => o.id === sortBy) || SORT_OPTIONS[0];
+
   const sortedPosts = [...posts].sort((a, b) => {
-    const dateA = new Date(a.scheduled_at || a.created_at || 0);
-    const dateB = new Date(b.scheduled_at || b.created_at || 0);
-    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    const dateA = new Date(a[activeSortOption.field] || 0);
+    const dateB = new Date(b[activeSortOption.field] || 0);
+    return activeSortOption.dir === "desc" ? dateB - dateA : dateA - dateB;
   });
 
   return (
@@ -208,14 +218,35 @@ export const ClientApprovals = () => {
             );
           })}
         </div>
-        <button
-          className="sort-toggle"
-          onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
-          title={sortOrder === "newest" ? "Showing newest first" : "Showing oldest first"}
-        >
-          {sortOrder === "newest" ? <FaSortAmountDown /> : <FaSortAmountUp />}
-          <span>{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
-        </button>
+        <div className="sort-dropdown-wrapper">
+          <button
+            className="sort-toggle"
+            onClick={() => setShowSortMenu(prev => !prev)}
+          >
+            {activeSortOption.dir === "desc" ? <FaSortAmountDown /> : <FaSortAmountUp />}
+            <span>{activeSortOption.label}</span>
+          </button>
+          {showSortMenu && (
+            <>
+              <div className="sort-dropdown-backdrop" onClick={() => setShowSortMenu(false)} />
+              <div className="sort-dropdown-menu">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    className={`sort-dropdown-item ${sortBy === option.id ? "active" : ""}`}
+                    onClick={() => {
+                      setSortBy(option.id);
+                      setShowSortMenu(false);
+                    }}
+                  >
+                    {option.dir === "desc" ? <FaSortAmountDown /> : <FaSortAmountUp />}
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="approvals-content">

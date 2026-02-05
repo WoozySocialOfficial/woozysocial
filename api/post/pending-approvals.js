@@ -66,6 +66,8 @@ module.exports = async function handler(req, res) {
         created_at,
         user_id,
         created_by,
+        ayr_post_id,
+        reviewed_at,
         post_approvals (
           approval_status,
           reviewed_at,
