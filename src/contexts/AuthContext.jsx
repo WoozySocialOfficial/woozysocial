@@ -41,16 +41,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      const onResetPage = window.location.pathname === '/reset-password';
       setUser(session?.user ?? null);
       setAuthChecked(true); // Mark auth as checked
-      if (session?.user) {
+      if (session?.user && !onResetPage) {
         // Fetch fresh profile data
         fetchProfile(session.user.id);
-      } else {
+      } else if (!session?.user) {
         // No session - clear cache
         sessionStorage.removeItem('woozy_profile_cache');
         sessionStorage.removeItem('woozy_workspace_cache');
         setProfile(null);
+        setLoading(false);
+      } else {
+        // On reset page with session - stop loading but don't fetch profile
         setLoading(false);
       }
     });
@@ -58,7 +62,29 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Check current path at the time the event fires (not stale closure)
+      const onResetPage = window.location.pathname === '/reset-password';
+
+      // If this is a password recovery event, ensure user is on the reset page
+      if (event === 'PASSWORD_RECOVERY') {
+        if (!onResetPage) {
+          window.location.replace('/reset-password');
+          return;
+        }
+        // On reset page already - let ResetPasswordPage handle it
+        setLoading(false);
+        return;
+      }
+
+      // If user is on the reset-password page and got signed in via recovery token
+      // (PKCE flow fires SIGNED_IN instead of PASSWORD_RECOVERY),
+      // don't set user/fetch profile - let ResetPasswordPage handle the flow
+      if (onResetPage && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        setLoading(false);
+        return;
+      }
+
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
