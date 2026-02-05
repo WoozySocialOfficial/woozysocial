@@ -382,45 +382,38 @@ export const ScheduleContent = () => {
 
     return (
       <div className="week-view">
-        {/* Sticky header row */}
-        <div className="week-header-row">
-          <div className="time-header"></div>
-          {weekDates.map((date, dayIndex) => (
-            <div key={dayIndex} className="day-header">
-              <div className="day-name">{dayNames[date.getDay()]}</div>
-              <div className="day-date">
-                {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </div>
+        {/* Sticky header cells - part of the same flat grid */}
+        <div className="time-header"></div>
+        {weekDates.map((date, dayIndex) => (
+          <div key={`header-${dayIndex}`} className="day-header">
+            <div className="day-name">{dayNames[date.getDay()]}</div>
+            <div className="day-date">
+              {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
-        {/* Scrollable body */}
-        <div className="week-body">
-          <div className="time-column">
-            {timeSlots.map((hour) => (
+        {/* Body cells - time slots and schedule cells in one flat grid */}
+        {timeSlots.map((hour) => {
+          const slotHeight = getSlotHeight(hour);
+          return (
+            <React.Fragment key={hour}>
               <div
-                key={hour}
                 className="time-slot"
-                style={{ height: `${getSlotHeight(hour)}px` }}
+                style={{ height: `${slotHeight}px` }}
               >
                 {hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`}
               </div>
-            ))}
-          </div>
-
-          {weekDates.map((date, dayIndex) => (
-            <div key={dayIndex} className="day-column">
-              {timeSlots.map((hour) => {
+              {weekDates.map((date, dayIndex) => {
                 const slotPosts = getPostsForSlot(date, hour);
                 const visiblePosts = slotPosts.slice(0, 2);
                 const remainingCount = slotPosts.length - 2;
 
                 return (
                   <div
-                    key={hour}
+                    key={dayIndex}
                     className="schedule-cell"
-                    style={{ height: `${getSlotHeight(hour)}px` }}
+                    style={{ height: `${slotHeight}px` }}
                   >
                     {visiblePosts.map(renderPostCard)}
                     {remainingCount > 0 && (
@@ -434,9 +427,9 @@ export const ScheduleContent = () => {
                   </div>
                 );
               })}
-            </div>
-          ))}
-        </div>
+            </React.Fragment>
+          );
+        })}
       </div>
     );
   };

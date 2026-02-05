@@ -100,76 +100,28 @@
   font-size: 16px;
 }
 
-/* Week View */
+/* Week View - single flat grid with sticky headers */
 .week-view {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 100px repeat(7, 1fr);
+  overflow: auto;
   height: calc(100vh - 250px);
   min-height: 700px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: white;
-  overflow: hidden;
 }
 
-/* Sticky header row */
-.week-header-row {
-  display: grid;
-  grid-template-columns: 100px repeat(7, 1fr);
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-/* Scrollable body */
-.week-body {
-  display: grid;
-  grid-template-columns: 100px repeat(7, 1fr);
-  overflow-y: auto;
-  overflow-x: auto;
-  flex: 1;
-}
-
-.time-column {
-  display: flex;
-  flex-direction: column;
-  border-right: 2px solid #e5e7eb;
-  background: #f9fafb;
-  position: sticky;
-  left: 0;
-  z-index: 10;
-}
-
+/* Sticky header cells */
 .time-header {
   height: 60px;
   border-bottom: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
   background: #f9fafb;
-}
-
-.time-slot {
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 13px;
-  color: #6b7280;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.day-column {
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
-  border-right: 1px solid #e5e7eb;
-}
-
-.day-column:last-child {
-  border-right: none;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
 }
 
 .day-header {
@@ -180,11 +132,33 @@
   justify-content: center;
   background: #f9fafb;
   gap: 4px;
+  border-bottom: 2px solid #e5e7eb;
   border-right: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .day-header:last-child {
   border-right: none;
+}
+
+/* Time slots - sticky left column */
+.time-slot {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+  background: #f9fafb;
+  position: sticky;
+  left: 0;
+  z-index: 10;
 }
 
 .day-name {
@@ -203,6 +177,7 @@
 .schedule-cell {
   min-height: 80px;
   border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
   padding: 10px 8px;
   display: flex;
   flex-direction: column;
@@ -212,6 +187,14 @@
   position: relative;
   flex-shrink: 0;
   align-items: stretch;
+}
+
+.schedule-cell:nth-child(8n + 1) {
+  /* Last cell in each row - no right border */
+}
+
+.schedule-cell:last-child {
+  border-right: none;
 }
 
 /* Add subtle hover effect for cells */
