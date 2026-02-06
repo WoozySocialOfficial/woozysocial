@@ -524,13 +524,15 @@ export const ScheduleContent = () => {
     );
   };
 
-  // Count posts by approval status
+  // Count posts by approval status (only posts with schedule dates)
+  // This ensures counts match what's actually displayed in the Schedule view
+  const scheduledPosts = posts.filter(p => p.scheduleDate);
   const approvalCounts = {
-    all: posts.length,
-    pending: posts.filter(p => p.approvalStatus === 'pending').length,
-    changes_requested: posts.filter(p => p.approvalStatus === 'changes_requested').length,
-    approved: posts.filter(p => p.approvalStatus === 'approved').length,
-    rejected: posts.filter(p => p.approvalStatus === 'rejected').length,
+    all: scheduledPosts.length,
+    pending: scheduledPosts.filter(p => p.approvalStatus === 'pending').length,
+    changes_requested: scheduledPosts.filter(p => p.approvalStatus === 'changes_requested').length,
+    approved: scheduledPosts.filter(p => p.approvalStatus === 'approved').length,
+    rejected: scheduledPosts.filter(p => p.approvalStatus === 'rejected').length,
   };
 
   return (
