@@ -191,6 +191,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 10;
+  overflow: visible;
 }
 
 .posts-tabs {
