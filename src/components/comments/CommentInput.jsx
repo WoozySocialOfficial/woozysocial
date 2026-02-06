@@ -170,21 +170,21 @@ export const CommentInput = forwardRef(({
     }, 0);
   };
 
-  // Parse mentions from comment text
+  // Parse mentions from comment text by matching known member names
   const parseMentions = () => {
-    const mentionRegex = /@([A-Za-z]+(?:\s+[A-Za-z]+)*)/g;
-    const matches = [...comment.matchAll(mentionRegex)];
     const mentionedIds = [];
+    const lowerComment = comment.toLowerCase();
 
-    matches.forEach(match => {
-      const name = match[1].trim();
-      const member = workspaceMembers.find(
-        m => m.full_name?.toLowerCase() === name.toLowerCase()
-      );
-      if (member) mentionedIds.push(member.id);
+    workspaceMembers.forEach(member => {
+      if (member.full_name) {
+        const pattern = `@${member.full_name.toLowerCase()}`;
+        if (lowerComment.includes(pattern)) {
+          mentionedIds.push(member.id);
+        }
+      }
     });
 
-    return mentionedIds;
+    return [...new Set(mentionedIds)];
   };
 
   // Submit comment

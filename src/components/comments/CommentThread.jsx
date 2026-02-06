@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseURL } from '../../utils/constants';
 import { supabase } from '../../utils/supabaseClient';
@@ -31,6 +31,45 @@ export const CommentThread = ({
   const { user } = useAuth();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [memberNames, setMemberNames] = useState([]);
+
+  // Fetch workspace member names for mention highlighting
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!workspaceId) return;
+      const { data } = await supabase
+        .from('workspace_members')
+        .select('user_profiles ( full_name )')
+        .eq('workspace_id', workspaceId);
+      if (data) {
+        const names = data
+          .map(m => m.user_profiles?.full_name)
+          .filter(Boolean);
+        setMemberNames(names);
+      }
+    };
+    fetchMembers();
+  }, [workspaceId]);
+
+  // Render comment text with highlighted @mentions
+  const renderCommentText = (text) => {
+    if (!text || memberNames.length === 0) return text;
+
+    // Sort names longest-first so "John Doe" matches before "John"
+    const sorted = [...memberNames].sort((a, b) => b.length - a.length);
+    const escaped = sorted.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(@(?:${escaped.join('|')}))`, 'gi');
+
+    const parts = text.split(regex);
+    if (parts.length === 1) return text;
+
+    return parts.map((part, i) => {
+      if (part.startsWith('@') && sorted.some(n => part.slice(1).toLowerCase() === n.toLowerCase())) {
+        return <span key={i} className="comment-mention">{part}</span>;
+      }
+      return part;
+    });
+  };
 
   // Fetch comments
   const fetchComments = async () => {
@@ -200,7 +239,7 @@ export const CommentThread = ({
               </div>
               <span className="comment-time">{formatRelativeTime(comment.created_at)}</span>
             </div>
-            <p className="comment-text">{comment.comment}</p>
+            <p className="comment-text">{renderCommentText(comment.comment)}</p>
             {comment.updated_at && comment.updated_at !== comment.created_at && (
               <span className="comment-edited">(edited)</span>
             )}
