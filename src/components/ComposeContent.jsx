@@ -253,7 +253,7 @@ export const ComposeContent = () => {
           if (data.recommendations && data.recommendations.length > 0) {
             const best = data.recommendations[0];
             setBestPostingTime(`${best?.day || ''} ${best?.time || ''}`);
-            setBestTimes(data.recommendations.slice(0, 3));
+            setBestTimes(data.recommendations);
             setHasRealData(data.source === 'personalized');
           } else {
             setHasRealData(false);

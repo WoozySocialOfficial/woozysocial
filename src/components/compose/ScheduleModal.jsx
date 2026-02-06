@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button } from "@chakra-ui/react";
 import { formatDateInTimezone } from "../../utils/timezones";
 import "./ScheduleModal.css";
 import "./ScheduleModalCompact.css";
+
+// Industry-average best posting times per day of week (fallback when no data)
+const INDUSTRY_DEFAULTS = {
+  Sunday:    { time: '11:00 AM', score: 70 },
+  Monday:    { time: '10:00 AM', score: 75 },
+  Tuesday:   { time: '9:00 AM',  score: 90 },
+  Wednesday: { time: '11:00 AM', score: 85 },
+  Thursday:  { time: '10:00 AM', score: 80 },
+  Friday:    { time: '2:00 PM',  score: 78 },
+  Saturday:  { time: '11:00 AM', score: 72 },
+};
 
 export const ScheduleModal = ({
   isOpen,
@@ -16,6 +27,8 @@ export const ScheduleModal = ({
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState('09:00');
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [bestTimePopup, setBestTimePopup] = useState(null); // { dayName, time, score, source }
+  const calendarRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,12 +51,62 @@ export const ScheduleModal = ({
     }
   }, [isOpen, initialDate]);
 
+  // Build lookup: day name → best time recommendation (API data takes priority over defaults)
+  const bestTimeByDay = useMemo(() => {
+    const lookup = { ...INDUSTRY_DEFAULTS };
+    // Override with real/API data
+    bestTimes.forEach(bt => {
+      if (bt.day && bt.time) {
+        lookup[bt.day] = { time: bt.time, score: bt.score, avgEngagement: bt.avgEngagement };
+      }
+    });
+    return lookup;
+  }, [bestTimes]);
+
   const handleDateClick = (date) => {
     const newDate = new Date(selectedDate || new Date());
     newDate.setFullYear(date.getFullYear());
     newDate.setMonth(date.getMonth());
     newDate.setDate(date.getDate());
     setSelectedDate(newDate);
+
+    // Show best-time recommendation popup for this day of the week
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = dayNames[date.getDay()];
+    const recommendation = bestTimeByDay[dayName];
+
+    if (recommendation) {
+      const isFromApi = bestTimes.some(bt => bt.day === dayName);
+      setBestTimePopup({
+        dayName,
+        time: recommendation.time,
+        score: recommendation.score,
+        source: isFromApi && hasRealData ? 'your data' : 'industry average'
+      });
+    }
+  };
+
+  // Apply the recommended time from the popup
+  const applyRecommendedTime = () => {
+    if (!bestTimePopup) return;
+
+    const timeStr = bestTimePopup.time;
+    const timeHour = parseInt(timeStr.split(':')[0]);
+    const isPM = timeStr.includes('PM');
+    const is12Hour = timeHour === 12;
+    let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
+
+    const time24 = `${hour24.toString().padStart(2, '0')}:00`;
+    setSelectedTime(time24);
+
+    // Also update the selected date's time
+    if (selectedDate) {
+      const newDate = new Date(selectedDate);
+      newDate.setHours(hour24, 0, 0, 0);
+      setSelectedDate(newDate);
+    }
+
+    setBestTimePopup(null);
   };
 
   const handleTimeChange = (e) => {
@@ -91,6 +154,7 @@ export const ScheduleModal = ({
       setSelectedDate(null);
       setSelectedTime('09:00');
     }
+    setBestTimePopup(null);
     onClose();
   };
 
@@ -246,7 +310,7 @@ export const ScheduleModal = ({
               </div>
 
               {/* Calendar grid */}
-              <div className="calendar-days">
+              <div className="calendar-days" ref={calendarRef}>
                 {calendar.map((day, idx) => (
                   <button
                     key={idx}
@@ -258,6 +322,35 @@ export const ScheduleModal = ({
                   </button>
                 ))}
               </div>
+
+              {/* Best time recommendation popup */}
+              {bestTimePopup && (
+                <div className="best-time-popup">
+                  <div className="best-time-popup-content">
+                    <div className="best-time-popup-header">
+                      <span className="best-time-popup-icon">&#9201;</span>
+                      <span className="best-time-popup-title">Best time for {bestTimePopup.dayName}s</span>
+                      <button
+                        className="best-time-popup-close"
+                        onClick={() => setBestTimePopup(null)}
+                        aria-label="Dismiss"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <div className="best-time-popup-body">
+                      <div className="best-time-popup-time">{bestTimePopup.time}</div>
+                      <div className="best-time-popup-meta">
+                        <span className="best-time-popup-score">{bestTimePopup.score}% optimal</span>
+                        <span className="best-time-popup-source">Based on {bestTimePopup.source}</span>
+                      </div>
+                    </div>
+                    <button className="best-time-popup-apply" onClick={applyRecommendedTime}>
+                      Use {bestTimePopup.time}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Time selector with 15-min increments */}
               <div className="time-selector-compact">
