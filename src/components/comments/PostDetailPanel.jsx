@@ -200,12 +200,28 @@ export const PostDetailPanel = ({
         </div>
 
       <div className="panel-content">
-        {/* Status Badge */}
-        <div
-          className="status-badge"
-          style={{ backgroundColor: STATUS_COLORS[post.status || post.approval_status] }}
-        >
-          {getStatusLabel(post.status || post.approval_status)}
+        {/* Status Badge + Edit Actions Row */}
+        <div className="status-actions-row">
+          <div
+            className="status-badge"
+            style={{ backgroundColor: STATUS_COLORS[post.status || post.approval_status] }}
+          >
+            {getStatusLabel(post.status || post.approval_status)}
+          </div>
+
+          {/* Edit Actions - Immediately Visible */}
+          {post.status === 'draft' && onEditDraft && (
+            <button className="btn-continue-editing-top" onClick={() => onEditDraft(post)}>
+              <FaEdit size={14} />
+              Continue Editing
+            </button>
+          )}
+          {(post.status === 'scheduled' || post.status === 'pending_approval') && onEditScheduledPost && (
+            <button className="btn-edit-post-top" onClick={() => onEditScheduledPost(post)}>
+              <FaEdit size={14} />
+              Edit Post
+            </button>
+          )}
         </div>
 
         {/* Caption */}
