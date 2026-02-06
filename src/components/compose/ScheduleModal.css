@@ -8,6 +8,10 @@
   max-width: 720px !important;
 }
 
+.schedule-modal-geist.schedule-modal-simple {
+  max-width: 420px !important;
+}
+
 .schedule-modal-header {
   padding: 24px 24px 16px 24px;
   border-bottom: 1px solid #f3f4f6;
