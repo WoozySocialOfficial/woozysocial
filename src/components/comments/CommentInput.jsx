@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseURL } from '../../utils/constants';
-import { supabase } from '../../utils/supabaseClient';
 import { useToast } from '@chakra-ui/react';
 import './CommentInput.css';
 
@@ -48,45 +47,26 @@ export const CommentInput = forwardRef(({
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showMentions]);
 
-  // Fetch workspace members for @mentions (two-step: members then profiles)
+  // Fetch workspace members for @mentions via API (bypasses RLS)
   useEffect(() => {
     const fetchMembers = async () => {
-      if (!workspaceId) return;
+      if (!workspaceId || !user?.id) return;
 
       try {
-        // Step 1: Get member user_ids
-        const { data: membersData, error: membersError } = await supabase
-          .from('workspace_members')
-          .select('user_id')
-          .eq('workspace_id', workspaceId);
+        const res = await fetch(
+          `${baseURL}/api/workspaces/${workspaceId}/members?userId=${user.id}`
+        );
+        const data = await res.json();
 
-        if (membersError || !membersData || membersData.length === 0) {
-          if (membersError) console.error('Error fetching workspace members:', membersError);
-          return;
-        }
-
-        const userIds = membersData.map(m => m.user_id);
-
-        // Step 2: Get profiles for those user_ids
-        const { data: profiles, error: profilesError } = await supabase
-          .from('user_profiles')
-          .select('id, full_name, email, avatar_url')
-          .in('id', userIds);
-
-        if (profilesError) {
-          console.error('Error fetching user profiles:', profilesError);
-          return;
-        }
-
-        if (profiles) {
-          setWorkspaceMembers(
-            profiles.map(p => ({
-              id: p.id,
-              full_name: p.full_name,
-              email: p.email,
-              avatar_url: p.avatar_url
-            }))
-          );
+        if (data.success) {
+          const responseData = data.data || data;
+          const members = (responseData.members || []).map(m => ({
+            id: m.user_id,
+            full_name: m.profile?.full_name,
+            email: m.profile?.email,
+            avatar_url: m.profile?.avatar_url
+          }));
+          setWorkspaceMembers(members);
         }
       } catch (err) {
         console.error('Failed to fetch workspace members for mentions:', err);
@@ -94,7 +74,7 @@ export const CommentInput = forwardRef(({
     };
 
     fetchMembers();
-  }, [workspaceId]);
+  }, [workspaceId, user?.id]);
 
   // Handle @mention detection
   const handleTextChange = (e) => {

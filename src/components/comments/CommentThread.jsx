@@ -33,29 +33,21 @@ export const CommentThread = ({
   const [loading, setLoading] = useState(false);
   const [memberNames, setMemberNames] = useState([]);
 
-  // Fetch workspace member names for mention highlighting (two-step query)
+  // Fetch workspace member names for mention highlighting via API
   useEffect(() => {
     const fetchMembers = async () => {
-      if (!workspaceId) return;
+      if (!workspaceId || !user?.id) return;
       try {
-        // Step 1: Get member user_ids
-        const { data: membersData } = await supabase
-          .from('workspace_members')
-          .select('user_id')
-          .eq('workspace_id', workspaceId);
+        const res = await fetch(
+          `${baseURL}/api/workspaces/${workspaceId}/members?userId=${user.id}`
+        );
+        const data = await res.json();
 
-        if (!membersData || membersData.length === 0) return;
-
-        const userIds = membersData.map(m => m.user_id);
-
-        // Step 2: Get full_name for those user_ids
-        const { data: profiles } = await supabase
-          .from('user_profiles')
-          .select('full_name')
-          .in('id', userIds);
-
-        if (profiles) {
-          const names = profiles.map(p => p.full_name).filter(Boolean);
+        if (data.success) {
+          const responseData = data.data || data;
+          const names = (responseData.members || [])
+            .map(m => m.profile?.full_name)
+            .filter(Boolean);
           setMemberNames(names);
         }
       } catch (err) {
@@ -63,7 +55,7 @@ export const CommentThread = ({
       }
     };
     fetchMembers();
-  }, [workspaceId]);
+  }, [workspaceId, user?.id]);
 
   // Render comment text with highlighted @mentions
   const renderCommentText = (text) => {
