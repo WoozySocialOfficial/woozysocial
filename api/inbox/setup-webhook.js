@@ -11,7 +11,7 @@ const {
   isServiceConfigured
 } = require("../_utils");
 
-const BASE_AYRSHARE = "https://app.ayrshare.com/api";
+const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
 /**
  * Setup Ayrshare Webhook for Messages

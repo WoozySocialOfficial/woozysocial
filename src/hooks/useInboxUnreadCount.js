@@ -27,9 +27,12 @@ export function useInboxUnreadCount(workspaceId, enabled = true) {
       });
 
       const response = await fetch(`${baseURL}/api/inbox/conversations?${params}`);
-      const data = await response.json();
+      const raw = await response.json();
 
-      if (response.ok && data.success !== false && isMountedRef.current) {
+      // API wraps response in { success, data: { ... } }
+      const data = raw.data || raw;
+
+      if (response.ok && raw.success !== false && isMountedRef.current) {
         setUnreadCount(data.totalUnread || 0);
       }
     } catch (err) {

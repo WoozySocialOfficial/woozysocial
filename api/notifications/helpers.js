@@ -634,12 +634,13 @@ async function sendMentionNotifications(supabase, {
         workspace_id: workspaceId,
         post_id: postId,
         type: 'comment_mention',
-        title: 'You were mentioned',
-        message: `${mentionerName} mentioned you in a comment: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+        title: 'You were tagged in a comment',
+        message: `@${mentionerName} tagged you in a post's comments: "${postContext}${postContext.length >= 50 ? '...' : ''}"`,
         actor_id: mentionerId,
         metadata: {
           commentId,
-          postCaption: postContext
+          postCaption: postContext,
+          commentPreview: comment.substring(0, 100)
         },
         read: false
       }));

@@ -51,11 +51,14 @@ export function useInbox(workspaceId, options = {}) {
       });
 
       const response = await fetch(`${baseURL}/api/inbox/conversations?${params}`);
-      const data = await response.json();
+      const raw = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch conversations');
+        throw new Error(raw.error || 'Failed to fetch conversations');
       }
+
+      // API wraps response in { success, data: { ... } }
+      const data = raw.data || raw;
 
       if (isMountedRef.current) {
         setConversations(data.conversations || []);
@@ -91,11 +94,14 @@ export function useInbox(workspaceId, options = {}) {
       });
 
       const response = await fetch(`${baseURL}/api/inbox/messages?${params}`);
-      const data = await response.json();
+      const raw = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch messages');
+        throw new Error(raw.error || 'Failed to fetch messages');
       }
+
+      // API wraps response in { success, data: { ... } }
+      const data = raw.data || raw;
 
       if (isMountedRef.current) {
         setMessages(data.messages || []);
@@ -155,11 +161,14 @@ export function useInbox(workspaceId, options = {}) {
         })
       });
 
-      const data = await response.json();
+      const raw = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send message');
+        throw new Error(raw.error || 'Failed to send message');
       }
+
+      // API wraps response in { success, data: { ... } }
+      const data = raw.data || raw;
 
       // Add the sent message to the local state
       if (isMountedRef.current && data.message) {
