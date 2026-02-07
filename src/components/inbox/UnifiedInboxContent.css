@@ -203,7 +203,9 @@
   border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
+  height: 100%;
   min-height: 0;
+  box-sizing: border-box;
 }
 
 .cp-sidebar-header {
@@ -318,7 +320,9 @@
   border-radius: 12px;
   padding: 24px;
   overflow: hidden;
+  height: 100%;
   min-height: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
@@ -344,8 +348,9 @@
 }
 
 .cp-comments-list {
-  flex: 1;
+  flex: 1 1 0;
   overflow-y: auto;
+  min-height: 0;
   margin-bottom: 20px;
 }
 
