@@ -63,12 +63,15 @@ module.exports = async function handler(req, res) {
     }
 
     // Post comment via Ayrshare
+    // Ayrshare expects: POST /comments with { id, comment, platforms[] }
     try {
+      const targetPlatform = platform || 'facebook';
       const response = await axios.post(
-        `${BASE_AYRSHARE}/comments/${postId}`,
+        `${BASE_AYRSHARE}/comments`,
         {
-          message: comment,
-          platform: platform || 'facebook' // Default to Facebook if not specified
+          id: postId,
+          comment: comment,
+          platforms: [targetPlatform]
         },
         {
           headers: {

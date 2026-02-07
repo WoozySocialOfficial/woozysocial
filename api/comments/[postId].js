@@ -119,23 +119,32 @@ module.exports = async function handler(req, res) {
           );
 
           if (response.data) {
-            const ayrshareComments = response.data.comments || response.data.data || [];
-            const responsePlatform = response.data.platform || 'unknown';
-            console.log(`[COMMENTS] Fetched ${ayrshareComments.length} comments from Ayrshare for platform ${responsePlatform}`);
+            // Ayrshare returns comments keyed by platform: { facebook: [...], tiktok: [...], status, id }
+            const allComments = [];
+            const platformKeys = ['facebook', 'instagram', 'twitter', 'tiktok', 'linkedin', 'youtube', 'bluesky', 'threads', 'reddit'];
+            for (const plat of platformKeys) {
+              if (Array.isArray(response.data[plat])) {
+                const platComments = response.data[plat].map(c => ({ ...c, platform: plat }));
+                allComments.push(...platComments);
+              }
+            }
+            // Fallback for unexpected response shapes
+            if (allComments.length === 0 && Array.isArray(response.data.comments)) {
+              allComments.push(...response.data.comments);
+            }
+            console.log(`[COMMENTS] Fetched ${allComments.length} comments from Ayrshare`);
 
-            // TODO: Sync Ayrshare comments to database
-            // For now, just return Ayrshare comments
-            const normalizedComments = ayrshareComments.map(comment => ({
-              id: comment.id || comment.comment_id,
-              message: comment.message || comment.text || comment.comment,
+            const normalizedComments = allComments.map(comment => ({
+              id: comment.commentId || comment.id || comment.comment_id,
+              message: comment.comment || comment.text || comment.message,
               from: comment.from || {
-                name: comment.author_name || comment.username || 'Unknown',
+                name: comment.userName || comment.username || comment.author_name || 'Unknown',
                 id: comment.author_id || comment.user_id
               },
-              created_time: comment.created_time || comment.timestamp || comment.created_at,
-              platform: comment.platform || response.data.platform,
-              like_count: comment.like_count || 0,
-              comments: comment.comments || comment.replies || []
+              created_time: comment.created || comment.created_time || comment.timestamp || comment.created_at,
+              platform: comment.platform,
+              like_count: comment.likeCount || comment.like_count || 0,
+              comments: comment.replies || comment.comments || []
             }));
 
             return sendSuccess(res, {
