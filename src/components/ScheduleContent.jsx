@@ -48,6 +48,7 @@ export const ScheduleContent = () => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedDayPosts, setSelectedDayPosts] = useState([]);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [selectedMonthDate, setSelectedMonthDate] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const { invalidatePosts } = useInvalidateQueries();
 
@@ -503,8 +504,22 @@ export const ScheduleContent = () => {
     );
   };
 
-  // Status color for month view dots
-  const getStatusColor = (post) => {
+  // Get days for month view (null = empty cell, same pattern as client calendar)
+  const getCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+    const cells = [];
+    for (let i = 0; i < startingDay; i++) cells.push(null);
+    for (let i = 1; i <= daysInMonth; i++) cells.push(new Date(year, month, i));
+    return cells;
+  };
+
+  // Status color for dots
+  const getDotColor = (post) => {
     if (post.approvalStatus === 'rejected') return '#ef4444';
     if (post.approvalStatus === 'approved') return '#10b981';
     if (post.approvalStatus === 'changes_requested') return '#f97316';
@@ -513,82 +528,80 @@ export const ScheduleContent = () => {
     return '#3b82f6';
   };
 
-  // Month View - Clean dot pattern like client calendar
+  // Month View - rebuilt from client portal calendar
   const renderMonthView = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const calendarDays = getCalendarDays();
+    const todayStr = new Date().toDateString();
 
     return (
-      <div className="month-view">
-        <div className="month-grid">
-          {dayNames.map(day => (
-            <div key={day} className="month-day-header">{day}</div>
+      <div className="sc-calendar">
+        <div className="sc-grid">
+          {dayNames.map((day) => (
+            <div key={day} className="sc-day-header">{day}</div>
           ))}
-          {monthDates.map((date, index) => {
-            const datePosts = getPostsForDate(date);
-            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-            const dateNorm = new Date(date);
-            dateNorm.setHours(0, 0, 0, 0);
-            const isToday = dateNorm.getTime() === today.getTime();
+          {calendarDays.map((date, index) => {
+            const datePosts = date ? getPostsForDate(date) : [];
+            const isToday = date && date.toDateString() === todayStr;
+            const isSelected = date && selectedMonthDate && date.toDateString() === selectedMonthDate.toDateString();
             const hasPosts = datePosts.length > 0;
 
             return (
               <div
                 key={index}
-                className={`month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${hasPosts ? 'has-posts' : ''}`}
-                onClick={() => isCurrentMonth && handleMonthDateClick(date)}
+                className={`sc-day${!date ? ' sc-empty' : ''}${isToday ? ' sc-today' : ''}${isSelected ? ' sc-selected' : ''}${hasPosts ? ' sc-has-posts' : ''}`}
+                onClick={() => {
+                  if (!date) return;
+                  if (hasPosts) {
+                    setSelectedMonthDate(date);
+                    handleMonthDateClick(date);
+                  }
+                }}
               >
-                <div className="month-date">{date.getDate()}</div>
-                {hasPosts && (
-                  <div className="month-dot-row">
-                    {datePosts.slice(0, 4).map((post, i) => (
-                      <div
-                        key={post.id}
-                        className="month-post-dot"
-                        style={{ backgroundColor: getStatusColor(post) }}
-                        title={`${post.content?.substring(0, 40) || 'Post'}${post.content?.length > 40 ? '...' : ''}`}
-                      />
-                    ))}
-                    {datePosts.length > 4 && (
-                      <span className="month-dot-more">+{datePosts.length - 4}</span>
+                {date && (
+                  <>
+                    <span className="sc-day-num">{date.getDate()}</span>
+                    {hasPosts && (
+                      <div className="sc-dots">
+                        {datePosts.slice(0, 3).map((post) => (
+                          <div
+                            key={post.id}
+                            className="sc-dot"
+                            style={{ backgroundColor: getDotColor(post) }}
+                          />
+                        ))}
+                        {datePosts.length > 3 && (
+                          <span className="sc-dot-more">+{datePosts.length - 3}</span>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
-                {hasPosts && (
-                  <div className="month-post-count">
-                    {datePosts.length} post{datePosts.length !== 1 ? 's' : ''}
-                  </div>
+                  </>
                 )}
               </div>
             );
           })}
         </div>
-
-        {/* Legend */}
-        {hasApprovalWorkflows && (
-          <div className="month-legend">
-            <div className="month-legend-item">
-              <div className="month-legend-dot" style={{ backgroundColor: '#f59e0b' }} />
-              <span>Pending</span>
-            </div>
-            <div className="month-legend-item">
-              <div className="month-legend-dot" style={{ backgroundColor: '#10b981' }} />
-              <span>Approved</span>
-            </div>
-            <div className="month-legend-item">
-              <div className="month-legend-dot" style={{ backgroundColor: '#f97316' }} />
-              <span>Changes Requested</span>
-            </div>
-            <div className="month-legend-item">
-              <div className="month-legend-dot" style={{ backgroundColor: '#ef4444' }} />
-              <span>Rejected</span>
-            </div>
-            <div className="month-legend-item">
-              <div className="month-legend-dot" style={{ backgroundColor: '#3b82f6' }} />
-              <span>Scheduled</span>
-            </div>
+        <div className="sc-legend">
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#f59e0b' }} />
+            <span>Pending</span>
           </div>
-        )}
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#10b981' }} />
+            <span>Approved</span>
+          </div>
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#f97316' }} />
+            <span>Changes Requested</span>
+          </div>
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#ef4444' }} />
+            <span>Rejected</span>
+          </div>
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#3b82f6' }} />
+            <span>Scheduled</span>
+          </div>
+        </div>
       </div>
     );
   };
@@ -742,6 +755,7 @@ export const ScheduleContent = () => {
             setSelectedPost(null);
             setSelectedDayPosts([]);
             setSelectedDayIndex(0);
+            setSelectedMonthDate(null);
           }}
           onApprove={handleApprove}
           onReject={handleReject}
