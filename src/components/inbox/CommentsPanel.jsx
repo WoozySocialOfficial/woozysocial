@@ -53,16 +53,22 @@ export const CommentsPanel = ({ onRefresh }) => {
     }
   }, [user, activeWorkspace, selectedPost]);
 
+  // Ayrshare history posts have the ID at .id, DB posts at .ayr_post_id
+  const getAyrPostId = useCallback((post) => {
+    return post?.ayr_post_id || post?.id;
+  }, []);
+
   const syncComments = useCallback(async () => {
     if (!selectedPost || !activeWorkspace) return;
-    if (!selectedPost.ayr_post_id) return;
+    const ayrPostId = getAyrPostId(selectedPost);
+    if (!ayrPostId) return;
 
     try {
       const response = await fetch(`${baseURL}/api/sync-comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          postId: selectedPost.ayr_post_id,
+          postId: ayrPostId,
           workspaceId: activeWorkspace.id
         })
       });
@@ -73,17 +79,18 @@ export const CommentsPanel = ({ onRefresh }) => {
     } catch (error) {
       console.error('Error syncing comments:', error);
     }
-  }, [selectedPost, activeWorkspace]);
+  }, [selectedPost, activeWorkspace, getAyrPostId]);
 
   const fetchComments = useCallback(async () => {
     if (!selectedPost || !activeWorkspace) return;
+    const ayrPostId = getAyrPostId(selectedPost);
 
     setLoading(true);
     try {
       await syncComments();
 
       const response = await fetch(
-        `${baseURL}/api/comments/${selectedPost.ayr_post_id}?workspaceId=${activeWorkspace.id}`
+        `${baseURL}/api/comments/${ayrPostId}?workspaceId=${activeWorkspace.id}`
       );
 
       if (!response.ok) {
@@ -126,6 +133,7 @@ export const CommentsPanel = ({ onRefresh }) => {
 
     setIsSubmitting(true);
     try {
+      const ayrPostId = getAyrPostId(selectedPost);
       const endpoint = commentId
         ? `${baseURL}/api/comments/reply/${commentId}`
         : `${baseURL}/api/comments`;
@@ -135,13 +143,17 @@ export const CommentsPanel = ({ onRefresh }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workspaceId: activeWorkspace.id,
-          postId: selectedPost.id,
+          postId: ayrPostId,
           [commentId ? "reply" : "comment"]: replyText,
           platform: selectedPost.platforms?.[0] || "facebook"
         })
       });
 
-      if (!response.ok) throw new Error("Failed to post reply");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData?.error || errData?.data?.error || "Failed to post comment";
+        throw new Error(errMsg);
+      }
 
       setReplyText("");
       setReplyingTo(null);

@@ -160,6 +160,7 @@ module.exports = async function handler(req, res) {
       const dbPost = supabasePosts.find(p => p.ayr_post_id === ayrPost.id);
       return {
         ...ayrPost,
+        ayr_post_id: ayrPost.id,
         approval_status: dbPost?.approval_status || 'approved',
         requires_approval: dbPost?.requires_approval || false,
         comments: dbPost?.comments || []
