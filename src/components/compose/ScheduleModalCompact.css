@@ -233,24 +233,26 @@
 /* Hourly Engagement Bar Graph */
 .hourly-graph {
   margin-top: 12px;
-  padding: 16px 16px 10px;
-  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  border-radius: 12px;
+  padding: 16px 12px 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   animation: slideDown 0.2s ease-out;
+  overflow-x: auto;
 }
 
 .hourly-graph-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  padding: 0 4px;
 }
 
 .hourly-graph-title {
   font-size: 13px;
   font-weight: 600;
-  color: #5b21b6;
+  color: #111827;
   flex: 1;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
@@ -258,27 +260,25 @@
 .hourly-graph-close {
   background: none;
   border: none;
-  color: #7c3aed;
+  color: #6b7280;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
   padding: 2px 4px;
-  opacity: 0.5;
-  transition: opacity 0.15s;
+  transition: color 0.15s;
   border-radius: 4px;
 }
 
 .hourly-graph-close:hover {
-  opacity: 1;
-  background: rgba(124, 58, 237, 0.1);
+  color: #111827;
 }
 
-.hourly-graph-bars {
+/* The chart area */
+.hourly-graph-chart {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  height: 100px;
-  padding: 0 2px;
+  gap: 4px;
+  min-width: 480px;
 }
 
 .hourly-bar-col {
@@ -287,71 +287,59 @@
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  height: 100%;
-  justify-content: flex-end;
-  position: relative;
+  gap: 6px;
+}
+
+/* The track holds the bar and defines chart height */
+.hourly-bar-track {
+  width: 100%;
+  height: 110px;
+  display: flex;
+  align-items: flex-end;
 }
 
 .hourly-bar {
   width: 100%;
-  min-height: 3px;
-  background: rgba(196, 181, 253, 0.6);
+  min-height: 4px;
+  background: #c4b5fd;
   border-radius: 3px 3px 0 0;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .hourly-bar-col:hover .hourly-bar {
   background: #8b5cf6;
-  transform: scaleY(1.05);
-  transform-origin: bottom;
 }
 
 .hourly-bar-col.active .hourly-bar {
   background: #7c3aed;
-  box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
 }
 
 .hourly-bar-col.peak .hourly-bar {
   background: #7c3aed;
 }
 
-.hourly-bar-col.peak:not(.active) .hourly-bar {
-  background: linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%);
-}
-
-/* Tooltip on active bar */
-.hourly-bar-tooltip {
-  position: absolute;
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #7c3aed;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Static time labels below bars */
-.hourly-graph-labels {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 2px 0;
-  border-top: 1px solid rgba(124, 58, 237, 0.15);
-  margin-top: 2px;
-}
-
-.hourly-graph-labels span {
-  font-size: 10px;
+/* Time label below each bar */
+.hourly-bar-label {
+  font-size: 9px;
   font-weight: 500;
+  color: #9ca3af;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.hourly-bar-col:hover .hourly-bar-label {
+  color: #6b7280;
+}
+
+.hourly-bar-col.active .hourly-bar-label {
   color: #7c3aed;
-  opacity: 0.6;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-weight: 700;
+}
+
+.hourly-bar-col.peak .hourly-bar-label {
+  color: #7c3aed;
+  font-weight: 600;
 }
 
 /* Best Time Recommendation Popup (legacy) */
@@ -552,13 +540,18 @@
   background: #7c3aed;
 }
 
-[data-theme="dark"] .hourly-graph-labels,
-.dark .hourly-graph-labels {
-  border-top-color: rgba(124, 58, 237, 0.2);
+[data-theme="dark"] .hourly-bar-label,
+.dark .hourly-bar-label {
+  color: #9ca3af;
 }
 
-[data-theme="dark"] .hourly-graph-labels span,
-.dark .hourly-graph-labels span {
+[data-theme="dark"] .hourly-bar-col.active .hourly-bar-label,
+.dark .hourly-bar-col.active .hourly-bar-label {
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .hourly-bar-col.peak .hourly-bar-label,
+.dark .hourly-bar-col.peak .hourly-bar-label {
   color: #c4b5fd;
 }
 

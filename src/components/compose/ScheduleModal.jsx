@@ -328,7 +328,7 @@ export const ScheduleModal = ({
                   &times;
                 </button>
               </div>
-              <div className="hourly-graph-bars">
+              <div className="hourly-graph-chart">
                 {hourlyGraph.data.map(({ hour, score, label }) => {
                   const currentHour = parseInt(selectedTime.split(':')[0]);
                   const isActive = hour === currentHour;
@@ -339,20 +339,13 @@ export const ScheduleModal = ({
                       className={`hourly-bar-col ${isActive ? 'active' : ''} ${isPeak ? 'peak' : ''}`}
                       onClick={() => handleBarClick(hour)}
                     >
-                      {isActive && (
-                        <span className="hourly-bar-tooltip">{label}</span>
-                      )}
-                      <div className="hourly-bar" style={{ height: `${score}%` }} />
+                      <div className="hourly-bar-track">
+                        <div className="hourly-bar" style={{ height: `${score}%` }} />
+                      </div>
+                      <span className="hourly-bar-label">{formatShortHour(hour)}</span>
                     </div>
                   );
                 })}
-              </div>
-              <div className="hourly-graph-labels">
-                <span>12a</span>
-                <span>6a</span>
-                <span>12p</span>
-                <span>6p</span>
-                <span>11p</span>
               </div>
             </div>
           )}
