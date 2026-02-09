@@ -49,7 +49,7 @@ const TIER_NAMES = {
 };
 
 module.exports = async function handler(req, res) {
-  setCors(res);
+  setCors(res, req);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();

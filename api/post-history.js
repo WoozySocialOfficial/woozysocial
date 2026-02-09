@@ -23,7 +23,7 @@ const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 const AYRSHARE_CACHE_TTL = 120; // Cache Ayrshare responses for 2 minutes
 
 module.exports = async function handler(req, res) {
-  setCors(res);
+  setCors(res, req);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();

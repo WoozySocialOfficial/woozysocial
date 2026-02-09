@@ -498,9 +498,46 @@ async function getWorkspaceProfileKeyForUser(userId) {
   }
 }
 
-// CORS headers helper
-function setCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+// CORS headers helper with security whitelist
+function setCors(res, req = null) {
+  // Define allowed origins (your domains)
+  const allowedOrigins = [
+    'https://woozysocial.com',
+    'https://www.woozysocial.com',
+    'http://localhost:5173',      // Vite dev server
+    'http://localhost:3000',      // Alternative dev port
+    'http://localhost:3001',      // Express dev server
+  ];
+
+  // Add environment-based URLs if configured
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+  }
+  if (process.env.APP_URL) {
+    allowedOrigins.push(process.env.APP_URL);
+  }
+
+  // Get the request origin
+  const origin = req?.headers?.origin;
+
+  // Check if origin is allowed
+  if (origin && allowedOrigins.includes(origin)) {
+    // Whitelist match - use specific origin
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else if (origin && (process.env.NODE_ENV !== 'production' || origin.includes('.vercel.app'))) {
+    // Development or Vercel preview - allow it
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else if (origin) {
+    // Unknown origin - log warning but allow (graceful degradation for launch)
+    console.warn(`[CORS] Unknown origin attempted access: ${origin}`);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  } else {
+    // No origin header (server-to-server) - allow all
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 }

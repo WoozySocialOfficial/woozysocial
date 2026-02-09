@@ -68,7 +68,7 @@ const readPrivateKey = async (privateKeyPathOrContent) => {
  */
 module.exports = async (req, res) => {
   // Set CORS headers first
-  setCors(res);
+  setCors(res, req);
 
   // Handle OPTIONS preflight
   if (req.method === 'OPTIONS') {
