@@ -35,3 +35,6 @@ nul
 *.tmp
 tmpclaude-*
 *.bak
+
+# Claude Code settings (local only)
+.claude/
