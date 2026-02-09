@@ -376,49 +376,44 @@ export const TeamContent = () => {
                               Leave Workspace
                             </button>
                           ) : (
-                            <>
-                              <RoleGuard permission="canManageTeam" fallbackType="hide">
-                                <div className="member-controls">
-                                  <select
-                                    className="role-dropdown"
-                                    value={memberRole}
-                                    onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
-                                  >
-                                    <option value="member">Member</option>
-                                    <option value="viewer">Viewer</option>
-                                  </select>
-                                  <div className="permission-toggles">
-                                    <label className="toggle-label">
-                                      <input
-                                        type="checkbox"
-                                        checked={member.permissions?.canApprovePosts || false}
-                                        onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
-                                      />
-                                      Can approve posts
-                                    </label>
-                                    {memberRole === 'member' && (
-                                      <label className="toggle-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={member.permissions?.canManageTeam || false}
-                                          onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
-                                        />
-                                        Can manage team
-                                      </label>
-                                    )}
-                                  </div>
-                                  <button
-                                    className="remove-button"
-                                    onClick={() => handleRemoveMember(member.user_id)}
-                                  >
-                                    Remove
-                                  </button>
+                            <RoleGuard permission="canManageTeam" fallbackType="hide">
+                              <div className="member-controls">
+                                <select
+                                  className="role-dropdown"
+                                  value={memberRole}
+                                  onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
+                                >
+                                  <option value="member">Member</option>
+                                  <option value="viewer">Viewer</option>
+                                </select>
+                                <div className="permission-toggles">
+                                  <label className="toggle-label">
+                                    <input
+                                      type="checkbox"
+                                      checked={member.permissions?.canApprovePosts || false}
+                                      onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
+                                    />
+                                    <span className="toggle-switch"></span>
+                                    Can approve posts
+                                  </label>
+                                  <label className="toggle-label">
+                                    <input
+                                      type="checkbox"
+                                      checked={member.permissions?.canManageTeam || false}
+                                      onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
+                                    />
+                                    <span className="toggle-switch"></span>
+                                    Can manage team
+                                  </label>
                                 </div>
-                              </RoleGuard>
-                              <RoleGuard permission="canManageTeam" fallbackType="message" fallbackMessage="Only team managers can manage members.">
-                                <span className="member-role">{getRoleLabel(member.role)}</span>
-                              </RoleGuard>
-                            </>
+                                <button
+                                  className="remove-button"
+                                  onClick={() => handleRemoveMember(member.user_id)}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </RoleGuard>
                           )}
                         </div>
                       </div>
