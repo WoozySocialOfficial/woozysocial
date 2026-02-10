@@ -68,8 +68,9 @@ module.exports = async function handler(req, res) {
     const platformsToFetch = platform === 'all' ? SUPPORTED_PLATFORMS : [platform];
 
     // Check if we should fetch from Ayrshare or use cache
+    let syncResults = null;
     if (shouldRefresh && isServiceConfigured('ayrshare')) {
-      await syncConversationsFromAyrshare(supabase, workspaceId, profileKey, platformsToFetch);
+      syncResults = await syncConversationsFromAyrshare(supabase, workspaceId, profileKey, platformsToFetch);
     }
 
     // Fetch from local cache
@@ -104,12 +105,19 @@ module.exports = async function handler(req, res) {
       return acc;
     }, {});
 
-    return sendSuccess(res, {
+    const responseData = {
       conversations: conversations || [],
       totalUnread,
       platformStats,
       platforms: SUPPORTED_PLATFORMS
-    });
+    };
+
+    // Include sync diagnostics when refresh was requested
+    if (syncResults) {
+      responseData.syncDiagnostics = syncResults;
+    }
+
+    return sendSuccess(res, responseData);
 
   } catch (error) {
     logError('inbox.conversations.handler', error);
@@ -122,8 +130,12 @@ module.exports = async function handler(req, res) {
  */
 async function syncConversationsFromAyrshare(supabase, workspaceId, profileKey, platforms) {
   const results = [];
+  const diagnostics = { platforms: {}, totalSynced: 0 };
 
   for (const platform of platforms) {
+    const platformDiag = { status: 'pending', conversationsFound: 0, error: null, rawResponseType: null };
+    diagnostics.platforms[platform] = platformDiag;
+
     try {
       // Fetch conversations from Ayrshare
       const response = await axios.get(`${BASE_AYRSHARE}/messages/${platform}`, {
@@ -135,7 +147,21 @@ async function syncConversationsFromAyrshare(supabase, workspaceId, profileKey, 
         timeout: 30000
       });
 
+      // Log the raw response shape for debugging
+      platformDiag.rawResponseType = typeof response.data;
+      platformDiag.rawResponseKeys = response.data ? Object.keys(response.data) : [];
+      platformDiag.httpStatus = response.status;
+
       const ayrshareConversations = response.data?.conversations || response.data || [];
+      const isArray = Array.isArray(ayrshareConversations);
+      platformDiag.isArray = isArray;
+      platformDiag.conversationsFound = isArray ? ayrshareConversations.length : 0;
+
+      if (!isArray) {
+        platformDiag.status = 'unexpected_format';
+        platformDiag.rawSnippet = JSON.stringify(response.data).substring(0, 300);
+        continue;
+      }
 
       // Upsert each conversation to local cache
       for (const conv of ayrshareConversations) {
@@ -167,18 +193,25 @@ async function syncConversationsFromAyrshare(supabase, workspaceId, profileKey, 
 
         if (error) {
           logError('inbox.conversations.sync.upsert', error, { conversationId: conv.conversationId });
+          platformDiag.dbError = error.message;
         } else {
           results.push(conversationData);
+          diagnostics.totalSynced++;
         }
       }
 
+      platformDiag.status = 'success';
+
     } catch (platformError) {
       logError('inbox.conversations.sync.platform', platformError, { platform });
+      platformDiag.status = 'error';
+      platformDiag.error = platformError.response?.data?.message || platformError.response?.data?.error || platformError.message;
+      platformDiag.httpStatus = platformError.response?.status;
       // Continue with other platforms
     }
   }
 
-  return results;
+  return diagnostics;
 }
 
 /**
