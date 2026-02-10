@@ -5,7 +5,7 @@ const isLocalhost = typeof window !== 'undefined' &&
 
 const baseURL = isLocalhost
   ? "http://localhost:3001"
-  : "https://woozysocials.com";
+  : "https://www.woozysocials.com";
 
 // ===========================
 // SUBSCRIPTION TIERS
