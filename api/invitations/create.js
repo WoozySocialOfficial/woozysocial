@@ -229,12 +229,12 @@ module.exports = async function handler(req, res) {
       const inviterName = inviter?.full_name || inviter?.email || 'Someone';
       const workspaceName = workspaceData?.name || 'a workspace';
       // Use APP_URL environment variable for invitation links (must be frontend domain)
-      const appUrl = (process.env.APP_URL || 'https://woozysocial.com').trim();
+      const appUrl = (process.env.APP_URL || 'https://woozysocials.com').trim();
       const inviteLink = `${appUrl}/accept-invite?token=${invitation.invite_token}`;
 
       try {
         await resend.emails.send({
-          from: 'Woozy Social <hello@woozysocial.com>',
+          from: 'Woozy Social <hello@woozysocials.com>',
           to: [email],
           subject: `${inviterName} invited you to join ${workspaceName}`,
           html: `

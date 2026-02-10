@@ -20,7 +20,7 @@ function generateShortCode() {
 
 // Get base URL for short links
 function getBaseUrl() {
-  return process.env.APP_URL || process.env.FRONTEND_URL || 'https://woozysocial.com';
+  return process.env.APP_URL || process.env.FRONTEND_URL || 'https://woozysocials.com';
 }
 
 module.exports = async function handler(req, res) {

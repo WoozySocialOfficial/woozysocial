@@ -372,7 +372,7 @@ export const Pricing = () => {
           </p>
         )}
         <p className="contact-info">
-          Need a custom plan? <a href="mailto:support@woozysocial.com">Contact us</a>
+          Need a custom plan? <a href="mailto:support@woozysocials.com">Contact us</a>
         </p>
       </div>
       </div>

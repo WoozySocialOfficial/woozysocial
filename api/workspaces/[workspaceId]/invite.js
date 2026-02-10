@@ -166,12 +166,12 @@ module.exports = async function handler(req, res) {
       const inviterName = inviterData?.full_name || inviterData?.email || 'A team member';
       const workspaceName = workspace?.name || 'a workspace';
       // Use APP_URL first (correct), ignore FRONTEND_URL (wrong domain)
-      const appUrl = (process.env.APP_URL || 'https://woozysocial.com').trim();
+      const appUrl = (process.env.APP_URL || 'https://woozysocials.com').trim();
       const inviteLink = `${appUrl}/accept-invite?token=${inviteToken}`;
 
       try {
         await resend.emails.send({
-          from: 'Woozy Social <hello@woozysocial.com>',
+          from: 'Woozy Social <hello@woozysocials.com>',
           to: [email],
           subject: `${inviterName} invited you to join ${workspaceName} on Woozy Social`,
           html: `<!DOCTYPE html>
@@ -237,7 +237,7 @@ module.exports = async function handler(req, res) {
       invitation,
       debug: {
         tokenUsedInEmail: inviteToken,
-        frontendUrl: (process.env.APP_URL || 'https://woozysocial.com').trim()
+        frontendUrl: (process.env.APP_URL || 'https://woozysocials.com').trim()
       }
     });
 

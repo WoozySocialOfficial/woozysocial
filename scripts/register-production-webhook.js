@@ -153,10 +153,10 @@ async function main() {
   try {
     // Step 1: Get production URL
     logSection('Step 1: Enter Production URL');
-    log('Enter your production API URL (e.g., https://api.woozysocial.com)');
-    log('Press Enter to use default: https://api.woozysocial.com\n');
+    log('Enter your production API URL (e.g., https://woozysocials.com)');
+    log('Press Enter to use default: https://woozysocials.com\n');
 
-    const apiUrl = await prompt('Production API URL: ') || 'https://api.woozysocial.com';
+    const apiUrl = await prompt('Production API URL: ') || 'https://woozysocials.com';
 
     if (!apiUrl.startsWith('http')) {
       throw new Error('Invalid URL format. Must start with http:// or https://');

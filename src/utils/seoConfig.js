@@ -6,7 +6,7 @@
 export const seoConfig = {
   // Base site information
   siteName: 'Woozy Social',
-  siteUrl: 'https://www.woozysocial.com',
+  siteUrl: 'https://www.woozysocials.com',
   defaultTitle: 'Woozy Social',
   defaultDescription: 'Create, schedule, publish, and easily manage your social media content at scale with Woozy Social\'s AI-powered platform. Perfect for brands, agencies, and creators.',
 
@@ -28,11 +28,11 @@ export const seoConfig = {
   company: {
     name: 'Woozy Social',
     legalName: 'Woozy Social Inc.',
-    url: 'https://www.woozysocial.com',
-    logo: 'https://www.woozysocial.com/assets/woozysocial.png',
+    url: 'https://www.woozysocials.com',
+    logo: 'https://www.woozysocials.com/assets/woozysocial.png',
     description: 'AI-powered social media management platform for brands, agencies, and creators',
     foundingDate: '2024',
-    email: 'hello@woozysocial.com',
+    email: 'hello@woozysocials.com',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'US',

@@ -168,7 +168,7 @@ module.exports = async function handler(req, res) {
       resend = new Resend(process.env.RESEND_API_KEY);
     }
 
-    const appUrl = (process.env.APP_URL || 'https://woozysocial.com').trim();
+    const appUrl = (process.env.APP_URL || 'https://woozysocials.com').trim();
     const inviterName = userProfile.full_name || userProfile.email || 'Agency owner';
 
     for (const member of teamMembers) {
@@ -268,7 +268,7 @@ module.exports = async function handler(req, res) {
 
             try {
               await resend.emails.send({
-                from: 'Woozy Social <hello@woozysocial.com>',
+                from: 'Woozy Social <hello@woozysocials.com>',
                 to: [member.email],
                 subject: `${inviterName} invited you to join ${workspace.name}`,
                 html: `

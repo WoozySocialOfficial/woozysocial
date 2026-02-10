@@ -10,7 +10,7 @@ import http from 'http';
 
 // Configuration - adjust these values to stress test
 const CONFIG = {
-  baseUrl: process.env.API_URL || 'https://api.woozysocial.com',
+  baseUrl: process.env.API_URL || 'https://woozysocials.com',
   concurrentUsers: 100,     // Safe default
   totalRequests: 500,       // Quick test
   delayBetweenBatches: 50,  // Small delay between batches

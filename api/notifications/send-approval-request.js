@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
       return sendSuccess(res, { notified: 0, emailsSent: 0, message: "No clients to notify" });
     }
 
-    const appUrl = process.env.APP_URL || 'https://woozysocial.com';
+    const appUrl = process.env.APP_URL || 'https://woozysocials.com';
     const workspaceName = workspace?.name || 'your workspace';
     const platformList = platforms?.join(', ') || 'multiple platforms';
     const scheduledDate = scheduledAt ? new Date(scheduledAt).toLocaleString('en-US', {
@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 20px;">
               <div style="background: #ffffff; border-radius: 12px; padding: 30px; border: 1px solid #e5e7eb;">
                 <div style="text-align: center; margin-bottom: 24px;">
-                  <img src="https://woozysocial.com/ChatGPT%20Image%20Dec%2031,%202025,%2004_19_09%20PM.png" alt="Woozy Social" style="height: 40px;" />
+                  <img src="https://woozysocials.com/ChatGPT%20Image%20Dec%2031,%202025,%2004_19_09%20PM.png" alt="Woozy Social" style="height: 40px;" />
                 </div>
 
                 <h2 style="color: #114C5A; margin: 0 0 16px 0;">New Post Needs Your Approval</h2>

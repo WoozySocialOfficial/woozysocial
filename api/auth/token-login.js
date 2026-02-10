@@ -104,7 +104,7 @@ module.exports = async function handler(req, res) {
     console.log("[TOKEN LOGIN] User found:", user.email);
 
     // Get the app URL for redirects
-    const appUrl = (process.env.APP_URL || process.env.FRONTEND_URL || 'https://api.woozysocial.com').trim();
+    const appUrl = (process.env.APP_URL || process.env.FRONTEND_URL || 'https://woozysocials.com').trim();
 
     // Generate a magic link that the user can be redirected to directly
     // This is more reliable than trying to verify OTP manually

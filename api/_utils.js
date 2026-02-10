@@ -502,11 +502,12 @@ async function getWorkspaceProfileKeyForUser(userId) {
 function setCors(res, req = null) {
   // Define allowed origins (your domains)
   const allowedOrigins = [
-    'https://woozysocial.com',
-    'https://www.woozysocial.com',
-    'http://localhost:5173',      // Vite dev server
-    'http://localhost:3000',      // Alternative dev port
-    'http://localhost:3001',      // Express dev server
+    'https://woozysocials.com',
+    'https://www.woozysocials.com',
+    'https://api.woozysocial.com',  // Preview/test domain
+    'http://localhost:5173',        // Vite dev server
+    'http://localhost:3000',        // Alternative dev port
+    'http://localhost:3001',        // Express dev server
   ];
 
   // Add environment-based URLs if configured

@@ -138,7 +138,7 @@ async function createNotification({
 
       try {
         await resend.emails.send({
-          from: emailData.from || 'Woozy Social <hello@woozysocial.com>',
+          from: emailData.from || 'Woozy Social <hello@woozysocials.com>',
           to: [profile.email],
           subject: emailData.subject || title,
           html: emailData.html

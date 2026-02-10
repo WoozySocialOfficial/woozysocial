@@ -9,7 +9,7 @@ import http from 'http';
 
 // Configuration - AGGRESSIVE
 const CONFIG = {
-  baseUrl: process.env.API_URL || 'https://api.woozysocial.com',
+  baseUrl: process.env.API_URL || 'https://woozysocials.com',
   concurrentUsers: 200,
   requestsPerEndpoint: 500,
   delayBetweenBatches: 10,

@@ -2462,7 +2462,7 @@ app.post("/api/workspaces/:id/invite", async (req, res) => {
 
       try {
         await resend.emails.send({
-          from: 'Woozy Social <hello@woozysocial.com>',
+          from: 'Woozy Social <hello@woozysocials.com>',
           to: [email],
           subject: `${inviterName} invited you to join ${workspaceName} on Woozy Social`,
           html: `

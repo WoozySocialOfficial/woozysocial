@@ -126,7 +126,7 @@ module.exports = async function handler(req, res) {
     console.log("[COMPLETE ONBOARDING] Login token created");
 
     // Get app URL
-    const appUrl = (process.env.APP_URL || process.env.FRONTEND_URL || "https://api.woozysocial.com").trim();
+    const appUrl = (process.env.APP_URL || process.env.FRONTEND_URL || "https://woozysocials.com").trim();
 
     return sendSuccess(res, {
       loginToken: token,

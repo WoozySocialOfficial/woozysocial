@@ -24,7 +24,7 @@ export const options = {
 };
 
 // Change this to your API URL
-const BASE_URL = __ENV.API_URL || 'https://api.woozysocial.com';
+const BASE_URL = __ENV.API_URL || 'https://woozysocials.com';
 
 export default function () {
   // Test health endpoint

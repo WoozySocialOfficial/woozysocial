@@ -11,7 +11,7 @@ async function fetchWebsiteContent(url) {
   try {
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; WoozySocial/1.0; +https://woozysocial.com)'
+        'User-Agent': 'Mozilla/5.0 (compatible; WoozySocial/1.0; +https://woozysocials.com)'
       },
       timeout: 10000
     });
