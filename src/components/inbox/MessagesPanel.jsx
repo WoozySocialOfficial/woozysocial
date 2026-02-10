@@ -23,6 +23,7 @@ export const MessagesPanel = ({ inboxData }) => {
     selectConversation,
     sendMessage,
     filterByPlatform,
+    refresh,
     clearError
   } = inboxData;
 
@@ -87,7 +88,10 @@ export const MessagesPanel = ({ inboxData }) => {
       {error && (
         <div className="mp-error-banner">
           <span>{error}</span>
-          <button onClick={clearError}>Dismiss</button>
+          <div className="mp-error-actions">
+            <button className="mp-error-retry" onClick={() => refresh()}>Retry</button>
+            <button className="mp-error-dismiss" onClick={clearError}>Dismiss</button>
+          </div>
         </div>
       )}
 
@@ -158,12 +162,20 @@ export const MessagesPanel = ({ inboxData }) => {
               <LoadingContainer message="Loading conversations..." size="sm" />
             ) : filteredConversations.length === 0 ? (
               <div className="mp-empty-conversations">
+                <div className="mp-empty-icon">💬</div>
                 <p>No conversations found</p>
                 <span className="mp-empty-hint">
                   {selectedPlatform !== "all"
                     ? `No ${PLATFORM_ICONS[selectedPlatform]?.name} messages yet`
-                    : "Messages will appear here when you receive them"}
+                    : "Connect your social accounts and sync to see direct messages"}
                 </span>
+                <button
+                  className="mp-sync-btn"
+                  onClick={() => refresh()}
+                  disabled={loading}
+                >
+                  {loading ? "Syncing..." : "Sync Messages"}
+                </button>
               </div>
             ) : (
               filteredConversations.map((conversation) => {
@@ -343,10 +355,30 @@ export const MessagesPanel = ({ inboxData }) => {
           ) : (
             <div className="unified-empty-state">
               <div className="empty-icon">💬</div>
-              <p className="empty-text">Select a conversation to view messages</p>
-              <p className="empty-subtext">
-                Choose a conversation from the list to start responding
-              </p>
+              {conversations.length > 0 ? (
+                <>
+                  <p className="empty-text">Select a conversation to view messages</p>
+                  <p className="empty-subtext">
+                    Choose a conversation from the list to start responding
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="empty-text">No direct messages yet</p>
+                  <p className="empty-subtext">
+                    Messages from Facebook Messenger, Instagram DMs, and X will appear here.
+                    Make sure your social accounts are connected and have messaging enabled.
+                  </p>
+                  <button
+                    className="mp-sync-btn"
+                    onClick={() => refresh()}
+                    disabled={loading}
+                    style={{ marginTop: "16px" }}
+                  >
+                    {loading ? "Syncing..." : "Sync Messages"}
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
