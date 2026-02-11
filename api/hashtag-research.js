@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { topic, platform, count = 10 } = req.body;
+    const { topic, platform, count = 5 } = req.body;
 
     if (!topic || topic.trim().length === 0) {
       return sendError(res, "Topic is required", ErrorCodes.VALIDATION_ERROR);

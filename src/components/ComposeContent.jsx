@@ -1305,7 +1305,7 @@ export const ComposeContent = () => {
         body: JSON.stringify({
           topic: post.text.substring(0, 200), // Use first 200 chars as topic
           platform: selectedPlatform || null,
-          count: 8
+          count: 5
         })
       });
 
@@ -2799,7 +2799,7 @@ export const ComposeContent = () => {
                       <span className="prediction-icon">#</span>
                       <div className="prediction-info">
                         <span className="prediction-label">Hashtags:</span>
-                        <span className="prediction-value">{getHashtagCount()} / 5-10</span>
+                        <span className="prediction-value">{getHashtagCount()} / 5</span>
                       </div>
                     </div>
                   </div>
