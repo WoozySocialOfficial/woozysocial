@@ -1282,3 +1282,200 @@
 .dark .post-card-content {
   color: #ede9fc;
 }
+
+/* Dark Mode - Time Slot Background */
+[data-theme="dark"] .time-slot,
+.dark .time-slot {
+  background: #0d0b1a;
+}
+
+/* Dark Mode - Comment Modal */
+[data-theme="dark"] .comment-modal,
+.dark .comment-modal {
+  background: #0d0b1a;
+}
+
+[data-theme="dark"] .comment-modal-header,
+.dark .comment-modal-header {
+  border-bottom-color: #2a2545;
+}
+
+[data-theme="dark"] .comment-modal-header h3,
+.dark .comment-modal-header h3 {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .comment-modal-post,
+.dark .comment-modal-post {
+  background: #16132a;
+  border-bottom-color: #2a2545;
+}
+
+[data-theme="dark"] .modal-post-content,
+.dark .modal-post-content {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .modal-post-meta,
+.dark .modal-post-meta {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .existing-comments,
+.dark .existing-comments {
+  border-bottom-color: #2a2545;
+}
+
+[data-theme="dark"] .existing-comments h4,
+.dark .existing-comments h4 {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .comment-item,
+.dark .comment-item {
+  background: #16132a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .comment-item.system,
+.dark .comment-item.system {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .comment-author,
+.dark .comment-author {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .comment-text,
+.dark .comment-text {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .comment-input-section textarea,
+.dark .comment-input-section textarea {
+  background: #0a0918;
+  border-color: #2a2545;
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .comment-input-section textarea:focus,
+.dark .comment-input-section textarea:focus {
+  border-color: #7c3aed;
+}
+
+/* Dark Mode - Post Cards */
+[data-theme="dark"] .post-card,
+.dark .post-card {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  border-left-color: #3b82f6;
+}
+
+[data-theme="dark"] .post-card.published,
+.dark .post-card.published {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  border-left-color: #10b981;
+}
+
+[data-theme="dark"] .post-card.scheduled,
+.dark .post-card.scheduled {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  border-left-color: #3b82f6;
+}
+
+[data-theme="dark"] .post-card.approval-pending,
+.dark .post-card.approval-pending {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  border-left-color: #f59e0b;
+}
+
+[data-theme="dark"] .post-card.approval-approved,
+.dark .post-card.approval-approved {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  border-left-color: #10b981;
+}
+
+[data-theme="dark"] .post-card.approval-rejected,
+.dark .post-card.approval-rejected {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  border-left-color: #ef4444;
+}
+
+[data-theme="dark"] .post-card.approval-changes_requested,
+.dark .post-card.approval-changes_requested {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  border-left-color: #f59e0b;
+}
+
+[data-theme="dark"] .post-card.past-post::before,
+.dark .post-card.past-post::before {
+  background: rgba(8, 7, 15, 0.65);
+}
+
+[data-theme="dark"] .post-card.past-post:hover::before,
+.dark .post-card.past-post:hover::before {
+  background: rgba(8, 7, 15, 0.45);
+}
+
+[data-theme="dark"] .post-card-meta,
+.dark .post-card-meta {
+  color: #a39dd0;
+}
+
+/* Dark Mode - More Posts Indicator */
+[data-theme="dark"] .more-posts-indicator,
+.dark .more-posts-indicator {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+/* Dark Mode - Filter Tab Hover */
+[data-theme="dark"] .filter-tab:hover,
+.dark .filter-tab:hover {
+  background: #1e1a2e;
+  border-color: #352d5e;
+}
+
+[data-theme="dark"] .filter-tab:not(.active) .filter-count,
+.dark .filter-tab:not(.active) .filter-count {
+  background: #1e1a2e;
+}
+
+/* Dark Mode - Approval Buttons */
+[data-theme="dark"] .approval-btn.approve,
+.dark .approval-btn.approve {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+[data-theme="dark"] .approval-btn.reject,
+.dark .approval-btn.reject {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .approval-btn.comment,
+.dark .approval-btn.comment {
+  background: rgba(175, 171, 249, 0.15);
+  color: #afabf9;
+}
+
+/* Dark Mode - Close Modal */
+[data-theme="dark"] .close-modal,
+.dark .close-modal {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .close-modal:hover,
+.dark .close-modal:hover {
+  color: #ede9fc;
+}

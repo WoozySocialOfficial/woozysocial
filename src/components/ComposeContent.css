@@ -2407,3 +2407,39 @@
 .dark .warning-list {
   color: #fcd34d;
 }
+
+/* Dark Mode - Preview & Phone Mockup */
+[data-theme="dark"] .preview-container,
+.dark .preview-container {
+  background-color: #0d0b1a;
+}
+
+[data-theme="dark"] .phone-content,
+.dark .phone-content {
+  background: #16132a;
+}
+
+[data-theme="dark"] .status-bar,
+.dark .status-bar {
+  background: #0d0b1a;
+}
+
+[data-theme="dark"] .compose-media-preview-section,
+.dark .compose-media-preview-section {
+  background: #16132a;
+}
+
+[data-theme="dark"] .thumbnail-preview,
+.dark .thumbnail-preview {
+  background: #16132a;
+}
+
+[data-theme="dark"] .form-footer,
+.dark .form-footer {
+  background-color: #0d0b1a;
+}
+
+[data-theme="dark"] .comments-container,
+.dark .comments-container {
+  background-color: #0d0b1a;
+}

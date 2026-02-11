@@ -523,3 +523,123 @@
     font-size: 12px;
   }
 }
+
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+[data-theme="dark"] .agency-team-title,
+.dark .agency-team-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .agency-team-subtitle,
+.dark .agency-team-subtitle {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .agency-team-section,
+.dark .agency-team-section {
+  background-color: #0d0b1a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .section-title,
+.dark .section-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .section-subtitle,
+.dark .section-subtitle {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .search-input,
+.dark .search-input {
+  background: #16132a;
+  border-color: #2a2545;
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .search-clear,
+.dark .search-clear {
+  color: #a39dd0;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .search-clear:hover,
+.dark .search-clear:hover {
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .member-card,
+.dark .member-card {
+  background-color: #16132a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .member-card:hover,
+.dark .member-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .member-name,
+.dark .member-name {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .member-email,
+.dark .member-email {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .member-department,
+.dark .member-department {
+  color: #7b74b0;
+}
+
+[data-theme="dark"] .role-dropdown,
+.dark .role-dropdown {
+  color: #000000;
+}
+
+[data-theme="dark"] .remove-button:hover,
+.dark .remove-button:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .team-info-box,
+.dark .team-info-box {
+  background-color: #16132a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .info-text,
+.dark .info-text {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .info-subtext,
+.dark .info-subtext {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .info-section,
+.dark .info-section {
+  background-color: #0d0b1a;
+}
+
+[data-theme="dark"] .info-section-title,
+.dark .info-section-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .step-content h4,
+.dark .step-content h4 {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .step-content p,
+.dark .step-content p {
+  color: #a39dd0;
+}

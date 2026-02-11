@@ -281,3 +281,100 @@
     width: 100%;
   }
 }
+
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+[data-theme="dark"] .agency-modal-content,
+.dark .agency-modal-content {
+  background: #0d0b1a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .agency-modal-header,
+.dark .agency-modal-header {
+  background: #0d0b1a;
+  border-bottom-color: #2a2545;
+}
+
+[data-theme="dark"] .agency-modal-title,
+.dark .agency-modal-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .agency-modal-close-button,
+.dark .agency-modal-close-button {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .agency-modal-close-button:hover,
+.dark .agency-modal-close-button:hover {
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .agency-form-label,
+.dark .agency-form-label {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .agency-form-input,
+[data-theme="dark"] .agency-form-select,
+[data-theme="dark"] .agency-form-textarea,
+.dark .agency-form-input,
+.dark .agency-form-select,
+.dark .agency-form-textarea {
+  background-color: #16132a !important;
+  border-color: #2a2545 !important;
+  color: #ede9fc !important;
+}
+
+[data-theme="dark"] .agency-form-input::placeholder,
+[data-theme="dark"] .agency-form-textarea::placeholder,
+.dark .agency-form-input::placeholder,
+.dark .agency-form-textarea::placeholder {
+  color: #7b74b0 !important;
+}
+
+[data-theme="dark"] .agency-form-input:focus,
+[data-theme="dark"] .agency-form-select:focus,
+[data-theme="dark"] .agency-form-textarea:focus,
+.dark .agency-form-input:focus,
+.dark .agency-form-select:focus,
+.dark .agency-form-textarea:focus {
+  border-color: #afabf9 !important;
+  box-shadow: 0 0 0 3px rgba(175, 171, 249, 0.15);
+}
+
+[data-theme="dark"] .agency-form-input:disabled,
+.dark .agency-form-input:disabled {
+  background-color: #0a0918 !important;
+}
+
+[data-theme="dark"] .agency-role-description,
+.dark .agency-role-description {
+  background: #16132a;
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .agency-submit-error,
+.dark .agency-submit-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .agency-cancel-button,
+.dark .agency-cancel-button {
+  color: #a39dd0;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .agency-cancel-button:hover:not(:disabled),
+.dark .agency-cancel-button:hover:not(:disabled) {
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .agency-submit-button,
+.dark .agency-submit-button {
+  color: #000000;
+}

@@ -575,6 +575,12 @@
   background-color: #1e1a2e;
 }
 
+[data-theme="dark"] .post-item.clickable:hover,
+.dark .post-item.clickable:hover {
+  background-color: #352d5e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 [data-theme="dark"] .post-text,
 .dark .post-text {
   color: #ede9fc;
