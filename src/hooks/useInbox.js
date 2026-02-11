@@ -26,6 +26,7 @@ export function useInbox(workspaceId, options = {}) {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [syncErrors, setSyncErrors] = useState({});
   const [platformStats, setPlatformStats] = useState({});
   const [totalUnread, setTotalUnread] = useState(0);
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -64,6 +65,17 @@ export function useInbox(workspaceId, options = {}) {
         setConversations(data.conversations || []);
         setPlatformStats(data.platformStats || {});
         setTotalUnread(data.totalUnread || 0);
+
+        // Capture sync diagnostics if present (only on refresh=true responses)
+        if (data.syncDiagnostics?.platforms) {
+          const errors = {};
+          for (const [platform, diag] of Object.entries(data.syncDiagnostics.platforms)) {
+            if (diag.status === 'error' && diag.error) {
+              errors[platform] = diag.error;
+            }
+          }
+          setSyncErrors(errors);
+        }
       }
     } catch (err) {
       console.error('Error fetching conversations:', err);
@@ -282,6 +294,7 @@ export function useInbox(workspaceId, options = {}) {
     messagesLoading,
     sending,
     error,
+    syncErrors,
     platformStats,
     totalUnread,
     selectedPlatform,

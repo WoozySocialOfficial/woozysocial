@@ -808,6 +808,69 @@
   transform: none;
 }
 
+/* Platform error indicators */
+.mp-platform-btn.has-error {
+  opacity: 0.7;
+}
+
+.mp-platform-error-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Sync error list in empty state */
+.mp-sync-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.mp-sync-error-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-secondary, #f9fafb);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #4b5563);
+}
+
+.mp-sync-error-item svg {
+  margin-top: 2px;
+  font-size: 16px;
+}
+
+.mp-sync-error-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mp-sync-error-detail strong {
+  color: var(--text-primary, #111827);
+  font-size: 13px;
+}
+
+.mp-sync-error-detail span {
+  font-size: 12px;
+  color: var(--text-tertiary, #6b7280);
+  line-height: 1.4;
+}
+
 .mp-conversation-item {
   display: flex;
   align-items: flex-start;

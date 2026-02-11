@@ -18,6 +18,7 @@ export const MessagesPanel = ({ inboxData }) => {
     messagesLoading,
     sending,
     error,
+    syncErrors = {},
     platformStats,
     selectedPlatform,
     selectConversation,
@@ -26,6 +27,8 @@ export const MessagesPanel = ({ inboxData }) => {
     refresh,
     clearError
   } = inboxData;
+
+  const hasSyncErrors = Object.keys(syncErrors).length > 0;
 
   const [messageFilter, setMessageFilter] = useState("all");
   const [replyText, setReplyText] = useState("");
@@ -112,18 +115,26 @@ export const MessagesPanel = ({ inboxData }) => {
               </button>
               {Object.entries(PLATFORM_ICONS).map(([key, { icon: Icon, color, name }]) => {
                 const stats = platformStats[key] || { total: 0, unread: 0 };
+                const hasError = !!syncErrors[key];
                 return (
                   <button
                     key={key}
-                    className={`mp-platform-btn ${selectedPlatform === key ? "active" : ""}`}
+                    className={`mp-platform-btn ${selectedPlatform === key ? "active" : ""} ${hasError ? "has-error" : ""}`}
                     onClick={() => filterByPlatform(key)}
+                    title={hasError ? syncErrors[key] : ""}
                   >
-                    <Icon className="mp-filter-icon" style={{ color }} />
+                    <Icon className="mp-filter-icon" style={{ color: hasError ? "#999" : color }} />
                     <span className="mp-filter-name">{name}</span>
                     <span className="mp-filter-count">
-                      {stats.total}
-                      {stats.unread > 0 && (
-                        <span className="mp-unread-badge">{stats.unread}</span>
+                      {hasError ? (
+                        <span className="mp-platform-error-dot" title="Connection issue">!</span>
+                      ) : (
+                        <>
+                          {stats.total}
+                          {stats.unread > 0 && (
+                            <span className="mp-unread-badge">{stats.unread}</span>
+                          )}
+                        </>
                       )}
                     </span>
                   </button>
@@ -361,6 +372,42 @@ export const MessagesPanel = ({ inboxData }) => {
                   <p className="empty-subtext">
                     Choose a conversation from the list to start responding
                   </p>
+                </>
+              ) : hasSyncErrors ? (
+                <>
+                  <p className="empty-text">Platform connection issues</p>
+                  <div className="mp-sync-errors">
+                    {Object.entries(syncErrors).map(([platform, errorMsg]) => {
+                      const platformInfo = PLATFORM_ICONS[platform];
+                      if (!platformInfo) return null;
+                      const Icon = platformInfo.icon;
+                      const isNotLinked = errorMsg.toLowerCase().includes("not linked");
+                      const needsRelink = errorMsg.toLowerCase().includes("relinked");
+                      return (
+                        <div key={platform} className="mp-sync-error-item">
+                          <Icon style={{ color: platformInfo.color, flexShrink: 0 }} />
+                          <div className="mp-sync-error-detail">
+                            <strong>{platformInfo.name}</strong>
+                            <span>
+                              {isNotLinked
+                                ? "Not connected. Link this account in Social Accounts settings."
+                                : needsRelink
+                                ? "Needs to be unlinked and relinked to enable messaging."
+                                : errorMsg}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    className="mp-sync-btn"
+                    onClick={() => refresh()}
+                    disabled={loading}
+                    style={{ marginTop: "16px" }}
+                  >
+                    {loading ? "Checking..." : "Retry Sync"}
+                  </button>
                 </>
               ) : (
                 <>
