@@ -134,7 +134,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .social-accounts-container,
 .dark .social-accounts-container {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .social-accounts-title,
@@ -144,13 +144,13 @@
 
 [data-theme="dark"] .social-accounts-subtitle,
 .dark .social-accounts-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .platform-card,
 .dark .platform-card {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .platform-card:hover,
@@ -166,7 +166,7 @@
 
 [data-theme="dark"] .platform-status,
 .dark .platform-status {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .loading-overlay,
@@ -176,7 +176,7 @@
 
 [data-theme="dark"] .loading-spinner,
 .dark .loading-spinner {
-  background-color: #1f2937;
+  background-color: #0d0b1a;
   color: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }

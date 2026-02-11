@@ -70,11 +70,11 @@
 
 .confirm-dialog-btn.cancel {
   background: #f3f4f6;
-  color: #374151;
+  color: #1e1a2e;
 }
 
 .confirm-dialog-btn.cancel:hover {
-  background: #e5e7eb;
+  background: #ede9fc;
 }
 
 .confirm-dialog-btn.danger {

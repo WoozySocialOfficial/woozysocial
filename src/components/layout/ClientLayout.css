@@ -38,7 +38,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .client-layout,
 .dark .client-layout {
-  background-color: #0f172a;
+  background-color: #08070f;
 }
 
 [data-theme="dark"] .client-main-content,

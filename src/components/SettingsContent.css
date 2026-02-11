@@ -18,7 +18,7 @@
 
 .settings-subtitle {
   font-size: 18px;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, #7b74b0);
   opacity: 0.7;
   margin: 0;
 }
@@ -63,7 +63,7 @@
 
 .section-subtitle {
   font-size: 15px;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary, #7b74b0);
   opacity: 0.6;
   margin: 0;
 }
@@ -482,7 +482,7 @@ input:checked + .toggle-slider:before {
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   background-color: var(--bg-tertiary, #f9fafb);
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;

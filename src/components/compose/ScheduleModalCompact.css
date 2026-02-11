@@ -6,9 +6,9 @@
   font-size: 14px;
   font-weight: 500;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-  color: #111827;
+  color: #0a0918;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   transition: all 0.15s ease;
   cursor: pointer;
@@ -21,7 +21,7 @@
 
 .time-select:focus {
   outline: none;
-  border-color: #111827;
+  border-color: #0a0918;
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.05);
 }
@@ -33,7 +33,7 @@
   gap: 16px;
   padding: 20px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 10px;
 }
 
@@ -42,13 +42,13 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #ede9fc;
 }
 
 .highlight-title {
   font-size: 12px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -57,7 +57,7 @@
 .highlight-source {
   font-size: 10px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
@@ -77,14 +77,14 @@
 .engagement-time {
   font-size: 24px;
   font-weight: 700;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
 .engagement-label {
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -107,7 +107,7 @@
 .score-text {
   font-size: 10px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-align: center;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
@@ -119,21 +119,21 @@
   gap: 8px;
   padding: 16px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
 }
 
 .selected-time-display {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
 .no-engagement-text {
   font-size: 11px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #a39dd0;
   text-align: center;
 }
 
@@ -142,13 +142,13 @@
   flex-direction: column;
   gap: 6px;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #ede9fc;
 }
 
 .quick-picks-label {
   font-size: 10px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
@@ -158,11 +158,11 @@
 .quick-pick-btn {
   padding: 8px 12px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #374151;
+  color: #1e1a2e;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -170,7 +170,7 @@
 }
 
 .quick-pick-btn:hover {
-  border-color: #111827;
+  border-color: #0a0918;
   background: #f9fafb;
   transform: translateX(2px);
 }
@@ -178,21 +178,21 @@
 /* Dark Mode */
 [data-theme="dark"] .time-select,
 .dark .time-select {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
   color: #f9fafb;
 }
 
 [data-theme="dark"] .time-select:hover,
 .dark .time-select:hover {
-  background: #111827;
-  border-color: #4b5563;
+  background: #0a0918;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .best-time-highlight,
 .dark .best-time-highlight {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .engagement-display,
@@ -208,8 +208,8 @@
 
 [data-theme="dark"] .no-engagement,
 .dark .no-engagement {
-  background: #111827;
-  border-color: #374151;
+  background: #0a0918;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .selected-time-display,
@@ -219,15 +219,15 @@
 
 [data-theme="dark"] .quick-pick-btn,
 .dark .quick-pick-btn {
-  background: #111827;
-  border-color: #374151;
+  background: #0a0918;
+  border-color: #1e1a2e;
   color: #d1d5db;
 }
 
 [data-theme="dark"] .quick-pick-btn:hover,
 .dark .quick-pick-btn:hover {
   border-color: #f9fafb;
-  background: #1f2937;
+  background: #0d0b1a;
 }
 
 /* Hourly Engagement Bar Graph */
@@ -235,7 +235,7 @@
   margin-top: 12px;
   padding: 16px 12px 8px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 10px;
   animation: slideDown 0.2s ease-out;
   overflow-x: auto;
@@ -252,7 +252,7 @@
 .hourly-graph-title {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   flex: 1;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
@@ -260,7 +260,7 @@
 .hourly-graph-close {
   background: none;
   border: none;
-  color: #6b7280;
+  color: #7b74b0;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -270,7 +270,7 @@
 }
 
 .hourly-graph-close:hover {
-  color: #111827;
+  color: #0a0918;
 }
 
 /* The chart area */
@@ -322,14 +322,14 @@
 .hourly-bar-label {
   font-size: 9px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #a39dd0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   white-space: nowrap;
   transition: color 0.15s;
 }
 
 .hourly-bar-col:hover .hourly-bar-label {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 .hourly-bar-col.active .hourly-bar-label {
@@ -412,7 +412,7 @@
 .best-time-popup-time {
   font-size: 22px;
   font-weight: 700;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   letter-spacing: -0.02em;
 }
@@ -433,7 +433,7 @@
 .best-time-popup-source {
   font-size: 10px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 .best-time-popup-apply {
@@ -461,11 +461,11 @@
   margin-top: 12px;
   padding: 10px 14px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
@@ -483,7 +483,7 @@
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   background: transparent;
   border: none;
   border-radius: 4px;
@@ -542,7 +542,7 @@
 
 [data-theme="dark"] .hourly-bar-label,
 .dark .hourly-bar-label {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .hourly-bar-col.active .hourly-bar-label,
@@ -579,8 +579,8 @@
 
 [data-theme="dark"] .schedule-summary,
 .dark .schedule-summary {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
   color: #f9fafb;
 }
 
@@ -591,7 +591,7 @@
 
 [data-theme="dark"] .toggle-btn,
 .dark .toggle-btn {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .toggle-btn.active,

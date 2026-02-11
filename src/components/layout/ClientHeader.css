@@ -134,8 +134,8 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .client-header,
 .dark .client-header {
-  background-color: #111827;
-  border-bottom-color: #374151;
+  background-color: #0a0918;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .client-profile-avatar,
@@ -151,8 +151,8 @@
 
 [data-theme="dark"] .client-profile-dropdown,
 .dark .client-profile-dropdown {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -163,7 +163,7 @@
 
 [data-theme="dark"] .client-dropdown-email,
 .dark .client-dropdown-email {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .client-dropdown-role,
@@ -173,12 +173,12 @@
 
 [data-theme="dark"] .client-dropdown-divider,
 .dark .client-dropdown-divider {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .client-dropdown-item,
 .dark .client-dropdown-item {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .client-dropdown-item.profile-settings-link,

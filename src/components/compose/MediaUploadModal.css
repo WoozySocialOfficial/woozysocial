@@ -103,7 +103,7 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #6b7280;
+  color: #7b74b0;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -136,20 +136,20 @@
 }
 
 .library-placeholder-icon {
-  color: #9ca3af;
+  color: #a39dd0;
   margin-bottom: 16px;
 }
 
 .library-placeholder-text {
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: #1e1a2e;
   margin: 0 0 4px 0;
 }
 
 .library-placeholder-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
 }
 
@@ -496,12 +496,12 @@
 
 /* Dark Mode */
 [data-theme="dark"] .media-upload-modal-content {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .modal-header {
-  border-bottom-color: #374151;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .modal-title {
@@ -509,20 +509,20 @@
 }
 
 [data-theme="dark"] .modal-close-button {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .modal-close-button:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .media-tabs {
-  border-bottom-color: #374151;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .media-tab {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .media-tab:hover {
@@ -536,12 +536,12 @@
 }
 
 [data-theme="dark"] .drop-zone {
-  border-color: #4b5563;
-  background: #374151;
+  border-color: #352d5e;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .drop-zone:hover {
-  border-color: #6b7280;
+  border-color: #7b74b0;
   background: #3f4a5c;
 }
 
@@ -555,11 +555,11 @@
 }
 
 [data-theme="dark"] .drop-zone-or {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .drop-zone-hint {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .browse-btn {
@@ -572,12 +572,12 @@
 }
 
 [data-theme="dark"] .media-preview-item {
-  background: #374151;
-  border-color: #4b5563;
+  background: #1e1a2e;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .preview-thumbnail {
-  background: #4b5563;
+  background: #352d5e;
 }
 
 [data-theme="dark"] .file-name {
@@ -585,12 +585,12 @@
 }
 
 [data-theme="dark"] .file-size {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .upload-info {
-  background: #374151;
-  border-color: #4b5563;
+  background: #1e1a2e;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .upload-info-item {
@@ -598,17 +598,17 @@
 }
 
 [data-theme="dark"] .modal-footer {
-  border-top-color: #374151;
+  border-top-color: #1e1a2e;
 }
 
 [data-theme="dark"] .btn-cancel {
-  border-color: #4b5563;
-  color: #9ca3af;
+  border-color: #352d5e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .btn-cancel:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: #6b7280;
+  border-color: #7b74b0;
 }
 
 [data-theme="dark"] .btn-confirm {
@@ -621,18 +621,18 @@
 }
 
 [data-theme="dark"] .library-placeholder-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .library-placeholder-sub {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .library-placeholder-icon {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .processing-indicator {
-  background: #374151;
+  background: #1e1a2e;
   color: #a78bfa;
 }

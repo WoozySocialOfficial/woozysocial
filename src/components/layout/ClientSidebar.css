@@ -141,8 +141,8 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .client-sidebar,
 .dark .client-sidebar {
-  background: #111827;
-  border-right-color: #374151;
+  background: #0a0918;
+  border-right-color: #1e1a2e;
 }
 
 [data-theme="dark"] .client-workspace-name,
@@ -152,7 +152,7 @@
 
 [data-theme="dark"] .client-workspace-role,
 .dark .client-workspace-role {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .client-workspace-avatar,
@@ -162,7 +162,7 @@
 
 [data-theme="dark"] .client-menu-item-text,
 .dark .client-menu-item-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .client-menu-item:hover,

@@ -143,8 +143,8 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .sidebar,
 .dark .sidebar {
-  background: #111827;
-  border-right-color: #374151;
+  background: #0a0918;
+  border-right-color: #1e1a2e;
 }
 
 [data-theme="dark"] .sidebar .sidebar-logo-text,
@@ -154,7 +154,7 @@
 
 [data-theme="dark"] .sidebar .menu-item-text,
 .dark .sidebar .menu-item-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .sidebar .menu-item:hover,

@@ -472,7 +472,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .analytics-content,
 .dark .analytics-content {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .analytics-title,
@@ -482,28 +482,28 @@
 
 [data-theme="dark"] .analytics-subtitle,
 .dark .analytics-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Period Selector */
 [data-theme="dark"] .period-selector,
 .dark .period-selector {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .period-btn,
 .dark .period-btn {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .period-btn:hover,
 .dark .period-btn:hover {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .period-btn.active,
 .dark .period-btn.active {
-  background-color: #1f2937;
+  background-color: #0d0b1a;
   color: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -511,13 +511,13 @@
 /* Dark Mode Stats Cards */
 [data-theme="dark"] .stat-card,
 .dark .stat-card {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .stat-label,
 .dark .stat-label {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .stat-value,
@@ -527,14 +527,14 @@
 
 [data-theme="dark"] .stat-value.skeleton,
 .dark .stat-value.skeleton {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background: linear-gradient(90deg, #1e1a2e 25%, #352d5e 50%, #1e1a2e 75%);
 }
 
 /* Dark Mode Chart Cards */
 [data-theme="dark"] .chart-card,
 .dark .chart-card {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .chart-title,
@@ -544,20 +544,20 @@
 
 [data-theme="dark"] .chart-subtitle,
 .dark .chart-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .chart-loading,
 [data-theme="dark"] .no-data,
 .dark .chart-loading,
 .dark .no-data {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 /* Dark Mode Best Times List */
 [data-theme="dark"] .best-time-item,
 .dark .best-time-item {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .best-time-rank,
@@ -568,12 +568,12 @@
 
 [data-theme="dark"] .best-time-day,
 .dark .best-time-day {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .best-time-hour,
 .dark .best-time-hour {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .score-bar,
@@ -583,34 +583,34 @@
 
 [data-theme="dark"] .score-text,
 .dark .score-text {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Platform Stats */
 [data-theme="dark"] .platform-stat-item,
 .dark .platform-stat-item {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .platform-name,
 .dark .platform-name {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .metric-value,
 .dark .metric-value {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .metric-label,
 .dark .metric-label {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 /* Dark Mode Top Posts */
 [data-theme="dark"] .top-post-item,
 .dark .top-post-item {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .top-post-rank,
@@ -620,26 +620,26 @@
 
 [data-theme="dark"] .top-post-text,
 .dark .top-post-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .post-platform-badge,
 .dark .post-platform-badge {
-  background-color: #4b5563;
-  color: #9ca3af;
+  background-color: #352d5e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .top-post-date,
 .dark .top-post-date {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .engagement-value,
 .dark .engagement-value {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .engagement-label,
 .dark .engagement-label {
-  color: #6b7280;
+  color: #7b74b0;
 }

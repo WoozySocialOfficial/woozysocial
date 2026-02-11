@@ -502,7 +502,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .approvals-page,
 .dark .approvals-page {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .approvals-header h1,
@@ -512,14 +512,14 @@
 
 [data-theme="dark"] .approvals-header p,
 .dark .approvals-header p {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .filter-tab,
 .dark .filter-tab {
-  background: #1f2937;
-  border-color: #374151;
-  color: #9ca3af;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .filter-tab:hover,
@@ -539,15 +539,15 @@
 [data-theme="dark"] .empty-state,
 .dark .loading-state,
 .dark .empty-state {
-  background: #1f2937;
-  border-color: #374151;
-  color: #9ca3af;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .post-card,
 .dark .post-card {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .post-card:hover,
@@ -570,22 +570,22 @@
 
 [data-theme="dark"] .platform-icon,
 .dark .platform-icon {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .post-preview,
 .dark .post-preview {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .post-card-footer,
 .dark .post-card-footer {
-  border-top-color: #374151;
+  border-top-color: #1e1a2e;
 }
 
 [data-theme="dark"] .post-date,
 .dark .post-date {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .comment-count,
@@ -596,15 +596,15 @@
 
 [data-theme="dark"] .post-detail,
 .dark .post-detail {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .detail-header,
 .dark .detail-header {
-  background: #1f2937;
-  border-bottom-color: #374151;
+  background: #0d0b1a;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .detail-header h3,
@@ -614,19 +614,19 @@
 
 [data-theme="dark"] .close-detail,
 .dark .close-detail {
-  background: #374151;
-  color: #9ca3af;
+  background: #1e1a2e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .close-detail:hover,
 .dark .close-detail:hover {
-  background: #4b5563;
+  background: #352d5e;
   color: #ffffff;
 }
 
 [data-theme="dark"] .detail-section,
 .dark .detail-section {
-  border-bottom-color: #374151;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .detail-section label,
@@ -636,9 +636,9 @@
 
 [data-theme="dark"] .post-full-content,
 .dark .post-full-content {
-  background: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background: #1e1a2e;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .platform-tag,
@@ -650,13 +650,13 @@
 
 [data-theme="dark"] .detail-section p,
 .dark .detail-section p {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .comments-section,
 .dark .comments-section {
-  background: #374151;
-  border-color: #4b5563;
+  background: #1e1a2e;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .comments-section label,
@@ -666,8 +666,8 @@
 
 [data-theme="dark"] .comment,
 .dark .comment {
-  background: #1f2937;
-  border-color: #4b5563;
+  background: #0d0b1a;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .comment.system-comment,
@@ -684,28 +684,28 @@
 
 [data-theme="dark"] .comment-time,
 .dark .comment-time {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .comment-text,
 .dark .comment-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .loading-comments,
 [data-theme="dark"] .no-comments,
 .dark .loading-comments,
 .dark .no-comments {
-  background: #1f2937;
-  border-color: #4b5563;
-  color: #6b7280;
+  background: #0d0b1a;
+  border-color: #352d5e;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .add-comment textarea,
 .dark .add-comment textarea {
-  background: #1f2937;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background: #0d0b1a;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .add-comment textarea:focus,
@@ -727,12 +727,12 @@
 
 [data-theme="dark"] .approval-actions,
 .dark .approval-actions {
-  border-top-color: #374151;
+  border-top-color: #1e1a2e;
 }
 
 [data-theme="dark"] .btn-reject,
 .dark .btn-reject {
-  background: #1f2937;
+  background: #0d0b1a;
   border-color: #dc2626;
   color: #fca5a5;
 }
@@ -745,7 +745,7 @@
 
 [data-theme="dark"] .btn-changes,
 .dark .btn-changes {
-  background: #1f2937;
+  background: #0d0b1a;
   border-color: #d97706;
   color: #fbbf24;
 }

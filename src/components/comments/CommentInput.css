@@ -1,5 +1,5 @@
 .comment-input-container {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #ede9fc;
   padding-top: 16px;
   margin-top: 16px;
 }
@@ -78,12 +78,12 @@
 .mention-name {
   font-weight: 600;
   font-size: 14px;
-  color: #111827;
+  color: #0a0918;
 }
 
 .mention-email {
   font-size: 12px;
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 .comment-input-footer {
@@ -101,7 +101,7 @@
 
 .char-count {
   font-size: 12px;
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 .priority-selector {
@@ -112,7 +112,7 @@
 }
 
 .priority-selector label {
-  color: #6b7280;
+  color: #7b74b0;
   font-weight: 500;
 }
 
@@ -149,6 +149,6 @@
 .comment-input-hint {
   margin-top: 8px;
   font-size: 11px;
-  color: #9ca3af;
+  color: #a39dd0;
   text-align: center;
 }

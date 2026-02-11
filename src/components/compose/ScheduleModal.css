@@ -2,7 +2,7 @@
 
 .schedule-modal-geist {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   max-width: 720px !important;
@@ -17,14 +17,14 @@
   border-bottom: 1px solid #f3f4f6;
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
 }
 
 .schedule-modal-subtitle {
   font-size: 13px;
   font-weight: 400;
-  color: #6b7280;
+  color: #7b74b0;
   margin-top: 4px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
@@ -68,7 +68,7 @@
 .calendar-month {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   letter-spacing: -0.01em;
 }
@@ -80,9 +80,9 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 6px;
-  color: #6b7280;
+  color: #7b74b0;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -90,7 +90,7 @@
 .calendar-nav-btn:hover {
   background: #f9fafb;
   border-color: #d1d5db;
-  color: #111827;
+  color: #0a0918;
 }
 
 .calendar-weekdays {
@@ -104,7 +104,7 @@
   text-align: center;
   font-size: 11px;
   font-weight: 500;
-  color: #9ca3af;
+  color: #a39dd0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 8px 0;
@@ -124,7 +124,7 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: #1e1a2e;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -136,7 +136,7 @@
 
 .calendar-day:hover:not(.past):not(:disabled) {
   background: #f9fafb;
-  border-color: #e5e7eb;
+  border-color: #ede9fc;
 }
 
 .calendar-day.today {
@@ -198,7 +198,7 @@
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -211,9 +211,9 @@
   font-size: 14px;
   font-weight: 500;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-  color: #111827;
+  color: #0a0918;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   transition: all 0.15s ease;
 }
@@ -225,7 +225,7 @@
 
 .time-input:focus {
   outline: none;
-  border-color: #111827;
+  border-color: #0a0918;
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.05);
 }
@@ -237,7 +237,7 @@
   gap: 16px;
   padding: 20px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 10px;
 }
 
@@ -246,20 +246,20 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #ede9fc;
 }
 
 .best-times-title {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
 .best-times-source {
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
@@ -277,7 +277,7 @@
   gap: 8px;
   padding: 12px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -285,7 +285,7 @@
 }
 
 .best-time-card:hover {
-  border-color: #111827;
+  border-color: #0a0918;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
@@ -315,7 +315,7 @@
 .best-time-rank {
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: #7b74b0;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   min-width: 24px;
 }
@@ -333,21 +333,21 @@
 .best-time-day {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .best-time-time {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
 .best-time-stats {
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
@@ -358,7 +358,7 @@
 .score-bar-bg {
   width: 100%;
   height: 4px;
-  background: #e5e7eb;
+  background: #ede9fc;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -379,7 +379,7 @@
   margin-top: 24px;
   padding: 16px;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -389,7 +389,7 @@
 .selected-datetime-label {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
@@ -398,7 +398,7 @@
 .selected-datetime-value {
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
@@ -413,8 +413,8 @@
 
 .btn-ghost {
   background: transparent !important;
-  color: #6b7280 !important;
-  border: 1px solid #e5e7eb !important;
+  color: #7b74b0 !important;
+  border: 1px solid #ede9fc !important;
   border-radius: 8px !important;
   padding: 10px 20px !important;
   font-size: 14px !important;
@@ -426,7 +426,7 @@
 .btn-ghost:hover {
   background: #f9fafb !important;
   border-color: #d1d5db !important;
-  color: #111827 !important;
+  color: #0a0918 !important;
 }
 
 .btn-primary {
@@ -455,19 +455,19 @@
 /* Dark Mode Support */
 [data-theme="dark"] .schedule-modal-geist,
 .dark .schedule-modal-geist {
-  background: #111827;
-  border-color: #374151;
+  background: #0a0918;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .schedule-modal-header,
 .dark .schedule-modal-header {
   color: #f9fafb;
-  border-color: #374151;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .schedule-modal-subtitle,
 .dark .schedule-modal-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .calendar-day,
@@ -477,27 +477,27 @@
 
 [data-theme="dark"] .calendar-day:hover:not(.past):not(:disabled),
 .dark .calendar-day:hover:not(.past):not(:disabled) {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .calendar-day.selected,
 .dark .calendar-day.selected {
   background: #f9fafb;
-  color: #111827;
+  color: #0a0918;
   border-color: #f9fafb;
 }
 
 [data-theme="dark"] .best-times-section,
 .dark .best-times-section {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .best-time-card,
 .dark .best-time-card {
-  background: #111827;
-  border-color: #374151;
+  background: #0a0918;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .best-time-day,

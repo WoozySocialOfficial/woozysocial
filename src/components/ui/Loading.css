@@ -46,13 +46,13 @@
 
 /* Spinner Variants */
 .spinner-primary {
-  border-color: #e5e7eb;
+  border-color: #ede9fc;
   border-top-color: #afabf9;
 }
 
 .spinner-secondary {
-  border-color: #e5e7eb;
-  border-top-color: #6b7280;
+  border-color: #ede9fc;
+  border-top-color: #7b74b0;
 }
 
 .spinner-white {
@@ -80,7 +80,7 @@
 }
 
 .loading-message {
-  color: #6b7280;
+  color: #7b74b0;
   font-size: 14px;
   margin: 0;
 }
@@ -118,7 +118,7 @@
 .loading-overlay-message {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: #0d0b1a;
   margin: 0;
 }
 
@@ -195,7 +195,7 @@
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #ede9fc;
   margin-bottom: 8px;
 }
 
@@ -251,7 +251,7 @@
   padding: 20px;
   display: flex;
   gap: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
 }
 
 .post-skeleton-avatar {
@@ -299,7 +299,7 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -310,15 +310,15 @@
    ================================================ */
 @media (prefers-color-scheme: dark) {
   .skeleton {
-    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background: linear-gradient(90deg, #1e1a2e 25%, #352d5e 50%, #1e1a2e 75%);
   }
 
   .loading-message {
-    color: #9ca3af;
+    color: #a39dd0;
   }
 
   .loading-overlay-content {
-    background-color: #1f2937;
+    background-color: #0d0b1a;
   }
 
   .loading-overlay-message {
@@ -326,24 +326,24 @@
   }
 
   .skeleton-row {
-    border-bottom-color: #374151;
+    border-bottom-color: #1e1a2e;
   }
 
   .skeleton-header {
-    border-bottom-color: #4b5563;
+    border-bottom-color: #352d5e;
   }
 
   .skeleton-card {
-    background: #1f2937;
+    background: #0d0b1a;
   }
 
   .post-skeleton-item {
-    background: #1f2937;
-    border-color: #374151;
+    background: #0d0b1a;
+    border-color: #1e1a2e;
   }
 
   .stat-skeleton-card {
-    background: #1f2937;
-    border-color: #374151;
+    background: #0d0b1a;
+    border-color: #1e1a2e;
   }
 }

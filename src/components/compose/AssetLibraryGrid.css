@@ -14,7 +14,7 @@
 .asset-search-input {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
@@ -34,12 +34,12 @@
 
 .asset-filter-btn {
   padding: 8px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   background: white;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -127,7 +127,7 @@
 .asset-grid-name {
   font-size: 11px;
   font-weight: 600;
-  color: #374151;
+  color: #1e1a2e;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -135,7 +135,7 @@
 
 .asset-grid-size {
   font-size: 10px;
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Actions bar */
@@ -176,7 +176,7 @@
 /* Skeleton */
 .asset-grid-skeleton {
   aspect-ratio: 1;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, #f3f4f6 25%, #ede9fc 50%, #f3f4f6 75%);
   background-size: 200% 100%;
   animation: assetShimmer 1.5s infinite;
   border-radius: 10px;
@@ -185,7 +185,7 @@
 .asset-search-skeleton {
   height: 40px;
   width: 100%;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, #f3f4f6 25%, #ede9fc 50%, #f3f4f6 75%);
   background-size: 200% 100%;
   animation: assetShimmer 1.5s infinite;
   border-radius: 8px;
@@ -207,20 +207,20 @@
 }
 
 .asset-grid-empty-icon {
-  color: #9ca3af;
+  color: #a39dd0;
   margin-bottom: 16px;
 }
 
 .asset-grid-empty-text {
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: #1e1a2e;
   margin: 0 0 4px 0;
 }
 
 .asset-grid-empty-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
 }
 
@@ -244,9 +244,9 @@
 
 /* Dark mode */
 [data-theme="dark"] .asset-search-input {
-  background: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background: #1e1a2e;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .asset-search-input:focus {
@@ -255,9 +255,9 @@
 }
 
 [data-theme="dark"] .asset-filter-btn {
-  background: #374151;
-  border-color: #4b5563;
-  color: #9ca3af;
+  background: #1e1a2e;
+  border-color: #352d5e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .asset-filter-btn:hover {
@@ -272,19 +272,19 @@
 }
 
 [data-theme="dark"] .asset-grid-thumb {
-  background: #374151;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .asset-grid-info {
-  background: #1f2937;
+  background: #0d0b1a;
 }
 
 [data-theme="dark"] .asset-grid-name {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .asset-grid-size {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .asset-grid-actions {
@@ -293,16 +293,16 @@
 }
 
 [data-theme="dark"] .asset-grid-empty-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .asset-grid-empty-sub {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .asset-grid-skeleton,
 [data-theme="dark"] .asset-search-skeleton {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background: linear-gradient(90deg, #1e1a2e 25%, #352d5e 50%, #1e1a2e 75%);
   background-size: 200% 100%;
   animation: assetShimmer 1.5s infinite;
 }

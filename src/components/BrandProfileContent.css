@@ -110,7 +110,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .brand-profile-container,
 .dark .brand-profile-container {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .page-title,
@@ -120,13 +120,13 @@
 
 [data-theme="dark"] .page-subtitle,
 .dark .page-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .brand-profile-content,
 .dark .brand-profile-content {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -137,12 +137,12 @@
 
 [data-theme="dark"] .section-subtitle,
 .dark .section-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .form-group label,
 .dark .form-group label {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .form-group input,
@@ -151,9 +151,9 @@
 .dark .form-group input,
 .dark .form-group textarea,
 .dark .form-group select {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background-color: #1e1a2e;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .form-group input:focus,
@@ -179,6 +179,6 @@
 
 [data-theme="dark"] .save-button:disabled,
 .dark .save-button:disabled {
-  background-color: #4b5563;
-  color: #9ca3af;
+  background-color: #352d5e;
+  color: #a39dd0;
 }

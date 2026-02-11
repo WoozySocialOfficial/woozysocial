@@ -36,7 +36,7 @@
 .delete-modal-header {
   padding: 24px 24px 16px;
   text-align: center;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--border-color, #ede9fc);
 }
 
 .delete-icon-wrapper {
@@ -49,7 +49,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
 }
 
 .delete-modal-content {
@@ -85,17 +85,17 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary, #7b74b0);
   margin-bottom: 8px;
 }
 
 .preview-text {
   background: var(--bg-tertiary, #f9fafb);
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--border-color, #ede9fc);
   border-radius: 6px;
   padding: 12px;
   font-size: 14px;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   line-height: 1.5;
   margin: 0;
   font-style: italic;
@@ -107,7 +107,7 @@
 
 .delete-details p {
   font-size: 14px;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   margin-bottom: 8px;
 }
 
@@ -118,13 +118,13 @@
 
 .delete-details li {
   font-size: 14px;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary, #7b74b0);
   margin-bottom: 4px;
 }
 
 .delete-option {
   background: var(--bg-tertiary, #f9fafb);
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--border-color, #ede9fc);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 20px;
@@ -153,12 +153,12 @@
 .checkbox-label span {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
 }
 
 .option-description {
   font-size: 13px;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary, #7b74b0);
   margin: 0;
   padding-left: 28px;
 }
@@ -171,7 +171,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   margin-bottom: 8px;
 }
 
@@ -184,7 +184,7 @@
   width: 100%;
   padding: 12px;
   background: var(--input-bg, #ffffff);
-  border: 2px solid var(--input-border, #e5e7eb);
+  border: 2px solid var(--input-border, #ede9fc);
   border-radius: 6px;
   font-size: 16px;
   font-family: monospace;
@@ -217,7 +217,7 @@
   display: flex;
   gap: 12px;
   padding: 16px 24px 24px;
-  border-top: 1px solid var(--border-color, #e5e7eb);
+  border-top: 1px solid var(--border-color, #ede9fc);
 }
 
 .delete-modal-actions button {
@@ -237,7 +237,7 @@
 
 .btn-cancel {
   background: var(--bg-tertiary, white);
-  color: var(--text-primary, #374151);
+  color: var(--text-primary, #1e1a2e);
   border: 1px solid var(--border-color, #d1d5db) !important;
 }
 

@@ -57,7 +57,7 @@
   text-align: center;
   padding: 16px 24px 0;
   font-size: 13px;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted, #a39dd0);
   font-weight: 500;
 }
 
@@ -86,7 +86,7 @@
 
 .onboarding-description {
   font-size: 16px;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   line-height: 1.6;
   margin: 0;
 }
@@ -103,14 +103,14 @@
   height: 10px;
   border-radius: 50%;
   border: none;
-  background: var(--bg-tertiary, #e5e7eb);
+  background: var(--bg-tertiary, #ede9fc);
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
 }
 
 .onboarding-dot:hover {
-  background: var(--text-muted, #9ca3af);
+  background: var(--text-muted, #a39dd0);
 }
 
 .onboarding-dot.active {
@@ -154,7 +154,7 @@
 
 .onboarding-btn.secondary {
   background: transparent;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   border-color: var(--border-color, rgba(0, 0, 0, 0.1));
 }
 
@@ -170,14 +170,14 @@
   padding: 0 0 20px;
   background: none;
   border: none;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted, #a39dd0);
   font-size: 14px;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .onboarding-skip-link:hover {
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   text-decoration: underline;
 }
 

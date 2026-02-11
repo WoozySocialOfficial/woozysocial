@@ -491,7 +491,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .dashboard-content,
 .dark .dashboard-content {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .dashboard-title,
@@ -501,19 +501,19 @@
 
 [data-theme="dark"] .dashboard-subtitle,
 .dark .dashboard-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Stats Cards */
 [data-theme="dark"] .stat-card,
 .dark .stat-card {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .stat-label,
 .dark .stat-label {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .stat-value,
@@ -523,7 +523,7 @@
 
 [data-theme="dark"] .stat-value.skeleton,
 .dark .stat-value.skeleton {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background: linear-gradient(90deg, #1e1a2e 25%, #352d5e 50%, #1e1a2e 75%);
 }
 
 /* Dark Mode Section Headers */
@@ -534,21 +534,21 @@
 
 [data-theme="dark"] .section-subtitle,
 .dark .section-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Quick Actions */
 [data-theme="dark"] .quick-actions-section,
 .dark .quick-actions-section {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .action-btn,
 .dark .action-btn {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background-color: #1e1a2e;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .action-btn.primary,
@@ -566,47 +566,47 @@
 /* Dark Mode Recent Posts */
 [data-theme="dark"] .recent-posts-section,
 .dark .recent-posts-section {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .post-item,
 .dark .post-item {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .post-text,
 .dark .post-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .post-status,
 [data-theme="dark"] .post-platforms,
 .dark .post-status,
 .dark .post-platforms {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .post-date,
 .dark .post-date {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 /* Dark Mode Social Accounts */
 [data-theme="dark"] .social-accounts-section,
 .dark .social-accounts-section {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .social-account-item,
 .dark .social-account-item {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .social-account-item:hover,
 .dark .social-account-item:hover {
-  background-color: #4b5563;
+  background-color: #352d5e;
 }
 
 [data-theme="dark"] .social-account-item.clickable:hover,
@@ -623,7 +623,7 @@
 
 [data-theme="dark"] .account-status,
 .dark .account-status {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .status-badge.inactive,

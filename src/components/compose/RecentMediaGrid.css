@@ -112,7 +112,7 @@
 .recent-media-date {
   padding: 6px 8px;
   font-size: 11px;
-  color: #6b7280;
+  color: #7b74b0;
   text-align: center;
   background: #fafafa;
 }
@@ -155,7 +155,7 @@
 /* Skeleton loading */
 .recent-media-skeleton {
   aspect-ratio: 1;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, #f3f4f6 25%, #ede9fc 50%, #f3f4f6 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 10px;
@@ -177,20 +177,20 @@
 }
 
 .recent-media-empty-icon {
-  color: #9ca3af;
+  color: #a39dd0;
   margin-bottom: 16px;
 }
 
 .recent-media-empty-text {
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: #1e1a2e;
   margin: 0 0 4px 0;
 }
 
 .recent-media-empty-sub {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
 }
 
@@ -210,12 +210,12 @@
 
 /* Dark mode */
 [data-theme="dark"] .recent-media-thumb {
-  background: #374151;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .recent-media-date {
-  background: #1f2937;
-  color: #9ca3af;
+  background: #0d0b1a;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .recent-media-actions {
@@ -224,15 +224,15 @@
 }
 
 [data-theme="dark"] .recent-media-empty-text {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .recent-media-empty-sub {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .recent-media-skeleton {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background: linear-gradient(90deg, #1e1a2e 25%, #352d5e 50%, #1e1a2e 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

@@ -46,7 +46,7 @@
 }
 
 .tag-input-icon {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 .tag-editor-input {
@@ -54,13 +54,13 @@
   border: none;
   outline: none;
   font-size: 13px;
-  color: #374151;
+  color: #1e1a2e;
   padding: 4px 0;
   background: transparent;
 }
 
 .tag-editor-input::placeholder {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 .tag-suggestions {
@@ -69,7 +69,7 @@
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 10;
@@ -86,7 +86,7 @@
   background: none;
   cursor: pointer;
   font-size: 13px;
-  color: #374151;
+  color: #1e1a2e;
   transition: background 0.15s;
 }
 
@@ -106,16 +106,16 @@
 }
 
 [data-theme="dark"] .tag-editor-input {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .tag-suggestions {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .tag-suggestion-item {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .tag-suggestion-item:hover {

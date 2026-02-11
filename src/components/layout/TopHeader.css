@@ -154,7 +154,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary, #1e1a2e);
   border-radius: 8px;
   transition: all 0.2s;
 }
@@ -351,8 +351,8 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .top-header,
 .dark .top-header {
-  background-color: #111827;
-  border-bottom-color: #374151;
+  background-color: #0a0918;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .top-header .profile-avatar,
@@ -368,8 +368,8 @@
 
 [data-theme="dark"] .profile-dropdown,
 .dark .profile-dropdown {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -380,17 +380,17 @@
 
 [data-theme="dark"] .profile-dropdown-email,
 .dark .profile-dropdown-email {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .profile-dropdown-divider,
 .dark .profile-dropdown-divider {
-  background-color: #374151;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .profile-dropdown-item,
 .dark .profile-dropdown-item {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .profile-dropdown-item.notifications-link,
@@ -435,23 +435,23 @@
 
 [data-theme="dark"] .theme-toggle-btn,
 .dark .theme-toggle-btn {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .theme-toggle-btn:hover,
 .dark .theme-toggle-btn:hover {
-  background-color: #374151;
+  background-color: #1e1a2e;
   color: #a78bfa;
 }
 
 [data-theme="dark"] .mobile-nav,
 .dark .mobile-nav {
-  background: #111827;
+  background: #0a0918;
 }
 
 [data-theme="dark"] .mobile-nav-item,
 .dark .mobile-nav-item {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .mobile-nav-item:hover,

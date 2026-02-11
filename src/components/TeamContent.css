@@ -17,7 +17,7 @@
 
 .team-subtitle {
   font-size: 15px;
-  color: #6b7280;
+  color: #7b74b0;
   margin: 0;
 }
 
@@ -26,7 +26,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #ede9fc;
 }
 
 .team-tab {
@@ -36,7 +36,7 @@
   cursor: pointer;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: #a39dd0;
   font-family: inherit;
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
@@ -55,7 +55,7 @@
 /* Section */
 .team-section {
   background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 12px;
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -83,7 +83,7 @@
 
 .section-subtitle {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
 }
 
@@ -120,7 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: #e5e7eb;
+  background: #ede9fc;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -189,7 +189,7 @@
 
 .member-email {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -272,7 +272,7 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: #6b7280;
+  color: #7b74b0;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
@@ -364,13 +364,13 @@
 .info-text {
   font-size: 15px;
   font-weight: 600;
-  color: #374151;
+  color: #1e1a2e;
   margin: 0 0 6px 0;
 }
 
 .info-subtext {
   font-size: 13px;
-  color: #9ca3af;
+  color: #a39dd0;
   margin: 0;
 }
 
@@ -384,7 +384,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 .invite-date {
@@ -569,17 +569,17 @@
 
 [data-theme="dark"] .team-subtitle,
 .dark .team-subtitle {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .team-tab-bar,
 .dark .team-tab-bar {
-  border-bottom-color: #374151;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .team-tab,
 .dark .team-tab {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .team-tab:hover,
@@ -595,8 +595,8 @@
 
 [data-theme="dark"] .team-section,
 .dark .team-section {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
@@ -607,7 +607,7 @@
 
 [data-theme="dark"] .section-subtitle,
 .dark .section-subtitle {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .add-member-button,
@@ -624,17 +624,17 @@
 
 [data-theme="dark"] .members-list,
 .dark .members-list {
-  background: #374151;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .member-card,
 .dark .member-card {
-  background-color: #1f2937;
+  background-color: #0d0b1a;
 }
 
 [data-theme="dark"] .member-card:hover,
 .dark .member-card:hover {
-  background-color: #2d2250;
+  background-color: #1e1a2e;
 }
 
 [data-theme="dark"] .member-card.expired,
@@ -664,7 +664,7 @@
 
 [data-theme="dark"] .member-email,
 .dark .member-email {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .owner-badge,
@@ -695,7 +695,7 @@
 .dark .role-dropdown {
   background-color: rgba(124, 58, 237, 0.2);
   color: #a78bfa;
-  border-color: #4b5563;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .role-dropdown:hover,
@@ -710,12 +710,12 @@
 
 [data-theme="dark"] .toggle-label,
 .dark .toggle-label {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .toggle-switch,
 .dark .toggle-switch {
-  background-color: #4b5563;
+  background-color: #352d5e;
 }
 
 [data-theme="dark"] .toggle-label input[type="checkbox"]:checked + .toggle-switch,
@@ -768,8 +768,8 @@
 
 [data-theme="dark"] .team-info-box,
 .dark .team-info-box {
-  background-color: #1f2937;
-  border-color: #374151;
+  background-color: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .info-text,
@@ -779,12 +779,12 @@
 
 [data-theme="dark"] .info-subtext,
 .dark .info-subtext {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .invite-meta,
 .dark .invite-meta {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .invite-expiry.expired,

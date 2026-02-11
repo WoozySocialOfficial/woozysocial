@@ -74,9 +74,9 @@ select:-webkit-autofill:focus {
 .dark select:-webkit-autofill,
 .dark select:-webkit-autofill:hover,
 .dark select:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #27272a inset !important;
+  -webkit-box-shadow: 0 0 0 30px #16132a inset !important;
   -webkit-text-fill-color: #fafafa !important;
-  background-color: #27272a !important;
+  background-color: #16132a !important;
 }
 
 #root {

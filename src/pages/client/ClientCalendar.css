@@ -16,7 +16,7 @@
 
 .calendar-header p {
   font-size: 16px;
-  color: #6b7280;
+  color: #7b74b0;
   margin: 0;
 }
 
@@ -27,7 +27,7 @@
 /* Calendar Main */
 .calendar-main {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   border-radius: 12px;
   padding: 24px;
 }
@@ -42,14 +42,14 @@
 .calendar-nav h2 {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   margin: 0;
 }
 
 .nav-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
   background: #ffffff;
   border-radius: 8px;
   font-size: 18px;
@@ -73,7 +73,7 @@
   padding: 12px 0;
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: #7b74b0;
   text-transform: uppercase;
 }
 
@@ -121,7 +121,7 @@
 .day-number {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #1e1a2e;
   margin-bottom: 4px;
 }
 
@@ -140,7 +140,7 @@
 
 .more-posts {
   font-size: 10px;
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 /* Legend */
@@ -150,7 +150,7 @@
   gap: 24px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #ede9fc;
 }
 
 .legend-item {
@@ -158,7 +158,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 .legend-dot {
@@ -222,13 +222,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #ede9fc;
 }
 
 .modal-header h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: #0a0918;
   margin: 0;
 }
 
@@ -237,7 +237,7 @@
   border: none;
   cursor: pointer;
   padding: 4px;
-  color: #6b7280;
+  color: #7b74b0;
   transition: color 0.2s;
   display: flex;
   align-items: center;
@@ -245,7 +245,7 @@
 }
 
 .modal-close:hover {
-  color: #111827;
+  color: #0a0918;
 }
 
 .modal-content {
@@ -256,7 +256,7 @@
 .no-posts {
   text-align: center;
   padding: 40px 20px;
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 .modal-posts {
@@ -298,7 +298,7 @@
 
 .post-caption {
   font-size: 14px;
-  color: #374151;
+  color: #1e1a2e;
   line-height: 1.5;
   margin-bottom: 10px;
   white-space: pre-wrap;
@@ -312,12 +312,12 @@
   width: 100%;
   border-radius: 8px;
   margin-top: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ede9fc;
 }
 
 .post-platforms {
   font-size: 12px;
-  color: #9ca3af;
+  color: #a39dd0;
   text-transform: capitalize;
 }
 
@@ -358,7 +358,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .client-calendar,
 .dark .client-calendar {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .calendar-header h1,
@@ -368,14 +368,14 @@
 
 [data-theme="dark"] .calendar-header p,
 .dark .calendar-header p {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Calendar Main */
 [data-theme="dark"] .calendar-main,
 .dark .calendar-main {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .calendar-nav h2,
@@ -385,25 +385,25 @@
 
 [data-theme="dark"] .nav-btn,
 .dark .nav-btn {
-  background: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
+  background: #1e1a2e;
+  border-color: #352d5e;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .nav-btn:hover,
 .dark .nav-btn:hover {
-  background: #4b5563;
+  background: #352d5e;
 }
 
 /* Dark Mode Calendar Grid */
 [data-theme="dark"] .calendar-day-header,
 .dark .calendar-day-header {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .calendar-day:hover:not(.empty),
 .dark .calendar-day:hover:not(.empty) {
-  background: #374151;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .calendar-day.today,
@@ -435,23 +435,23 @@
 
 [data-theme="dark"] .day-number,
 .dark .day-number {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .more-posts,
 .dark .more-posts {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Legend */
 [data-theme="dark"] .calendar-legend,
 .dark .calendar-legend {
-  border-top-color: #374151;
+  border-top-color: #1e1a2e;
 }
 
 [data-theme="dark"] .legend-item,
 .dark .legend-item {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Modal */
@@ -462,13 +462,13 @@
 
 [data-theme="dark"] .posts-modal,
 .dark .posts-modal {
-  background: #1f2937;
+  background: #0d0b1a;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .modal-header,
 .dark .modal-header {
-  border-bottom-color: #374151;
+  border-bottom-color: #1e1a2e;
 }
 
 [data-theme="dark"] .modal-header h3,
@@ -478,7 +478,7 @@
 
 [data-theme="dark"] .modal-close,
 .dark .modal-close {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .modal-close:hover,
@@ -488,17 +488,17 @@
 
 [data-theme="dark"] .no-posts,
 .dark .no-posts {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .modal-post,
 .dark .modal-post {
-  background: #374151;
+  background: #1e1a2e;
 }
 
 [data-theme="dark"] .modal-post:hover,
 .dark .modal-post:hover {
-  background: #4b5563;
+  background: #352d5e;
 }
 
 [data-theme="dark"] .post-time,
@@ -508,15 +508,15 @@
 
 [data-theme="dark"] .post-caption,
 .dark .post-caption {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .post-media img,
 .dark .post-media img {
-  border-color: #4b5563;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .post-platforms,
 .dark .post-platforms {
-  color: #9ca3af;
+  color: #a39dd0;
 }

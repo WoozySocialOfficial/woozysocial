@@ -4,7 +4,7 @@
 
 .post-settings {
   background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--border-color, #ede9fc);
   border-radius: 12px;
   margin: 16px 0;
   overflow: hidden;
@@ -23,7 +23,7 @@
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
   transition: background 0.2s;
 }
 
@@ -50,7 +50,7 @@
 /* Content Area */
 .post-settings-content {
   padding: 20px;
-  border-top: 1px solid var(--border-color, #e5e7eb);
+  border-top: 1px solid var(--border-color, #ede9fc);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -89,7 +89,7 @@
   gap: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
   cursor: pointer;
   user-select: none;
   transition: color 0.2s;
@@ -134,7 +134,7 @@
 /* Setting Description */
 .setting-description {
   font-size: 12px;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary, #7b74b0);
   margin: 0;
   padding-left: 30px;
   line-height: 1.5;
@@ -147,7 +147,7 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
   margin-bottom: 8px;
 }
 
@@ -158,7 +158,7 @@
   border: 1px solid var(--border-color, #d1d5db);
   border-radius: 6px;
   font-size: 14px;
-  color: var(--text-primary, #1f2937);
+  color: var(--text-primary, #0d0b1a);
   background: var(--input-bg, #ffffff);
   cursor: pointer;
   transition: all 0.2s;
@@ -179,7 +179,7 @@
 .setting-empty {
   text-align: center;
   padding: 20px;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--text-tertiary, #7b74b0);
   font-size: 14px;
 }
 
@@ -190,8 +190,8 @@
 /* Dark Mode */
 [data-theme="dark"] .post-settings,
 .dark .post-settings {
-  background: var(--card-bg, #1f2937);
-  border-color: var(--border-color, #374151);
+  background: var(--card-bg, #0d0b1a);
+  border-color: var(--border-color, #1e1a2e);
 }
 
 [data-theme="dark"] .post-settings-toggle,
@@ -201,17 +201,17 @@
 
 [data-theme="dark"] .post-settings-toggle:hover,
 .dark .post-settings-toggle:hover {
-  background: var(--bg-hover, #374151);
+  background: var(--bg-hover, #1e1a2e);
 }
 
 [data-theme="dark"] .post-settings-content,
 .dark .post-settings-content {
-  border-top-color: var(--border-color, #374151);
+  border-top-color: var(--border-color, #1e1a2e);
 }
 
 [data-theme="dark"] .setting-item-group,
 .dark .setting-item-group {
-  background: var(--bg-secondary, #111827);
+  background: var(--bg-secondary, #0a0918);
 }
 
 [data-theme="dark"] .setting-label,
@@ -226,8 +226,8 @@
 
 [data-theme="dark"] .setting-select,
 .dark .setting-select {
-  background: var(--input-bg, #111827);
-  border-color: var(--border-color, #374151);
+  background: var(--input-bg, #0a0918);
+  border-color: var(--border-color, #1e1a2e);
   color: var(--text-primary, #f3f4f6);
 }
 
@@ -238,12 +238,12 @@
 
 [data-theme="dark"] .setting-description,
 .dark .setting-description {
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--text-tertiary, #a39dd0);
 }
 
 [data-theme="dark"] .setting-empty,
 .dark .setting-empty {
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--text-tertiary, #a39dd0);
 }
 
 /* Responsive */

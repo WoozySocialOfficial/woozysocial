@@ -227,7 +227,7 @@
 /* Dark Mode Styles */
 [data-theme="dark"] .client-approved,
 .dark .client-approved {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .header-content h1,
@@ -237,15 +237,15 @@
 
 [data-theme="dark"] .header-content p,
 .dark .header-content p {
-  color: #9ca3af;
+  color: #a39dd0;
 }
 
 /* Dark Mode Sort Toggle */
 [data-theme="dark"] .client-approved .sort-toggle,
 .dark .client-approved .sort-toggle {
-  background: #1f2937;
-  border-color: #374151;
-  color: #9ca3af;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .client-approved .sort-toggle:hover,
@@ -257,8 +257,8 @@
 /* Dark Mode Filter Buttons */
 [data-theme="dark"] .filter-btn,
 .dark .filter-btn {
-  background: #1f2937;
-  color: #e5e7eb;
+  background: #0d0b1a;
+  color: #ede9fc;
   border-color: transparent;
 }
 
@@ -266,14 +266,14 @@
 .dark .filter-btn:hover {
   border-color: #7c3aed;
   color: #a78bfa;
-  background: #252f3f;
+  background: #16132a;
 }
 
 [data-theme="dark"] .filter-btn.active,
 .dark .filter-btn.active {
   border-color: #7c3aed;
   color: #a78bfa;
-  background: #252f3f;
+  background: #16132a;
 }
 
 /* Dark Mode Loading and Empty States */
@@ -281,22 +281,22 @@
 [data-theme="dark"] .empty-state,
 .dark .loading-state,
 .dark .empty-state {
-  background: #1f2937;
-  border-color: #374151;
-  color: #9ca3af;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
+  color: #a39dd0;
 }
 
 /* Dark Mode History Cards */
 [data-theme="dark"] .history-card,
 .dark .history-card {
-  background: #1f2937;
-  border-color: #374151;
+  background: #0d0b1a;
+  border-color: #1e1a2e;
 }
 
 [data-theme="dark"] .history-card:hover,
 .dark .history-card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  border-color: #4b5563;
+  border-color: #352d5e;
 }
 
 [data-theme="dark"] .history-card.highlighted,
@@ -307,7 +307,7 @@
 
 [data-theme="dark"] .card-media,
 .dark .card-media {
-  background: #111827;
+  background: #0a0918;
 }
 
 [data-theme="dark"] .status-badge.approved,
@@ -324,20 +324,20 @@
 
 [data-theme="dark"] .card-caption,
 .dark .card-caption {
-  color: #e5e7eb;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .card-meta,
 .dark .card-meta {
-  border-top-color: #374151;
+  border-top-color: #1e1a2e;
 }
 
 [data-theme="dark"] .meta-label,
 .dark .meta-label {
-  color: #6b7280;
+  color: #7b74b0;
 }
 
 [data-theme="dark"] .meta-value,
 .dark .meta-value {
-  color: #9ca3af;
+  color: #a39dd0;
 }
