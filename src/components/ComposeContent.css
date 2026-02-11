@@ -1683,6 +1683,75 @@
   color: #000;
 }
 
+/* Improvement Suggestions */
+.improvement-suggestions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #ede9fc);
+}
+
+.suggestions-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--text-primary, #111827);
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary, #f3f4f6);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.suggestion-item:hover {
+  background: var(--bg-hover, #e5e7eb);
+}
+
+.suggestion-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.suggestion-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.suggestion-text {
+  font-size: 13px;
+  color: var(--text-primary, #1f2937);
+  line-height: 1.4;
+}
+
+.suggestion-impact {
+  font-size: 11px;
+  font-weight: 600;
+  color: #afabf9;
+}
+
+.suggestion-perfect {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--success-bg, #d1fae5);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--success-text, #065f46);
+  text-align: center;
+}
+
 .quick-actions {
   display: flex;
   flex-direction: column;
@@ -2246,6 +2315,33 @@
 [data-theme="dark"] .prediction-value,
 .dark .prediction-value {
   color: #ede9fc;
+}
+
+/* Dark mode - Improvement Suggestions */
+[data-theme="dark"] .suggestion-item,
+.dark .suggestion-item {
+  background: #16132a;
+}
+
+[data-theme="dark"] .suggestion-item:hover,
+.dark .suggestion-item:hover {
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .suggestion-text,
+.dark .suggestion-text {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .suggestions-title,
+.dark .suggestions-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .suggestion-perfect,
+.dark .suggestion-perfect {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
 }
 
 [data-theme="dark"] .comments-header h3,

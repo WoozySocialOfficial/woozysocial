@@ -80,6 +80,7 @@ export const ComposeContent = () => {
   const [hasRealData, setHasRealData] = useState(false);
   const [predictionRun, setPredictionRun] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [scoreBreakdown, setScoreBreakdown] = useState(null);
 
   // Analytics data for insights
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -663,62 +664,78 @@ export const ComposeContent = () => {
       score += hashtagScore;
 
       // 3. MEDIA SCORE (max 20 points)
+      let mediaScore = 0;
       if (mediaPreviews.length > 0) {
-        score += 18;
-        // Video bonus - videos get higher engagement
+        mediaScore = 18;
         const hasVideo = mediaPreviews.some(p => p.type === 'video');
-        if (hasVideo) {
-          score += 2;
-        }
+        if (hasVideo) mediaScore = 20;
       }
+      score += mediaScore;
 
       // 4. EMOJI USAGE (max 8 points) - Emojis boost engagement 25%+
       const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
       const emojiCount = (text.match(emojiRegex) || []).length;
+      let emojiScore = 0;
       if (emojiCount >= 1 && emojiCount <= 3) {
-        score += 8;
+        emojiScore = 8;
       } else if (emojiCount >= 4 && emojiCount <= 6) {
-        score += 5;
+        emojiScore = 5;
       } else if (emojiCount > 6) {
-        score += 2;
+        emojiScore = 2;
       }
+      score += emojiScore;
 
       // 5. ENGAGEMENT HOOKS (max 15 points)
       let hookScore = 0;
-      // Questions drive 100% more comments
-      if (/\?/.test(text)) hookScore += 5;
-      // Call-to-action increases engagement 285%
-      if (/\b(click|link|check|visit|shop|buy|learn|sign up|join|follow|subscribe|download|try|get|grab|save|share|tag|comment|tell us|let us know|drop a|what do you think|swipe|tap)\b/i.test(text)) hookScore += 5;
-      // Urgency words boost CTR 30%
-      if (/\b(now|today|limited|exclusive|don't miss|last chance|hurry|act fast|ending soon|only)\b/i.test(text)) hookScore += 3;
-      // Numbered lists perform 40% better
-      if (/\b\d+\s*(tips|ways|reasons|steps|things|ideas|hacks|secrets|mistakes|facts)\b/i.test(text)) hookScore += 2;
+      const hasQuestion = /\?/.test(text);
+      const hasCTA = /\b(click|link|check|visit|shop|buy|learn|sign up|join|follow|subscribe|download|try|get|grab|save|share|tag|comment|tell us|let us know|drop a|what do you think|swipe|tap)\b/i.test(text);
+      const hasUrgency = /\b(now|today|limited|exclusive|don't miss|last chance|hurry|act fast|ending soon|only)\b/i.test(text);
+      const hasListFormat = /\b\d+\s*(tips|ways|reasons|steps|things|ideas|hacks|secrets|mistakes|facts)\b/i.test(text);
+      if (hasQuestion) hookScore += 5;
+      if (hasCTA) hookScore += 5;
+      if (hasUrgency) hookScore += 3;
+      if (hasListFormat) hookScore += 2;
       score += Math.min(hookScore, 15);
 
       // 6. FIRST LINE HOOK (max 12 points) - First 125 chars are crucial
       const firstLine = text.split('\n')[0] || text.substring(0, 60);
       let firstLineScore = 0;
       if (firstLine.length >= 20) firstLineScore += 3;
-      // Strong opener patterns
-      if (/^[🔥⚡💡🚀✨🎯💪🙌]/.test(firstLine)) firstLineScore += 2;
-      if (/\?|!/.test(firstLine)) firstLineScore += 3;
-      if (/\b(how|why|what|secret|truth|mistake|stop|start|never|always|this|here's|introducing|finally|breaking|just|new)\b/i.test(firstLine)) firstLineScore += 4;
+      const hasEmojiOpener = /^[🔥⚡💡🚀✨🎯💪🙌]/.test(firstLine);
+      const hasFirstLinePunctuation = /\?|!/.test(firstLine);
+      const hasPowerWords = /\b(how|why|what|secret|truth|mistake|stop|start|never|always|this|here's|introducing|finally|breaking|just|new)\b/i.test(firstLine);
+      if (hasEmojiOpener) firstLineScore += 2;
+      if (hasFirstLinePunctuation) firstLineScore += 3;
+      if (hasPowerWords) firstLineScore += 4;
       score += Math.min(firstLineScore, 12);
 
       // 7. PLATFORM SELECTION (max 10 points)
+      let platformScore = 0;
       if (selectedPlatforms.length >= 2 && selectedPlatforms.length <= 4) {
-        score += 10;
+        platformScore = 10;
       } else if (selectedPlatforms.length === 1) {
-        score += 7;
+        platformScore = 7;
       } else if (selectedPlatforms.length > 4) {
-        score += 5;
+        platformScore = 5;
       }
+      score += platformScore;
 
       // 8. URL/LINK PRESENCE (max 5 points) - CTAs with links convert better
       const hasUrl = /https?:\/\/[^\s]+/i.test(text);
-      if (hasUrl) {
-        score += 5;
-      }
+      let urlScore = hasUrl ? 5 : 0;
+      score += urlScore;
+
+      // Store breakdown for improvement suggestions
+      setScoreBreakdown({
+        length: { score: lengthScore, max: 18, textLength, selectedPlatforms },
+        hashtags: { score: hashtagScore, max: 12, count: hashtagCount, selectedPlatforms },
+        media: { score: mediaScore, max: 20, count: mediaPreviews.length },
+        emoji: { score: emojiScore, max: 8, count: emojiCount },
+        hooks: { score: Math.min(hookScore, 15), max: 15, hasQuestion, hasCTA, hasUrgency, hasListFormat },
+        firstLine: { score: Math.min(firstLineScore, 12), max: 12, length: firstLine.length, hasEmojiOpener, hasFirstLinePunctuation, hasPowerWords },
+        platforms: { score: platformScore, max: 10, count: selectedPlatforms.length },
+        url: { score: urlScore, max: 5, hasUrl }
+      });
 
       // Cap at 100
       setEngagementScore(Math.min(score, 100));
@@ -2201,6 +2218,97 @@ export const ComposeContent = () => {
     return circumference - (engagementScore / 100) * circumference;
   };
 
+  // Generate dynamic improvement suggestions based on score breakdown
+  const getImprovementSuggestions = () => {
+    if (!scoreBreakdown) return [];
+    const suggestions = [];
+    const b = scoreBreakdown;
+
+    // Media - biggest impact (20 pts)
+    if (b.media.score === 0) {
+      suggestions.push({ icon: '📸', text: 'Add an image or video to boost engagement by up to 150%', impact: 20, category: 'Media' });
+    } else if (b.media.score < 20) {
+      suggestions.push({ icon: '🎬', text: 'Use video content for even higher engagement rates', impact: 2, category: 'Media' });
+    }
+
+    // Text length (18 pts)
+    if (b.length.score < 12) {
+      const platforms = b.length.selectedPlatforms;
+      if (b.length.textLength < 50) {
+        suggestions.push({ icon: '📝', text: 'Write more - aim for 80-150 characters for optimal engagement', impact: 18 - b.length.score, category: 'Length' });
+      } else if (b.length.textLength > 200) {
+        suggestions.push({ icon: '✂️', text: 'Shorten your text - concise posts get more engagement', impact: 18 - b.length.score, category: 'Length' });
+      } else {
+        suggestions.push({ icon: '📝', text: `Adjust text length to match ${platforms.length > 0 ? platforms[0] : 'platform'} best practices`, impact: 18 - b.length.score, category: 'Length' });
+      }
+    }
+
+    // Engagement hooks (15 pts)
+    if (b.hooks.score < 10) {
+      if (!b.hooks.hasQuestion) {
+        suggestions.push({ icon: '❓', text: 'Ask a question to drive 2x more comments', impact: 5, category: 'Hooks' });
+      }
+      if (!b.hooks.hasCTA) {
+        suggestions.push({ icon: '👆', text: 'Add a call-to-action (e.g. "Share your thoughts", "Tag a friend")', impact: 5, category: 'Hooks' });
+      }
+      if (!b.hooks.hasUrgency) {
+        suggestions.push({ icon: '⏰', text: 'Create urgency with words like "today", "limited", or "don\'t miss"', impact: 3, category: 'Hooks' });
+      }
+    }
+
+    // Hashtags (12 pts)
+    if (b.hashtags.score < 10) {
+      if (b.hashtags.count === 0) {
+        suggestions.push({ icon: '#️⃣', text: 'Add 2-5 relevant hashtags to increase discoverability', impact: 12, category: 'Hashtags' });
+      } else if (b.hashtags.count === 1) {
+        suggestions.push({ icon: '#️⃣', text: 'Add a few more hashtags (2-5 is the sweet spot)', impact: 4, category: 'Hashtags' });
+      } else if (b.hashtags.count > 10) {
+        suggestions.push({ icon: '#️⃣', text: 'Reduce hashtags - too many looks spammy (aim for 2-5)', impact: 7, category: 'Hashtags' });
+      }
+    }
+
+    // First line hook (12 pts)
+    if (b.firstLine.score < 8) {
+      if (!b.firstLine.hasPowerWords) {
+        suggestions.push({ icon: '🎯', text: 'Start with a hook word: "How", "Why", "Secret", "This", or "Here\'s"', impact: 4, category: 'Hook' });
+      }
+      if (!b.firstLine.hasFirstLinePunctuation) {
+        suggestions.push({ icon: '❗', text: 'Add a question or exclamation to your opening line', impact: 3, category: 'Hook' });
+      }
+      if (b.firstLine.length < 20) {
+        suggestions.push({ icon: '✍️', text: 'Make your first line longer and more attention-grabbing', impact: 3, category: 'Hook' });
+      }
+    }
+
+    // Platform selection (10 pts)
+    if (b.platforms.score < 10) {
+      if (b.platforms.count === 0) {
+        suggestions.push({ icon: '📱', text: 'Select platforms to post on (2-4 recommended)', impact: 10, category: 'Platforms' });
+      } else if (b.platforms.count === 1) {
+        suggestions.push({ icon: '📱', text: 'Cross-post to 2-4 platforms to maximize reach', impact: 3, category: 'Platforms' });
+      } else if (b.platforms.count > 4) {
+        suggestions.push({ icon: '📱', text: 'Focus on 2-4 platforms for better tailored content', impact: 5, category: 'Platforms' });
+      }
+    }
+
+    // Emoji (8 pts)
+    if (b.emoji.score < 8) {
+      if (b.emoji.count === 0) {
+        suggestions.push({ icon: '😊', text: 'Add 1-3 emojis to boost engagement by 25%+', impact: 8, category: 'Emoji' });
+      } else if (b.emoji.count > 3) {
+        suggestions.push({ icon: '😊', text: 'Use fewer emojis (1-3 is optimal, too many can reduce quality)', impact: 3, category: 'Emoji' });
+      }
+    }
+
+    // URL (5 pts)
+    if (b.url.score === 0) {
+      suggestions.push({ icon: '🔗', text: 'Include a link for better click-through conversion', impact: 5, category: 'Link' });
+    }
+
+    // Sort by impact (highest first) and limit to top 5
+    return suggestions.sort((a, c) => c.impact - a.impact).slice(0, 5);
+  };
+
   return (
     <div className="compose-content">
       {/* Posting Progress Modal */}
@@ -2803,6 +2911,31 @@ export const ComposeContent = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Improvement Suggestions */}
+                  {scoreBreakdown && getImprovementSuggestions().length > 0 && (
+                    <div className="improvement-suggestions">
+                      <h4 className="suggestions-title">
+                        💡 How to improve
+                      </h4>
+                      <div className="suggestions-list">
+                        {getImprovementSuggestions().map((suggestion, idx) => (
+                          <div key={idx} className="suggestion-item">
+                            <span className="suggestion-icon">{suggestion.icon}</span>
+                            <div className="suggestion-content">
+                              <span className="suggestion-text">{suggestion.text}</span>
+                              <span className="suggestion-impact">+{suggestion.impact} pts</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {engagementScore >= 80 && (
+                        <div className="suggestion-perfect">
+                          Your post is well-optimized! Keep up the great work.
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Analytics Insights */}
                   {analyticsData?.summary && (
