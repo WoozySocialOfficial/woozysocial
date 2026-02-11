@@ -6,7 +6,7 @@
   margin-top: 70px;
   padding: 40px;
   overflow-y: auto;
-  min-height: calc(100vh - 70px);
+  height: calc(100vh - 70px);
   z-index: 1;
   transition: margin-left 0.3s ease;
   background-color: var(--bg-primary, #f1f6f4);
