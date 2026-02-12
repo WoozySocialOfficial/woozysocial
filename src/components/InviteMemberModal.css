@@ -190,9 +190,9 @@
 
 .cancel-button,
 .invite-button {
-  padding: 14px 32px;
-  border-radius: 10px;
-  font-size: 16px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
