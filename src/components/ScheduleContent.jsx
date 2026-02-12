@@ -559,18 +559,21 @@ export const ScheduleContent = () => {
                   <>
                     <span className="sc-day-num">{date.getDate()}</span>
                     {hasPosts && (
-                      <div className="sc-dots">
-                        {datePosts.slice(0, 3).map((post) => (
-                          <div
-                            key={post.id}
-                            className="sc-dot"
-                            style={{ backgroundColor: getDotColor(post) }}
-                          />
-                        ))}
-                        {datePosts.length > 3 && (
-                          <span className="sc-dot-more">+{datePosts.length - 3}</span>
-                        )}
-                      </div>
+                      <>
+                        <span className="sc-post-count">
+                          <span className="sc-post-count-num">{datePosts.length}</span>
+                          {datePosts.length === 1 ? 'post' : 'posts'}
+                        </span>
+                        <div className="sc-dots">
+                          {datePosts.slice(0, 5).map((post) => (
+                            <div
+                              key={post.id}
+                              className="sc-dot"
+                              style={{ backgroundColor: getDotColor(post) }}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                   </>
                 )}
