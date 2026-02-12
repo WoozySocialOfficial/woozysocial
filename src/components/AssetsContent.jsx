@@ -59,7 +59,7 @@ export const AssetsContent = () => {
   // Fetch assets on mount
   useEffect(() => {
     fetchAssets();
-  }, [user]);
+  }, [user, activeWorkspace]);
 
   // Exit bulk mode when no items selected
   useEffect(() => {
@@ -69,7 +69,7 @@ export const AssetsContent = () => {
   }, [selectedIds, bulkMode]);
 
   const fetchAssets = async () => {
-    if (!user) return;
+    if (!user || !activeWorkspace) return;
 
     setIsLoading(true);
     try {
