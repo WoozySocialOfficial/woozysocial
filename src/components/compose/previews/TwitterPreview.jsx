@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { linkifyText } from '../../../utils/linkifyText';
 import { StatusBarIcons, VerifiedBadge } from '../PlatformIcons';
 import {
   AiOutlineHeart,
@@ -101,7 +102,7 @@ export const TwitterPreview = ({ post, mediaPreviews = [], accountInfo }) => {
           {/* Tweet Text */}
           {post?.text && (
             <div className="tw-text">
-              {post.text}
+              {linkifyText(post.text)}
             </div>
           )}
 

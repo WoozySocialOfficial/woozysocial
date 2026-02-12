@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { linkifyText } from '../../../utils/linkifyText';
 import { MediaCarousel } from '../MediaCarousel';
 import { StatusBarIcons } from '../PlatformIcons';
 import { AiOutlineLike, AiFillLike } from 'react-icons/ai';
@@ -69,7 +70,7 @@ export const LinkedInPreview = ({ post, mediaPreviews = [], accountInfo }) => {
           {/* Post Text */}
           {post?.text && (
             <div className="li-text">
-              {post.text}
+              {linkifyText(post.text)}
             </div>
           )}
 

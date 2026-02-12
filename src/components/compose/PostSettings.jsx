@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaLink, FaListUl, FaInstagram, FaChevronDown, FaChevronUp, FaCog } from 'react-icons/fa';
+import { FaListUl, FaInstagram, FaChevronDown, FaChevronUp, FaCog } from 'react-icons/fa';
 import './PostSettings.css';
 
 /**
@@ -26,7 +26,6 @@ export const PostSettings = ({
   const hasInstagram = normalizedPlatforms.includes('instagram');
 
   // Settings state
-  const [shortenLinks, setShortenLinks] = useState(settings.shortenLinks || false);
   const [threadPost, setThreadPost] = useState(settings.threadPost || false);
   const [threadNumber, setThreadNumber] = useState(settings.threadNumber !== false);
   const [instagramType, setInstagramType] = useState(settings.instagramType || 'feed');
@@ -63,26 +62,6 @@ export const PostSettings = ({
 
       {isExpanded && (
         <div className="post-settings-content" id="post-settings-content">
-          {/* Auto-Shorten Links (All Platforms) */}
-          <div className="setting-item">
-            <label className="setting-label">
-              <input
-                type="checkbox"
-                checked={shortenLinks}
-                onChange={(e) => {
-                  setShortenLinks(e.target.checked);
-                  handleSettingChange('shortenLinks', e.target.checked);
-                }}
-                className="setting-checkbox"
-              />
-              <FaLink className="setting-icon" />
-              <span>Auto-Shorten Links</span>
-            </label>
-            <p className="setting-description">
-              Automatically shorten URLs in your post (Ayrshare feature)
-            </p>
-          </div>
-
           {/* Thread Post Toggle (Twitter/X only) */}
           {hasTwitter && (
             <div className="setting-item setting-item-group">

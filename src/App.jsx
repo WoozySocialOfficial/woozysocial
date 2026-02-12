@@ -66,6 +66,18 @@ const ClientProfileSettings = lazyRetry(() => import("./pages/client/ClientProfi
 // 404 page
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 
+// Prefetch the dashboard chunk on idle since it's the most common landing page
+if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+  requestIdleCallback(() => {
+    import("./components/DashboardContent").catch(() => {});
+  });
+} else {
+  // Fallback: prefetch after a short delay
+  setTimeout(() => {
+    import("./components/DashboardContent").catch(() => {});
+  }, 2000);
+}
+
 // Loading fallback component
 const PageLoader = () => (
   <div style={{

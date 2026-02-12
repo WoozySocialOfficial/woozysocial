@@ -245,6 +245,10 @@
   word-wrap: break-word;
 }
 
+.ig-caption-text .preview-link {
+  color: #00376b;
+}
+
 .ig-caption-more {
   color: #8E8E93;
   background: none;

@@ -201,6 +201,10 @@
   word-wrap: break-word;
 }
 
+.tw-text .preview-link {
+  color: #1d9bf0;
+}
+
 /* Media Grid Layouts */
 .tw-media-grid {
   margin: 12px 0;

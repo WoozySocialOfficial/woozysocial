@@ -37,7 +37,8 @@ export const WorkspaceProvider = ({ children }) => {
 
   const [activeWorkspace, setActiveWorkspace] = useState(cachedData?.activeWorkspace || null);
   const [userWorkspaces, setUserWorkspaces] = useState(cachedData?.workspaces || []);
-  const [loading, setLoading] = useState(true);
+  // If we have cached data, don't block rendering with loading state
+  const [loading, setLoading] = useState(!cachedData);
   const [workspaceMembership, setWorkspaceMembership] = useState(cachedData?.membership || null);
 
   // Ref to track current fetch request and prevent race conditions

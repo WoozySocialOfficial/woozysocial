@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { linkifyText } from '../../../utils/linkifyText';
 import { StatusBarIcons } from '../PlatformIcons';
 import {
   AiOutlineHeart,
@@ -129,7 +130,7 @@ export const FacebookPreview = ({ post, mediaPreviews = [], accountInfo }) => {
           {/* Post Text */}
           {post?.text && (
             <div className="fb-text">
-              {post.text}
+              {linkifyText(post.text)}
             </div>
           )}
 

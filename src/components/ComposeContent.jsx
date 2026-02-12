@@ -98,15 +98,8 @@ export const ComposeContent = () => {
   // Hashtag generation state
   const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
 
-  // Link shortening state
-  const [showLinkShortener, setShowLinkShortener] = useState(false);
-  const [urlToShorten, setUrlToShorten] = useState("");
-  const [shortenedLink, setShortenedLink] = useState(null);
-  const [isShorteningLink, setIsShorteningLink] = useState(false);
-
   // Post settings state (Phase 4)
   const [postSettings, setPostSettings] = useState({
-    shortenLinks: false,
     threadPost: false,
     threadNumber: true,
     instagramType: 'feed'
@@ -1363,88 +1356,6 @@ export const ComposeContent = () => {
     }
   };
 
-  const handleShortenLink = async () => {
-    if (!urlToShorten || !urlToShorten.trim()) {
-      toast({
-        title: "No URL",
-        description: "Please enter a URL to shorten.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true
-      });
-      return;
-    }
-
-    // Basic URL validation
-    try {
-      new URL(urlToShorten);
-    } catch {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL (e.g., https://example.com)",
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
-      return;
-    }
-
-    setIsShorteningLink(true);
-
-    try {
-      const response = await fetch(`${baseURL}/api/links`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          workspaceId: activeWorkspace.id,
-          url: urlToShorten
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create short link");
-      }
-
-      const data = await response.json();
-
-      setShortenedLink(data);
-
-      toast({
-        title: "Link shortened",
-        description: "Your trackable link is ready!",
-        status: "success",
-        duration: 3000,
-        isClosable: true
-      });
-    } catch (error) {
-      console.error("Error shortening link:", error);
-      toast({
-        title: "Error",
-        description: "Failed to shorten link. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
-    } finally {
-      setIsShorteningLink(false);
-    }
-  };
-
-  const handleCopyShortLink = () => {
-    if (shortenedLink?.shortLink) {
-      navigator.clipboard.writeText(shortenedLink.shortLink);
-      toast({
-        title: "Copied!",
-        description: "Short link copied to clipboard",
-        status: "success",
-        duration: 2000,
-        isClosable: true
-      });
-    }
-  };
-
   // Handler for saving changes to scheduled post
   const handleSaveScheduledPost = async () => {
     if (!currentDraftId || !activeWorkspace?.id) {
@@ -2059,7 +1970,19 @@ export const ComposeContent = () => {
           errorMessage = errorData.error || "Failed to upload your media file. Please try again.";
         } else if (errorData.code === 'EXTERNAL_API_ERROR') {
           errorTitle = "Posting Failed";
-          errorMessage = errorData.error || "Failed to post to social media. Please try again.";
+          // Clean up error message - if it looks like raw JSON, extract readable part
+          let rawError = errorData.error || "";
+          if (rawError.startsWith('{') || rawError.startsWith('[')) {
+            try {
+              const parsed = JSON.parse(rawError);
+              // Try to extract message from common Ayrshare error formats
+              rawError = parsed?.message
+                || parsed?.posts?.[0]?.errors?.[0]?.message
+                || parsed?.errors?.[0]?.message
+                || "Failed to post to social media. Please try again.";
+            } catch { /* not JSON, use as-is */ }
+          }
+          errorMessage = rawError || "Failed to post to social media. Please try again.";
         }
 
         throw new Error(errorMessage);
@@ -2550,14 +2473,6 @@ export const ComposeContent = () => {
                     {isGeneratingHashtags ? '...' : '#'}
                   </button>
                 </FeatureGate>
-                <button
-                  className="media-upload-btn"
-                  onClick={() => setShowLinkShortener(!showLinkShortener)}
-                  title="Link Shortener"
-                  style={{ marginLeft: '8px' }}
-                >
-                  🔗
-                </button>
               </div>
 
               <div className="form-buttons">
@@ -2645,103 +2560,6 @@ export const ComposeContent = () => {
                 )}
               </div>
             </div>
-
-            {/* Link Shortener Section */}
-            {showLinkShortener && (
-              <div className="link-shortener-section" style={{
-                marginTop: '20px',
-                padding: '16px',
-                backgroundColor: 'var(--bg-secondary, #F1F6F4)',
-                borderRadius: '10px',
-                border: '1px solid var(--border-color, rgba(0, 0, 0, 0.1))'
-              }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: 'var(--text-primary, #114C5A)' }}>
-                  Link Shortener & Tracker
-                </h4>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-                  <input
-                    type="url"
-                    value={urlToShorten}
-                    onChange={(e) => setUrlToShorten(e.target.value)}
-                    placeholder="Enter URL to shorten (e.g., https://example.com)"
-                    className="link-shortener-input"
-                    style={{
-                      flex: 1,
-                      padding: '10px 12px',
-                      border: '1px solid var(--border-color, rgba(0, 0, 0, 0.2))',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontFamily: 'Inter, sans-serif',
-                      backgroundColor: 'var(--input-bg, #ffffff)',
-                      color: 'var(--text-primary, #000000)'
-                    }}
-                  />
-                  <button
-                    onClick={handleShortenLink}
-                    disabled={isShorteningLink || !urlToShorten}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: '#afabf9',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#000',
-                      cursor: isShorteningLink || !urlToShorten ? 'not-allowed' : 'pointer',
-                      opacity: isShorteningLink || !urlToShorten ? 0.5 : 1
-                    }}
-                  >
-                    {isShorteningLink ? 'Shortening...' : 'Shorten'}
-                  </button>
-                </div>
-
-                {shortenedLink && (
-                  <div className="shortened-link-result" style={{
-                    padding: '12px',
-                    backgroundColor: 'var(--accent-bg-subtle, rgba(175, 171, 249, 0.1))',
-                    borderRadius: '8px',
-                    border: '1px solid #afabf9'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <input
-                        type="text"
-                        value={shortenedLink.shortLink}
-                        readOnly
-                        className="shortened-link-display"
-                        style={{
-                          flex: 1,
-                          padding: '8px 12px',
-                          backgroundColor: 'var(--input-bg, #ffffff)',
-                          border: '1px solid var(--border-color, rgba(0, 0, 0, 0.1))',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontFamily: 'monospace',
-                          color: 'var(--text-primary, #000000)'
-                        }}
-                      />
-                      <button
-                        onClick={handleCopyShortLink}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: 'var(--accent-dark, #114C5A)',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          color: '#ffffff',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--text-tertiary, rgba(0, 0, 0, 0.6))' }}>
-                      ✓ This link is trackable. View analytics in the Posts tab after using it.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Post Settings (Phase 4) */}
             <PostSettings

@@ -7,6 +7,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Inject early preconnect hint for Supabase so browser starts TLS handshake sooner
+if (typeof document !== 'undefined' && !document.querySelector(`link[href="${supabaseUrl}"]`)) {
+  const link = document.createElement('link');
+  link.rel = 'preconnect';
+  link.href = supabaseUrl;
+  link.crossOrigin = 'anonymous';
+  document.head.appendChild(link);
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,

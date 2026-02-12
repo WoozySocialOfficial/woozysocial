@@ -162,6 +162,10 @@
   word-wrap: break-word;
 }
 
+.th-text .preview-link {
+  color: #0095f6;
+}
+
 /* Media Container */
 .th-media-container {
   margin-bottom: 12px;

@@ -233,6 +233,10 @@
   word-wrap: break-word;
 }
 
+.fb-text .preview-link {
+  color: #385898;
+}
+
 /* Media Grid Layouts */
 .fb-media-grid {
   margin: 0;

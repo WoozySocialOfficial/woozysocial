@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { linkifyText } from '../../../utils/linkifyText';
 import { MediaCarousel } from '../MediaCarousel';
 import { StatusBarIcons, ActionIcons, NavIcons, VerifiedBadge } from '../PlatformIcons';
 import {
@@ -134,7 +135,7 @@ export const InstagramPreview = ({ post, mediaPreviews = [], accountInfo }) => {
                 {accountInfo?.username || 'your_username'}
               </span>{' '}
               <span className="ig-caption-text">
-                {displayCaption}
+                {linkifyText(displayCaption)}
                 {needsMore && (
                   <button
                     className="ig-caption-more"

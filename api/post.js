@@ -19,6 +19,64 @@ const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPost
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
+/**
+ * Map known Ayrshare error messages to short, user-friendly messages.
+ */
+function friendlyErrorMessage(rawMsg, platform) {
+  const lower = rawMsg.toLowerCase();
+  if (lower.includes('media error') || lower.includes('image or video could not be processed')) {
+    const name = platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'This platform';
+    return `${name} requires an image or video to publish this post.`;
+  }
+  if (lower.includes('rate limit') || lower.includes('too many requests')) {
+    return 'Too many requests. Please wait a moment and try again.';
+  }
+  if (lower.includes('token') || lower.includes('unauthorized') || lower.includes('authentication')) {
+    const name = platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Your account';
+    return `${name} needs to be reconnected. Go to Social Accounts to reconnect.`;
+  }
+  if (lower.includes('duplicate')) {
+    return 'This content was already posted. Try changing the text.';
+  }
+  // Strip Ayrshare docs URL and return cleaned message
+  let cleaned = rawMsg.replace(/\s*https?:\/\/www\.ayrshare\.com\S*/gi, '').trim();
+  return platform ? `${cleaned} (${platform})` : cleaned;
+}
+
+/**
+ * Extract a clean, human-readable error message from Ayrshare's response.
+ * Ayrshare can nest errors in: data.message, data.posts[].errors[].message, data.errors[].message
+ */
+function extractAyrshareErrorMessage(data) {
+  if (!data) return null;
+
+  // Direct message field
+  if (data.message && typeof data.message === 'string') return friendlyErrorMessage(data.message);
+  if (data.error && typeof data.error === 'string') return friendlyErrorMessage(data.error);
+
+  // Nested in posts array: posts[0].errors[0].message
+  if (Array.isArray(data.posts)) {
+    for (const post of data.posts) {
+      if (Array.isArray(post?.errors)) {
+        const messages = post.errors
+          .filter(e => e?.message)
+          .map(e => friendlyErrorMessage(e.message, e.platform));
+        if (messages.length > 0) return messages.join('. ');
+      }
+    }
+  }
+
+  // Direct errors array
+  if (Array.isArray(data.errors)) {
+    const messages = data.errors
+      .filter(e => e?.message)
+      .map(e => friendlyErrorMessage(e.message, e.platform));
+    if (messages.length > 0) return messages.join('. ');
+  }
+
+  return null;
+}
+
 // Parse FormData using busboy (works with Vercel serverless)
 function parseFormData(req) {
   return new Promise((resolve, reject) => {
@@ -871,14 +929,10 @@ module.exports = async function handler(req, res) {
         if (dbErr) logError('post.save_failed', dbErr);
       }
 
-      // Include actual Ayrshare error in the response for better debugging
-      // Ayrshare can return errors in different formats
-      let ayrshareError = responseData?.message
-        || responseData?.error
-        || (responseData?.errors ? JSON.stringify(responseData.errors) : null)
-        || (typeof responseData === 'string' ? responseData : null)
-        || (responseData ? JSON.stringify(responseData) : null)
-        || axiosError.message;
+      // Extract a clean, human-readable error from Ayrshare's response
+      let ayrshareError = extractAyrshareErrorMessage(responseData)
+        || axiosError.message
+        || "Failed to connect to social media service";
 
       console.error('[POST] Extracted Ayrshare error:', ayrshareError);
 
@@ -910,7 +964,7 @@ module.exports = async function handler(req, res) {
 
       return sendError(
         res,
-        response.data.message || "Failed to post to social platforms",
+        extractAyrshareErrorMessage(response.data) || "Failed to post to social platforms",
         ErrorCodes.EXTERNAL_API_ERROR,
         response.data
       );

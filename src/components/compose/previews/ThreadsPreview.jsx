@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { linkifyText } from '../../../utils/linkifyText';
 import { StatusBarIcons } from '../PlatformIcons';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
 import { FaRegComment, FaUser } from 'react-icons/fa';
@@ -64,7 +65,7 @@ export const ThreadsPreview = ({ post, mediaPreviews = [], accountInfo }) => {
               {/* Thread Text */}
               {post?.text && (
                 <div className="th-text">
-                  {post.text}
+                  {linkifyText(post.text)}
                 </div>
               )}
 

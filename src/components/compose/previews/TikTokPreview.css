@@ -317,6 +317,10 @@
   overflow: hidden;
 }
 
+.tt-caption .preview-link {
+  color: #83c9f5;
+}
+
 .tt-music-row {
   display: flex;
   align-items: center;

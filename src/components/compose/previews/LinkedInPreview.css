@@ -182,6 +182,10 @@
   word-wrap: break-word;
 }
 
+.li-text .preview-link {
+  color: #0a66c2;
+}
+
 /* Media Container */
 .li-media-container {
   width: 100%;
