@@ -81,6 +81,9 @@ export const ComposeContent = () => {
   const [predictionRun, setPredictionRun] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
   const [scoreBreakdown, setScoreBreakdown] = useState(null);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizeError, setOptimizeError] = useState(null);
 
   // Analytics data for insights
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -2309,6 +2312,73 @@ export const ComposeContent = () => {
     return suggestions.sort((a, c) => c.impact - a.impact).slice(0, 5);
   };
 
+  // AI-powered post optimizer
+  const handleOptimizePost = async () => {
+    if (!post.text || isOptimizing) return;
+    setIsOptimizing(true);
+    setOptimizeError(null);
+    setAiSuggestions([]);
+
+    try {
+      const selectedPlatforms = Object.keys(networks).filter(key => networks[key]);
+      const response = await fetch(`${baseURL}/api/post-optimize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: post.text,
+          platforms: selectedPlatforms,
+          hasMedia: mediaPreviews.length > 0,
+          mediaType: mediaPreviews.some(p => p.type === 'video') ? 'video' : mediaPreviews.length > 0 ? 'image' : null,
+          scoreBreakdown
+        })
+      });
+
+      const result = await response.json();
+      const data = result?.data || result;
+      if (data?.suggestions && data.suggestions.length > 0) {
+        setAiSuggestions(data.suggestions);
+      } else {
+        setOptimizeError('No suggestions generated. Your post might already be well-optimized!');
+      }
+    } catch (err) {
+      console.error('Optimize error:', err);
+      setOptimizeError('Failed to analyze post. Try again.');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Apply an AI suggestion to the post text
+  const applySuggestion = (suggestion) => {
+    let newText = post.text;
+
+    if (suggestion.original && suggestion.original.length > 0) {
+      // Replace original text with improved version
+      if (newText.includes(suggestion.original)) {
+        newText = newText.replace(suggestion.original, suggestion.improved);
+      } else {
+        // If exact match not found, append the improved text
+        newText = newText + suggestion.improved;
+      }
+    } else {
+      // Append new content (CTA, hashtags, etc.)
+      newText = newText + suggestion.improved;
+    }
+
+    setPost(prev => ({ ...prev, text: newText }));
+    // Remove the applied suggestion
+    setAiSuggestions(prev => prev.filter(s => s !== suggestion));
+    toast({ title: 'Suggestion applied!', status: 'success', duration: 2000 });
+  };
+
+  // Clear AI suggestions when post text changes significantly
+  useEffect(() => {
+    if (aiSuggestions.length > 0) {
+      setAiSuggestions([]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.text?.length > 0 ? Math.floor(post.text.length / 50) : 0]);
+
   return (
     <div className="compose-content">
       {/* Posting Progress Modal */}
@@ -2912,24 +2982,90 @@ export const ComposeContent = () => {
                     </div>
                   </div>
 
-                  {/* Improvement Suggestions */}
-                  {scoreBreakdown && getImprovementSuggestions().length > 0 && (
+                  {/* AI Post Optimizer */}
+                  {scoreBreakdown && (
                     <div className="improvement-suggestions">
-                      <h4 className="suggestions-title">
-                        💡 How to improve
-                      </h4>
-                      <div className="suggestions-list">
-                        {getImprovementSuggestions().map((suggestion, idx) => (
-                          <div key={idx} className="suggestion-item">
-                            <span className="suggestion-icon">{suggestion.icon}</span>
-                            <div className="suggestion-content">
-                              <span className="suggestion-text">{suggestion.text}</span>
-                              <span className="suggestion-impact">+{suggestion.impact} pts</span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="optimizer-header">
+                        <h4 className="suggestions-title">
+                          💡 Improve your post
+                        </h4>
+                        <button
+                          className="optimize-btn"
+                          onClick={handleOptimizePost}
+                          disabled={isOptimizing || !post.text}
+                        >
+                          {isOptimizing ? 'Analyzing...' : aiSuggestions.length > 0 ? 'Re-analyze' : 'Optimize with AI'}
+                        </button>
                       </div>
-                      {engagementScore >= 80 && (
+
+                      {/* Quick tips (always visible from score breakdown) */}
+                      {aiSuggestions.length === 0 && !isOptimizing && (
+                        <div className="suggestions-list">
+                          {getImprovementSuggestions().slice(0, 3).map((suggestion, idx) => (
+                            <div key={idx} className="suggestion-item">
+                              <span className="suggestion-icon">{suggestion.icon}</span>
+                              <div className="suggestion-content">
+                                <span className="suggestion-text">{suggestion.text}</span>
+                                <span className="suggestion-impact">+{suggestion.impact} pts</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Loading state */}
+                      {isOptimizing && (
+                        <div className="optimizer-loading">
+                          <div className="optimizer-spinner"></div>
+                          <span>AI is analyzing your post...</span>
+                        </div>
+                      )}
+
+                      {/* Error state */}
+                      {optimizeError && (
+                        <div className="optimizer-error">{optimizeError}</div>
+                      )}
+
+                      {/* AI Suggestions with Apply buttons */}
+                      {aiSuggestions.length > 0 && (
+                        <div className="ai-suggestions-list">
+                          {aiSuggestions.map((suggestion, idx) => (
+                            <div key={idx} className="ai-suggestion-card">
+                              <div className="ai-suggestion-header">
+                                <span className="ai-suggestion-title">{suggestion.title}</span>
+                                <span className="ai-suggestion-impact">+{suggestion.impact} pts</span>
+                              </div>
+                              <p className="ai-suggestion-desc">{suggestion.description}</p>
+                              {suggestion.original && (
+                                <div className="ai-suggestion-diff">
+                                  <div className="diff-original">
+                                    <span className="diff-label">Current:</span>
+                                    <span className="diff-text">{suggestion.original.length > 80 ? suggestion.original.substring(0, 80) + '...' : suggestion.original}</span>
+                                  </div>
+                                  <div className="diff-improved">
+                                    <span className="diff-label">Suggested:</span>
+                                    <span className="diff-text">{suggestion.improved.length > 100 ? suggestion.improved.substring(0, 100) + '...' : suggestion.improved}</span>
+                                  </div>
+                                </div>
+                              )}
+                              {!suggestion.original && (
+                                <div className="ai-suggestion-preview">
+                                  <span className="diff-label">Add:</span>
+                                  <span className="diff-text">{suggestion.improved.length > 100 ? suggestion.improved.substring(0, 100) + '...' : suggestion.improved}</span>
+                                </div>
+                              )}
+                              <button
+                                className="apply-suggestion-btn"
+                                onClick={() => applySuggestion(suggestion)}
+                              >
+                                Apply
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {engagementScore >= 80 && aiSuggestions.length === 0 && !isOptimizing && (
                         <div className="suggestion-perfect">
                           Your post is well-optimized! Keep up the great work.
                         </div>

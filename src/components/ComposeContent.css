@@ -1752,6 +1752,176 @@
   text-align: center;
 }
 
+/* Optimizer Header */
+.optimizer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.optimizer-header .suggestions-title {
+  margin: 0;
+}
+
+.optimize-btn {
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #afabf9 0%, #7c3aed 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.optimize-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.optimize-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Optimizer Loading */
+.optimizer-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  justify-content: center;
+  color: var(--text-tertiary, #6b7280);
+  font-size: 13px;
+}
+
+.optimizer-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(175, 171, 249, 0.3);
+  border-top-color: #afabf9;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.optimizer-error {
+  padding: 10px 12px;
+  background: var(--error-bg, #fee2e2);
+  color: var(--error-text, #991b1b);
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* AI Suggestion Cards */
+.ai-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-suggestion-card {
+  padding: 12px;
+  background: var(--bg-tertiary, #f3f4f6);
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.ai-suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ai-suggestion-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.ai-suggestion-impact {
+  font-size: 11px;
+  font-weight: 700;
+  color: #afabf9;
+  background: rgba(175, 171, 249, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.ai-suggestion-desc {
+  font-size: 12px;
+  color: var(--text-tertiary, #6b7280);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.ai-suggestion-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.diff-original {
+  padding: 8px 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 3px solid #ef4444;
+  border-radius: 4px;
+}
+
+.diff-improved {
+  padding: 8px 10px;
+  background: rgba(16, 185, 129, 0.06);
+  border-left: 3px solid #10b981;
+  border-radius: 4px;
+}
+
+.ai-suggestion-preview {
+  padding: 8px 10px;
+  background: rgba(16, 185, 129, 0.06);
+  border-left: 3px solid #10b981;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.diff-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #9ca3af);
+  margin-bottom: 2px;
+}
+
+.diff-text {
+  font-size: 13px;
+  color: var(--text-primary, #1f2937);
+  line-height: 1.4;
+}
+
+.apply-suggestion-btn {
+  width: 100%;
+  padding: 8px;
+  background: #afabf9;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apply-suggestion-btn:hover {
+  background: #9f9af7;
+  transform: translateY(-1px);
+}
+
 .quick-actions {
   display: flex;
   flex-direction: column;
@@ -2342,6 +2512,51 @@
 .dark .suggestion-perfect {
   background: rgba(16, 185, 129, 0.15);
   color: #34d399;
+}
+
+/* Dark mode - AI Optimizer */
+[data-theme="dark"] .ai-suggestion-card,
+.dark .ai-suggestion-card {
+  background: #16132a;
+  border-color: #2a2545;
+}
+
+[data-theme="dark"] .ai-suggestion-title,
+.dark .ai-suggestion-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .ai-suggestion-desc,
+.dark .ai-suggestion-desc {
+  color: #7b74b0;
+}
+
+[data-theme="dark"] .diff-original,
+.dark .diff-original {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+[data-theme="dark"] .diff-improved,
+[data-theme="dark"] .ai-suggestion-preview,
+.dark .diff-improved,
+.dark .ai-suggestion-preview {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+[data-theme="dark"] .diff-text,
+.dark .diff-text {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .optimizer-loading,
+.dark .optimizer-loading {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .optimizer-error,
+.dark .optimizer-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
 }
 
 [data-theme="dark"] .comments-header h3,
