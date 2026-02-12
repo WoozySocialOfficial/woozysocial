@@ -390,13 +390,11 @@ export const ScheduleContent = () => {
         title="Click to view details"
       >
         <div className="post-card-header">
-          {/* Only show approval badge if tier has approval workflows */}
-          {hasApprovalWorkflows && (
-            <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
-              <ApprovalIcon size={11} />
-              <span>{approvalInfo.label}</span>
-            </div>
-          )}
+          {/* Always show approval badge so status is visible */}
+          <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
+            <ApprovalIcon size={11} />
+            <span>{approvalInfo.label}</span>
+          </div>
           {(post.comments?.length > 0 || post.commentCount > 0) && (
             <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
               <FaComment size={10} />
@@ -647,6 +645,10 @@ export const ScheduleContent = () => {
     rejected: scheduledPosts.filter(p => p.approvalStatus === 'rejected').length,
   };
 
+  // Show approval filter tabs if tier has feature OR if any posts have non-approved approval status
+  const hasApprovalPosts = approvalCounts.pending > 0 || approvalCounts.changes_requested > 0 || approvalCounts.rejected > 0;
+  const showApprovalFilters = hasApprovalWorkflows || hasApprovalPosts;
+
   return (
     <div className="schedule-container">
       {/* Subscription Banner */}
@@ -700,8 +702,8 @@ export const ScheduleContent = () => {
         </div>
       </div>
 
-      {/* Approval Filter Tabs - Only show for tiers with approval workflows */}
-      {hasApprovalWorkflows && (
+      {/* Approval Filter Tabs - Show when tier has feature or approval posts exist */}
+      {showApprovalFilters && (
         <div className="approval-filter-tabs">
           <button
             className={`filter-tab ${approvalFilter === 'all' ? 'active' : ''}`}
@@ -762,7 +764,7 @@ export const ScheduleContent = () => {
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
           onEditScheduledPost={handleEditScheduledPost}
-          showApprovalActions={canApprove && hasApprovalWorkflows}
+          showApprovalActions={canApprove}
           dayPosts={selectedDayPosts}
           currentIndex={selectedDayIndex}
           onNavigatePost={handleNavigatePost}
