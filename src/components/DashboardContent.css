@@ -501,7 +501,7 @@
 
 [data-theme="dark"] .dashboard-subtitle,
 .dark .dashboard-subtitle {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 /* Dark Mode Stats Cards */
@@ -513,7 +513,7 @@
 
 [data-theme="dark"] .stat-label,
 .dark .stat-label {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .stat-value,
@@ -534,7 +534,7 @@
 
 [data-theme="dark"] .section-subtitle,
 .dark .section-subtitle {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 /* Dark Mode Quick Actions */
@@ -590,12 +590,12 @@
 [data-theme="dark"] .post-platforms,
 .dark .post-status,
 .dark .post-platforms {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .post-date,
 .dark .post-date {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 /* Dark Mode Social Accounts */
@@ -629,7 +629,7 @@
 
 [data-theme="dark"] .account-status,
 .dark .account-status {
-  color: #a39dd0;
+  color: #ede9fc;
 }
 
 [data-theme="dark"] .status-badge.inactive,
