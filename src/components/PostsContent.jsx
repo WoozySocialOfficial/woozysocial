@@ -156,6 +156,7 @@ export const PostsContent = () => {
     setActiveTab(tab);
     setSortBy(SORT_OPTIONS[tab][0].id);
     setShowSortMenu(false);
+    setSelectedPost(null);
   };
 
   const getPlatformIcons = (platforms) => {
