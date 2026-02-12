@@ -555,11 +555,11 @@
 }
 
 [data-theme="dark"] .drop-zone-or {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .drop-zone-hint {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .browse-btn {
@@ -585,7 +585,7 @@
 }
 
 [data-theme="dark"] .file-size {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .upload-info {
@@ -625,11 +625,11 @@
 }
 
 [data-theme="dark"] .library-placeholder-sub {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .library-placeholder-icon {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .processing-indicator {

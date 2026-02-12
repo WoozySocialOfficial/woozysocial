@@ -359,7 +359,7 @@
 
 [data-theme="dark"] .notifications-empty,
 .dark .notifications-empty {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .notifications-empty p,
@@ -415,7 +415,7 @@
 
 [data-theme="dark"] .notif-time,
 .dark .notif-time {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .notif-unread-dot,

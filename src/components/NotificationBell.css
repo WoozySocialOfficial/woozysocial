@@ -473,7 +473,7 @@
 
 [data-theme="dark"] .notification-empty,
 .dark .notification-empty {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .notification-empty p,
@@ -519,7 +519,7 @@
 
 [data-theme="dark"] .notification-time,
 .dark .notification-time {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .unread-dot,

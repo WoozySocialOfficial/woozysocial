@@ -490,7 +490,7 @@
 
 [data-theme="dark"] .posts-search-input input::placeholder,
 .dark .posts-search-input input::placeholder {
-  color: #7b74b0 !important;
+  color: #a39dd0 !important;
 }
 
 [data-theme="dark"] .posts-table-container,
@@ -529,14 +529,14 @@
 
 [data-theme="dark"] .no-media,
 .dark .no-media {
-  color: #5a5290 !important;
+  color: #a39dd0 !important;
 }
 
 [data-theme="dark"] .posts-loading,
 [data-theme="dark"] .posts-empty,
 .dark .posts-loading,
 .dark .posts-empty {
-  color: #7b74b0 !important;
+  color: #a39dd0 !important;
 }
 
 [data-theme="dark"] .posts-sort-menu,

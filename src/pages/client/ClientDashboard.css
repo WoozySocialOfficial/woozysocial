@@ -481,7 +481,7 @@
 
 [data-theme="dark"] .activity-arrow,
 .dark .activity-arrow {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .activity-item.clickable:hover .activity-arrow,
@@ -496,7 +496,7 @@
 
 [data-theme="dark"] .activity-date,
 .dark .activity-date {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .activity-platforms,

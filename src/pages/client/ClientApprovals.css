@@ -807,7 +807,7 @@
 
 [data-theme="dark"] .no-selection,
 .dark .no-selection {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .detail-header,
@@ -931,14 +931,14 @@
 
 [data-theme="dark"] .comments-scroll-container .comment-time,
 .dark .comments-scroll-container .comment-time {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .comments-scroll-container .no-comments,
 [data-theme="dark"] .comments-scroll-container .loading-comments,
 .dark .comments-scroll-container .no-comments,
 .dark .comments-scroll-container .loading-comments {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .detail-comment textarea,
@@ -950,7 +950,7 @@
 
 [data-theme="dark"] .detail-comment textarea::placeholder,
 .dark .detail-comment textarea::placeholder {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .detail-comment textarea:focus,

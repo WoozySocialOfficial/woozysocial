@@ -333,7 +333,7 @@
 [data-theme="dark"] .agency-form-textarea::placeholder,
 .dark .agency-form-input::placeholder,
 .dark .agency-form-textarea::placeholder {
-  color: #7b74b0 !important;
+  color: #a39dd0 !important;
 }
 
 [data-theme="dark"] .agency-form-input:focus,

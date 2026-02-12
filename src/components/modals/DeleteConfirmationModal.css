@@ -85,7 +85,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-tertiary, #7b74b0);
+  color: var(--text-tertiary, #b8b2d9);
   margin-bottom: 8px;
 }
 
@@ -118,7 +118,7 @@
 
 .delete-details li {
   font-size: 14px;
-  color: var(--text-tertiary, #7b74b0);
+  color: var(--text-tertiary, #b8b2d9);
   margin-bottom: 4px;
 }
 
@@ -158,7 +158,7 @@
 
 .option-description {
   font-size: 13px;
-  color: var(--text-tertiary, #7b74b0);
+  color: var(--text-tertiary, #b8b2d9);
   margin: 0;
   padding-left: 28px;
 }

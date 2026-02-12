@@ -595,7 +595,7 @@
 
 [data-theme="dark"] .post-date,
 .dark .post-date {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 /* Dark Mode Social Accounts */
@@ -629,7 +629,7 @@
 
 [data-theme="dark"] .account-status,
 .dark .account-status {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .status-badge.inactive,

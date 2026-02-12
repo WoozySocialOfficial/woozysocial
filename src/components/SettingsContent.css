@@ -573,7 +573,7 @@ input:checked + .toggle-slider:before {
 
 [data-theme="dark"] .form-helper-text,
 .dark .form-helper-text {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .logo-preview,
@@ -584,7 +584,7 @@ input:checked + .toggle-slider:before {
 
 [data-theme="dark"] .logo-preview-placeholder,
 .dark .logo-preview-placeholder {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .logo-info,

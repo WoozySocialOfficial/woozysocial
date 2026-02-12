@@ -579,7 +579,7 @@
 
 [data-theme="dark"] .team-tab,
 .dark .team-tab {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .team-tab:hover,
@@ -607,7 +607,7 @@
 
 [data-theme="dark"] .section-subtitle,
 .dark .section-subtitle {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .add-member-button,
@@ -664,7 +664,7 @@
 
 [data-theme="dark"] .member-email,
 .dark .member-email {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .owner-badge,
@@ -779,12 +779,12 @@
 
 [data-theme="dark"] .info-subtext,
 .dark .info-subtext {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .invite-meta,
 .dark .invite-meta {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .invite-expiry.expired,

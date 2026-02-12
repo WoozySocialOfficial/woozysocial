@@ -551,7 +551,7 @@
 [data-theme="dark"] .no-data,
 .dark .chart-loading,
 .dark .no-data {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 /* Dark Mode Best Times List */
@@ -604,7 +604,7 @@
 
 [data-theme="dark"] .metric-label,
 .dark .metric-label {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 /* Dark Mode Top Posts */
@@ -631,7 +631,7 @@
 
 [data-theme="dark"] .top-post-date,
 .dark .top-post-date {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .engagement-value,
@@ -641,5 +641,5 @@
 
 [data-theme="dark"] .engagement-label,
 .dark .engagement-label {
-  color: #7b74b0;
+  color: #a39dd0;
 }

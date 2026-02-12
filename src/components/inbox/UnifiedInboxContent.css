@@ -1296,7 +1296,7 @@
 
 [data-theme="dark"] .unified-inbox-header p,
 .dark .unified-inbox-header p {
-  color: #a39dd0;
+  color: #c8c2e6;
 }
 
 [data-theme="dark"] .unified-inbox-refresh-btn,
@@ -1331,7 +1331,7 @@
 
 [data-theme="dark"] .unified-inbox-tab,
 .dark .unified-inbox-tab {
-  color: #a39dd0;
+  color: #c8c2e6;
 }
 
 [data-theme="dark"] .unified-inbox-tab:hover,
@@ -1347,7 +1347,7 @@
 
 [data-theme="dark"] .unified-empty-state,
 .dark .unified-empty-state {
-  color: #7b74b0;
+  color: #c8c2e6;
 }
 
 [data-theme="dark"] .unified-empty-state .empty-text,
@@ -1415,7 +1415,7 @@
 
 [data-theme="dark"] .mp-filter-tab,
 .dark .mp-filter-tab {
-  color: #a39dd0;
+  color: #c8c2e6;
 }
 
 [data-theme="dark"] .mp-filter-tab.active,
@@ -1533,6 +1533,143 @@
 [data-theme="dark"] .mp-you-prefix,
 .dark .mp-you-prefix {
   color: #a78bfa;
+}
+
+/* Dark: Improved text visibility */
+[data-theme="dark"] .unified-stat-label,
+.dark .unified-stat-label {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .cp-post-date,
+.dark .cp-post-date {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .cp-comment-text,
+.dark .cp-comment-text {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .cp-comment-meta,
+.dark .cp-comment-meta {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .cp-post-preview,
+.dark .cp-post-preview {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .cp-nested-text,
+.dark .cp-nested-text {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .cp-nested-date,
+.dark .cp-nested-date {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-filter-title,
+.dark .mp-filter-title {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .mp-filter-name,
+.dark .mp-filter-name {
+  color: #d5d0f0;
+}
+
+[data-theme="dark"] .mp-filter-count,
+.dark .mp-filter-count {
+  color: #c8c2e6;
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .mp-preview,
+.dark .mp-preview {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-time,
+.dark .mp-time {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-sender,
+.dark .mp-sender {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .mp-thread-name,
+.dark .mp-thread-name {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .mp-thread-platform,
+.dark .mp-thread-platform {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-username,
+.dark .mp-username {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-thread-avatar span,
+.dark .mp-thread-avatar span {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-avatar-placeholder,
+.dark .mp-avatar-placeholder {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-bubble.incoming .mp-bubble-time,
+.dark .mp-bubble.incoming .mp-bubble-time {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-reply-hint,
+.dark .mp-reply-hint {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-no-messages,
+.dark .mp-no-messages {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-empty-conversations,
+.dark .mp-empty-conversations {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .mp-empty-hint,
+.dark .mp-empty-hint {
+  color: #b8b2d9;
+}
+
+[data-theme="dark"] .unified-empty-state .empty-subtext,
+.dark .unified-empty-state .empty-subtext {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .cp-sync-btn,
+.dark .cp-sync-btn {
+  color: #c8c2e6;
+}
+
+[data-theme="dark"] .cp-comment-author,
+.dark .cp-comment-author {
+  color: #ede9fc;
+}
+
+[data-theme="dark"] .mp-sync-error-detail span,
+.dark .mp-sync-error-detail span {
+  color: #c8c2e6;
 }
 
 /* ===========================

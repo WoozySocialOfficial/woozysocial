@@ -585,7 +585,7 @@
 
 [data-theme="dark"] .post-date,
 .dark .post-date {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .comment-count,
@@ -684,7 +684,7 @@
 
 [data-theme="dark"] .comment-time,
 .dark .comment-time {
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .comment-text,
@@ -698,7 +698,7 @@
 .dark .no-comments {
   background: #0d0b1a;
   border-color: #352d5e;
-  color: #7b74b0;
+  color: #a39dd0;
 }
 
 [data-theme="dark"] .add-comment textarea,
