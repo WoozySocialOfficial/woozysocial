@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
       throwOnError: false, // Don't throw errors to ErrorBoundary - handle them gracefully in components
       useErrorBoundary: false, // Deprecated but keeping for backwards compat
-      refetchOnMount: false, // Use cached data on mount; staleTime handles freshness
+      refetchOnMount: true, // Refetch stale data on mount; staleTime prevents unnecessary refetches
       refetchOnReconnect: true, // Refetch when internet reconnects
     },
     mutations: {
