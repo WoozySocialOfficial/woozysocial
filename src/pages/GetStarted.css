@@ -1,4 +1,4 @@
-/* Get Started Wizard Container */
+/* Force light color scheme to prevent dark mode interference */
 .get-started-container {
   min-height: 100vh;
   background: #f9fafb;
@@ -6,6 +6,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  color-scheme: light !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 .get-started-header {
@@ -126,35 +128,55 @@
   font-size: 0.95rem;
 }
 
-.get-started-container .form-group input[type="text"],
-.get-started-container .form-group input[type="email"],
-.get-started-container .form-group input[type="password"] {
+/* NUCLEAR OPTION: Force white inputs with dark text */
+.get-started-container .wizard-step .form-group input[type="text"],
+.get-started-container .wizard-step .form-group input[type="email"],
+.get-started-container .wizard-step .form-group input[type="password"],
+.get-started-container input[type="text"],
+.get-started-container input[type="email"],
+.get-started-container input[type="password"] {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.2s;
+  padding: 0.75rem 1rem !important;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-size: 0.95rem !important;
+  transition: all 0.2s !important;
   background-color: #ffffff !important;
+  background-image: none !important;
   background: #ffffff !important;
-  color: #1f2937 !important;
-  -webkit-text-fill-color: #1f2937 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  color-scheme: light !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
 }
 
-.get-started-container .form-group input[type="text"]::placeholder,
-.get-started-container .form-group input[type="email"]::placeholder,
-.get-started-container .form-group input[type="password"]::placeholder {
+/* Placeholder styling */
+.get-started-container .form-group input::placeholder,
+.get-started-container input::placeholder {
   color: #9ca3af !important;
   opacity: 1 !important;
+  -webkit-text-fill-color: #9ca3af !important;
 }
 
-/* Override autofill styles */
-.get-started-container .form-group input:-webkit-autofill,
-.get-started-container .form-group input:-webkit-autofill:hover,
-.get-started-container .form-group input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #1f2937 !important;
-  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-  transition: background-color 5000s ease-in-out 0s;
+/* Override autofill styles - AGGRESSIVE */
+.get-started-container input:-webkit-autofill,
+.get-started-container input:-webkit-autofill:hover,
+.get-started-container input:-webkit-autofill:focus,
+.get-started-container input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Force input text color on focus */
+.get-started-container input:focus {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
 }
 
 .form-group input:focus {
@@ -296,6 +318,167 @@
   transform: translateY(-1px);
 }
 
+/* Pricing Cards for Step 4 */
+.pricing-selection-step {
+  width: 100%;
+  max-width: 1200px;
+  padding: 2rem 1rem;
+}
+
+.pricing-grid-signup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.pricing-card-signup {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-card-signup:hover {
+  border-color: #667eea;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  transform: translateY(-4px);
+}
+
+.pricing-card-signup.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+}
+
+.pricing-card-signup.popular {
+  border-color: #8b5cf6;
+}
+
+.pricing-card-signup.recommended {
+  border-color: #10b981;
+}
+
+.popular-badge,
+.recommended-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #8b5cf6;
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.recommended-badge {
+  background: #10b981;
+}
+
+.card-header-signup {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.card-header-signup h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+}
+
+.tier-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.price-section-signup {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.price-section-signup .price {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #667eea;
+  display: block;
+  line-height: 1;
+}
+
+.price-section-signup .period {
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.features-list-signup {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  flex: 1;
+}
+
+.features-list-signup li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.features-list-signup .feature-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.features-list-signup .feature-icon.included {
+  color: #10b981;
+}
+
+.features-list-signup .feature-icon.excluded {
+  color: #d1d5db;
+}
+
+.features-list-signup li.excluded {
+  color: #9ca3af;
+}
+
+.select-indicator-signup {
+  background: #667eea;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pricing-card-signup:not(.selected) .select-indicator-signup {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pricing-card-signup.selected .select-indicator-signup .selected-icon {
+  color: white;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .get-started-container {
@@ -330,5 +513,18 @@
 
   .btn {
     width: 100%;
+  }
+
+  .pricing-grid-signup {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .pricing-card-signup {
+    padding: 1.5rem 1rem;
+  }
+
+  .price-section-signup .price {
+    font-size: 2rem;
   }
 }

@@ -1,6 +1,71 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 import './GetStarted.css';
+
+// Pricing tiers configuration
+const PRICING_TIERS = [
+  {
+    id: 'solo',
+    name: 'Solo',
+    price: 35,
+    currency: '£',
+    description: 'Perfect for individuals',
+    features: [
+      { text: '1 workspace', included: true },
+      { text: '1 team member', included: true },
+      { text: 'Basic analytics', included: true },
+      { text: 'Email support', included: true },
+      { text: 'Client approvals', included: false },
+    ],
+    popular: false,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 50,
+    currency: '£',
+    description: 'For growing businesses',
+    features: [
+      { text: '1 workspace', included: true },
+      { text: 'Up to 3 members', included: true },
+      { text: 'Advanced analytics', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Client approvals', included: false },
+    ],
+    popular: false,
+  },
+  {
+    id: 'pro-plus',
+    name: 'Pro Plus',
+    price: 115,
+    currency: '£',
+    description: 'Advanced features for power users',
+    features: [
+      { text: 'Up to 4 workspaces', included: true },
+      { text: 'Unlimited members', included: true },
+      { text: 'Full analytics suite', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Client approvals', included: true },
+    ],
+    popular: true,
+  },
+  {
+    id: 'agency',
+    name: 'Agency',
+    price: 288,
+    currency: '£',
+    description: 'Complete solution for agencies',
+    features: [
+      { text: 'Unlimited workspaces', included: true },
+      { text: 'Unlimited members', included: true },
+      { text: 'Full analytics suite', included: true },
+      { text: 'Dedicated support', included: true },
+      { text: 'Client portal & approvals', included: true },
+    ],
+    popular: false,
+  },
+];
 
 const GetStarted = () => {
   const navigate = useNavigate();
@@ -549,37 +614,58 @@ const GetStarted = () => {
 
       {/* Step 4: Plan Selection */}
       {currentStep === 4 && (
-        <div className="wizard-step">
-          <h2>Choose your plan</h2>
+        <div className="pricing-selection-step">
+          <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Choose your plan</h2>
           {formData.recommendedTier && (
-            <p className="step-subtitle">
+            <p className="step-subtitle" style={{ textAlign: 'center', marginBottom: '2rem' }}>
               Based on your answers, we recommend the <strong>{planNames[formData.recommendedTier]}</strong> plan
             </p>
           )}
 
-          <div className="radio-group">
-            {[
-              { value: 'solo', name: 'Solo', price: '£35/month', desc: '1 workspace, 1 member' },
-              { value: 'pro', name: 'Pro', price: '£50/month', desc: '1 workspace, up to 3 members' },
-              { value: 'pro-plus', name: 'Pro Plus', price: '£115/month', desc: 'Up to 4 workspaces, unlimited members' },
-              { value: 'agency', name: 'Agency', price: '£288/month', desc: 'Unlimited workspaces & members' }
-            ].map(plan => (
-              <div
-                key={plan.value}
-                className={`radio-option ${formData.selectedTier === plan.value ? 'selected' : ''}`}
-                onClick={() => updateField('selectedTier', plan.value)}
-              >
-                <input
-                  type="radio"
-                  checked={formData.selectedTier === plan.value}
-                  onChange={() => {}}
-                />
-                <div>
-                  <strong>{plan.name}</strong> - {plan.price}
-                  <p className="plan-desc">{plan.desc}</p>
+          <div className="pricing-grid-signup">
+            {PRICING_TIERS.map((tier) => {
+              const isSelected = formData.selectedTier === tier.id;
+              const isRecommended = formData.recommendedTier === tier.id;
+
+              return (
+                <div
+                  key={tier.id}
+                  className={`pricing-card-signup ${isSelected ? 'selected' : ''} ${tier.popular ? 'popular' : ''} ${isRecommended ? 'recommended' : ''}`}
+                  onClick={() => updateField('selectedTier', tier.id)}
+                >
+                  {tier.popular && <div className="popular-badge">Most Popular</div>}
+                  {isRecommended && !tier.popular && <div className="recommended-badge">Recommended</div>}
+
+                  <div className="card-header-signup">
+                    <h3>{tier.name}</h3>
+                    <p className="tier-description">{tier.description}</p>
+                  </div>
+
+                  <div className="price-section-signup">
+                    <span className="price">{tier.currency}{tier.price}</span>
+                    <span className="period">per month</span>
+                  </div>
+
+                  <ul className="features-list-signup">
+                    {tier.features.map((feature, index) => (
+                      <li key={index} className={feature.included ? 'included' : 'excluded'}>
+                        {feature.included ? (
+                          <FaCheck className="feature-icon included" />
+                        ) : (
+                          <FaTimes className="feature-icon excluded" />
+                        )}
+                        {feature.text}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="select-indicator-signup">
+                    {isSelected && <FaCheck className="selected-icon" />}
+                    {isSelected ? 'Selected' : 'Select Plan'}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
