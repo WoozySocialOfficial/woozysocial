@@ -36,14 +36,30 @@ module.exports = async (req, res) => {
     const baseUrl = `https://${req.headers.host}`;
     const targetUrl = `${baseUrl}/api/stripe/create-checkout-session-onboarding`;
 
-    // Build success and cancel URLs for the FRONTEND (not API subdomain)
-    // API is at api.woozysocials.com, frontend is at woozysocials.com
-    const frontendUrl = baseUrl.replace('api.woozysocials.com', 'woozysocials.com')
-                               .replace('api.woozysocial.com', 'woozysocial.com');
+    // Determine frontend URL based on environment
+    let frontendUrl;
+
+    // Check if we're on Vercel (VERCEL_URL is set for all Vercel deployments)
+    if (process.env.VERCEL_URL) {
+      // Use the Vercel deployment URL (works for both preview and production)
+      frontendUrl = `https://${process.env.VERCEL_URL}`;
+    } else if (req.headers.host.includes('api.')) {
+      // Fallback: Strip API subdomain for production
+      frontendUrl = baseUrl.replace('api.woozysocials.com', 'www.woozysocials.com')
+                           .replace('api.woozysocial.com', 'www.woozysocial.com');
+    } else {
+      // Use the request host as-is
+      frontendUrl = baseUrl;
+    }
+
     const successUrl = `${frontendUrl}/get-started/success`;
     const cancelUrl = `${frontendUrl}/get-started?step=4&payment=cancelled`;
 
-    console.log('[CREATE-CHECKOUT] Request host:', req.headers.host);
+    console.log('[CREATE-CHECKOUT] Environment:', {
+      VERCEL_URL: process.env.VERCEL_URL,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      requestHost: req.headers.host
+    });
     console.log('[CREATE-CHECKOUT] Frontend URL:', frontendUrl);
     console.log('[CREATE-CHECKOUT] Proxying to:', targetUrl);
     console.log('[CREATE-CHECKOUT] Payload:', {
