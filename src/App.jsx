@@ -35,6 +35,8 @@ const SignUpPage = lazyRetry(() => import("./components/auth/SignUpPage").then(m
 const ResetPasswordPage = lazyRetry(() => import("./components/auth/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
 const AcceptInvite = lazyRetry(() => import("./pages/AcceptInvite").then(m => ({ default: m.AcceptInvite })));
 const TokenLogin = lazyRetry(() => import("./pages/TokenLogin"));
+const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
+const GetStartedSuccess = lazyRetry(() => import("./pages/GetStartedSuccess"));
 
 // Main app pages - lazy loaded
 const DashboardContent = lazyRetry(() => import("./components/DashboardContent").then(m => ({ default: m.DashboardContent })));
@@ -120,6 +122,8 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/get-started" element={<GetStarted />} />
+              <Route path="/get-started/success" element={<GetStartedSuccess />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/auth/token-login" element={<TokenLogin />} />
