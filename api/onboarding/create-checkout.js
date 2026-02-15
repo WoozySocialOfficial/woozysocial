@@ -36,10 +36,15 @@ module.exports = async (req, res) => {
     const baseUrl = `https://${req.headers.host}`;
     const targetUrl = `${baseUrl}/api/stripe/create-checkout-session-onboarding`;
 
-    // Build success and cancel URLs dynamically based on current host
-    const successUrl = `${baseUrl}/get-started/success`;
-    const cancelUrl = `${baseUrl}/get-started?step=4&payment=cancelled`;
+    // Build success and cancel URLs for the FRONTEND (not API subdomain)
+    // API is at api.woozysocials.com, frontend is at woozysocials.com
+    const frontendUrl = baseUrl.replace('api.woozysocials.com', 'woozysocials.com')
+                               .replace('api.woozysocial.com', 'woozysocial.com');
+    const successUrl = `${frontendUrl}/get-started/success`;
+    const cancelUrl = `${frontendUrl}/get-started?step=4&payment=cancelled`;
 
+    console.log('[CREATE-CHECKOUT] Request host:', req.headers.host);
+    console.log('[CREATE-CHECKOUT] Frontend URL:', frontendUrl);
     console.log('[CREATE-CHECKOUT] Proxying to:', targetUrl);
     console.log('[CREATE-CHECKOUT] Payload:', {
       userId,

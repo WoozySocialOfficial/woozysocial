@@ -1,7 +1,7 @@
 /* Get Started Wizard Container */
 .get-started-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f9fafb;
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
@@ -11,13 +11,14 @@
 .get-started-header {
   text-align: center;
   margin-bottom: 2rem;
-  color: white;
+  color: #1f2937;
 }
 
 .get-started-header h1 {
   font-size: 2rem;
   font-weight: 600;
   margin: 0;
+  color: #1f2937;
 }
 
 /* Progress Bar */
@@ -34,26 +35,27 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: #e5e7eb;
+  color: #6b7280;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 2px solid #e5e7eb;
 }
 
 .progress-step.active {
-  background: white;
-  color: #667eea;
-  border-color: white;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
 }
 
 .progress-step.completed {
-  background: rgba(255, 255, 255, 0.4);
-  border-color: white;
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
 }
 
 /* Alert */
@@ -133,8 +135,14 @@
   border-radius: 8px;
   font-size: 0.95rem;
   transition: all 0.2s;
-  background: white;
-  color: #1f2937;
+  background: white !important;
+  color: #1f2937 !important;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group input[type="email"]::placeholder,
+.form-group input[type="password"]::placeholder {
+  color: #9ca3af !important;
 }
 
 .form-group input:focus {
