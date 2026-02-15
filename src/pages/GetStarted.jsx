@@ -439,6 +439,11 @@ const GetStarted = () => {
               placeholder="John Doe"
               value={formData.fullName}
               onChange={(e) => updateField('fullName', e.target.value)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                WebkitTextFillColor: '#111827'
+              }}
             />
             {errors.fullName && <div className="form-error">{errors.fullName}</div>}
           </div>
@@ -452,6 +457,11 @@ const GetStarted = () => {
               value={formData.email}
               onChange={(e) => updateField('email', e.target.value)}
               onBlur={validateEmailAvailability}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                WebkitTextFillColor: '#111827'
+              }}
             />
             {errors.email && <div className="form-error">{errors.email}</div>}
           </div>
@@ -464,6 +474,11 @@ const GetStarted = () => {
               placeholder="Minimum 8 characters"
               value={formData.password}
               onChange={(e) => updateField('password', e.target.value)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                WebkitTextFillColor: '#111827'
+              }}
             />
             {errors.password && <div className="form-error">{errors.password}</div>}
           </div>
@@ -476,6 +491,11 @@ const GetStarted = () => {
               placeholder="Re-enter your password"
               value={formData.confirmPassword}
               onChange={(e) => updateField('confirmPassword', e.target.value)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                WebkitTextFillColor: '#111827'
+              }}
             />
             {errors.confirmPassword && <div className="form-error">{errors.confirmPassword}</div>}
           </div>
@@ -496,6 +516,11 @@ const GetStarted = () => {
               placeholder="My Awesome Brand"
               value={formData.workspaceName}
               onChange={(e) => updateField('workspaceName', e.target.value)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#111827',
+                WebkitTextFillColor: '#111827'
+              }}
             />
             {errors.workspaceName && <div className="form-error">{errors.workspaceName}</div>}
           </div>
