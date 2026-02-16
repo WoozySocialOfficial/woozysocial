@@ -1,11 +1,9 @@
-// In production, API is at woozysocials.com. In development, use localhost:3001
-// Runtime detection is more reliable than build-time MODE variable
-const isLocalhost = typeof window !== 'undefined' &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-const baseURL = isLocalhost
-  ? "http://localhost:3001"
-  : "https://www.woozysocials.com";
+// Use environment variable for API URL, with fallback for development
+const baseURL = import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' &&
+   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? "http://localhost:3001"
+    : "https://www.woozysocials.com");
 
 // ===========================
 // SUBSCRIPTION TIERS
