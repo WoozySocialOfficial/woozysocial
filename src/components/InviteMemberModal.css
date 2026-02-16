@@ -212,6 +212,8 @@
 .invite-button {
   background: #afabf9;
   color: #7c3aed;
+  padding: 8px 18px;
+  font-size: 13px;
 }
 
 .invite-button:hover:not(:disabled) {
