@@ -166,15 +166,11 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/remove-member`, {
-        method: 'POST',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}?userId=${user.id}`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          memberId,
-          userId: user.id,
-        }),
       });
 
       const data = await response.json();
@@ -193,13 +189,12 @@ export const TeamContent = () => {
 
   const handleUpdateRole = async (memberId, newRole) => {
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
-        method: 'POST',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          memberId,
           role: newRole,
           userId: user.id,
         }),
@@ -220,13 +215,12 @@ export const TeamContent = () => {
 
   const handleTogglePermission = async (memberId, permName, value) => {
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
-        method: 'POST',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          memberId,
           userId: user.id,
           permissions: { [permName]: value },
         }),
@@ -351,14 +345,14 @@ export const TeamContent = () => {
                     return (
                       <div key={member.id} className="member-card">
                         <div className="member-info">
-                          <div className={`member-avatar ${isMemberOwner ? 'owner' : ''}`}>{getInitials(member.profile?.email)}</div>
+                          <div className={`member-avatar ${isMemberOwner ? 'owner' : ''}`}>{getInitials(member.user?.email)}</div>
                           <div className="member-details">
                             <h3 className="member-name">
-                              {member.profile?.full_name || member.profile?.email || "Unknown user"}
+                              {member.user?.full_name || member.user?.email || "Unknown user"}
                               {isCurrentUser && !isMemberOwner && <span className="owner-badge" style={{backgroundColor: '#4CAF50'}}>You</span>}
                             </h3>
                             <p className="member-email">
-                              {member.profile?.email || "Email not available"}
+                              {member.user?.email || "Email not available"}
                             </p>
                             <p className="member-email">
                               Joined {new Date(member.joined_at || member.created_at).toLocaleDateString()}
@@ -390,7 +384,7 @@ export const TeamContent = () => {
                                   <label className="toggle-label">
                                     <input
                                       type="checkbox"
-                                      checked={member.permissions?.canApprovePosts || false}
+                                      checked={member.can_approve_posts || false}
                                       onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
                                     />
                                     <span className="toggle-switch"></span>
@@ -399,7 +393,7 @@ export const TeamContent = () => {
                                   <label className="toggle-label">
                                     <input
                                       type="checkbox"
-                                      checked={member.permissions?.canManageTeam || false}
+                                      checked={member.can_manage_team || false}
                                       onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
                                     />
                                     <span className="toggle-switch"></span>
