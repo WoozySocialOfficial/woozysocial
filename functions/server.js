@@ -34,15 +34,49 @@ const STRIPE_PRICE_IDS = {
   "brand-bolt": env.STRIPE_PRICE_BRAND_BOLT,
 };
 
-const corsOptions = {};
+const allowedOrigins = [
+  'https://www.woozysocials.com',
+  'https://api.woozysocial.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // For now, allow all origins for maximum compatibility
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+};
 
 const app = express();
 app.use(cors(corsOptions));
 const upload = multer({ dest: "uploads/" });
 
-// WARNING: This CORS configuration allows all origins and is not secure for production use
+// Additional CORS middleware for explicit header control
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+
+  // Set the origin header based on the request
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+  } else if (origin) {
+    // Allow other origins for development/testing
+    res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    res.header("Access-Control-Allow-Origin", "*");
+  }
+
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, PUT, PATCH, DELETE"
@@ -52,6 +86,7 @@ app.use((req, res, next) => {
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
 
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
