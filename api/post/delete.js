@@ -36,11 +36,11 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = await parseBody(req);
-    const { postId, workspaceId, deleteFromDatabase = true } = body;
+    let { postId, databaseId, workspaceId, deleteFromDatabase = true } = body;
 
-    // Validate required fields
-    if (!postId) {
-      return sendError(res, "postId is required", ErrorCodes.VALIDATION_ERROR);
+    // Validate required fields - need at least one identifier
+    if (!postId && !databaseId) {
+      return sendError(res, "postId or databaseId is required", ErrorCodes.VALIDATION_ERROR);
     }
 
     if (!workspaceId) {
@@ -49,6 +49,21 @@ module.exports = async function handler(req, res) {
 
     if (!isValidUUID(workspaceId)) {
       return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // If we have a databaseId but no Ayrshare postId, look it up from the database
+    const supabase = getSupabase();
+    if (!postId && databaseId && supabase) {
+      const { data: dbPost } = await supabase
+        .from('posts')
+        .select('ayr_post_id')
+        .eq('id', databaseId)
+        .eq('workspace_id', workspaceId)
+        .single();
+
+      if (dbPost?.ayr_post_id) {
+        postId = dbPost.ayr_post_id;
+      }
     }
 
     // Get workspace profile key
@@ -61,109 +76,82 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    console.log('[DELETE POST] Attempting to delete post:', { postId, workspaceId });
+    console.log('[DELETE POST] Attempting to delete post:', { postId, databaseId, workspaceId });
 
-    // Delete from Ayrshare FIRST - this is the critical operation
+    // Delete from Ayrshare if we have an Ayrshare post ID
     let ayrshareDeleted = false;
     let ayrshareError = null;
 
-    try {
-      const response = await axios.delete(
-        `${BASE_AYRSHARE}/post/${postId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-            "Profile-Key": profileKey
-          },
-          timeout: 30000
+    if (postId) {
+      try {
+        const response = await axios.delete(
+          `${BASE_AYRSHARE}/post/${postId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+              "Profile-Key": profileKey
+            },
+            timeout: 30000
+          }
+        );
+
+        if (response.data && (response.data.status === 'success' || response.status === 200)) {
+          ayrshareDeleted = true;
+          console.log('[DELETE POST] Successfully deleted from Ayrshare:', response.data);
+        } else {
+          ayrshareError = response.data;
+          console.warn('[DELETE POST] Unexpected Ayrshare response:', response.data);
         }
-      );
+      } catch (axiosError) {
+        const statusCode = axiosError.response?.status;
+        const responseData = axiosError.response?.data;
 
-      if (response.data && (response.data.status === 'success' || response.status === 200)) {
-        ayrshareDeleted = true;
-        console.log('[DELETE POST] Successfully deleted from Ayrshare:', response.data);
-      } else {
-        ayrshareError = response.data;
-        console.warn('[DELETE POST] Unexpected Ayrshare response:', response.data);
+        console.error('[DELETE POST] Ayrshare delete failed:', {
+          status: statusCode,
+          data: responseData,
+          message: axiosError.message
+        });
 
-        // Don't proceed with database delete if Ayrshare failed
-        return sendError(
-          res,
-          "Failed to delete post from social media platforms",
-          ErrorCodes.EXTERNAL_API_ERROR,
-          {
-            message: "Post could not be deleted from social media. Database was not modified.",
-            ayrshareError: response.data
-          }
-        );
+        // 404 means post doesn't exist on Ayrshare (already deleted or never existed)
+        if (statusCode === 404) {
+          console.log('[DELETE POST] Post not found on Ayrshare (404 - may already be deleted), proceeding with database cleanup');
+          ayrshareDeleted = true;
+        } else {
+          ayrshareError = responseData || axiosError.message;
+          // Don't block database deletion if Ayrshare fails - still clean up our DB
+          console.warn('[DELETE POST] Ayrshare deletion failed, will still attempt database cleanup');
+        }
       }
-    } catch (axiosError) {
-      const statusCode = axiosError.response?.status;
-      const responseData = axiosError.response?.data;
-
-      console.error('[DELETE POST] Ayrshare delete failed:', {
-        status: statusCode,
-        data: responseData,
-        message: axiosError.message
-      });
-
-      // 404 means post doesn't exist on Ayrshare (already deleted or never existed)
-      // This is OK - we can still clean up our database
-      if (statusCode === 404) {
-        console.log('[DELETE POST] Post not found on Ayrshare (404 - may already be deleted), proceeding with database cleanup');
-        ayrshareDeleted = true; // Treat as success for database cleanup
-      } else {
-        // Any other error - STOP and return error
-        // Don't delete from database if we can't delete from social media
-        return sendError(
-          res,
-          "Failed to delete post from social media platforms",
-          ErrorCodes.EXTERNAL_API_ERROR,
-          {
-            message: "Post could not be deleted from social media. Please try again or delete manually from the platform. Database was not modified.",
-            statusCode,
-            ayrshareError: responseData || axiosError.message
-          }
-        );
-      }
+    } else {
+      // No Ayrshare ID - post was never published (scheduled/pending), skip Ayrshare deletion
+      console.log('[DELETE POST] No Ayrshare post ID - skipping Ayrshare deletion');
+      ayrshareDeleted = true;
     }
 
-    // Delete from database if requested
-    const supabase = getSupabase();
+    // Delete from database
     let databaseDeleted = false;
     let databaseError = null;
 
     if (deleteFromDatabase && supabase) {
       try {
-        // Find the post in our database by ayr_post_id
-        const { data: posts, error: findError } = await supabase
-          .from('posts')
-          .select('id')
-          .eq('ayr_post_id', postId)
-          .eq('workspace_id', workspaceId);
+        // Delete by database ID (preferred) or fall back to ayr_post_id
+        let deleteQuery = supabase.from('posts').delete().eq('workspace_id', workspaceId);
 
-        if (findError) {
-          console.error('[DELETE POST] Error finding post in database:', findError);
-          databaseError = findError.message;
-        } else if (posts && posts.length > 0) {
-          // Delete the post
-          const { error: deleteError } = await supabase
-            .from('posts')
-            .delete()
-            .eq('ayr_post_id', postId)
-            .eq('workspace_id', workspaceId);
+        if (databaseId) {
+          deleteQuery = deleteQuery.eq('id', databaseId);
+        } else if (postId) {
+          deleteQuery = deleteQuery.eq('ayr_post_id', postId);
+        }
 
-          if (deleteError) {
-            console.error('[DELETE POST] Error deleting from database:', deleteError);
-            databaseError = deleteError.message;
-          } else {
-            databaseDeleted = true;
-            console.log('[DELETE POST] Successfully deleted from database');
-          }
+        const { error: deleteError, count } = await deleteQuery;
+
+        if (deleteError) {
+          console.error('[DELETE POST] Error deleting from database:', deleteError);
+          databaseError = deleteError.message;
         } else {
-          console.log('[DELETE POST] Post not found in database (may have been draft-only or already deleted)');
-          databaseDeleted = true; // Treat as success if not found
+          databaseDeleted = true;
+          console.log('[DELETE POST] Successfully deleted from database');
         }
       } catch (dbError) {
         console.error('[DELETE POST] Database operation exception:', dbError);

@@ -184,36 +184,35 @@ export const ComposeContent = () => {
     return { width, height, duration, fileSizeMB, warnings };
   };
 
-  // Progress countdown effect - makes the timer feel realistic
+  // Smooth progress bar animation - advances gradually without a countdown
   useEffect(() => {
     if (isLoading && postingProgress.step && postingProgress.step !== 'complete') {
-      // Clear any existing interval
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
 
-      // Start countdown interval
+      // Animate progress bar smoothly, slowing down as it approaches the cap
       progressIntervalRef.current = setInterval(() => {
         setPostingProgress(prev => {
-          if (prev.estimatedTime <= 1 || prev.step === 'complete') {
-            return prev;
+          if (prev.step === 'complete') return prev;
+
+          let maxPercent = 45;
+          let increment = 1.5;
+          if (prev.step === 'publishing' || prev.step === 'updating' || prev.step === 'resolving') {
+            maxPercent = 90;
+            increment = 2;
           }
 
-          // Calculate progress based on step
-          let targetPercent = prev.percent;
-          if (prev.step === 'uploading') {
-            targetPercent = Math.min(prev.percent + 2, 45);
-          } else if (prev.step === 'publishing') {
-            targetPercent = Math.min(prev.percent + 3, 95);
-          }
+          // Slow down as we approach the cap so it never stalls at a fixed number
+          const remaining = maxPercent - prev.percent;
+          const easedIncrement = Math.max(0.3, increment * (remaining / maxPercent));
 
           return {
             ...prev,
-            percent: targetPercent,
-            estimatedTime: Math.max(0, prev.estimatedTime - 1)
+            percent: Math.min(prev.percent + easedIncrement, maxPercent)
           };
         });
-      }, 1000);
+      }, 800);
 
       return () => {
         if (progressIntervalRef.current) {
@@ -221,7 +220,6 @@ export const ComposeContent = () => {
         }
       };
     } else {
-      // Clear interval when not loading
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -2323,9 +2321,9 @@ export const ComposeContent = () => {
             <p className="progress-time">
               {postingProgress.step === 'complete'
                 ? 'Done!'
-                : postingProgress.estimatedTime > 0
-                  ? `~${postingProgress.estimatedTime}s remaining`
-                  : 'Almost done...'}
+                : postingProgress.percent > 75
+                  ? 'Almost done...'
+                  : 'This may take a moment...'}
             </p>
           </div>
         </div>

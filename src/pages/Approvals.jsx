@@ -355,7 +355,11 @@ export const Approvals = () => {
 
                 {post.media_url && (
                   <div className="post-media-preview">
-                    <img src={post.media_url} alt="Post media" />
+                    {/\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(post.media_url) ? (
+                      <video src={post.media_url} controls style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                    ) : (
+                      <img src={post.media_url} alt="Post media" />
+                    )}
                   </div>
                 )}
 
@@ -395,7 +399,11 @@ export const Approvals = () => {
               {selectedPost.media_url && (
                 <div className="detail-section">
                   <label>Media</label>
-                  <img src={selectedPost.media_url} alt="Post media" className="detail-media" />
+                  {/\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(selectedPost.media_url) ? (
+                    <video src={selectedPost.media_url} controls className="detail-media" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                  ) : (
+                    <img src={selectedPost.media_url} alt="Post media" className="detail-media" />
+                  )}
                 </div>
               )}
 

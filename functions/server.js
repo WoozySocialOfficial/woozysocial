@@ -1102,7 +1102,86 @@ app.get("/api/analytics/best-time", requireActiveProfile, async (req, res) => {
 // AYRSHARE POST MANAGEMENT ENDPOINTS
 // ============================================================
 
-// Delete a published post
+// Delete a post - supports both Ayrshare post ID and database ID
+app.delete("/api/post/delete", requireActiveProfile, async (req, res) => {
+  try {
+    let { postId, databaseId, workspaceId } = req.body;
+
+    if (!postId && !databaseId) {
+      return res.status(400).json({ error: "postId or databaseId is required" });
+    }
+    if (!workspaceId) {
+      return res.status(400).json({ error: "workspaceId is required" });
+    }
+
+    // If we have a databaseId but no Ayrshare postId, look it up
+    if (!postId && databaseId) {
+      const { data: dbPost } = await supabase
+        .from('posts')
+        .select('ayr_post_id')
+        .eq('id', databaseId)
+        .eq('workspace_id', workspaceId)
+        .single();
+      if (dbPost?.ayr_post_id) {
+        postId = dbPost.ayr_post_id;
+      }
+    }
+
+    // Get workspace's profile key
+    let profileKey = env.AYRSHARE_PROFILE_KEY;
+    if (workspaceId) {
+      const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+      if (workspaceProfileKey) profileKey = workspaceProfileKey;
+    }
+
+    // Delete from Ayrshare if we have an Ayrshare ID
+    let ayrshareDeleted = false;
+    if (postId) {
+      try {
+        await axios.delete(`${BASE_AYRSHARE}/post`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
+            "Profile-Key": profileKey
+          },
+          data: { id: postId }
+        });
+        ayrshareDeleted = true;
+      } catch (ayrErr) {
+        if (ayrErr.response?.status === 404) {
+          ayrshareDeleted = true; // Already deleted
+        } else {
+          console.warn("[DELETE POST] Ayrshare deletion failed:", ayrErr.response?.data || ayrErr.message);
+        }
+      }
+    } else {
+      ayrshareDeleted = true; // No Ayrshare ID, skip
+    }
+
+    // Delete from database
+    let deleteQuery = supabase.from('posts').delete().eq('workspace_id', workspaceId);
+    if (databaseId) {
+      deleteQuery = deleteQuery.eq('id', databaseId);
+    } else if (postId) {
+      deleteQuery = deleteQuery.eq('ayr_post_id', postId);
+    }
+    await deleteQuery;
+
+    res.json({
+      success: true,
+      message: "Post deleted successfully",
+      deletedFromAyrshare: ayrshareDeleted
+    });
+  } catch (error) {
+    console.error("Error deleting post:", error.response?.data || error.message);
+    res.status(500).json({
+      error: "Failed to delete post",
+      details: error.response?.data || error.message
+    });
+  }
+});
+
+// Legacy delete route (kept for backwards compat)
 app.delete("/api/post/:id", requireActiveProfile, async (req, res) => {
   try {
     const { id } = req.params;

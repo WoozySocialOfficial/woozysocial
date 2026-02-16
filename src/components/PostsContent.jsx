@@ -217,19 +217,25 @@ export const PostsContent = () => {
     }
   };
 
-  const handleDeletePost = async (e, postId) => {
+  const handleDeletePost = async (e, post) => {
     e.stopPropagation(); // Prevent row click
 
     if (!window.confirm("Delete this post from all platforms? This cannot be undone.")) return;
 
     try {
-      const response = await fetch(`${baseURL}/api/post/${postId}?workspaceId=${activeWorkspace.id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${baseURL}/api/post/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.ayr_post_id || null,
+          databaseId: post.id,
+          workspaceId: activeWorkspace.id
+        })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.details || "Failed to delete post");
+        throw new Error(error.details || error.error || "Failed to delete post");
       }
 
       // Invalidate cache and refresh
@@ -446,7 +452,7 @@ export const PostsContent = () => {
                   ) : activeTab === 'history' || activeTab === 'scheduled' ? (
                     <button
                       className="delete-post-btn"
-                      onClick={(e) => handleDeletePost(e, post.id)}
+                      onClick={(e) => handleDeletePost(e, post)}
                       title="Delete post"
                     >
                       <FaTrash size={14} />
