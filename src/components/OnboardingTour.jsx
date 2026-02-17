@@ -96,7 +96,7 @@ export const OnboardingTour = ({ onComplete }) => {
   const completeTour = async () => {
     setIsVisible(false);
 
-    // Mark tour as completed in the database
+    // Mark app tour as completed in the database
     if (user) {
       try {
         await fetch(`${baseURL}/api/user/update-profile`, {
@@ -104,11 +104,11 @@ export const OnboardingTour = ({ onComplete }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: user.id,
-            updates: { onboarding_completed: true }
+            updates: { app_tour_completed: true }
           })
         });
       } catch (error) {
-        console.error('Failed to mark onboarding complete:', error);
+        console.error('Failed to mark app tour complete:', error);
       }
     }
 

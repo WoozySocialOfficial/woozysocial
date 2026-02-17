@@ -1001,6 +1001,37 @@ app.post("/api/create-user-profile", async (req, res) => {
   }
 });
 
+// Update user profile (for app tour completion, etc.)
+app.post("/api/user/update-profile", async (req, res) => {
+  try {
+    const { userId, updates } = req.body;
+    if (!userId || !updates) {
+      return res.status(400).json({ error: "userId and updates are required" });
+    }
+
+    const ALLOWED_FIELDS = ['app_tour_completed', 'full_name', 'avatar_url'];
+    const safeUpdates = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (ALLOWED_FIELDS.includes(key)) safeUpdates[key] = value;
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update(safeUpdates)
+      .eq('id', userId);
+
+    if (error) throw error;
+    res.json({ success: true, updated: Object.keys(safeUpdates) });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
 // Endpoint to get analytics and best posting times
 app.get("/api/analytics/best-time", requireActiveProfile, async (req, res) => {
   try {

@@ -5,11 +5,11 @@ import { OnboardingTour } from './OnboardingTour';
 /**
  * Wrapper component that shows onboarding tour for new users
  * Shows tour when:
- * 1. User has an active subscription (not free)
- * 2. User hasn't completed onboarding yet
+ * 1. User has an active subscription (paid)
+ * 2. User hasn't completed the in-app tour yet
  */
 export const OnboardingWrapper = ({ children }) => {
-  const { user, profile, hasActiveProfile } = useAuth();
+  const { user, profile, subscriptionStatus, isWhitelisted } = useAuth();
   const [showTour, setShowTour] = useState(false);
   const [checked, setChecked] = useState(false);
 
@@ -20,17 +20,17 @@ export const OnboardingWrapper = ({ children }) => {
       return;
     }
 
-    // Check if user should see onboarding
     const shouldShowTour = () => {
-      // Don't show if user doesn't have active profile/subscription
-      if (!hasActiveProfile) return false;
+      // Only show after payment — active subscription or whitelisted
+      const hasPaid = subscriptionStatus === 'active' || isWhitelisted;
+      if (!hasPaid) return false;
 
       // Check localStorage first (faster)
       const localCompleted = localStorage.getItem('woozy_onboarding_completed');
       if (localCompleted === 'true') return false;
 
-      // Check profile for onboarding_completed flag
-      if (profile.onboarding_completed) return false;
+      // Check profile for app_tour_completed flag (separate from signup onboarding)
+      if (profile.app_tour_completed) return false;
 
       // Show tour for users who haven't completed it
       return true;
@@ -38,7 +38,7 @@ export const OnboardingWrapper = ({ children }) => {
 
     setShowTour(shouldShowTour());
     setChecked(true);
-  }, [user, profile, hasActiveProfile]);
+  }, [user, profile, subscriptionStatus, isWhitelisted]);
 
   const handleTourComplete = () => {
     setShowTour(false);
