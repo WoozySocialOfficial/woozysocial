@@ -496,7 +496,7 @@ export const ScheduleContent = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           const rect = e.currentTarget.getBoundingClientRect();
-                          setOverflowPopup({ posts: slotPosts, rect });
+                          setOverflowPopup({ posts: slotPosts.slice(2), rect });
                         }}
                       >
                         +{remainingCount} more
@@ -771,8 +771,10 @@ export const ScheduleContent = () => {
           <div
             className="overflow-popup"
             style={{
-              top: overflowPopup.rect.bottom + 6,
+              top: overflowPopup.rect.top,
               left: overflowPopup.rect.left,
+              width: overflowPopup.rect.width,
+              maxHeight: Math.min(overflowPopup.posts.length * 120 + 16, window.innerHeight - overflowPopup.rect.top - 16),
             }}
             onClick={(e) => e.stopPropagation()}
           >
