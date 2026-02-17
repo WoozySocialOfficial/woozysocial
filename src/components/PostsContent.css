@@ -349,6 +349,49 @@
   transform: scale(1.1);
 }
 
+/* Per-row actions column */
+.posts-actions-col {
+  width: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.posts-table-row:hover .posts-actions-col {
+  opacity: 1;
+}
+
+.posts-table-header .posts-actions-col {
+  opacity: 1;
+}
+
+/* Bulk delete button in toolbar */
+.bulk-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff1f1;
+  color: #e53e3e;
+  border: 1.5px solid #e53e3e;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.bulk-delete-btn:hover {
+  background: #e53e3e;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(229, 62, 62, 0.3);
+}
+
 .posts-table-row.clickable:hover {
   background-color: rgba(100, 101, 241, 0.05);
   cursor: pointer;

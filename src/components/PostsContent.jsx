@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
@@ -63,6 +63,8 @@ export const PostsContent = () => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.drafts[0].id);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const selectAllRef = useRef(null);
   const { invalidatePosts } = useInvalidateQueries();
 
   // Map tab to status for posts query
@@ -152,11 +154,85 @@ export const PostsContent = () => {
     return activeSortOption.dir === "desc" ? dateB - dateA : dateA - dateB;
   });
 
+  // Selection derived state
+  const allSelected = sortedPosts.length > 0 && sortedPosts.every(p => selectedIds.has(p.id));
+  const someSelected = sortedPosts.some(p => selectedIds.has(p.id));
+
+  // Keep the select-all checkbox indeterminate when only some rows are selected
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected && !allSelected;
+    }
+  }, [someSelected, allSelected]);
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedPosts.map(p => p.id)));
+    }
+  };
+
+  const handleToggleSelect = (e, postId) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+      } else {
+        next.add(postId);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    const count = selectedIds.size;
+    if (!window.confirm(`Delete ${count} selected item${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+    try {
+      if (activeTab === 'drafts') {
+        const { error } = await supabase
+          .from('post_drafts')
+          .delete()
+          .in('id', [...selectedIds])
+          .eq('workspace_id', activeWorkspace.id);
+        if (error) throw error;
+        invalidatePosts(activeWorkspace?.id);
+        refetchDrafts();
+      } else {
+        const selectedPosts = sortedPosts.filter(p => selectedIds.has(p.id));
+        const results = await Promise.allSettled(
+          selectedPosts.map(post =>
+            fetch(`${baseURL}/api/post/delete`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                postId: post.ayr_post_id || null,
+                databaseId: post.id,
+                workspaceId: activeWorkspace.id
+              })
+            })
+          )
+        );
+        const failed = results.filter(r => r.status === 'rejected').length;
+        invalidatePosts(activeWorkspace?.id);
+        refetchPosts();
+        if (failed > 0) alert(`${failed} item${failed > 1 ? 's' : ''} failed to delete.`);
+      }
+      setSelectedIds(new Set());
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      alert('Failed to delete: ' + error.message);
+    }
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSortBy(SORT_OPTIONS[tab][0].id);
     setShowSortMenu(false);
     setSelectedPost(null);
+    setSelectedIds(new Set());
   };
 
   const getPlatformIcons = (platforms) => {
@@ -383,6 +459,12 @@ export const PostsContent = () => {
               </>
             )}
           </div>
+          {someSelected && (
+            <button className="bulk-delete-btn" onClick={handleBulkDelete}>
+              <FaTrash size={13} />
+              Delete ({selectedIds.size})
+            </button>
+          )}
           <button
             onClick={handleRefresh}
             className="refresh-button"
@@ -398,12 +480,18 @@ export const PostsContent = () => {
       <div className="posts-table-container">
         <div className="posts-table-header">
           <div className="posts-checkbox-col">
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              ref={selectAllRef}
+              checked={allSelected}
+              onChange={handleSelectAll}
+            />
           </div>
           <div className="posts-date-col">Date</div>
           <div className="posts-content-col">Content</div>
           <div className="posts-media-col">Media</div>
           <div className="posts-socials-col">Socials</div>
+          <div className="posts-actions-col"></div>
         </div>
 
         <div className="posts-table-body">
@@ -433,33 +521,12 @@ export const PostsContent = () => {
                 style={{ cursor: (activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history') ? 'pointer' : 'default' }}
               >
                 <div className="posts-checkbox-col">
-                  {activeTab === 'drafts' ? (
-                    <button
-                      className="delete-draft-btn"
-                      onClick={(e) => handleDeleteDraft(e, post.id)}
-                      title="Delete draft"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  ) : activeTab === 'failed' ? (
-                    <button
-                      className="retry-post-btn"
-                      onClick={(e) => handleRetryPost(e, post.id)}
-                      title="Retry post"
-                    >
-                      <FaSyncAlt size={14} />
-                    </button>
-                  ) : activeTab === 'history' || activeTab === 'scheduled' ? (
-                    <button
-                      className="delete-post-btn"
-                      onClick={(e) => handleDeletePost(e, post)}
-                      title="Delete post"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  ) : (
-                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
-                  )}
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(post.id)}
+                    onChange={(e) => handleToggleSelect(e, post.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </div>
                 <div className="posts-date-col">
                   <div>{formatTableDateTime(post.scheduleDate || post.scheduled_date || post.created_at || post.postDate)}</div>
@@ -494,6 +561,25 @@ export const PostsContent = () => {
                   <div className="platform-icons-container">
                     {getPlatformIcons(post.platforms)}
                   </div>
+                </div>
+                <div className="posts-actions-col">
+                  {activeTab === 'failed' ? (
+                    <button
+                      className="retry-post-btn"
+                      onClick={(e) => handleRetryPost(e, post.id)}
+                      title="Retry post"
+                    >
+                      <FaSyncAlt size={14} />
+                    </button>
+                  ) : (
+                    <button
+                      className={activeTab === 'drafts' ? 'delete-draft-btn' : 'delete-post-btn'}
+                      onClick={(e) => activeTab === 'drafts' ? handleDeleteDraft(e, post.id) : handleDeletePost(e, post)}
+                      title={activeTab === 'drafts' ? 'Delete draft' : 'Delete post'}
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))
