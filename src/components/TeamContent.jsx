@@ -166,11 +166,15 @@ export const TeamContent = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}?userId=${user.id}`, {
-        method: 'DELETE',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/remove-member`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          memberId,
+          userId: user.id,
+        }),
       });
 
       const data = await response.json();
@@ -189,12 +193,13 @@ export const TeamContent = () => {
 
   const handleUpdateRole = async (memberId, newRole) => {
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}`, {
-        method: 'PUT',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          memberId,
           role: newRole,
           userId: user.id,
         }),
@@ -215,12 +220,13 @@ export const TeamContent = () => {
 
   const handleTogglePermission = async (memberId, permName, value) => {
     try {
-      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/members/${memberId}`, {
-        method: 'PUT',
+      const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          memberId,
           userId: user.id,
           permissions: { [permName]: value },
         }),
