@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { userId, workspaceId } = req.query;
+    const { userId, workspaceId, lastDays } = req.query;
 
     if (workspaceId && !isValidUUID(workspaceId)) {
       return sendError(res, "Invalid workspaceId format", ErrorCodes.VALIDATION_ERROR);
@@ -80,7 +80,12 @@ module.exports = async function handler(req, res) {
     // If not in cache, fetch from Ayrshare
     if (ayrshareHistory.length === 0) {
       try {
+        const historyParams = {};
+        if (lastDays && !isNaN(Number(lastDays))) {
+          historyParams.lastDays = Number(lastDays);
+        }
         const response = await axios.get(`${BASE_AYRSHARE}/history`, {
+          params: historyParams,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,

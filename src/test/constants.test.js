@@ -237,20 +237,16 @@ describe('Team Roles', () => {
   describe('TEAM_ROLES constants', () => {
     it('should have all required role constants', () => {
       expect(TEAM_ROLES.OWNER).toBe('owner')
-      expect(TEAM_ROLES.ADMIN).toBe('admin')
-      expect(TEAM_ROLES.EDITOR).toBe('editor')
-      expect(TEAM_ROLES.CLIENT).toBe('client')
-      expect(TEAM_ROLES.VIEW_ONLY).toBe('view_only')
+      expect(TEAM_ROLES.MEMBER).toBe('member')
+      expect(TEAM_ROLES.VIEWER).toBe('viewer')
     })
   })
 
   describe('ROLE_CONFIG', () => {
     it('should have configuration for all roles', () => {
       expect(ROLE_CONFIG[TEAM_ROLES.OWNER]).toBeDefined()
-      expect(ROLE_CONFIG[TEAM_ROLES.ADMIN]).toBeDefined()
-      expect(ROLE_CONFIG[TEAM_ROLES.EDITOR]).toBeDefined()
-      expect(ROLE_CONFIG[TEAM_ROLES.CLIENT]).toBeDefined()
-      expect(ROLE_CONFIG[TEAM_ROLES.VIEW_ONLY]).toBeDefined()
+      expect(ROLE_CONFIG[TEAM_ROLES.MEMBER]).toBeDefined()
+      expect(ROLE_CONFIG[TEAM_ROLES.VIEWER]).toBeDefined()
     })
 
     it('should grant owner all permissions', () => {
@@ -261,55 +257,67 @@ describe('Team Roles', () => {
       expect(owner.permissions.canTransferOwnership).toBe(true)
     })
 
-    it('should not allow admin to delete workspace', () => {
-      const admin = ROLE_CONFIG[TEAM_ROLES.ADMIN]
-      expect(admin.permissions.canDeleteWorkspace).toBe(false)
-      expect(admin.permissions.canTransferOwnership).toBe(false)
-      expect(admin.permissions.canManageTeam).toBe(true)
+    it('should allow member to create and edit own posts', () => {
+      const member = ROLE_CONFIG[TEAM_ROLES.MEMBER]
+      expect(member.permissions.canCreatePosts).toBe(true)
+      expect(member.permissions.canEditOwnPosts).toBe(true)
+      expect(member.permissions.canEditAllPosts).toBe(false)
+      expect(member.permissions.canDeleteOwnPosts).toBe(true)
+      expect(member.permissions.canDeleteAllPosts).toBe(false)
+      expect(member.permissions.canDeleteWorkspace).toBe(false)
+      expect(member.permissions.canTransferOwnership).toBe(false)
     })
 
-    it('should restrict editor permissions', () => {
-      const editor = ROLE_CONFIG[TEAM_ROLES.EDITOR]
-      expect(editor.permissions.canCreatePosts).toBe(true)
-      expect(editor.permissions.canEditOwnPosts).toBe(true)
-      expect(editor.permissions.canEditAllPosts).toBe(false)
-      expect(editor.permissions.canManageTeam).toBe(false)
-      expect(editor.permissions.canApprovePosts).toBe(false)
+    it('should have member approve/manage as false by default (DB toggle overrides)', () => {
+      const member = ROLE_CONFIG[TEAM_ROLES.MEMBER]
+      expect(member.permissions.canApprovePosts).toBe(false)
+      expect(member.permissions.canManageTeam).toBe(false)
     })
 
-    it('should allow client to approve posts only', () => {
-      const client = ROLE_CONFIG[TEAM_ROLES.CLIENT]
-      expect(client.permissions.canApprovePosts).toBe(true)
-      expect(client.permissions.canCreatePosts).toBe(false)
-      expect(client.permissions.canManageTeam).toBe(false)
-    })
-
-    it('should restrict view_only to read-only', () => {
-      const viewOnly = ROLE_CONFIG[TEAM_ROLES.VIEW_ONLY]
-      expect(viewOnly.permissions.canCreatePosts).toBe(false)
-      expect(viewOnly.permissions.canApprovePosts).toBe(false)
-      expect(viewOnly.permissions.canViewAnalytics).toBe(true)
+    it('should restrict viewer to read-only with no base permissions', () => {
+      const viewer = ROLE_CONFIG[TEAM_ROLES.VIEWER]
+      expect(viewer.permissions.canCreatePosts).toBe(false)
+      expect(viewer.permissions.canEditOwnPosts).toBe(false)
+      expect(viewer.permissions.canApprovePosts).toBe(false)
+      expect(viewer.permissions.canManageTeam).toBe(false)
+      expect(viewer.permissions.canViewAnalytics).toBe(false)
+      expect(viewer.permissions.canAccessSocialInbox).toBe(false)
     })
   })
 
   describe('getRoleConfig', () => {
     it('should return correct config for valid roles', () => {
-      const adminConfig = getRoleConfig('admin')
-      expect(adminConfig.name).toBe('Admin')
+      const memberConfig = getRoleConfig('member')
+      expect(memberConfig.name).toBe('Member')
     })
 
-    it('should return VIEW_ONLY config for invalid role', () => {
+    it('should normalize legacy roles', () => {
+      expect(getRoleConfig('admin').name).toBe('Member')
+      expect(getRoleConfig('editor').name).toBe('Member')
+      expect(getRoleConfig('client').name).toBe('Viewer')
+      expect(getRoleConfig('view_only').name).toBe('Viewer')
+    })
+
+    it('should return Viewer config for invalid role', () => {
       const invalidConfig = getRoleConfig('invalid_role')
-      expect(invalidConfig.name).toBe('View Only')
+      expect(invalidConfig.name).toBe('Viewer')
     })
   })
 
   describe('hasPermission', () => {
     it('should correctly check permissions', () => {
       expect(hasPermission('owner', 'canDeleteWorkspace')).toBe(true)
-      expect(hasPermission('admin', 'canDeleteWorkspace')).toBe(false)
+      expect(hasPermission('member', 'canCreatePosts')).toBe(true)
+      expect(hasPermission('member', 'canDeleteWorkspace')).toBe(false)
+      expect(hasPermission('viewer', 'canCreatePosts')).toBe(false)
+    })
+
+    it('should normalize legacy roles when checking permissions', () => {
+      // admin/editor → member
+      expect(hasPermission('admin', 'canCreatePosts')).toBe(true)
       expect(hasPermission('editor', 'canCreatePosts')).toBe(true)
-      expect(hasPermission('client', 'canApprovePosts')).toBe(true)
+      // client/view_only → viewer
+      expect(hasPermission('client', 'canCreatePosts')).toBe(false)
       expect(hasPermission('view_only', 'canCreatePosts')).toBe(false)
     })
   })
@@ -322,27 +330,33 @@ describe('Team Roles', () => {
       expect(hasRoleTabAccess('owner', 'settings')).toBe(true)
     })
 
-    it('should restrict client to client portal tabs', () => {
-      expect(hasRoleTabAccess('client', 'client/dashboard')).toBe(true)
-      expect(hasRoleTabAccess('client', 'client/approvals')).toBe(true)
-      expect(hasRoleTabAccess('client', 'compose')).toBe(false)
-      expect(hasRoleTabAccess('client', 'settings')).toBe(false)
+    it('should allow member access to core tabs but not settings/approvals', () => {
+      expect(hasRoleTabAccess('member', 'dashboard')).toBe(true)
+      expect(hasRoleTabAccess('member', 'compose')).toBe(true)
+      expect(hasRoleTabAccess('member', 'posts')).toBe(true)
+      expect(hasRoleTabAccess('member', 'team')).toBe(true)
+      expect(hasRoleTabAccess('member', 'settings')).toBe(false)
+      // Approvals tab is added dynamically via DB toggle
+      expect(hasRoleTabAccess('member', 'approvals')).toBe(false)
     })
 
-    it('should restrict view_only to read-only tabs', () => {
-      expect(hasRoleTabAccess('view_only', 'dashboard')).toBe(true)
-      expect(hasRoleTabAccess('view_only', 'posts')).toBe(true)
-      expect(hasRoleTabAccess('view_only', 'compose')).toBe(false)
-      expect(hasRoleTabAccess('view_only', 'team')).toBe(false)
+    it('should restrict viewer to client portal tabs', () => {
+      expect(hasRoleTabAccess('viewer', 'client/dashboard')).toBe(true)
+      expect(hasRoleTabAccess('viewer', 'client/calendar')).toBe(true)
+      expect(hasRoleTabAccess('viewer', 'client/assets')).toBe(true)
+      expect(hasRoleTabAccess('viewer', 'compose')).toBe(false)
+      expect(hasRoleTabAccess('viewer', 'settings')).toBe(false)
     })
   })
 
   describe('isClientRole', () => {
     it('should identify client roles correctly', () => {
+      expect(isClientRole('viewer')).toBe(true)
+      // Legacy roles that map to viewer
       expect(isClientRole('client')).toBe(true)
       expect(isClientRole('view_only')).toBe(true)
-      expect(isClientRole('editor')).toBe(false)
-      expect(isClientRole('admin')).toBe(false)
+      // Non-client roles
+      expect(isClientRole('member')).toBe(false)
       expect(isClientRole('owner')).toBe(false)
     })
   })
@@ -350,10 +364,10 @@ describe('Team Roles', () => {
   describe('isAdminRole', () => {
     it('should identify admin roles correctly', () => {
       expect(isAdminRole('owner')).toBe(true)
-      expect(isAdminRole('admin')).toBe(true)
-      expect(isAdminRole('editor')).toBe(false)
-      expect(isAdminRole('client')).toBe(false)
-      expect(isAdminRole('view_only')).toBe(false)
+      // Legacy admin maps to member, not owner
+      expect(isAdminRole('admin')).toBe(false)
+      expect(isAdminRole('member')).toBe(false)
+      expect(isAdminRole('viewer')).toBe(false)
     })
   })
 
@@ -367,26 +381,22 @@ describe('Team Roles', () => {
       expect(canPerformPostAction('owner', 'create')).toBe(true)
     })
 
-    it('should allow editor to edit/delete own posts only', () => {
-      expect(canPerformPostAction('editor', 'edit', true)).toBe(true)
-      expect(canPerformPostAction('editor', 'edit', false)).toBe(false)
-      expect(canPerformPostAction('editor', 'delete', true)).toBe(true)
-      expect(canPerformPostAction('editor', 'delete', false)).toBe(false)
-      expect(canPerformPostAction('editor', 'create')).toBe(true)
-      expect(canPerformPostAction('editor', 'approve')).toBe(false)
+    it('should allow member to create and edit/delete own posts', () => {
+      expect(canPerformPostAction('member', 'create')).toBe(true)
+      expect(canPerformPostAction('member', 'edit', true)).toBe(true)
+      expect(canPerformPostAction('member', 'edit', false)).toBe(false)
+      expect(canPerformPostAction('member', 'delete', true)).toBe(true)
+      expect(canPerformPostAction('member', 'delete', false)).toBe(false)
+      // Approve is false by default (DB toggle overrides at runtime)
+      expect(canPerformPostAction('member', 'approve')).toBe(false)
     })
 
-    it('should allow client to approve only', () => {
-      expect(canPerformPostAction('client', 'approve')).toBe(true)
-      expect(canPerformPostAction('client', 'create')).toBe(false)
-      expect(canPerformPostAction('client', 'edit', true)).toBe(false)
-    })
-
-    it('should not allow view_only any post actions', () => {
-      expect(canPerformPostAction('view_only', 'create')).toBe(false)
-      expect(canPerformPostAction('view_only', 'edit', true)).toBe(false)
-      expect(canPerformPostAction('view_only', 'delete', true)).toBe(false)
-      expect(canPerformPostAction('view_only', 'approve')).toBe(false)
+    it('should not allow viewer any post actions by default', () => {
+      expect(canPerformPostAction('viewer', 'create')).toBe(false)
+      expect(canPerformPostAction('viewer', 'edit', true)).toBe(false)
+      expect(canPerformPostAction('viewer', 'delete', true)).toBe(false)
+      // Approve is false by default (DB toggle overrides at runtime)
+      expect(canPerformPostAction('viewer', 'approve')).toBe(false)
     })
 
     it('should return false for unknown actions', () => {

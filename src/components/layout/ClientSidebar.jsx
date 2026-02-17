@@ -26,7 +26,7 @@ export const ClientSidebar = () => {
     <div className="client-sidebar">
       <div className="client-sidebar-content">
         <div className="client-sidebar-logo">
-          <img src="/assets/woozy Png.png" alt="Woozy Social" className="client-logo-image" />
+          <img src="/assets/woozy-logo.png" alt="Woozy Social" className="client-logo-image" />
         </div>
 
         <WorkspaceSwitcher />

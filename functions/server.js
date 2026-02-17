@@ -437,7 +437,7 @@ app.post("/api/post", upload.single("media"), requireActiveProfile, async (req, 
 
 app.get("/api/post-history", requireActiveProfile, async (req, res) => {
   try {
-    const { userId, workspaceId } = req.query;
+    const { userId, workspaceId, lastDays } = req.query;
 
     // Get workspace's profile key from database, or fall back to user's key, or env variable
     let profileKey = env.AYRSHARE_PROFILE_KEY;
@@ -457,7 +457,12 @@ app.get("/api/post-history", requireActiveProfile, async (req, res) => {
     // Fetch from Ayrshare
     let ayrshareHistory = [];
     try {
+      const historyParams = {};
+      if (lastDays && !isNaN(Number(lastDays))) {
+        historyParams.lastDays = Number(lastDays);
+      }
       const response = await axios.get(`${BASE_AYRSHARE}/history`, {
+        params: historyParams,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
