@@ -458,7 +458,7 @@ export const PostsContent = () => {
                       <FaTrash size={14} />
                     </button>
                   ) : (
-                    <input type="checkbox" />
+                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
                   )}
                 </div>
                 <div className="posts-date-col">
