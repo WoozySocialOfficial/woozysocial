@@ -853,10 +853,14 @@ module.exports = async function handler(req, res) {
       // Ayrshare has a quirk where it returns HTTP 400 with a success response body
       const responseData = axiosError.response?.data;
 
+      // Log full response for debugging status mismatches
+      console.log('[POST] Full error response:', JSON.stringify(responseData));
+
       // Check multiple indicators that the post actually succeeded
       const isActuallySuccessful = responseData?.status === 'success'
         || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
-        || responseData?.postIds?.length > 0;
+        || responseData?.postIds?.length > 0
+        || (Array.isArray(responseData?.posts) && responseData.posts.length > 0);
 
       const ayrPostId = responseData?.postIds?.[0]?.id
         || responseData?.posts?.[0]?.id
@@ -864,16 +868,15 @@ module.exports = async function handler(req, res) {
         || responseData?.postId
         || responseData?.refId;
 
-      if (isActuallySuccessful && ayrPostId) {
-        // Post actually succeeded despite HTTP 400 - save as successful
-        console.log('[POST] Post succeeded despite HTTP 400 error - status:', responseData?.status, 'ayr_post_id:', ayrPostId);
+      if (isActuallySuccessful) {
+        // Post actually succeeded despite HTTP error - save as successful
+        console.log('[POST] Post succeeded despite HTTP error - status:', responseData?.status, 'ayr_post_id:', ayrPostId || 'unknown');
 
         if (supabase) {
           const postRecord = {
             user_id: userId,
             workspace_id: workspaceId,
             created_by: userId,
-            ayr_post_id: ayrPostId,
             caption: text,
             media_urls: mediaUrls || [],
             status: isScheduled ? 'scheduled' : 'posted',
@@ -882,8 +885,11 @@ module.exports = async function handler(req, res) {
             platforms: platforms,
             approval_status: 'approved',
             requires_approval: false,
-            post_settings: settings // Phase 4: Save post settings
+            post_settings: settings
           };
+          if (ayrPostId) {
+            postRecord.ayr_post_id = ayrPostId;
+          }
 
           const { data: savedPost, error: dbError } = await supabase
             .from("posts")
@@ -902,12 +908,12 @@ module.exports = async function handler(req, res) {
         // Invalidate cache
         await invalidateWorkspaceCache(workspaceId);
 
-        // Return success even though Ayrshare returned HTTP 400
+        // Return success even though Ayrshare returned HTTP error
         return sendSuccess(res, {
           status: isScheduled ? 'scheduled' : 'posted',
-          postId: ayrPostId,
+          postId: ayrPostId || 'unknown',
           platforms: platforms,
-          warning: 'Post succeeded (Ayrshare returned HTTP 400 with success body)'
+          warning: 'Post succeeded (Ayrshare returned HTTP error with success body)'
         });
       }
 

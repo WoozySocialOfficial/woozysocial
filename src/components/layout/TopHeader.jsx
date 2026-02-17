@@ -119,8 +119,15 @@ export const TopHeader = () => {
         try {
           if (popup.closed) {
             clearInterval(pollTimer);
-            setIsLinking(false);
-            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+            // Wait for Ayrshare to propagate the connection before refreshing
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+              setIsLinking(false);
+              // Retry after a few more seconds in case propagation is slow
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+              }, 3000);
+            }, 2000);
           }
         } catch (e) {
           // Cross-origin error - popup still open

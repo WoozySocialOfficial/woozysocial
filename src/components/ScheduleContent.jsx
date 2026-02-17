@@ -374,7 +374,7 @@ export const ScheduleContent = () => {
     return (
       <div
         key={post.id}
-        className={`post-card ${post.status === "success" ? "published" : "scheduled"} approval-${post.approvalStatus} ${isPast ? 'past-post' : ''}`}
+        className={`post-card ${post.status === "posted" || post.status === "success" ? "published" : post.status === "failed" ? "failed" : "scheduled"} approval-${post.approvalStatus} ${isPast ? 'past-post' : ''}`}
         onClick={() => {
           // Normalize post structure for PostDetailPanel
           const normalizedPost = {

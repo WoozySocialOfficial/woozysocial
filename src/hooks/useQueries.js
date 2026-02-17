@@ -19,7 +19,7 @@ export function useConnectedAccounts(workspaceId, userId) {
       return data.data || data;
     },
     enabled: !!(workspaceId || userId),
-    staleTime: 1000 * 60 * 5, // 5 minutes - accounts don't change often
+    staleTime: 1000 * 30, // 30 seconds - needs to refresh quickly after connecting
   });
 }
 

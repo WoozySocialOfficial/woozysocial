@@ -325,9 +325,14 @@ module.exports = async function handler(req, res) {
         // IMPORTANT: Check if Ayrshare returned success data despite HTTP 400 status
         // Ayrshare has a quirk where it returns HTTP 400 with a success response body
         const responseData = postError.response?.data;
+
+        // Log full response for debugging status mismatches
+        console.log(`[Scheduler] Full error response for post ${post.id}:`, JSON.stringify(responseData));
+
         const isActuallySuccessful = responseData?.status === 'success'
           || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
-          || responseData?.postIds?.length > 0;
+          || responseData?.postIds?.length > 0
+          || (Array.isArray(responseData?.posts) && responseData.posts.length > 0);
 
         const ayrPostId = responseData?.postIds?.[0]?.id
           || responseData?.posts?.[0]?.id
@@ -335,18 +340,22 @@ module.exports = async function handler(req, res) {
           || responseData?.postId
           || responseData?.refId;
 
-        if (isActuallySuccessful && ayrPostId) {
-          // Post actually succeeded despite HTTP 400 - save as successful
-          console.log(`[Scheduler] Post ${post.id} succeeded despite HTTP 400 - ayr_post_id: ${ayrPostId}`);
+        if (isActuallySuccessful) {
+          // Post actually succeeded despite HTTP error - save as successful
+          console.log(`[Scheduler] Post ${post.id} succeeded despite HTTP error - ayr_post_id: ${ayrPostId || 'unknown'}`);
+
+          const updateData = {
+            status: 'posted',
+            posted_at: new Date().toISOString(),
+            last_error: null
+          };
+          if (ayrPostId) {
+            updateData.ayr_post_id = ayrPostId;
+          }
 
           await supabase
             .from('posts')
-            .update({
-              status: 'posted',
-              ayr_post_id: ayrPostId,
-              posted_at: new Date().toISOString(),
-              last_error: null
-            })
+            .update(updateData)
             .eq('id', post.id);
 
           // Invalidate cache after successful post
@@ -354,16 +363,16 @@ module.exports = async function handler(req, res) {
 
           results.success.push({
             postId: post.id,
-            ayrPostId,
-            warning: 'Succeeded despite HTTP 400'
+            ayrPostId: ayrPostId || 'unknown',
+            warning: 'Succeeded despite HTTP error'
           });
         } else {
-          // Post actually failed - no post ID found
+          // Post actually failed
           await supabase
             .from('posts')
             .update({
               status: 'failed',
-              last_error: postError.response?.data?.message || postError.message,
+              last_error: responseData?.message || postError.message,
               posted_at: new Date().toISOString()
             })
             .eq('id', post.id);

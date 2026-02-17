@@ -144,9 +144,17 @@ export const SocialAccounts = () => {
       const poll = setInterval(async () => {
         if (popup && popup.closed) {
           clearInterval(poll);
+          // Wait for Ayrshare to propagate the connection before fetching
+          const previousCount = activeAccounts.length;
+          await new Promise(r => setTimeout(r, 2000));
           await fetchActiveAccounts();
-          setLoading(false);
           window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+          // Retry if account count didn't change (Ayrshare may need more time)
+          setTimeout(async () => {
+            await fetchActiveAccounts();
+            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+            setLoading(false);
+          }, 3000);
         }
       }, 500);
     } catch (err) {
