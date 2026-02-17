@@ -448,9 +448,10 @@ export const ScheduleContent = () => {
     const getSlotHeight = (hour) => {
       const postCount = hourPostCounts[hour];
       if (postCount === 0) return 80;
-      // Base padding (35px) + (95px per card with all content visible + gap)
-      // This ensures cards are large enough to show caption, time, and platforms
-      return Math.max(80, 35 + (postCount * 95));
+      // Only account for the 2 visible cards + 30px for "+N more" button if overflow
+      const visibleCount = Math.min(postCount, 2);
+      const hasOverflow = postCount > 2;
+      return Math.max(80, 35 + (visibleCount * 95) + (hasOverflow ? 30 : 0));
     };
 
     return (
