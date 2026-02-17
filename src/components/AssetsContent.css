@@ -94,16 +94,16 @@
 }
 
 .refresh-button {
-  background: transparent;
+  background: #ffffff;
   color: #7b74b0;
-  border-color: #afabf9;
+  border: 2px solid #afabf9;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .refresh-button:hover {
-  background: rgba(175, 171, 249, 0.12);
+  background: #f5f4ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(175, 171, 249, 0.2);
 }
