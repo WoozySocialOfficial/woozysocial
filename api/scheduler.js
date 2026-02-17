@@ -391,10 +391,91 @@ module.exports = async function handler(req, res) {
       failed: results.failed.length
     });
 
+    // ============================================================
+    // RECONCILIATION: Check recently "failed" posts against Ayrshare
+    // Fixes posts that actually succeeded but were marked failed
+    // due to Ayrshare HTTP quirks
+    // ============================================================
+    let reconciled = 0;
+    try {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: failedPosts } = await supabase
+        .from('posts')
+        .select('id, workspace_id, caption, platforms, media_urls, posted_at')
+        .eq('status', 'failed')
+        .gte('posted_at', oneDayAgo)
+        .limit(10);
+
+      if (failedPosts && failedPosts.length > 0) {
+        console.log(`[Scheduler] Reconciling ${failedPosts.length} recently failed posts against Ayrshare...`);
+
+        // Group by workspace to minimize API calls
+        const byWorkspace = {};
+        for (const post of failedPosts) {
+          if (!byWorkspace[post.workspace_id]) byWorkspace[post.workspace_id] = [];
+          byWorkspace[post.workspace_id].push(post);
+        }
+
+        for (const [wsId, posts] of Object.entries(byWorkspace)) {
+          const profileKey = await getWorkspaceProfileKey(wsId);
+          if (!profileKey) continue;
+
+          try {
+            const historyRes = await axios.get(`${BASE_AYRSHARE}/history`, {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+                "Profile-Key": profileKey
+              },
+              timeout: 15000
+            });
+
+            const history = historyRes.data?.history || [];
+            if (history.length === 0) continue;
+
+            for (const post of posts) {
+              // Match by caption content (first 100 chars) since we may not have ayr_post_id
+              const captionStart = (post.caption || '').substring(0, 100).trim();
+              if (!captionStart) continue;
+
+              const match = history.find(h => {
+                const hBody = (h.body || h.post || '').substring(0, 100).trim();
+                return hBody === captionStart;
+              });
+
+              if (match) {
+                console.log(`[Scheduler] Reconciliation: Post ${post.id} found in Ayrshare history (${match.id}) - updating to posted`);
+                await supabase
+                  .from('posts')
+                  .update({
+                    status: 'posted',
+                    ayr_post_id: match.id,
+                    last_error: null
+                  })
+                  .eq('id', post.id);
+
+                await invalidateWorkspaceCache(wsId);
+                reconciled++;
+              }
+            }
+          } catch (histErr) {
+            console.warn(`[Scheduler] Reconciliation: Failed to fetch history for workspace ${wsId}:`, histErr.message);
+          }
+        }
+
+        if (reconciled > 0) {
+          console.log(`[Scheduler] Reconciliation: Fixed ${reconciled} incorrectly failed posts`);
+        }
+      }
+    } catch (reconErr) {
+      console.warn('[Scheduler] Reconciliation error (non-blocking):', reconErr.message);
+    }
+
     return sendSuccess(res, {
       processed: duePosts.length,
       successful: results.success.length,
       failed: results.failed.length,
+      reconciled,
       results
     });
 
