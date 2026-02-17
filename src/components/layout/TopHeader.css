@@ -132,6 +132,14 @@
   background-color: #F5F3FF;
 }
 
+.profile-dropdown-item.replay-tour {
+  color: #10B981;
+}
+
+.profile-dropdown-item.replay-tour:hover {
+  background-color: #ECFDF5;
+}
+
 .profile-dropdown-item.sign-out {
   color: #EF4444;
 }
@@ -421,6 +429,16 @@
 [data-theme="dark"] .profile-dropdown-item.manage-subscription:hover,
 .dark .profile-dropdown-item.manage-subscription:hover {
   background-color: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .profile-dropdown-item.replay-tour,
+.dark .profile-dropdown-item.replay-tour {
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .profile-dropdown-item.replay-tour:hover,
+.dark .profile-dropdown-item.replay-tour:hover {
+  background-color: rgba(16, 185, 129, 0.15);
 }
 
 [data-theme="dark"] .profile-dropdown-item.sign-out,

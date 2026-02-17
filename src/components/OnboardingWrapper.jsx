@@ -7,6 +7,8 @@ import { OnboardingTour } from './OnboardingTour';
  * Shows tour when:
  * 1. User has an active subscription (paid)
  * 2. User hasn't completed the in-app tour yet
+ *
+ * Also listens for 'replayTour' custom event to let users replay it
  */
 export const OnboardingWrapper = ({ children }) => {
   const { user, profile, subscriptionStatus, isWhitelisted } = useAuth();
@@ -39,6 +41,13 @@ export const OnboardingWrapper = ({ children }) => {
     setShowTour(shouldShowTour());
     setChecked(true);
   }, [user, profile, subscriptionStatus, isWhitelisted]);
+
+  // Listen for manual replay event (from profile dropdown "Replay Tour")
+  useEffect(() => {
+    const handleReplay = () => setShowTour(true);
+    window.addEventListener('replayTour', handleReplay);
+    return () => window.removeEventListener('replayTour', handleReplay);
+  }, []);
 
   const handleTourComplete = () => {
     setShowTour(false);

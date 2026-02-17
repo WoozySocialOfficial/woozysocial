@@ -209,6 +209,15 @@ export const TopHeader = () => {
                     {isLinking ? 'Opening...' : 'Connect Social Accounts'}
                   </button>
                 )}
+                <button
+                  className="profile-dropdown-item replay-tour"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    window.dispatchEvent(new CustomEvent('replayTour'));
+                  }}
+                >
+                  Replay Tour
+                </button>
                 <button className="profile-dropdown-item sign-out" onClick={handleSignOut}>
                   Sign Out
                 </button>
