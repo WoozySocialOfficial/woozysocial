@@ -50,6 +50,7 @@ export const ScheduleContent = () => {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [selectedMonthDate, setSelectedMonthDate] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [overflowPopup, setOverflowPopup] = useState(null); // { posts, rect }
   const { invalidatePosts } = useInvalidateQueries();
 
 
@@ -363,7 +364,9 @@ export const ScheduleContent = () => {
   };
 
   // Render Post Card - Compact, click opens modal
-  const renderPostCard = (post) => {
+  // onSelect is optional; if provided it receives the normalizedPost instead of calling setSelectedPost directly
+  const renderPostCard = (post, onSelect) => {
+    const selectHandler = typeof onSelect === 'function' ? onSelect : null;
     const approvalInfo = APPROVAL_STATUS[post.approvalStatus] || APPROVAL_STATUS.pending;
     const ApprovalIcon = approvalInfo.icon;
     const isPast = isPostInPast(post.scheduleDate);
@@ -385,7 +388,11 @@ export const ScheduleContent = () => {
             status: post.status || 'scheduled',
             approval_status: post.approvalStatus
           };
-          setSelectedPost(normalizedPost);
+          if (selectHandler) {
+            selectHandler(normalizedPost);
+          } else {
+            setSelectedPost(normalizedPost);
+          }
         }}
         title="Click to view details"
       >
@@ -485,7 +492,12 @@ export const ScheduleContent = () => {
                     {remainingCount > 0 && (
                       <div
                         className="more-posts-indicator"
-                        title={`${remainingCount} more post${remainingCount !== 1 ? 's' : ''} at this time. Click to view all.`}
+                        title={`${remainingCount} more post${remainingCount !== 1 ? 's' : ''}. Click to view all.`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setOverflowPopup({ posts: slotPosts, rect });
+                        }}
                       >
                         +{remainingCount} more
                       </div>
@@ -749,6 +761,28 @@ export const ScheduleContent = () => {
           </>
         )}
       </div>
+
+      {/* Overflow Post Popup - appears when clicking "+N more" */}
+      {overflowPopup && (
+        <div
+          className="overflow-popup-overlay"
+          onClick={() => setOverflowPopup(null)}
+        >
+          <div
+            className="overflow-popup"
+            style={{
+              top: overflowPopup.rect.bottom + 6,
+              left: overflowPopup.rect.left,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {overflowPopup.posts.map(post => renderPostCard(post, (normalizedPost) => {
+              setOverflowPopup(null);
+              setSelectedPost(normalizedPost);
+            }))}
+          </div>
+        </div>
+      )}
 
       {/* Post Detail Panel */}
       {selectedPost && (
