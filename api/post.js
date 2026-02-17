@@ -15,7 +15,7 @@ const {
   invalidateWorkspaceCache
 } = require("./_utils");
 const { hasFeature } = require("./_utils-access-control");
-const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPostUpdatedNotification } = require("./notifications/helpers");
+const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPostUpdatedNotification, sendPostFailedNotification } = require("./notifications/helpers");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -920,7 +920,8 @@ module.exports = async function handler(req, res) {
       // No post ID found - post actually failed
       // Save failed post to database
       if (supabase) {
-        const { error: dbErr } = await supabase.from("posts").insert([{
+        const failureReason = axiosError.response?.data?.message || axiosError.message;
+        const { data: savedFailedPost, error: dbErr } = await supabase.from("posts").insert([{
           user_id: userId,
           workspace_id: workspaceId,
           created_by: userId,
@@ -929,10 +930,17 @@ module.exports = async function handler(req, res) {
           status: 'failed',
           scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
           platforms: platforms,
-          last_error: axiosError.response?.data?.message || axiosError.message,
+          last_error: failureReason,
           post_settings: settings // Phase 4: Save post settings
-        }]);
+        }]).select('id').single();
         if (dbErr) logError('post.save_failed', dbErr);
+        sendPostFailedNotification(supabase, {
+          postId: savedFailedPost?.id || null,
+          workspaceId,
+          createdByUserId: userId,
+          platforms,
+          errorMessage: failureReason
+        }).catch(err => logError('post.notification.failed', err));
       }
 
       // Extract a clean, human-readable error from Ayrshare's response
@@ -953,7 +961,8 @@ module.exports = async function handler(req, res) {
     if (response.data.status === 'error') {
       // Save failed post to database
       if (supabase) {
-        const { error: dbErr } = await supabase.from("posts").insert([{
+        const failureReason = response.data.message || 'Post failed';
+        const { data: savedFailedPost, error: dbErr } = await supabase.from("posts").insert([{
           user_id: userId,
           workspace_id: workspaceId,
           created_by: userId,
@@ -962,10 +971,17 @@ module.exports = async function handler(req, res) {
           status: 'failed',
           scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
           platforms: platforms,
-          last_error: response.data.message || 'Post failed',
+          last_error: failureReason,
           post_settings: settings // Phase 4: Save post settings
-        }]);
+        }]).select('id').single();
         if (dbErr) logError('post.save_failed', dbErr);
+        sendPostFailedNotification(supabase, {
+          postId: savedFailedPost?.id || null,
+          workspaceId,
+          createdByUserId: userId,
+          platforms,
+          errorMessage: failureReason
+        }).catch(err => logError('post.notification.failed', err));
       }
 
       return sendError(

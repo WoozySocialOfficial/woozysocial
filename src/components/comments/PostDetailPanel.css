@@ -161,6 +161,43 @@
   transform: translateY(-1px);
 }
 
+.failure-reason-box {
+  background: #fff5f5;
+  border: 1.5px solid #fed7d7;
+  border-left: 4px solid #e53e3e;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.failure-reason-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e53e3e;
+  margin-bottom: 4px;
+}
+
+.failure-reason-message {
+  font-size: 13px;
+  color: #742a2a;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+[data-theme="dark"] .failure-reason-box,
+.dark .failure-reason-box {
+  background: rgba(229, 62, 62, 0.1);
+  border-color: rgba(229, 62, 62, 0.4);
+  border-left-color: #e53e3e;
+}
+
+[data-theme="dark"] .failure-reason-message,
+.dark .failure-reason-message {
+  color: #feb2b2;
+}
+
 .detail-section {
   margin-bottom: 24px;
 }

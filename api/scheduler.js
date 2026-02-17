@@ -9,6 +9,7 @@ const {
   getWorkspaceProfileKey,
   invalidateWorkspaceCache
 } = require("./_utils");
+const { sendPostFailedNotification } = require("./notifications/helpers");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -280,6 +281,14 @@ module.exports = async function handler(req, res) {
             })
             .eq('id', post.id);
 
+          sendPostFailedNotification(supabase, {
+            postId: post.id,
+            workspaceId: post.workspace_id,
+            createdByUserId: post.created_by || post.user_id,
+            platforms: post.platforms,
+            errorMessage: 'No social media accounts connected'
+          }).catch(err => logError('scheduler.notification.failed', err, { postId: post.id }));
+
           results.failed.push({
             postId: post.id,
             error: 'No profile key'
@@ -368,14 +377,23 @@ module.exports = async function handler(req, res) {
           });
         } else {
           // Post actually failed
+          const failureReason = responseData?.message || postError.message;
           await supabase
             .from('posts')
             .update({
               status: 'failed',
-              last_error: responseData?.message || postError.message,
+              last_error: failureReason,
               posted_at: new Date().toISOString()
             })
             .eq('id', post.id);
+
+          sendPostFailedNotification(supabase, {
+            postId: post.id,
+            workspaceId: post.workspace_id,
+            createdByUserId: post.created_by || post.user_id,
+            platforms: post.platforms,
+            errorMessage: failureReason
+          }).catch(err => logError('scheduler.notification.failed', err, { postId: post.id }));
 
           results.failed.push({
             postId: post.id,

@@ -264,6 +264,14 @@ export const PostDetailPanel = ({
           )}
         </div>
 
+        {/* Failure reason */}
+        {post.status === 'failed' && (post.last_error || post.lastError) && (
+          <div className="failure-reason-box">
+            <div className="failure-reason-label">Failure reason</div>
+            <div className="failure-reason-message">{post.last_error || post.lastError}</div>
+          </div>
+        )}
+
         {/* Caption */}
         <div className="detail-section">
           <label>Caption</label>
