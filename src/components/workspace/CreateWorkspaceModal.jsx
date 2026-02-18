@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useAgencyTeam } from '../../hooks/useQueries';
+import { useAgencyTeam, useAgencyAccess } from '../../hooks/useQueries';
 import { WorkspaceTeamProvisionModal } from './WorkspaceTeamProvisionModal';
 import { SUBSCRIPTION_TIERS } from '../../utils/constants';
 import './CreateWorkspaceModal.css';
@@ -9,10 +9,16 @@ import './CreateWorkspaceModal.css';
 export const CreateWorkspaceModal = ({ isOpen, onClose }) => {
   const { createWorkspace } = useWorkspace();
   const { user, subscriptionTier } = useAuth();
-  const isAgencyUser = subscriptionTier === SUBSCRIPTION_TIERS.AGENCY;
 
-  // Fetch agency team for provisioning (only for agency users)
-  const { data: teamMembers = [] } = useAgencyTeam(isAgencyUser ? user?.id : null);
+  // Check agency access (owner or delegated manager)
+  const { data: agencyAccess } = useAgencyAccess(user?.id);
+  const isAgencyOwner = subscriptionTier === SUBSCRIPTION_TIERS.AGENCY;
+  const isAgencyManager = agencyAccess?.isManager || false;
+  const hasAgencyAccess = isAgencyOwner || isAgencyManager;
+  const agencyOwnerId = agencyAccess?.agencyOwnerId || null;
+
+  // Fetch agency team for provisioning (for both owners and managers)
+  const { data: teamMembers = [] } = useAgencyTeam(hasAgencyAccess ? user?.id : null);
 
   const [businessName, setBusinessName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +40,12 @@ export const CreateWorkspaceModal = ({ isOpen, onClose }) => {
     setError('');
 
     try {
-      const { data, error: createError } = await createWorkspace(businessName.trim());
+      // If delegated manager, pass onBehalfOfUserId so workspace is owned by agency owner
+      const options = isAgencyManager && agencyOwnerId
+        ? { onBehalfOfUserId: agencyOwnerId }
+        : undefined;
+
+      const { data, error: createError } = await createWorkspace(businessName.trim(), options);
 
       if (createError) {
         setError(createError);
@@ -42,7 +53,7 @@ export const CreateWorkspaceModal = ({ isOpen, onClose }) => {
       }
 
       // Success - check if agency user with team members
-      if (isAgencyUser && teamMembers.length > 0 && data) {
+      if (hasAgencyAccess && teamMembers.length > 0 && data) {
         // Show provision modal
         setNewWorkspace(data);
         setShowProvisionModal(true);
@@ -99,7 +110,10 @@ export const CreateWorkspaceModal = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <p className="modal-description">
-              Each business gets its own social media accounts, posts, and schedule.
+              {isAgencyManager
+                ? "This business will be created under the agency owner's account."
+                : "Each business gets its own social media accounts, posts, and schedule."
+              }
             </p>
 
             <div className="form-group">

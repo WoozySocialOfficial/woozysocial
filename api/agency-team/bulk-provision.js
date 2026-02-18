@@ -14,7 +14,7 @@ const {
   isValidUUID,
   isServiceConfigured
 } = require("../_utils");
-const { SUBSCRIPTION_TIERS } = require("../_utils-access-control");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 // Role-based permissions (same as invitations/accept.js)
 const ROLE_PERMISSIONS = {
@@ -82,29 +82,23 @@ module.exports = async function handler(req, res) {
       return sendError(res, "teamMemberIds must be a non-empty array", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Verify user has agency subscription
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('subscription_tier, subscription_status, is_whitelisted, full_name, email')
-      .eq('id', userId)
-      .single();
+    // Verify agency access (owner or delegated manager)
+    const access = await getAgencyAccess(supabase, userId);
 
-    if (!userProfile) {
-      return sendError(res, "User not found", ErrorCodes.NOT_FOUND);
-    }
-
-    const isAgency = userProfile.subscription_tier === SUBSCRIPTION_TIERS.AGENCY;
-    const isActive = userProfile.subscription_status === 'active' || userProfile.is_whitelisted;
-
-    if (!isAgency && !userProfile.is_whitelisted) {
+    if (!access.hasAccess) {
       return sendError(res, "Agency subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
     }
 
-    if (!isActive) {
-      return sendError(res, "Active subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
-    }
+    const agencyOwnerId = access.agencyOwnerId;
 
-    // Verify workspace ownership
+    // Get the acting user's profile for email invitations
+    const { data: actingUserProfile } = await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('id', userId)
+      .single();
+
+    // Verify workspace ownership (must be owned by the agency owner)
     const { data: workspace } = await supabase
       .from('workspaces')
       .select('id, name, owner_id')
@@ -115,15 +109,15 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Workspace not found", ErrorCodes.NOT_FOUND);
     }
 
-    if (workspace.owner_id !== userId) {
-      return sendError(res, "You must be the workspace owner to provision team members", ErrorCodes.FORBIDDEN);
+    if (workspace.owner_id !== agencyOwnerId) {
+      return sendError(res, "Workspace must be owned by the agency owner to provision team members", ErrorCodes.FORBIDDEN);
     }
 
-    // Fetch selected team members
+    // Fetch selected team members from the agency owner's roster
     const { data: teamMembers, error: fetchError } = await supabase
       .from('agency_team_members')
       .select('*')
-      .eq('agency_owner_id', userId)
+      .eq('agency_owner_id', agencyOwnerId)
       .in('id', teamMemberIds);
 
     if (fetchError) {
@@ -169,7 +163,7 @@ module.exports = async function handler(req, res) {
     }
 
     const appUrl = (process.env.APP_URL || 'https://woozysocials.com').trim();
-    const inviterName = userProfile.full_name || userProfile.email || 'Agency owner';
+    const inviterName = actingUserProfile?.full_name || actingUserProfile?.email || 'Agency team';
 
     for (const member of teamMembers) {
       try {
@@ -211,7 +205,7 @@ module.exports = async function handler(req, res) {
 
           // Record provision
           await supabase.from('agency_workspace_provisions').insert({
-            agency_owner_id: userId,
+            agency_owner_id: agencyOwnerId,
             workspace_id: workspaceId,
             agency_team_member_id: member.id,
             provisioned_role: effectiveRole,
@@ -250,7 +244,7 @@ module.exports = async function handler(req, res) {
 
           // Record provision
           await supabase.from('agency_workspace_provisions').insert({
-            agency_owner_id: userId,
+            agency_owner_id: agencyOwnerId,
             workspace_id: workspaceId,
             agency_team_member_id: member.id,
             provisioned_role: effectiveRole,

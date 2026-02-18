@@ -180,19 +180,24 @@ export const WorkspaceProvider = ({ children }) => {
   }, [userWorkspaces, user]);
 
   // Create workspace via API (also creates Ayrshare profile)
-  const createWorkspace = useCallback(async (businessName) => {
+  const createWorkspace = useCallback(async (businessName, { onBehalfOfUserId } = {}) => {
     if (!user) return { data: null, error: 'User not authenticated' };
 
     try {
+      const payload = {
+        userId: user.id,
+        businessName: businessName
+      };
+      if (onBehalfOfUserId) {
+        payload.onBehalfOfUserId = onBehalfOfUserId;
+      }
+
       const { data, error: fetchError } = await safeFetch(
         `${baseURL}/api/workspace/create`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            businessName: businessName
-          })
+          body: JSON.stringify(payload)
         }
       );
 
@@ -208,11 +213,12 @@ export const WorkspaceProvider = ({ children }) => {
 
       // Switch to the new workspace
       if (responseData.workspace) {
+        const effectiveRole = onBehalfOfUserId ? 'member' : 'owner';
         setActiveWorkspace({
           ...responseData.workspace,
-          membership: { role: 'owner' }
+          membership: { role: effectiveRole }
         });
-        setWorkspaceMembership({ role: 'owner' });
+        setWorkspaceMembership({ role: effectiveRole });
       }
 
       return { data: responseData.workspace, error: null };

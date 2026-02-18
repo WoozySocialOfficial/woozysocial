@@ -12,6 +12,7 @@ const {
   validateRequired,
   isValidUUID
 } = require("../_utils");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 const VALID_ROLES = ['admin', 'editor', 'view_only', 'client'];
 const VALID_STATUSES = ['active', 'inactive'];
@@ -33,7 +34,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { userId, teamMemberId, fullName, defaultRole, department, notes, status } = req.body;
+    const { userId, teamMemberId, fullName, defaultRole, department, notes, status, canManageAgency } = req.body;
 
     const validation = validateRequired(req.body, ['userId', 'teamMemberId']);
     if (!validation.valid) {
@@ -44,7 +45,16 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Verify ownership
+    // Verify agency access (owner or delegated manager)
+    const access = await getAgencyAccess(supabase, userId);
+
+    if (!access.hasAccess) {
+      return sendError(res, "Agency subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
+    }
+
+    const agencyOwnerId = access.agencyOwnerId;
+
+    // Verify the team member belongs to this agency
     const { data: member, error: memberError } = await supabase
       .from('agency_team_members')
       .select('id, agency_owner_id')
@@ -55,7 +65,7 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Team member not found", ErrorCodes.NOT_FOUND);
     }
 
-    if (member.agency_owner_id !== userId) {
+    if (member.agency_owner_id !== agencyOwnerId) {
       return sendError(res, "Not authorized to update this team member", ErrorCodes.FORBIDDEN);
     }
 
@@ -66,6 +76,14 @@ module.exports = async function handler(req, res) {
     if (department !== undefined) updates.department = department?.trim() || null;
     if (notes !== undefined) updates.notes = notes?.trim() || null;
     if (status && VALID_STATUSES.includes(status)) updates.status = status;
+
+    // can_manage_agency toggle — only the agency owner can change this
+    if (typeof canManageAgency === 'boolean') {
+      if (!access.isOwner) {
+        return sendError(res, "Only the agency owner can grant or revoke agency management permission", ErrorCodes.FORBIDDEN);
+      }
+      updates.can_manage_agency = canManageAgency;
+    }
 
     if (Object.keys(updates).length === 0) {
       return sendError(res, "No valid fields to update", ErrorCodes.VALIDATION_ERROR);

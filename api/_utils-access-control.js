@@ -329,6 +329,63 @@ function sendSuccess(res, data = {}, message = null) {
   });
 }
 
+/**
+ * Resolve agency access for a user.
+ * Returns whether the user is the agency owner or a delegated manager,
+ * and the agency owner's ID to use for all operations.
+ *
+ * @returns {{ isOwner: boolean, isManager: boolean, agencyOwnerId: string|null, hasAccess: boolean }}
+ */
+async function getAgencyAccess(supabase, userId) {
+  // Path 1: Check if user is an agency owner
+  const { data: userProfile } = await supabase
+    .from('user_profiles')
+    .select('subscription_tier, subscription_status, is_whitelisted')
+    .eq('id', userId)
+    .single();
+
+  if (userProfile) {
+    const isAgency = userProfile.subscription_tier === SUBSCRIPTION_TIERS.AGENCY;
+    const isActive = userProfile.subscription_status === 'active' || userProfile.is_whitelisted;
+
+    if ((isAgency || userProfile.is_whitelisted) && isActive) {
+      return {
+        isOwner: true,
+        isManager: false,
+        agencyOwnerId: userId,
+        hasAccess: true
+      };
+    }
+  }
+
+  // Path 2: Check if user is a delegated manager in someone else's agency
+  const { data: managerEntry } = await supabase
+    .from('agency_team_members')
+    .select('agency_owner_id')
+    .eq('member_user_id', userId)
+    .eq('can_manage_agency', true)
+    .eq('status', 'active')
+    .limit(1)
+    .single();
+
+  if (managerEntry) {
+    return {
+      isOwner: false,
+      isManager: true,
+      agencyOwnerId: managerEntry.agency_owner_id,
+      hasAccess: true
+    };
+  }
+
+  // No agency access
+  return {
+    isOwner: false,
+    isManager: false,
+    agencyOwnerId: null,
+    hasAccess: false
+  };
+}
+
 // ===========================
 // EXPORTS (CommonJS)
 // ===========================
@@ -347,6 +404,7 @@ module.exports = {
   canPerformPostAction,
   verifyWorkspaceMembership,
   checkPermission,
+  getAgencyAccess,
   sendError,
   sendSuccess
 };

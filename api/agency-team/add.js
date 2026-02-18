@@ -13,7 +13,7 @@ const {
   isValidUUID,
   isValidEmail
 } = require("../_utils");
-const { SUBSCRIPTION_TIERS } = require("../_utils-access-control");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 const VALID_ROLES = ['admin', 'editor', 'view_only', 'client'];
 
@@ -52,33 +52,20 @@ module.exports = async function handler(req, res) {
 
     const role = defaultRole && VALID_ROLES.includes(defaultRole) ? defaultRole : 'editor';
 
-    // Verify agency subscription
-    const { data: userProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('subscription_tier, subscription_status, is_whitelisted')
-      .eq('id', userId)
-      .single();
+    // Verify agency access (owner or delegated manager)
+    const access = await getAgencyAccess(supabase, userId);
 
-    if (profileError || !userProfile) {
-      return sendError(res, "User not found", ErrorCodes.NOT_FOUND);
-    }
-
-    const isAgency = userProfile.subscription_tier === SUBSCRIPTION_TIERS.AGENCY;
-    const isActive = userProfile.subscription_status === 'active' || userProfile.is_whitelisted;
-
-    if (!isAgency && !userProfile.is_whitelisted) {
+    if (!access.hasAccess) {
       return sendError(res, "Agency subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
     }
 
-    if (!isActive) {
-      return sendError(res, "Active subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
-    }
+    const agencyOwnerId = access.agencyOwnerId;
 
     // Check if member already exists in roster
     const { data: existing } = await supabase
       .from('agency_team_members')
       .select('id')
-      .eq('agency_owner_id', userId)
+      .eq('agency_owner_id', agencyOwnerId)
       .ilike('email', email.trim())
       .single();
 
@@ -97,7 +84,7 @@ module.exports = async function handler(req, res) {
     const { data: newMember, error: insertError } = await supabase
       .from('agency_team_members')
       .insert({
-        agency_owner_id: userId,
+        agency_owner_id: agencyOwnerId,
         email: email.toLowerCase().trim(),
         member_user_id: existingUser?.id || null,
         full_name: fullName?.trim() || existingUser?.full_name || null,

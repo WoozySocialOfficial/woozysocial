@@ -168,6 +168,34 @@ export function useAgencyTeam(userId) {
   });
 }
 
+/**
+ * Returns full agency access context: team members + ownership/manager info.
+ * Used by components that need to know if the user is an owner or delegated manager.
+ */
+export function useAgencyAccess(userId) {
+  return useQuery({
+    queryKey: ["agencyAccess", userId],
+    queryFn: async () => {
+      const res = await fetch(`${baseURL}/api/agency-team/list?userId=${userId}`);
+      if (!res.ok) {
+        // User has no agency access — return null (not an error)
+        return null;
+      }
+      const data = await res.json();
+      if (!data.success) return null;
+      return {
+        teamMembers: data.data?.teamMembers || [],
+        agencyOwnerId: data.data?.agencyOwnerId || null,
+        isOwner: data.data?.isOwner || false,
+        isManager: data.data?.isManager || false,
+        hasAccess: !!(data.data?.agencyOwnerId)
+      };
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 // ============================================
 // TEAM MEMBERS
 // ============================================

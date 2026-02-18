@@ -4,7 +4,7 @@
 import React, { useState, lazy, Suspense } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
-import { useTeamMembers, usePendingInvites, useInvalidateQueries } from "../hooks/useQueries";
+import { useTeamMembers, usePendingInvites, useAgencyAccess, useInvalidateQueries } from "../hooks/useQueries";
 import { InviteMemberModal } from "./InviteMemberModal";
 import TeamMemberLimitGate from "./subscription/TeamMemberLimitGate";
 import RoleGuard from "./roles/RoleGuard";
@@ -48,11 +48,15 @@ export const TeamContent = () => {
     refetch: refetchPendingInvites
   } = usePendingInvites(activeWorkspace?.id, user?.id);
 
+  // Check if user has delegated agency management access
+  const { data: agencyAccess } = useAgencyAccess(user?.id);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('team'); // 'team' or 'agency'
 
-  // Show Agency Roster tab for agency tier users who are owner or can manage team
-  const showAgencyTab = subscriptionTier === 'agency' && (isOwner || canManageTeam);
+  // Show Agency Roster tab for agency owners OR delegated managers with can_manage_agency
+  const showAgencyTab = (subscriptionTier === 'agency' && (isOwner || canManageTeam))
+    || agencyAccess?.isManager;
 
   // Refresh functions that invalidate cache
   const fetchTeamMembers = () => {

@@ -1,11 +1,11 @@
 /**
  * AgencyTeamContent Component - Manages agency-level team roster
- * Only visible to users with agency subscription tier
+ * Visible to agency owners AND delegated managers (can_manage_agency = true)
  */
 import React, { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
-import { useAgencyTeam, useInvalidateQueries } from "../hooks/useQueries";
+import { useAgencyAccess, useInvalidateQueries } from "../hooks/useQueries";
 import { AddAgencyTeamMemberModal } from "./AddAgencyTeamMemberModal";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import { baseURL, SUBSCRIPTION_TIERS } from "../utils/constants";
@@ -16,12 +16,17 @@ export const AgencyTeamContent = () => {
   const { invalidateAgencyTeam } = useInvalidateQueries();
   const toast = useToast();
 
-  // Use React Query for cached data fetching
+  // Use the new agency access hook that returns ownership context
   const {
-    data: teamMembers = [],
+    data: agencyAccess,
     isLoading: loading,
     refetch: refetchTeamMembers
-  } = useAgencyTeam(user?.id);
+  } = useAgencyAccess(user?.id);
+
+  const teamMembers = agencyAccess?.teamMembers || [];
+  const isAgencyOwner = agencyAccess?.isOwner || false;
+  const isAgencyManager = agencyAccess?.isManager || false;
+  const hasAgencyAccess = agencyAccess?.hasAccess || false;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
@@ -34,10 +39,10 @@ export const AgencyTeamContent = () => {
     refetchTeamMembers();
   };
 
-  // Check if user has agency subscription
-  const isAgencyUser = subscriptionTier === SUBSCRIPTION_TIERS.AGENCY;
+  // Check if user has agency access (owner OR delegated manager)
+  const isAgencyUser = subscriptionTier === SUBSCRIPTION_TIERS.AGENCY || hasAgencyAccess;
 
-  if (!isAgencyUser) {
+  if (!isAgencyUser && !loading) {
     return (
       <div className="agency-team-container">
         <div className="agency-team-header">
@@ -155,6 +160,43 @@ export const AgencyTeamContent = () => {
     }
   };
 
+  const handleToggleCanManageAgency = async (memberId, value) => {
+    try {
+      const response = await fetch(`${baseURL}/api/agency-team/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          teamMemberId: memberId,
+          canManageAgency: value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update permission');
+      }
+
+      toast({
+        title: value ? "Agency management enabled" : "Agency management disabled",
+        status: "success",
+        duration: 2000,
+        isClosable: true
+      });
+      refreshTeam();
+    } catch (error) {
+      console.error('Error toggling can_manage_agency:', error);
+      toast({
+        title: "Failed to update permission",
+        description: error.message,
+        status: "error",
+        duration: 4000,
+        isClosable: true
+      });
+    }
+  };
+
   // Filter team members by search query
   const filteredMembers = teamMembers.filter(member => {
     if (!searchQuery.trim()) return true;
@@ -203,7 +245,10 @@ export const AgencyTeamContent = () => {
       <div className="agency-team-header">
         <h1 className="agency-team-title">Agency Team</h1>
         <p className="agency-team-subtitle">
-          Manage your central team roster. Add team members here once, then quickly provision them to any workspace.
+          {isAgencyManager
+            ? "You are managing this agency's team roster on behalf of the agency owner."
+            : "Manage your central team roster. Add team members here once, then quickly provision them to any workspace."
+          }
         </p>
       </div>
 
@@ -212,7 +257,7 @@ export const AgencyTeamContent = () => {
           <div>
             <h2 className="section-title">Team Roster</h2>
             <p className="section-subtitle">
-              {teamMembers.length} team member{teamMembers.length !== 1 ? 's' : ''} in your roster
+              {teamMembers.length} team member{teamMembers.length !== 1 ? 's' : ''} in {isAgencyManager ? 'the' : 'your'} roster
             </p>
           </div>
           <button className="add-member-button" onClick={handleAddMember}>
@@ -289,6 +334,20 @@ export const AgencyTeamContent = () => {
                       <option value="member">Member</option>
                       <option value="viewer">Viewer</option>
                     </select>
+                    {/* Can Manage Agency toggle — only visible to agency owner */}
+                    {isAgencyOwner && (
+                      <div className="permission-toggles">
+                        <label className="toggle-label">
+                          <input
+                            type="checkbox"
+                            checked={member.can_manage_agency || false}
+                            onChange={(e) => handleToggleCanManageAgency(member.id, e.target.checked)}
+                          />
+                          <span className="toggle-switch"></span>
+                          Can manage agency
+                        </label>
+                      </div>
+                    )}
                     <button
                       className="edit-button"
                       onClick={() => handleEditMember(member)}

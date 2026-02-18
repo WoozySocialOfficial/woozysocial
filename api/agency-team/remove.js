@@ -12,6 +12,7 @@ const {
   validateRequired,
   isValidUUID
 } = require("../_utils");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -41,10 +42,19 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Verify ownership
+    // Verify agency access (owner or delegated manager)
+    const access = await getAgencyAccess(supabase, userId);
+
+    if (!access.hasAccess) {
+      return sendError(res, "Agency subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
+    }
+
+    const agencyOwnerId = access.agencyOwnerId;
+
+    // Verify the team member belongs to this agency
     const { data: member, error: memberError } = await supabase
       .from('agency_team_members')
-      .select('id, agency_owner_id, email')
+      .select('id, agency_owner_id, email, member_user_id')
       .eq('id', teamMemberId)
       .single();
 
@@ -52,8 +62,13 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Team member not found", ErrorCodes.NOT_FOUND);
     }
 
-    if (member.agency_owner_id !== userId) {
+    if (member.agency_owner_id !== agencyOwnerId) {
       return sendError(res, "Not authorized to remove this team member", ErrorCodes.FORBIDDEN);
+    }
+
+    // Prevent delegated managers from removing themselves (would lock themselves out)
+    if (access.isManager && member.member_user_id === userId) {
+      return sendError(res, "You cannot remove yourself from the roster", ErrorCodes.FORBIDDEN);
     }
 
     // Delete from roster (cascade will handle provisions)

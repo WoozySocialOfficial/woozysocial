@@ -11,7 +11,7 @@ const {
   logError,
   isValidUUID
 } = require("../_utils");
-const { SUBSCRIPTION_TIERS } = require("../_utils-access-control");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -36,30 +36,16 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Valid userId is required", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Verify user has agency subscription
-    const { data: userProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('subscription_tier, subscription_status, is_whitelisted')
-      .eq('id', userId)
-      .single();
+    // Verify agency access (owner or delegated manager)
+    const access = await getAgencyAccess(supabase, userId);
 
-    if (profileError || !userProfile) {
-      return sendError(res, "User not found", ErrorCodes.NOT_FOUND);
-    }
-
-    // Check agency tier or whitelisted
-    const isAgency = userProfile.subscription_tier === SUBSCRIPTION_TIERS.AGENCY;
-    const isActive = userProfile.subscription_status === 'active' || userProfile.is_whitelisted;
-
-    if (!isAgency && !userProfile.is_whitelisted) {
+    if (!access.hasAccess) {
       return sendError(res, "Agency subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
     }
 
-    if (!isActive) {
-      return sendError(res, "Active subscription required", ErrorCodes.SUBSCRIPTION_REQUIRED);
-    }
+    const agencyOwnerId = access.agencyOwnerId;
 
-    // Fetch team roster
+    // Fetch team roster using the resolved agency owner ID
     const { data: teamMembers, error: teamError } = await supabase
       .from('agency_team_members')
       .select(`
@@ -71,10 +57,11 @@ module.exports = async function handler(req, res) {
         department,
         notes,
         status,
+        can_manage_agency,
         created_at,
         updated_at
       `)
-      .eq('agency_owner_id', userId)
+      .eq('agency_owner_id', agencyOwnerId)
       .order('created_at', { ascending: false });
 
     if (teamError) {
@@ -110,7 +97,10 @@ module.exports = async function handler(req, res) {
 
     return sendSuccess(res, {
       teamMembers: enrichedMembers,
-      count: enrichedMembers.length
+      count: enrichedMembers.length,
+      agencyOwnerId: agencyOwnerId,
+      isOwner: access.isOwner,
+      isManager: access.isManager
     });
 
   } catch (error) {

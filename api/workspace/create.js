@@ -10,6 +10,7 @@ const {
   isValidUUID,
   isServiceConfigured
 } = require("../_utils");
+const { getAgencyAccess } = require("../_utils-access-control");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -65,7 +66,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { userId, businessName } = req.body;
+    const { userId, businessName, onBehalfOfUserId } = req.body;
 
     // Validate required fields
     const validation = validateRequired(req.body, ['userId', 'businessName']);
@@ -84,6 +85,24 @@ module.exports = async function handler(req, res) {
     // Validate business name length
     if (businessName.length < 2 || businessName.length > 100) {
       return sendError(res, "Business name must be between 2 and 100 characters", ErrorCodes.VALIDATION_ERROR);
+    }
+
+    // Determine the effective owner — either the user themselves or the agency owner they manage for
+    let effectiveOwnerId = userId;
+
+    if (onBehalfOfUserId) {
+      if (!isValidUUID(onBehalfOfUserId)) {
+        return sendError(res, "Invalid onBehalfOfUserId format", ErrorCodes.VALIDATION_ERROR);
+      }
+
+      // Verify the calling user has can_manage_agency for this agency owner
+      const access = await getAgencyAccess(supabase, userId);
+
+      if (!access.hasAccess || !access.isManager || access.agencyOwnerId !== onBehalfOfUserId) {
+        return sendError(res, "Not authorized to create workspaces on behalf of this user", ErrorCodes.FORBIDDEN);
+      }
+
+      effectiveOwnerId = onBehalfOfUserId;
     }
 
     // Create a new Ayrshare profile for this workspace (Business Plan feature)
@@ -105,7 +124,7 @@ module.exports = async function handler(req, res) {
       ayrRefId = null;
     }
 
-    // Create workspace in database
+    // Create workspace in database (owned by the effective owner)
     const slug = generateSlug(businessName);
 
     const { data: workspace, error: workspaceError } = await supabase
@@ -113,27 +132,27 @@ module.exports = async function handler(req, res) {
       .insert({
         name: businessName,
         slug: slug,
-        owner_id: userId,
+        owner_id: effectiveOwnerId,
         ayr_profile_key: ayrProfileKey,
         ayr_ref_id: ayrRefId,
-        onboarding_status: 'completed',  // Mark as completed since user is already in app
-        subscription_status: 'active',   // Set to active by default
-        subscription_tier: 'free'        // Start with free tier
+        onboarding_status: 'completed',
+        subscription_status: 'active',
+        subscription_tier: 'free'
       })
       .select()
       .single();
 
     if (workspaceError) {
-      logError('workspace.create.insert', workspaceError, { userId, businessName });
+      logError('workspace.create.insert', workspaceError, { userId, effectiveOwnerId, businessName });
       return sendError(res, "Failed to create workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Add user as owner of the workspace with full permissions
-    const { error: memberError } = await supabase
+    // Add the effective owner as workspace owner with full permissions
+    const { error: ownerMemberError } = await supabase
       .from('workspace_members')
       .insert({
         workspace_id: workspace.id,
-        user_id: userId,
+        user_id: effectiveOwnerId,
         role: 'owner',
         can_manage_team: true,
         can_manage_settings: true,
@@ -142,14 +161,35 @@ module.exports = async function handler(req, res) {
         joined_at: new Date().toISOString()
       });
 
-    if (memberError) {
-      logError('workspace.create.addOwner', memberError, { workspaceId: workspace.id, userId });
+    if (ownerMemberError) {
+      logError('workspace.create.addOwner', ownerMemberError, { workspaceId: workspace.id, effectiveOwnerId });
       // Try to clean up the workspace
       await supabase.from('workspaces').delete().eq('id', workspace.id);
-      return sendError(res, "Failed to add user to workspace", ErrorCodes.DATABASE_ERROR);
+      return sendError(res, "Failed to add owner to workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Update user's last_workspace_id
+    // If created on behalf of someone, also add the acting user as a member with management permissions
+    if (onBehalfOfUserId && userId !== effectiveOwnerId) {
+      const { error: managerMemberError } = await supabase
+        .from('workspace_members')
+        .insert({
+          workspace_id: workspace.id,
+          user_id: userId,
+          role: 'member',
+          can_manage_team: true,
+          can_manage_settings: true,
+          can_delete_posts: true,
+          can_approve_posts: true,
+          joined_at: new Date().toISOString()
+        });
+
+      if (managerMemberError) {
+        logError('workspace.create.addManager', managerMemberError, { workspaceId: workspace.id, userId });
+        // Non-fatal — workspace and owner were created successfully
+      }
+    }
+
+    // Update the acting user's last_workspace_id
     await supabase
       .from('user_profiles')
       .update({ last_workspace_id: workspace.id })

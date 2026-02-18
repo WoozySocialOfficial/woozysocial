@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAgencyAccess } from '../../hooks/useQueries';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import WorkspaceLimitGate from '../subscription/WorkspaceLimitGate';
 import { baseURL } from '../../utils/constants';
@@ -11,6 +12,8 @@ import './WorkspaceSwitcher.css';
 export const WorkspaceSwitcher = () => {
   const { activeWorkspace, userWorkspaces, switchWorkspace, loading, refreshWorkspaces } = useWorkspace();
   const { user, profile, hasActiveProfile } = useAuth();
+  const { data: agencyAccess } = useAgencyAccess(user?.id);
+  const isAgencyManager = agencyAccess?.isManager || false;
   const toast = useToast();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -318,8 +321,9 @@ export const WorkspaceSwitcher = () => {
 
           <div className="dropdown-divider" />
 
-          <WorkspaceLimitGate onAllowed={handleAddBusinessClick}>
-            <button className="dropdown-action add-business">
+          {isAgencyManager ? (
+            /* Delegated managers bypass the limit gate — limits apply to the owner's account */
+            <button className="dropdown-action add-business" onClick={handleAddBusinessClick}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
                   d="M8 3V13M3 8H13"
@@ -331,7 +335,22 @@ export const WorkspaceSwitcher = () => {
               </svg>
               Add Business
             </button>
-          </WorkspaceLimitGate>
+          ) : (
+            <WorkspaceLimitGate onAllowed={handleAddBusinessClick}>
+              <button className="dropdown-action add-business">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 3V13M3 8H13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Add Business
+              </button>
+            </WorkspaceLimitGate>
+          )}
 
           <button className="dropdown-action" onClick={handleSettingsClick}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="settings-icon">
