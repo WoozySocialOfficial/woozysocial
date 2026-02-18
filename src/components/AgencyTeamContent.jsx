@@ -24,13 +24,10 @@ export const AgencyTeamContent = () => {
   } = useAgencyAccess(user?.id);
 
   const teamMembers = agencyAccess?.teamMembers || [];
-  const isAgencyOwner = agencyAccess?.isOwner || false;
+  // Fallback: if API doesn't return isOwner (old API), use subscriptionTier from AuthContext
+  const isAgencyOwner = agencyAccess?.isOwner || subscriptionTier === SUBSCRIPTION_TIERS.AGENCY;
   const isAgencyManager = agencyAccess?.isManager || false;
   const hasAgencyAccess = agencyAccess?.hasAccess || false;
-
-  // DEBUG: Remove after verifying toggle works
-  console.log('[AgencyTeam] agencyAccess:', JSON.stringify(agencyAccess, null, 2));
-  console.log('[AgencyTeam] isAgencyOwner:', isAgencyOwner, '| isAgencyManager:', isAgencyManager);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
