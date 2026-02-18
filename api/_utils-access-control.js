@@ -346,9 +346,8 @@ async function getAgencyAccess(supabase, userId) {
 
   if (userProfile) {
     const isAgency = userProfile.subscription_tier === SUBSCRIPTION_TIERS.AGENCY;
-    const isActive = userProfile.subscription_status === 'active' || userProfile.is_whitelisted;
 
-    if ((isAgency || userProfile.is_whitelisted) && isActive) {
+    if (isAgency || userProfile.is_whitelisted) {
       return {
         isOwner: true,
         isManager: false,

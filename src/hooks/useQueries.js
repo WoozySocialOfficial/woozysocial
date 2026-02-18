@@ -490,9 +490,10 @@ export function useInvalidateQueries() {
       queryClient.invalidateQueries({ queryKey: ["pendingInvites", workspaceId] });
     },
 
-    // Invalidate agency team roster
+    // Invalidate agency team roster (covers both old and new query keys)
     invalidateAgencyTeam: (userId) => {
       queryClient.invalidateQueries({ queryKey: ["agencyTeam", userId] });
+      queryClient.invalidateQueries({ queryKey: ["agencyAccess", userId] });
     },
 
     // Invalidate notifications

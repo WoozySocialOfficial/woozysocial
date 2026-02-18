@@ -294,6 +294,63 @@
   transform: translateY(-1px);
 }
 
+/* Permission Toggles */
+.permission-toggles {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #7b74b0;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.toggle-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background-color: #d1d5db;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-switch {
+  background-color: #7c3aed;
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
+  transform: translateX(16px);
+}
+
 /* Info Box */
 .team-info-box {
   background-color: #F1F6F4;
@@ -606,6 +663,21 @@
 [data-theme="dark"] .remove-button:hover,
 .dark .remove-button:hover {
   background-color: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .toggle-label,
+.dark .toggle-label {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .toggle-switch,
+.dark .toggle-switch {
+  background-color: #352d5e;
+}
+
+[data-theme="dark"] .toggle-label input[type="checkbox"]:checked + .toggle-switch,
+.dark .toggle-label input[type="checkbox"]:checked + .toggle-switch {
+  background-color: #7c3aed;
 }
 
 [data-theme="dark"] .team-info-box,
