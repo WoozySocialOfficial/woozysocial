@@ -506,6 +506,33 @@
   border-left-color: #3b82f6;
 }
 
+.post-card.failed {
+  background: #fef2f2;
+  border-color: #fecaca;
+  border-left-color: #ef4444;
+}
+
+/* Post status badges */
+.post-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+.post-status-posted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.post-status-failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 /* Approval status backgrounds */
 .post-card.approval-pending {
   background: #fffbeb;
@@ -1485,6 +1512,25 @@
   background: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.3);
   border-left-color: #3b82f6;
+}
+
+[data-theme="dark"] .post-card.failed,
+.dark .post-card.failed {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  border-left-color: #ef4444;
+}
+
+[data-theme="dark"] .post-status-posted,
+.dark .post-status-posted {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .post-status-failed,
+.dark .post-status-failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
 
 [data-theme="dark"] .post-card.approval-pending,

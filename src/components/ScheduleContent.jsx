@@ -418,6 +418,13 @@ export const ScheduleContent = () => {
         title="Click to view details"
       >
         <div className="post-card-header">
+          {/* Post status badge */}
+          {(post.status === 'posted' || post.status === 'success') && (
+            <div className="post-status-badge post-status-posted">Posted</div>
+          )}
+          {post.status === 'failed' && (
+            <div className="post-status-badge post-status-failed">Failed</div>
+          )}
           {/* Always show approval badge so status is visible */}
           <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
             <ApprovalIcon size={11} />
