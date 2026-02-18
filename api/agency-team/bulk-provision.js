@@ -273,33 +273,49 @@ module.exports = async function handler(req, res) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f3ff;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(100, 101, 241, 0.1);">
-    <div style="padding: 40px; text-align: center; background-color: #6465f1;">
-      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">You're Invited!</h1>
-    </div>
-    <div style="padding: 40px;">
-      <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">
-        <strong>${inviterName}</strong> has invited you to join <strong>${workspace.name}</strong> on Woozy Social.
-      </p>
-      <p style="margin: 0 0 30px 0; font-size: 16px; color: #374151;">
-        Role: <strong style="color: #6465f1;">${effectiveRole}</strong>
-      </p>
-      <div style="text-align: center;">
-        <a href="${inviteLink}" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #ffffff; background-color: #6465f1; text-decoration: none; border-radius: 8px;">
-          Accept Invitation
-        </a>
-      </div>
-      <p style="margin: 30px 0 0 0; font-size: 14px; color: #6b7280; line-height: 1.6; text-align: center;">
-        This invitation expires in 7 days.
-      </p>
-    </div>
-    <div style="padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-      <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">
-        If the button doesn't work, copy and paste this link:<br>
-        <a href="${inviteLink}" style="color: #6465f1; word-break: break-all;">${inviteLink}</a>
-      </p>
-    </div>
-  </div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f5f3ff">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="max-width: 600px; border-radius: 16px;">
+          <tr>
+            <td align="center" bgcolor="#6465f1" style="padding: 40px;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">You're Invited!</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">
+                <strong>${inviterName}</strong> has invited you to join <strong>${workspace.name}</strong> on Woozy Social.
+              </p>
+              <p style="margin: 0 0 30px 0; font-size: 16px; color: #374151;">
+                Role: <strong style="color: #6465f1;">${effectiveRole}</strong>
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                <tr>
+                  <td align="center" bgcolor="#6465f1" style="border-radius: 8px;">
+                    <a href="${inviteLink}" target="_blank" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #ffffff; text-decoration: none;">
+                      Accept Invitation
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 30px 0 0 0; font-size: 14px; color: #6b7280; line-height: 1.6; text-align: center;">
+                This invitation expires in 7 days.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f9fafb" style="padding: 20px 40px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">
+                If the button doesn't work, copy and paste this link:<br>
+                <a href="${inviteLink}" style="color: #6465f1; word-break: break-all;">${inviteLink}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
               });
