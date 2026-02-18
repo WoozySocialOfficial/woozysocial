@@ -94,6 +94,8 @@ export const ComposeContent = () => {
   const [aiWebsiteUrl, setAiWebsiteUrl] = useState("");
   const [aiVariations, setAiVariations] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiUseEmojis, setAiUseEmojis] = useState(true);
+  const [selectedVariations, setSelectedVariations] = useState([]);
 
   // Hashtag generation state
   const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
@@ -2052,7 +2054,8 @@ export const ComposeContent = () => {
           userId: user?.id,
           prompt: aiPrompt,
           platforms: selectedPlatforms,
-          websiteUrl: aiWebsiteUrl || null
+          websiteUrl: aiWebsiteUrl || null,
+          useEmojis: aiUseEmojis
         })
       });
 
@@ -2095,14 +2098,30 @@ export const ComposeContent = () => {
     }
   };
 
-  const handleSelectVariation = (variation) => {
-    // Clean up variation text (remove numbering if present)
-    const cleanText = variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '').trim();
-    setPost({ ...post, text: cleanText });
+  const handleToggleVariation = (index) => {
+    setSelectedVariations(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
+  };
+
+  const handleApplyVariations = () => {
+    // Combine selected variations in order, separated by double newline
+    const selected = selectedVariations
+      .sort((a, b) => a - b)
+      .map(i => {
+        const v = aiVariations[i];
+        return v.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '').replace(/^---\s*\n?/, '').trim();
+      })
+      .join('\n\n');
+
+    if (selected) {
+      setPost({ ...post, text: selected });
+    }
     onAiClose();
     setAiPrompt("");
     setAiWebsiteUrl("");
     setAiVariations([]);
+    setSelectedVariations([]);
   };
 
   // Calculate best posting time based on real analytics or selected platforms
@@ -3133,6 +3152,31 @@ export const ComposeContent = () => {
                   AI will analyze the page content to create more relevant posts
                 </p>
 
+                <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={() => setAiUseEmojis(!aiUseEmojis)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: `2px solid ${aiUseEmojis ? '#9333EA' : '#e5e7eb'}`,
+                      backgroundColor: aiUseEmojis ? '#f5f3ff' : '#ffffff',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: aiUseEmojis ? '#9333EA' : '#6b7280',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {aiUseEmojis ? '😊' : '🚫'} {aiUseEmojis ? 'Emojis On' : 'No Emojis'}
+                  </button>
+                  <span style={{ fontSize: '12px', color: '#999' }}>
+                    {aiUseEmojis ? 'Posts will include emojis' : 'Posts will be emoji-free'}
+                  </span>
+                </div>
+
                 <p style={{ marginTop: '12px', fontSize: '12px', color: '#999' }}>
                   Tip: Complete your Brand Profile for better AI-generated content
                 </p>
@@ -3140,48 +3184,78 @@ export const ComposeContent = () => {
             ) : (
               <div>
                 <p style={{ marginBottom: '15px', fontWeight: 'bold' }}>
-                  Select a variation:
+                  Select one or more variations:
                 </p>
-                {aiVariations.map((variation, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleSelectVariation(variation)}
-                    style={{
-                      padding: '16px',
-                      marginBottom: '12px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      backgroundColor: '#ffffff',
-                      color: '#111827'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#9333EA';
-                      e.currentTarget.style.backgroundColor = '#f5f3ff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.backgroundColor = '#ffffff';
+                {aiVariations.map((variation, index) => {
+                  const isSelected = selectedVariations.includes(index);
+                  const cleanText = variation
+                    .replace(/^\d+\.\s*/, '')
+                    .replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '')
+                    .replace(/^---\s*\n?/, '')
+                    .trim();
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => handleToggleVariation(index)}
+                      style={{
+                        padding: '16px',
+                        marginBottom: '12px',
+                        border: `2px solid ${isSelected ? '#9333EA' : '#e5e7eb'}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        backgroundColor: isSelected ? '#f5f3ff' : '#ffffff',
+                        color: '#111827',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '6px',
+                        border: `2px solid ${isSelected ? '#9333EA' : '#d1d5db'}`,
+                        backgroundColor: isSelected ? '#9333EA' : '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        color: '#ffffff',
+                        fontWeight: 'bold'
+                      }}>
+                        {isSelected && '✓'}
+                      </div>
+                      <div style={{ fontSize: '15px', whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#111827', fontWeight: '400', paddingRight: '36px' }}>
+                        {cleanText}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAiVariations([]);
+                      setSelectedVariations([]);
+                      setAiPrompt("");
+                      setAiWebsiteUrl("");
                     }}
                   >
-                    <div style={{ fontSize: '15px', whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#111827', fontWeight: '400' }}>
-                      {variation.replace(/^\d+\.\s*/, '').replace(/^\*\*Variation\s+\d+:?\*\*\s*/i, '')}
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setAiVariations([]);
-                    setAiPrompt("");
-                    setAiWebsiteUrl("");
-                  }}
-                  style={{ marginTop: '10px' }}
-                >
-                  ← Generate Again
-                </Button>
+                    ← Generate Again
+                  </Button>
+                  {selectedVariations.length > 0 && (
+                    <Button
+                      colorScheme="purple"
+                      size="sm"
+                      onClick={handleApplyVariations}
+                    >
+                      Use Selected ({selectedVariations.length})
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </ModalBody>

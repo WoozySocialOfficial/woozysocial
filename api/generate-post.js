@@ -99,7 +99,7 @@ async function getBrandProfile(workspaceId, userId) {
 }
 
 // Generate post using Claude AI
-async function generateWithAI(prompt, websiteData, brandProfile, platforms) {
+async function generateWithAI(prompt, websiteData, brandProfile, platforms, useEmojis = true) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
@@ -259,7 +259,7 @@ Each variation MUST:
 - Start with a hook that grabs attention
 - Be ready to copy-paste (no placeholders)
 - Match the brand voice if provided
-- Use minimal emojis (0-2 max, only if natural)
+- ${useEmojis ? 'Use minimal emojis (0-2 max, only if natural)' : 'Do NOT use any emojis at all - zero emojis in the post'}
 - Put hashtags at the END only (not inline)
 - MAXIMUM 5 hashtags per post (never more than 5)
 
@@ -339,7 +339,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { workspaceId, userId, prompt, platforms = [], websiteUrl } = req.body;
+    const { workspaceId, userId, prompt, platforms = [], websiteUrl, useEmojis = true } = req.body;
 
     if (!workspaceId) {
       return res.status(400).json({ error: "Workspace ID is required" });
@@ -372,7 +372,8 @@ module.exports = async (req, res) => {
       prompt,
       websiteData,
       brandProfile,
-      platforms
+      platforms,
+      useEmojis
     );
 
     return res.status(200).json({
