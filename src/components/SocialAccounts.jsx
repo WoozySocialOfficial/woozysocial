@@ -144,17 +144,49 @@ export const SocialAccounts = () => {
       const poll = setInterval(async () => {
         if (popup && popup.closed) {
           clearInterval(poll);
-          // Wait for Ayrshare to propagate the connection before fetching
-          const previousCount = activeAccounts.length;
-          await new Promise(r => setTimeout(r, 2000));
+          setLoading(true);
+
+          // Get profile key and invalidate backend cache
+          try {
+            const profileKeyResponse = await fetch(
+              `${baseURL}/api/check-and-create-profile?workspaceId=${activeWorkspace.id}`
+            );
+
+            if (profileKeyResponse.ok) {
+              const data = await profileKeyResponse.json();
+              if (data.profileKey) {
+                // Bust Vercel KV cache immediately
+                await fetch(`${baseURL}/api/cache/invalidate-accounts`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ profileKey: data.profileKey })
+                }).catch(err => console.warn('Cache invalidation failed:', err));
+              }
+            }
+          } catch (err) {
+            console.warn('Profile key fetch failed:', err);
+          }
+
+          // Reduced delay: 1.5 seconds (was 2s)
+          await new Promise(r => setTimeout(r, 1500));
           await fetchActiveAccounts();
           window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-          // Retry if account count didn't change (Ayrshare may need more time)
+
+          // Single retry after 2 more seconds (was 3s)
           setTimeout(async () => {
             await fetchActiveAccounts();
             window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
             setLoading(false);
-          }, 3000);
+
+            // Success feedback
+            toast({
+              title: "Account Connected!",
+              description: "Your social account has been linked successfully.",
+              status: "success",
+              duration: 3000,
+              isClosable: true
+            });
+          }, 2000);
         }
       }, 500);
     } catch (err) {

@@ -106,7 +106,10 @@ export const ComposeContent = () => {
   });
 
   // Use React Query for connected accounts
-  const { data: accountsData } = useConnectedAccounts(activeWorkspace?.id, user?.id);
+  const {
+    data: accountsData,
+    refetch: refetchAccounts
+  } = useConnectedAccounts(activeWorkspace?.id, user?.id);
   const connectedAccounts = accountsData?.accounts || [];
   const accountDetails = accountsData?.accountDetails || [];
 
@@ -586,14 +589,26 @@ export const ComposeContent = () => {
 
   // Listen for social accounts updates from other components
   useEffect(() => {
-    const handleAccountsUpdated = () => {
+    const handleAccountsUpdated = async () => {
       // Invalidate connected accounts cache so newly connected accounts appear immediately
       invalidateAccounts(activeWorkspace?.id || user?.id);
+
+      // Immediately refetch fresh data
+      await refetchAccounts();
+
+      // User feedback
+      toast({
+        title: "Accounts Refreshed",
+        description: "Your connected accounts have been updated.",
+        status: "info",
+        duration: 2000,
+        isClosable: true
+      });
     };
 
     window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
     return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
-  }, [activeWorkspace?.id, user?.id, invalidateAccounts]);
+  }, [activeWorkspace?.id, user?.id, invalidateAccounts, refetchAccounts, toast]);
 
   // Calculate engagement score based on post content - MANUAL TRIGGER
   const runPrediction = () => {
