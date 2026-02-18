@@ -244,17 +244,17 @@ module.exports = async function handler(req, res) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f3ff;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f5f3ff">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="max-width: 600px; border-radius: 16px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px;">
           <tr>
-            <td align="center" bgcolor="#6465f1" style="padding: 40px;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">You're Invited!</h1>
+            <td align="center" style="padding: 30px 40px;">
+              <h1 style="margin: 0; color: #6465f1; font-size: 28px; font-weight: 700;">You're Invited!</h1>
             </td>
           </tr>
           <tr>
-            <td style="padding: 40px;">
+            <td style="padding: 10px 40px 40px 40px;">
               <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.6;">
                 <strong>${inviterName}</strong> has invited you to join <strong>${workspaceName}</strong> on Woozy Social.
               </p>
@@ -263,8 +263,8 @@ module.exports = async function handler(req, res) {
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
                 <tr>
-                  <td align="center" bgcolor="#6465f1" style="border-radius: 8px;">
-                    <a href="${inviteLink}" target="_blank" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #ffffff; text-decoration: none;">
+                  <td align="center">
+                    <a href="${inviteLink}" target="_blank" style="display: inline-block; padding: 14px 30px; font-size: 16px; font-weight: 700; color: #6465f1; text-decoration: none; border: 2px solid #6465f1; border-radius: 8px;">
                       Accept Invitation
                     </a>
                   </td>
@@ -276,7 +276,7 @@ module.exports = async function handler(req, res) {
             </td>
           </tr>
           <tr>
-            <td bgcolor="#f9fafb" style="padding: 20px 40px; border-top: 1px solid #e5e7eb;">
+            <td style="padding: 20px 40px; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">
                 If the button doesn't work, copy and paste this link:<br>
                 <a href="${inviteLink}" style="color: #6465f1; word-break: break-all;">${inviteLink}</a>
