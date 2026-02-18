@@ -562,8 +562,8 @@ export const PostsContent = () => {
                     {getPlatformIcons(post.platforms)}
                   </div>
                 </div>
-                <div className="posts-actions-col">
-                  {activeTab === 'failed' ? (
+                {activeTab === 'failed' && (
+                  <div className="posts-actions-col">
                     <button
                       className="retry-post-btn"
                       onClick={(e) => handleRetryPost(e, post.id)}
@@ -571,16 +571,8 @@ export const PostsContent = () => {
                     >
                       <FaSyncAlt size={14} />
                     </button>
-                  ) : (
-                    <button
-                      className={activeTab === 'drafts' ? 'delete-draft-btn' : 'delete-post-btn'}
-                      onClick={(e) => activeTab === 'drafts' ? handleDeleteDraft(e, post.id) : handleDeletePost(e, post)}
-                      title={activeTab === 'drafts' ? 'Delete draft' : 'Delete post'}
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))
           )}
