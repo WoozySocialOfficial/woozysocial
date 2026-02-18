@@ -47,19 +47,11 @@ const TOUR_STEPS = [
   },
   {
     id: 'compose',
-    title: 'Create Your First Post',
-    description: 'Write your posts here. Add text, hashtags, and craft the perfect message for your audience.',
+    title: 'Create & Share Your Post',
+    description: 'Write your post on the left and select which connected social accounts to share it to on the right. Connect accounts from your profile menu to see them here.',
     icon: '✍️',
     route: '/compose',
-    target: '.compose-textarea'
-  },
-  {
-    id: 'compose-platforms',
-    title: 'Choose Platforms',
-    description: 'Select which social platforms to post to. Connect accounts first to see them here.',
-    icon: '📲',
-    route: '/compose',
-    target: '.compose-socials'
+    target: '.compose-top-row'
   },
   {
     id: 'compose-post',
