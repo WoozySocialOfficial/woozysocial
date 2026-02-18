@@ -505,20 +505,20 @@ export const PostsContent = () => {
             sortedPosts.map((post, idx) => (
               <div
                 key={post.id || idx}
-                className={`posts-table-row ${(activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history') ? 'clickable' : ''}`}
+                className={`posts-table-row ${(activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history' || activeTab === 'failed') ? 'clickable' : ''}`}
                 onClick={() => {
-                  if (activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history') {
+                  if (activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history' || activeTab === 'failed') {
                     // Normalize post structure for PostDetailPanel
                     const normalizedPost = {
                       ...post,
                       workspace_id: activeWorkspace.id,
                       // Add status if missing (for drafts)
-                      status: post.status || (activeTab === 'drafts' ? 'draft' : activeTab === 'pending' ? 'pending_approval' : activeTab === 'history' ? 'posted' : 'scheduled')
+                      status: post.status || (activeTab === 'drafts' ? 'draft' : activeTab === 'pending' ? 'pending_approval' : activeTab === 'history' ? 'posted' : activeTab === 'failed' ? 'failed' : 'scheduled')
                     };
                     setSelectedPost(normalizedPost);
                   }
                 }}
-                style={{ cursor: (activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history') ? 'pointer' : 'default' }}
+                style={{ cursor: (activeTab === 'drafts' || activeTab === 'scheduled' || activeTab === 'pending' || activeTab === 'history' || activeTab === 'failed') ? 'pointer' : 'default' }}
               >
                 <div className="posts-checkbox-col">
                   <input
@@ -553,6 +553,12 @@ export const PostsContent = () => {
                     {(post.post || post.caption || "").substring(0, 100)}
                     {(post.post || post.caption || "").length > 100 && "..."}
                   </div>
+                  {activeTab === 'failed' && (post.last_error || post.lastError) && (
+                    <div className="post-failure-reason">
+                      {(post.last_error || post.lastError).substring(0, 120)}
+                      {(post.last_error || post.lastError).length > 120 && '...'}
+                    </div>
+                  )}
                 </div>
                 <div className="posts-media-col">
                   {getMediaPreview(post)}
