@@ -1,428 +1,241 @@
-/* ========================================
-   ONBOARDING TOUR — DROPDOWN PANEL
-   ======================================== */
-
-/* Subtle dim behind the panel */
-.tour-dim {
+.onboarding-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  z-index: 9999;
-  animation: tourDimIn 0.25s ease;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-@keyframes tourDimIn {
+@keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* ========================================
-   PANEL — positioned on the left (after sidebar)
-   so right-side content (socials, etc.) stays visible
-   ======================================== */
-
-.tour-panel {
-  position: fixed;
-  top: 12px;
-  left: 290px; /* Just past the 275px sidebar */
-  width: 350px;
-  max-width: calc(100vw - 300px);
-  max-height: calc(100vh - 24px);
+.onboarding-modal {
   background: var(--card-bg, #ffffff);
-  border-radius: 16px;
-  z-index: 10001;
-  display: flex;
-  flex-direction: column;
+  border-radius: 20px;
+  max-width: 480px;
+  width: 100%;
+  padding: 0;
+  position: relative;
+  animation: slideUp 0.3s ease;
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(175, 171, 249, 0.15);
-  animation: tourPanelIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.tour-panel--closing {
-  animation: tourPanelOut 0.25s ease forwards;
-}
-
-@keyframes tourPanelIn {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(-12px) scale(0.97);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-@keyframes tourPanelOut {
-  to {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.97);
-  }
+.onboarding-progress {
+  height: 4px;
+  background: var(--bg-tertiary, #f3f4f6);
+  width: 100%;
 }
 
-/* ========================================
-   PANEL HEADER
-   ======================================== */
-
-.tour-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px 12px;
-}
-
-.tour-panel-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tour-panel-logo {
-  font-size: 20px;
-}
-
-.tour-panel-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary, #1a1a2e);
-}
-
-.tour-panel-close {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: none;
-  background: var(--bg-tertiary, #f0eef9);
-  color: var(--text-muted, #a39dd0);
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-
-.tour-panel-close:hover {
-  background: var(--bg-hover, #e5e3f0);
-  color: var(--text-primary, #1a1a2e);
-}
-
-/* ========================================
-   PROGRESS BAR
-   ======================================== */
-
-.tour-panel-progress {
-  height: 3px;
-  background: var(--bg-tertiary, #f0eef9);
-  margin: 0 18px 8px;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.tour-panel-progress-bar {
+.onboarding-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, #afabf9, #7c3aed);
-  border-radius: 3px;
-  transition: width 0.35s ease;
+  transition: width 0.3s ease;
+  border-radius: 0 2px 2px 0;
 }
 
-/* ========================================
-   STEPS LIST
-   ======================================== */
-
-.tour-panel-steps {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 10px;
-}
-
-.tour-panel-steps::-webkit-scrollbar {
-  width: 4px;
-}
-
-.tour-panel-steps::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.tour-panel-steps::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary, #e0ddf5);
-  border-radius: 4px;
-}
-
-/* ========================================
-   INDIVIDUAL STEP
-   ======================================== */
-
-.tour-step {
-  border-radius: 10px;
-  margin-bottom: 2px;
-  transition: background 0.15s;
-}
-
-.tour-step--active {
-  background: var(--bg-tertiary, #f7f6fd);
-}
-
-.tour-step--expanded {
-  background: var(--bg-tertiary, #f7f6fd);
-}
-
-/* Step header (clickable row) */
-.tour-step-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  border-radius: 10px;
-  transition: background 0.15s;
-}
-
-.tour-step-header:hover {
-  background: var(--bg-hover, #efedf8);
-}
-
-/* Step number circle */
-.tour-step-indicator {
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--bg-tertiary, #e8e6f5);
-  color: var(--text-muted, #8a84b8);
-  transition: all 0.2s;
-}
-
-.tour-step--active .tour-step-indicator {
-  background: #afabf9;
-  color: #1a1a2e;
-}
-
-.tour-step--completed .tour-step-indicator {
-  background: #7c3aed;
-  color: #ffffff;
-}
-
-.tour-step-check {
+.onboarding-step-indicator {
+  text-align: center;
+  padding: 16px 24px 0;
   font-size: 13px;
-  line-height: 1;
-}
-
-.tour-step-number {
-  font-size: 12px;
-  line-height: 1;
-}
-
-/* Step label (icon + title) */
-.tour-step-label {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tour-step-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.tour-step-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary, #4a4a6a);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tour-step--active .tour-step-name {
-  color: var(--text-primary, #1a1a2e);
-}
-
-.tour-step--completed .tour-step-name {
-  color: var(--text-muted, #8a84b8);
-}
-
-/* Chevron */
-.tour-step-chevron {
-  font-size: 14px;
   color: var(--text-muted, #a39dd0);
-  transition: transform 0.2s;
-  flex-shrink: 0;
+  font-weight: 500;
 }
 
-.tour-step-chevron--open {
-  transform: rotate(180deg);
-}
-
-/* Expanded body */
-.tour-step-body {
-  padding: 0 10px 12px 46px;
-  animation: tourStepExpand 0.2s ease;
-}
-
-@keyframes tourStepExpand {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 200px;
-  }
-}
-
-.tour-step-description {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--text-secondary, #5a5a7a);
-  margin: 0;
-}
-
-/* ========================================
-   FOOTER NAVIGATION
-   ======================================== */
-
-.tour-panel-footer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 18px 16px;
-  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.06));
-}
-
-.tour-btn {
-  flex: 1;
-  padding: 9px 16px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  border: 1.5px solid transparent;
+.onboarding-content {
+  padding: 24px 32px 16px;
   text-align: center;
 }
 
-.tour-btn--primary {
+.onboarding-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.onboarding-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #000000);
+  margin: 0 0 12px 0;
+}
+
+.onboarding-description {
+  font-size: 16px;
+  color: var(--text-secondary, #1e1a2e);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 24px;
+}
+
+.onboarding-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-tertiary, #ede9fc);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.onboarding-dot:hover {
+  background: var(--text-muted, #a39dd0);
+}
+
+.onboarding-dot.active {
   background: #afabf9;
-  color: #1a1a2e;
-  border-color: rgba(0, 0, 0, 0.06);
+  transform: scale(1.2);
 }
 
-.tour-btn--primary:hover {
+.onboarding-dot.completed {
+  background: #7c3aed;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px 24px;
+  justify-content: center;
+}
+
+.onboarding-btn {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  min-width: 120px;
+}
+
+.onboarding-btn.primary {
+  background: #afabf9;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.onboarding-btn.primary:hover {
   background: #9d97f5;
-  box-shadow: 0 2px 8px rgba(175, 171, 249, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(175, 171, 249, 0.4);
 }
 
-.tour-btn--secondary {
+.onboarding-btn.secondary {
   background: transparent;
-  color: var(--text-secondary, #5a5a7a);
+  color: var(--text-secondary, #1e1a2e);
   border-color: var(--border-color, rgba(0, 0, 0, 0.1));
 }
 
-.tour-btn--secondary:hover {
+.onboarding-btn.secondary:hover {
   background: var(--bg-hover, #f3f4f6);
+  border-color: var(--border-strong, rgba(0, 0, 0, 0.2));
 }
 
-/* ========================================
-   MOBILE
-   ======================================== */
-
-/* Tablet — sidebar hidden, center the panel */
-@media (max-width: 768px) {
-  .tour-panel {
-    left: 50%;
-    transform: translateX(-50%);
-    width: 360px;
-    max-width: calc(100vw - 24px);
-  }
-
-  .tour-panel--closing {
-    transform: translateX(-50%) translateY(-12px) scale(0.97);
-  }
+.onboarding-skip-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0 0 20px;
+  background: none;
+  border: none;
+  color: var(--text-muted, #a39dd0);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
-/* Mobile */
+.onboarding-skip-link:hover {
+  color: var(--text-secondary, #1e1a2e);
+  text-decoration: underline;
+}
+
+/* Mobile responsive */
 @media (max-width: 480px) {
-  .tour-panel {
-    left: 8px;
-    right: 8px;
-    transform: none;
-    width: auto;
-    max-height: calc(100vh - 16px);
+  .onboarding-overlay {
+    padding: 16px;
   }
 
-  .tour-panel--closing {
-    transform: translateY(-12px) scale(0.97);
+  .onboarding-modal {
+    border-radius: 16px;
+  }
+
+  .onboarding-content {
+    padding: 20px 24px 12px;
+  }
+
+  .onboarding-icon {
+    font-size: 48px;
+  }
+
+  .onboarding-title {
+    font-size: 20px;
+  }
+
+  .onboarding-description {
+    font-size: 14px;
+  }
+
+  .onboarding-actions {
+    flex-direction: column;
+    padding: 0 20px 20px;
+  }
+
+  .onboarding-btn {
+    width: 100%;
+    min-width: unset;
   }
 }
 
-/* ========================================
-   DARK MODE
-   ======================================== */
-
-[data-theme="dark"] .tour-panel {
+/* Dark mode */
+[data-theme="dark"] .onboarding-modal {
   background: var(--card-bg);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(175, 171, 249, 0.1);
 }
 
-[data-theme="dark"] .tour-panel-title {
+[data-theme="dark"] .onboarding-title {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .tour-panel-close {
-  background: var(--bg-secondary, #2a2a3e);
-  color: var(--text-muted);
-}
-
-[data-theme="dark"] .tour-panel-close:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .tour-step--active,
-[data-theme="dark"] .tour-step--expanded {
-  background: var(--bg-secondary, #1e1e30);
-}
-
-[data-theme="dark"] .tour-step-header:hover {
-  background: var(--bg-hover);
-}
-
-[data-theme="dark"] .tour-step-name {
+[data-theme="dark"] .onboarding-description {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .tour-step--active .tour-step-name {
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .tour-step-description {
-  color: var(--text-secondary);
-}
-
-[data-theme="dark"] .tour-btn--secondary {
+[data-theme="dark"] .onboarding-btn.secondary {
   color: var(--text-secondary);
   border-color: var(--border-color);
 }
 
-[data-theme="dark"] .tour-btn--secondary:hover {
+[data-theme="dark"] .onboarding-btn.secondary:hover {
   background: var(--bg-hover);
-}
-
-[data-theme="dark"] .tour-panel-footer {
-  border-top-color: var(--border-color);
 }
