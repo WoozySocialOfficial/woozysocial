@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL, hasFeature } from "../utils/constants";
@@ -33,6 +34,7 @@ const APPROVAL_STATUS = {
 export const ScheduleContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, subscriptionTier, isWhitelisted } = useAuth();
   const { activeWorkspace, workspaceMembership, canApprove } = useWorkspace();
+  const toast = useToast();
 
   // Check if user has access (multi-workspace support)
   // User has access if: active profile, whitelisted, active subscription, or workspace has profile
@@ -101,9 +103,29 @@ export const ScheduleContent = () => {
       // Refresh posts using cached query
       fetchPosts();
       setSelectedPost(null);
+
+      const successMessages = {
+        approve: { title: 'Post approved', description: 'The post has been approved and scheduled.' },
+        reject: { title: 'Post rejected', description: 'The post has been rejected.' },
+        request_changes: { title: 'Changes requested', description: 'Feedback has been sent to the author.' },
+      };
+      const msg = successMessages[action] || { title: 'Action completed', description: '' };
+      toast({
+        title: msg.title,
+        description: msg.description,
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Error updating approval:', error);
-      alert(error.message);
+      toast({
+        title: 'Action failed',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setActionLoading(false);
     }
@@ -112,7 +134,6 @@ export const ScheduleContent = () => {
   // Wrapper functions for PostDetailPanel
   const handleApprove = async (postId) => {
     await handleApproval(postId, 'approve');
-    setSelectedPost(null);
   };
 
   const handleReject = async (postId, commentText = '') => {
@@ -802,6 +823,7 @@ export const ScheduleContent = () => {
           onRequestChanges={handleRequestChanges}
           onEditScheduledPost={handleEditScheduledPost}
           showApprovalActions={canApprove}
+          actionLoading={actionLoading}
           dayPosts={selectedDayPosts}
           currentIndex={selectedDayIndex}
           onNavigatePost={handleNavigatePost}

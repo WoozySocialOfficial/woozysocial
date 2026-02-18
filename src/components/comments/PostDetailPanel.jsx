@@ -39,6 +39,7 @@ export const PostDetailPanel = ({
   onReject,
   onRequestChanges,
   showApprovalActions = false,
+  actionLoading = false,
   onEditDraft,
   onEditScheduledPost,
   onDelete,
@@ -390,14 +391,14 @@ export const PostDetailPanel = ({
           post.approval_status === 'pending' || post.approval_status === 'changes_requested' || post.status === 'pending_approval'
         ) && (
           <div className="approval-actions">
-            <button className="btn-reject" onClick={() => handleApprovalWithComment('reject')}>
+            <button className="btn-reject" onClick={() => handleApprovalWithComment('reject')} disabled={actionLoading}>
               Reject
             </button>
-            <button className="btn-changes" onClick={() => handleApprovalWithComment('changes_requested')}>
+            <button className="btn-changes" onClick={() => handleApprovalWithComment('changes_requested')} disabled={actionLoading}>
               Request Changes
             </button>
-            <button className="btn-approve" onClick={() => onApprove(post.id)}>
-              Approve
+            <button className="btn-approve" onClick={() => onApprove(post.id)} disabled={actionLoading}>
+              {actionLoading ? 'Processing...' : 'Approve'}
             </button>
           </div>
         )}

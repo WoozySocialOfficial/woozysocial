@@ -368,6 +368,11 @@
   background: #a7f3d0;
 }
 
+.btn-reject:disabled, .btn-changes:disabled, .btn-approve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .post-detail-panel {
     width: 100%;

@@ -196,6 +196,23 @@ module.exports = async function handler(req, res) {
       };
       const newStatus = statusMap[action];
 
+      // Guard: prevent re-approving a post that's already approved/scheduled/posted
+      if (action === 'approve') {
+        const { data: currentPost } = await supabase
+          .from('posts')
+          .select('status, approval_status')
+          .eq('id', postId)
+          .single();
+
+        if (currentPost && (currentPost.approval_status === 'approved' || currentPost.status === 'scheduled' || currentPost.status === 'posted')) {
+          return res.status(200).json({
+            success: true,
+            message: 'Post already approved',
+            alreadyProcessed: true
+          });
+        }
+      }
+
       // Update or create post approval record
       const { data: existingApproval, error: approvalError } = await supabase
         .from('post_approvals')
