@@ -1579,16 +1579,16 @@
 /* Dark Mode - More Posts Indicator */
 [data-theme="dark"] .more-posts-indicator,
 .dark .more-posts-indicator {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: #93c5fd;
+  background: rgba(175, 171, 249, 0.3) !important;
+  border-color: #afabf9 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .more-posts-indicator:hover,
 .dark .more-posts-indicator:hover {
-  background: #6c63ff;
-  border-color: #6c63ff;
-  color: white;
+  background: #afabf9 !important;
+  border-color: #afabf9 !important;
+  color: #000 !important;
 }
 
 /* Dark Mode - Overflow Popup */
