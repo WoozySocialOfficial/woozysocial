@@ -98,12 +98,12 @@ async function getBrandProfile(workspaceId, userId) {
   }
 }
 
-// Generate post using OpenAI - ENHANCED VERSION
-async function generateWithOpenAI(prompt, websiteData, brandProfile, platforms) {
-  const openaiKey = process.env.OPENAI_API_KEY;
+// Generate post using Claude AI
+async function generateWithAI(prompt, websiteData, brandProfile, platforms) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!openaiKey) {
-    throw new Error('OpenAI API key not configured');
+  if (!apiKey) {
+    throw new Error('AI API key not configured');
   }
 
   // Build context from website data
@@ -269,22 +269,23 @@ Each variation should feel DIFFERENT:
 
 FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
 
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o',  // Upgraded from gpt-4o-mini for better quality
+  const response = await axios.post('https://api.anthropic.com/v1/messages', {
+    model: 'claude-sonnet-4-5-20250929',
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Create 3 social media posts about: ${prompt}\n\nWrite like you're sharing with a friend - comfortable, casual, real. No corporate speak. Ready to copy-paste.` }
     ],
-    temperature: 0.85,  // Slightly higher for more creativity
-    max_tokens: 800     // Optimized for short, punchy captions
+    temperature: 0.85,
+    max_tokens: 800
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${openaiKey}`
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
     }
   });
 
-  const content = response.data.choices[0]?.message?.content || '';
+  const content = response.data.content?.[0]?.text || '';
 
   // Enhanced parsing for variations
   const variations = content
@@ -338,8 +339,8 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Generate content with OpenAI
-    const variations = await generateWithOpenAI(
+    // Generate content with Claude AI
+    const variations = await generateWithAI(
       prompt,
       websiteData,
       brandProfile,

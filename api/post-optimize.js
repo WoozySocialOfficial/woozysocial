@@ -29,15 +29,15 @@ module.exports = async (req, res) => {
       return sendError(res, "Post text is required", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (!openaiKey) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
       return sendSuccess(res, {
         suggestions: getFallbackSuggestions(text, platforms, hasMedia, scoreBreakdown),
         source: "rule_based"
       });
     }
 
-    const suggestions = await optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdown, openaiKey);
+    const suggestions = await optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdown, apiKey);
 
     return sendSuccess(res, {
       suggestions,
@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
 };
 
 /**
- * Use OpenAI to generate specific post improvements
+ * Use Claude AI to generate specific post improvements
  */
 async function optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdown, apiKey) {
   const platformList = platforms.length > 0 ? platforms.join(", ") : "general social media";
@@ -85,10 +85,10 @@ Rules:
 ${weakAreas.length > 0 ? `\nFocus on these weak areas: ${weakAreas.join(", ")}` : ""}
 ${!hasMedia ? "\nNote: No media attached. Consider suggesting media-related advice." : ""}`;
 
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o-mini',
+  const response = await axios.post('https://api.anthropic.com/v1/messages', {
+    model: 'claude-haiku-4-5-20251001',
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
@@ -96,11 +96,12 @@ ${!hasMedia ? "\nNote: No media attached. Consider suggesting media-related advi
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
     }
   });
 
-  const content = response.data.choices[0]?.message?.content || '[]';
+  const content = response.data.content?.[0]?.text || '[]';
 
   try {
     // Strip markdown code fences if present
