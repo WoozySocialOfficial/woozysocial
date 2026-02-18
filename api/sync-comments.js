@@ -123,12 +123,17 @@ module.exports = async function handler(req, res) {
     let syncedCount = 0;
     let skippedCount = 0;
 
+    // Log first comment structure for debugging
+    if (ayrshareComments.length > 0) {
+      console.log('[SYNC-COMMENTS] Sample comment structure:', JSON.stringify(ayrshareComments[0], null, 2));
+    }
+
     for (const comment of ayrshareComments) {
       const commentId = comment.commentId || comment.id || comment.comment_id;
       const commentText = comment.comment || comment.text || comment.message;
       const platform = comment.platform || responsePlatform;
-      const authorUsername = comment.from?.name || comment.userName || comment.username || comment.author_name || 'Unknown';
-      const authorProfileUrl = comment.from?.profile_url || comment.author_profile_url;
+      const authorUsername = comment.from?.username || comment.from?.name || comment.userName || comment.username || comment.author_name || comment.owner || 'Unknown';
+      const authorProfileUrl = comment.from?.profile_url || comment.author_profile_url || comment.profileImage;
       const createdAt = comment.created || comment.created_time || comment.timestamp || comment.created_at || new Date().toISOString();
 
       if (!commentId || !commentText) {
@@ -153,7 +158,19 @@ module.exports = async function handler(req, res) {
 
       if (insertError) {
         if (insertError.code === '23505') {
-          // Duplicate - already exists
+          // Duplicate - update username/profile if previously stored as 'Unknown'
+          if (authorUsername && authorUsername !== 'Unknown') {
+            await supabase
+              .from('social_engagement_comments')
+              .update({
+                author_username: authorUsername,
+                author_profile_url: authorProfileUrl || undefined,
+                updated_at: new Date().toISOString()
+              })
+              .eq('external_id', commentId)
+              .eq('platform', platform)
+              .eq('author_username', 'Unknown');
+          }
           skippedCount++;
         } else {
           console.error('[SYNC-COMMENTS] Error inserting comment:', insertError);

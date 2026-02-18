@@ -137,9 +137,10 @@ module.exports = async function handler(req, res) {
             const normalizedComments = allComments.map(comment => ({
               id: comment.commentId || comment.id || comment.comment_id,
               message: comment.comment || comment.text || comment.message,
-              from: comment.from || {
-                name: comment.userName || comment.username || comment.author_name || 'Unknown',
-                id: comment.author_id || comment.user_id
+              from: {
+                name: comment.from?.username || comment.from?.name || comment.userName || comment.username || comment.owner || comment.author_name || 'Unknown',
+                id: comment.from?.id || comment.author_id || comment.user_id,
+                profile_url: comment.from?.profile_url || comment.profileImage
               },
               created_time: comment.created || comment.created_time || comment.timestamp || comment.created_at,
               platform: comment.platform,
