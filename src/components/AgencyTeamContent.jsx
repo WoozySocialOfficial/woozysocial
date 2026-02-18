@@ -28,6 +28,10 @@ export const AgencyTeamContent = () => {
   const isAgencyManager = agencyAccess?.isManager || false;
   const hasAgencyAccess = agencyAccess?.hasAccess || false;
 
+  // DEBUG: Remove after verifying toggle works
+  console.log('[AgencyTeam] agencyAccess:', JSON.stringify(agencyAccess, null, 2));
+  console.log('[AgencyTeam] isAgencyOwner:', isAgencyOwner, '| isAgencyManager:', isAgencyManager);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
