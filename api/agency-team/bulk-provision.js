@@ -274,7 +274,7 @@ module.exports = async function handler(req, res) {
 </head>
 <body style="margin: 0; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f3ff;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(100, 101, 241, 0.1);">
-    <div style="padding: 40px; text-align: center; background: linear-gradient(135deg, #6465f1 0%, #8b5cf6 100%);">
+    <div style="padding: 40px; text-align: center; background-color: #6465f1;">
       <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">You're Invited!</h1>
     </div>
     <div style="padding: 40px;">
@@ -285,7 +285,7 @@ module.exports = async function handler(req, res) {
         Role: <strong style="color: #6465f1;">${effectiveRole}</strong>
       </p>
       <div style="text-align: center;">
-        <a href="${inviteLink}" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #ffffff; background: linear-gradient(135deg, #6465f1 0%, #8b5cf6 100%); text-decoration: none; border-radius: 8px;">
+        <a href="${inviteLink}" style="display: inline-block; padding: 16px 32px; font-size: 16px; font-weight: 700; color: #ffffff; background-color: #6465f1; text-decoration: none; border-radius: 8px;">
           Accept Invitation
         </a>
       </div>
