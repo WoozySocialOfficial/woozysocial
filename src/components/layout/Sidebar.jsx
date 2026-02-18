@@ -80,6 +80,7 @@ export const Sidebar = () => {
               key={index}
               to={item.path}
               className={`menu-item ${location.pathname === item.path ? "active" : ""}`}
+              data-tour={item.tabName}
             >
               <div className="menu-item-text">
                 {item.name}

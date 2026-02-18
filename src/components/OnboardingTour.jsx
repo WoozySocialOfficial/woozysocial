@@ -11,7 +11,8 @@ const TOUR_STEPS = [
     description: "Let's take a quick tour to help you get started. We'll show you around the app!",
     icon: '👋',
     route: '/dashboard',
-    target: null
+    target: null,
+    sidebarHighlight: null
   },
   {
     id: 'sidebar',
@@ -19,7 +20,8 @@ const TOUR_STEPS = [
     description: 'Use the sidebar to navigate between all sections of the app — Dashboard, Compose, Schedule, and more.',
     icon: '📱',
     route: '/dashboard',
-    target: '.sidebar-menu'
+    target: '.sidebar-menu',
+    sidebarHighlight: null
   },
   {
     id: 'dashboard',
@@ -27,7 +29,8 @@ const TOUR_STEPS = [
     description: 'This is your command center. See posting stats, recent activity, and quick actions at a glance.',
     icon: '📊',
     route: '/dashboard',
-    target: '.dashboard-stats'
+    target: '.dashboard-stats',
+    sidebarHighlight: 'dashboard'
   },
   {
     id: 'quick-actions',
@@ -35,7 +38,8 @@ const TOUR_STEPS = [
     description: 'Use these shortcuts to quickly compose posts, view your schedule, or manage your team.',
     icon: '⚡',
     route: '/dashboard',
-    target: '.quick-actions-grid'
+    target: '.quick-actions-grid',
+    sidebarHighlight: 'dashboard'
   },
   {
     id: 'connect',
@@ -43,7 +47,8 @@ const TOUR_STEPS = [
     description: 'Click your profile in the top right, then "Connect Social Accounts" to link Instagram, Twitter, LinkedIn, and more.',
     icon: '🔗',
     route: '/dashboard',
-    target: '.header-right'
+    target: '.header-right',
+    sidebarHighlight: null
   },
   {
     id: 'compose',
@@ -51,7 +56,8 @@ const TOUR_STEPS = [
     description: 'Write your post on the left and select which connected social accounts to share it to on the right. Connect accounts from your profile menu to see them here.',
     icon: '✍️',
     route: '/compose',
-    target: '.compose-top-row'
+    target: '.compose-top-row',
+    sidebarHighlight: 'compose'
   },
   {
     id: 'compose-post',
@@ -59,7 +65,8 @@ const TOUR_STEPS = [
     description: 'When ready, hit Post to publish immediately or set a date to schedule it for later.',
     icon: '🚀',
     route: '/compose',
-    target: '.btn-post'
+    target: '.btn-post',
+    sidebarHighlight: 'compose'
   },
   {
     id: 'schedule',
@@ -67,7 +74,8 @@ const TOUR_STEPS = [
     description: 'See your content calendar here. View scheduled posts and plan the best times to reach your audience.',
     icon: '📅',
     route: '/schedule',
-    target: '.schedule-controls'
+    target: '.schedule-controls',
+    sidebarHighlight: 'schedule'
   },
   {
     id: 'team',
@@ -75,7 +83,8 @@ const TOUR_STEPS = [
     description: 'On Pro plans and above, invite team members to collaborate on content creation and approvals.',
     icon: '👥',
     route: '/team',
-    target: '.add-member-button'
+    target: '.add-member-button',
+    sidebarHighlight: 'team'
   },
   {
     id: 'done',
@@ -83,7 +92,8 @@ const TOUR_STEPS = [
     description: "That's the basics! You can replay this tour anytime from your profile menu. Now go create something amazing!",
     icon: '🎉',
     route: null,
-    target: null
+    target: null,
+    sidebarHighlight: null
   }
 ];
 
@@ -199,6 +209,28 @@ export const OnboardingTour = ({ onComplete }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isVisible, measureTarget]);
+
+  // Highlight the corresponding sidebar menu item
+  useEffect(() => {
+    // Remove previous highlights
+    document.querySelectorAll('.menu-item.tour-highlight').forEach(el => {
+      el.classList.remove('tour-highlight');
+    });
+
+    if (!isVisible || !step.sidebarHighlight) return;
+
+    // Add highlight to the matching sidebar item
+    const sidebarItem = document.querySelector(`[data-tour="${step.sidebarHighlight}"]`);
+    if (sidebarItem) {
+      sidebarItem.classList.add('tour-highlight');
+    }
+
+    return () => {
+      document.querySelectorAll('.menu-item.tour-highlight').forEach(el => {
+        el.classList.remove('tour-highlight');
+      });
+    };
+  }, [currentStep, isVisible, step.sidebarHighlight]);
 
   const handleNext = () => {
     if (isLastStep) {

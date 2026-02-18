@@ -304,6 +304,39 @@
 }
 
 /* =============================================
+   SIDEBAR HIGHLIGHT
+   ============================================= */
+
+.menu-item.tour-highlight {
+  position: relative;
+  z-index: 10004;
+  background: rgba(175, 171, 249, 0.25) !important;
+  border-left: 3px solid #afabf9 !important;
+  border-radius: 0 8px 8px 0;
+  animation: sidebarPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sidebarPulse {
+  0%, 100% { background: rgba(175, 171, 249, 0.2) !important; }
+  50% { background: rgba(175, 171, 249, 0.4) !important; }
+}
+
+[data-theme="dark"] .menu-item.tour-highlight,
+.dark .menu-item.tour-highlight {
+  background: rgba(175, 171, 249, 0.15) !important;
+}
+
+@keyframes sidebarPulseDark {
+  0%, 100% { background: rgba(175, 171, 249, 0.1) !important; }
+  50% { background: rgba(175, 171, 249, 0.3) !important; }
+}
+
+[data-theme="dark"] .menu-item.tour-highlight,
+.dark .menu-item.tour-highlight {
+  animation-name: sidebarPulseDark;
+}
+
+/* =============================================
    MOBILE RESPONSIVE
    ============================================= */
 
