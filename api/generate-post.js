@@ -268,7 +268,11 @@ Each variation should feel DIFFERENT:
 - Variation 2: Slightly more polished but still warm
 - Variation 3: Bold take or relatable question
 
-FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
+FORMAT RULES:
+- Separate each variation with --- on its own line
+- Do NOT use bold, markdown, or headers
+- Do NOT write "Variation 1:" or any labels
+- Just write the post text directly, separated by ---`;
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
     model: 'claude-sonnet-4-5-20250929',
@@ -288,11 +292,34 @@ FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
 
   const content = response.data.content?.[0]?.text || '';
 
-  // Enhanced parsing for variations
-  const variations = content
-    .split(/\n(?=\d+\.\s)/)
-    .map(v => v.replace(/^\d+\.\s*/, '').trim())  // Remove the number prefix
-    .filter(v => v.length > 10);  // Filter out empty or too short
+  // Parse variations - handle Claude's formatting (bold numbers, --- separators, etc.)
+  let variations;
+
+  // Try splitting by --- separator first (Claude often uses this)
+  if (content.includes('---')) {
+    variations = content
+      .split(/\n---\n|\n-{3,}\n/)
+      .map(v => v.trim())
+      .filter(v => v.length > 10);
+  }
+
+  // If that didn't work well, try splitting by numbered patterns (1. or **1.** or **1**)
+  if (!variations || variations.length < 2) {
+    variations = content
+      .split(/\n(?=\*{0,2}\d+[\.\)]\*{0,2}\s)/)
+      .map(v => v.trim())
+      .filter(v => v.length > 10);
+  }
+
+  // Clean up each variation: remove number prefixes, bold markers, headers
+  variations = (variations || [content]).map(v => {
+    return v
+      .replace(/^#+\s.*\n*/, '')                    // Remove # headers
+      .replace(/^\*{1,2}\d+[\.\)]\*{0,2}\s*/, '')  // Remove **1.** or *1.* or 1.
+      .replace(/^\d+[\.\)]\s*/, '')                 // Remove plain 1. or 1)
+      .replace(/^\*{1,2}Variation\s+\d+:?\*{0,2}\s*/i, '') // Remove **Variation 1:**
+      .trim();
+  }).filter(v => v.length > 10);
 
   return variations.length > 0 ? variations : [content];
 }
