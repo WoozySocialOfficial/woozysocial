@@ -284,9 +284,14 @@ export const PostDetailPanel = ({
           <div className="detail-section">
             <label>Media</label>
             <div className="media-grid">
-              {(post.media_urls || [post.media_url]).filter(Boolean).map((url, idx) => (
-                <img key={idx} src={url} alt="Post media" className="detail-media" />
-              ))}
+              {(post.media_urls || [post.media_url]).filter(Boolean).map((url, idx) => {
+                const isVideo = /\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test(url);
+                return isVideo ? (
+                  <video key={idx} src={url} className="detail-media" controls muted />
+                ) : (
+                  <img key={idx} src={url} alt="Post media" className="detail-media" />
+                );
+              })}
             </div>
           </div>
         )}

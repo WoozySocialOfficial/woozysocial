@@ -283,12 +283,21 @@ function normalizePlatformMetrics(data, platform) {
     rawData: data // Keep raw data for debugging
   };
 
+  // Helper: safely extract reactions count (may be an object like {like: 1, love: 2} or a number)
+  const getReactionsCount = (reactions) => {
+    if (typeof reactions === 'number') return reactions;
+    if (reactions && typeof reactions === 'object') {
+      return Object.values(reactions).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+    }
+    return 0;
+  };
+
   // Platform-specific metric mapping
   // Ayrshare uses camelCase: likeCount, commentsCount, viewsCount, etc.
   switch (platform) {
     case 'facebook':
       normalized.views = data.impressions || data.views || data.viewsCount || 0;
-      normalized.likes = data.likeCount || data.likes || data.reactions || 0;
+      normalized.likes = data.likeCount || data.likes || getReactionsCount(data.reactions) || 0;
       normalized.comments = data.commentsCount || data.comments || 0;
       normalized.shares = data.sharesCount || data.shares || 0;
       normalized.reach = data.reachCount || data.reach || null;
@@ -317,7 +326,7 @@ function normalizePlatformMetrics(data, platform) {
 
     case 'linkedin':
       normalized.views = data.impressions || data.views || data.viewsCount || 0;
-      normalized.likes = data.likeCount || data.likes || data.reactions || 0;
+      normalized.likes = data.likeCount || data.likes || getReactionsCount(data.reactions) || 0;
       normalized.comments = data.commentsCount || data.comments || 0;
       normalized.shares = data.sharesCount || data.shares || 0;
       normalized.reach = data.impressions || null;
