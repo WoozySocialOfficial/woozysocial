@@ -1,38 +1,80 @@
-.onboarding-overlay {
+/* =============================================
+   SPOTLIGHT TOUR OVERLAY
+   ============================================= */
+
+.tour-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 10000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
+  animation: tourFadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
+@keyframes tourFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.onboarding-modal {
-  background: var(--card-bg, #ffffff);
-  border-radius: 20px;
-  max-width: 480px;
-  width: 100%;
-  padding: 0;
-  position: relative;
-  animation: slideUp 0.3s ease;
-  overflow: hidden;
+/* Click blocker covers everything */
+.tour-click-blocker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10001;
 }
 
-@keyframes slideUp {
+/* =============================================
+   SPOTLIGHT HIGHLIGHT
+   ============================================= */
+
+.tour-spotlight {
+  position: fixed;
+  z-index: 10002;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s ease;
+  pointer-events: none;
+  border: 2px solid rgba(175, 171, 249, 0.6);
+  animation: spotlightPulse 2s ease-in-out infinite;
+}
+
+@keyframes spotlightPulse {
+  0%, 100% { border-color: rgba(175, 171, 249, 0.6); }
+  50% { border-color: rgba(175, 171, 249, 1); }
+}
+
+/* =============================================
+   TOOLTIP (FLOATING CARD)
+   ============================================= */
+
+.tour-tooltip {
+  position: fixed;
+  z-index: 10003;
+  background: #ffffff;
+  border-radius: 16px;
+  width: 340px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: top 0.35s ease, left 0.35s ease;
+  animation: tooltipSlideIn 0.3s ease;
+}
+
+/* Centered mode (for welcome/done steps with no target) */
+.tour-tooltip--center {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+  width: 420px;
+}
+
+@keyframes tooltipSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -40,202 +82,321 @@
   }
 }
 
-.onboarding-progress {
+.tour-tooltip--center {
+  animation-name: tooltipCenterIn;
+}
+
+@keyframes tooltipCenterIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* =============================================
+   PROGRESS BAR
+   ============================================= */
+
+.tour-progress {
   height: 4px;
-  background: var(--bg-tertiary, #f3f4f6);
+  background: #f3f4f6;
   width: 100%;
 }
 
-.onboarding-progress-bar {
+.tour-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, #afabf9, #7c3aed);
   transition: width 0.3s ease;
   border-radius: 0 2px 2px 0;
 }
 
-.onboarding-step-indicator {
+/* =============================================
+   STEP INDICATOR
+   ============================================= */
+
+.tour-step-indicator {
   text-align: center;
-  padding: 16px 24px 0;
-  font-size: 13px;
-  color: var(--text-muted, #a39dd0);
+  padding: 12px 20px 0;
+  font-size: 12px;
+  color: #9ca3af;
   font-weight: 500;
 }
 
-.onboarding-content {
-  padding: 24px 32px 16px;
+/* =============================================
+   CONTENT
+   ============================================= */
+
+.tour-content {
+  padding: 16px 24px 12px;
   text-align: center;
 }
 
-.onboarding-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  animation: bounce 0.5s ease;
+.tour-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+  line-height: 1;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.tour-tooltip--center .tour-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
 }
 
-.onboarding-title {
-  font-size: 24px;
+.tour-title {
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary, #000000);
-  margin: 0 0 12px 0;
+  color: #111827;
+  margin: 0 0 8px 0;
 }
 
-.onboarding-description {
-  font-size: 16px;
-  color: var(--text-secondary, #1e1a2e);
-  line-height: 1.6;
+.tour-tooltip--center .tour-title {
+  font-size: 22px;
+}
+
+.tour-description {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
   margin: 0;
 }
 
-.onboarding-dots {
+.tour-tooltip--center .tour-description {
+  font-size: 15px;
+}
+
+/* =============================================
+   NAVIGATION DOTS
+   ============================================= */
+
+.tour-dots {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  padding: 16px 24px;
+  gap: 5px;
+  padding: 10px 20px 4px;
 }
 
-.onboarding-dot {
-  width: 10px;
-  height: 10px;
+.tour-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  border: none;
-  background: var(--bg-tertiary, #ede9fc);
-  cursor: pointer;
+  background: #e5e7eb;
+  display: inline-block;
   transition: all 0.2s;
-  padding: 0;
 }
 
-.onboarding-dot:hover {
-  background: var(--text-muted, #a39dd0);
-}
-
-.onboarding-dot.active {
+.tour-dot.active {
   background: #afabf9;
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
 
-.onboarding-dot.completed {
+.tour-dot.completed {
   background: #7c3aed;
 }
 
-.onboarding-actions {
+/* =============================================
+   ACTIONS
+   ============================================= */
+
+.tour-actions {
   display: flex;
-  gap: 12px;
-  padding: 0 24px 24px;
+  gap: 10px;
+  padding: 8px 20px 16px;
   justify-content: center;
 }
 
-.onboarding-btn {
-  padding: 14px 28px;
-  border-radius: 12px;
-  font-size: 16px;
+.tour-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid transparent;
-  min-width: 120px;
+  min-width: 100px;
 }
 
-.onboarding-btn.primary {
+.tour-btn.primary {
   background: #afabf9;
   color: #000000;
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
-.onboarding-btn.primary:hover {
+.tour-btn.primary:hover {
   background: #9d97f5;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(175, 171, 249, 0.4);
 }
 
-.onboarding-btn.secondary {
+.tour-btn.secondary {
   background: transparent;
-  color: var(--text-secondary, #1e1a2e);
-  border-color: var(--border-color, rgba(0, 0, 0, 0.1));
+  color: #4b5563;
+  border-color: #e5e7eb;
 }
 
-.onboarding-btn.secondary:hover {
-  background: var(--bg-hover, #f3f4f6);
-  border-color: var(--border-strong, rgba(0, 0, 0, 0.2));
+.tour-btn.secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
-.onboarding-skip-link {
+.tour-skip-link {
   display: block;
   width: 100%;
   text-align: center;
-  padding: 0 0 20px;
+  padding: 0 0 14px;
   background: none;
   border: none;
-  color: var(--text-muted, #a39dd0);
-  font-size: 14px;
+  color: #9ca3af;
+  font-size: 13px;
   cursor: pointer;
   transition: color 0.2s;
 }
 
-.onboarding-skip-link:hover {
-  color: var(--text-secondary, #1e1a2e);
+.tour-skip-link:hover {
+  color: #4b5563;
   text-decoration: underline;
 }
 
-/* Mobile responsive */
+/* =============================================
+   ARROW POINTERS
+   ============================================= */
+
+.tour-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Arrow points UP toward spotlight (tooltip is below) */
+.tour-arrow--bottom {
+  top: -7px;
+  left: 50%;
+  margin-left: -7px;
+}
+
+/* Arrow points DOWN toward spotlight (tooltip is above) */
+.tour-arrow--top {
+  bottom: -7px;
+  left: 50%;
+  margin-left: -7px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Arrow points LEFT toward spotlight (tooltip is to the right) */
+.tour-arrow--right {
+  left: -7px;
+  top: 50%;
+  margin-top: -7px;
+}
+
+/* Arrow points RIGHT toward spotlight (tooltip is to the left) */
+.tour-arrow--left {
+  right: -7px;
+  top: 50%;
+  margin-top: -7px;
+  box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* =============================================
+   MOBILE RESPONSIVE
+   ============================================= */
+
+@media (max-width: 768px) {
+  .tour-tooltip {
+    width: 300px;
+  }
+
+  .tour-tooltip--center {
+    width: 340px;
+  }
+
+  .tour-content {
+    padding: 14px 18px 10px;
+  }
+
+  .tour-icon {
+    font-size: 40px;
+  }
+
+  .tour-title {
+    font-size: 16px;
+  }
+
+  .tour-description {
+    font-size: 13px;
+  }
+
+  .tour-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-width: 80px;
+  }
+}
+
 @media (max-width: 480px) {
-  .onboarding-overlay {
-    padding: 16px;
+  .tour-tooltip,
+  .tour-tooltip--center {
+    width: calc(100vw - 32px);
+    left: 16px !important;
+    right: 16px;
   }
 
-  .onboarding-modal {
-    border-radius: 16px;
-  }
-
-  .onboarding-content {
-    padding: 20px 24px 12px;
-  }
-
-  .onboarding-icon {
-    font-size: 48px;
-  }
-
-  .onboarding-title {
-    font-size: 20px;
-  }
-
-  .onboarding-description {
-    font-size: 14px;
-  }
-
-  .onboarding-actions {
-    flex-direction: column;
-    padding: 0 20px 20px;
-  }
-
-  .onboarding-btn {
-    width: 100%;
-    min-width: unset;
+  .tour-tooltip--center {
+    transform: translate(0, -50%);
   }
 }
 
-/* Dark mode */
-[data-theme="dark"] .onboarding-modal {
-  background: var(--card-bg);
+/* =============================================
+   DARK MODE
+   ============================================= */
+
+[data-theme="dark"] .tour-tooltip {
+  background: var(--card-bg, #1e1b2e);
 }
 
-[data-theme="dark"] .onboarding-title {
-  color: var(--text-primary);
+[data-theme="dark"] .tour-progress {
+  background: var(--bg-tertiary, #2d2a3e);
 }
 
-[data-theme="dark"] .onboarding-description {
-  color: var(--text-secondary);
+[data-theme="dark"] .tour-step-indicator {
+  color: var(--text-muted, #a39dd0);
 }
 
-[data-theme="dark"] .onboarding-btn.secondary {
-  color: var(--text-secondary);
-  border-color: var(--border-color);
+[data-theme="dark"] .tour-title {
+  color: var(--text-primary, #f0edf9);
 }
 
-[data-theme="dark"] .onboarding-btn.secondary:hover {
-  background: var(--bg-hover);
+[data-theme="dark"] .tour-description {
+  color: var(--text-secondary, #c4bfe0);
+}
+
+[data-theme="dark"] .tour-dot {
+  background: var(--bg-tertiary, #2d2a3e);
+}
+
+[data-theme="dark"] .tour-btn.secondary {
+  color: var(--text-secondary, #c4bfe0);
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme="dark"] .tour-btn.secondary:hover {
+  background: var(--bg-hover, #2d2a3e);
+}
+
+[data-theme="dark"] .tour-skip-link {
+  color: var(--text-muted, #a39dd0);
+}
+
+[data-theme="dark"] .tour-skip-link:hover {
+  color: var(--text-secondary, #c4bfe0);
+}
+
+[data-theme="dark"] .tour-arrow {
+  background: var(--card-bg, #1e1b2e);
 }
