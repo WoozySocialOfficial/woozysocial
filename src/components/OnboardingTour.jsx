@@ -137,6 +137,20 @@ export const OnboardingTour = ({ onComplete }) => {
       }
 
       localStorage.setItem('woozy_onboarding_completed', 'true');
+
+      // Play welcome audio using text-to-speech
+      try {
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance('Welcome to Woozy Social!');
+          utterance.rate = 0.95;
+          utterance.pitch = 1.1;
+          utterance.volume = 0.8;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {
+        // Speech not supported — silently ignore
+      }
+
       if (onComplete) onComplete();
     }, 250);
   };
