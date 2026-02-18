@@ -36,7 +36,7 @@ const TOUR_STEPS = [
   {
     id: 'compose',
     title: 'Create & Compose Posts',
-    description: 'Write your content, add images or videos, select which platforms to post to, and preview how your post will look on each network. You can also use AI to help generate content.',
+    description: 'Write your content on the left and pick your platforms on the right — connected accounts are highlighted. Add images, videos, or use AI to generate content. Hit "Post Now" or "Schedule Post" when ready.',
     icon: '✍️',
     route: '/compose',
   },

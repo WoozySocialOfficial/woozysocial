@@ -17,15 +17,16 @@
 }
 
 /* ========================================
-   PANEL — slides down from top-right
+   PANEL — positioned on the left (after sidebar)
+   so right-side content (socials, etc.) stays visible
    ======================================== */
 
 .tour-panel {
   position: fixed;
   top: 12px;
-  right: 12px;
-  width: 380px;
-  max-width: calc(100vw - 24px);
+  left: 290px; /* Just past the 275px sidebar */
+  width: 350px;
+  max-width: calc(100vw - 300px);
   max-height: calc(100vh - 24px);
   background: var(--card-bg, #ffffff);
   border-radius: 16px;
@@ -338,13 +339,32 @@
    MOBILE
    ======================================== */
 
+/* Tablet — sidebar hidden, center the panel */
+@media (max-width: 768px) {
+  .tour-panel {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 360px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .tour-panel--closing {
+    transform: translateX(-50%) translateY(-12px) scale(0.97);
+  }
+}
+
+/* Mobile */
 @media (max-width: 480px) {
   .tour-panel {
-    top: 8px;
-    right: 8px;
     left: 8px;
+    right: 8px;
+    transform: none;
     width: auto;
     max-height: calc(100vh - 16px);
+  }
+
+  .tour-panel--closing {
+    transform: translateY(-12px) scale(0.97);
   }
 }
 
