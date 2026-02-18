@@ -73,6 +73,33 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/api/user-accounts",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=0, s-maxage=30, stale-while-revalidate=60"
+        }
+      ]
+    },
+    {
+      "source": "/api/post-history",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=0, s-maxage=30, stale-while-revalidate=60"
+        }
+      ]
+    },
+    {
+      "source": "/api/post/unified-schedule",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=0, s-maxage=15, stale-while-revalidate=30"
+        }
+      ]
     }
   ],
   "functions": {

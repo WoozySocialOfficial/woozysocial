@@ -1,4 +1,11 @@
 const axios = require("axios");
+let kv;
+try {
+  kv = require("@vercel/kv").kv;
+} catch (e) {
+  // KV not available in development
+  kv = null;
+}
 const {
   setCors,
   getWorkspaceProfileKey,
@@ -12,6 +19,7 @@ const {
 } = require("../_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
+const AYRSHARE_CACHE_TTL = 120; // Cache Ayrshare responses for 2 minutes
 
 /**
  * Unified Schedule Endpoint
@@ -99,24 +107,49 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to fetch posts", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Step 2: Fetch Ayrshare history for enrichment (optional, non-blocking)
+    // Step 2: Fetch Ayrshare history for enrichment (optional, non-blocking, cached)
     let ayrshareHistory = [];
     const profileKey = await getWorkspaceProfileKey(workspaceId);
+    const cacheKey = profileKey ? `ayrshare:history:${profileKey}` : null;
 
     if (profileKey && isServiceConfigured('ayrshare')) {
-      try {
-        const response = await axios.get(`${BASE_AYRSHARE}/history`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-            "Profile-Key": profileKey
-          },
-          timeout: 30000
-        });
-        ayrshareHistory = response.data.history || [];
-      } catch (axiosError) {
-        // Non-blocking: continue without Ayrshare data
-        logError('unified-schedule.ayrshare', axiosError);
+      // Try KV cache first
+      if (kv && cacheKey) {
+        try {
+          const cached = await kv.get(cacheKey);
+          if (cached) {
+            ayrshareHistory = cached;
+          }
+        } catch (cacheErr) {
+          // Ignore cache read errors
+        }
+      }
+
+      // If no cache hit, fetch from Ayrshare
+      if (ayrshareHistory.length === 0) {
+        try {
+          const response = await axios.get(`${BASE_AYRSHARE}/history`, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+              "Profile-Key": profileKey
+            },
+            timeout: 15000
+          });
+          ayrshareHistory = response.data.history || [];
+
+          // Store in cache for next request
+          if (kv && ayrshareHistory.length > 0) {
+            try {
+              await kv.set(cacheKey, ayrshareHistory, { ex: AYRSHARE_CACHE_TTL });
+            } catch (setCacheErr) {
+              // Ignore cache set errors
+            }
+          }
+        } catch (axiosError) {
+          // Non-blocking: continue without Ayrshare data
+          logError('unified-schedule.ayrshare', axiosError);
+        }
       }
     }
 

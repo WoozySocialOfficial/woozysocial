@@ -19,7 +19,7 @@ export function useConnectedAccounts(workspaceId, userId) {
       return data.data || data;
     },
     enabled: !!(workspaceId || userId),
-    staleTime: 1000 * 30, // 30 seconds - needs to refresh quickly after connecting
+    staleTime: 1000 * 60 * 2, // 2 minutes - KV cached on server, invalidated on connect
   });
 }
 
@@ -69,7 +69,7 @@ export function usePosts(workspaceId, userId, options = {}) {
       return data || [];
     },
     enabled: !!workspaceId && enabled,
-    staleTime: 1000 * 30, // 30 seconds - posts change more frequently
+    staleTime: 1000 * 60, // 1 minute - invalidated on post/schedule actions
   });
 }
 
@@ -88,7 +88,7 @@ export function useScheduledPosts(workspaceId, userId) {
       return data || [];
     },
     enabled: !!workspaceId,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -105,7 +105,7 @@ export function usePendingApprovals(workspaceId, userId, status = "pending") {
       return responseData.grouped?.[status] || [];
     },
     enabled: !!(workspaceId && userId),
-    staleTime: 1000 * 15, // 15 seconds - approvals are time-sensitive
+    staleTime: 1000 * 45, // 45 seconds - approvals are time-sensitive but don't need constant refetch
   });
 }
 
@@ -122,7 +122,7 @@ export function useUnifiedSchedule(workspaceId, userId, status = "all") {
       return responseData.posts || [];
     },
     enabled: !!(workspaceId && userId),
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60, // 1 minute - KV cached on server
   });
 }
 
@@ -249,7 +249,7 @@ export function useNotifications(userId, workspaceId, options = {}) {
       return data.data || data;
     },
     enabled: !!userId,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -319,7 +319,7 @@ export function useClientDashboardStats(workspaceId, userId) {
       return { stats, recentActivity };
     },
     enabled: !!(workspaceId && userId),
-    staleTime: 1000 * 30, // 30 seconds - client needs fresh approval data
+    staleTime: 1000 * 60, // 1 minute - client dashboard data
   });
 }
 
@@ -362,7 +362,7 @@ export function useClientCalendarPosts(workspaceId, userId) {
       ];
     },
     enabled: !!(workspaceId && userId),
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60, // 1 minute
   });
 }
 
