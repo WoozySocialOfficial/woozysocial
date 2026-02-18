@@ -92,7 +92,7 @@ ${!hasMedia ? "\nNote: No media attached. Consider suggesting media-related advi
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
-    max_tokens: 1000
+    max_tokens: 600
   }, {
     headers: {
       'Content-Type': 'application/json',

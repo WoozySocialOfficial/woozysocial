@@ -149,7 +149,7 @@ Writing Style Examples: ${brandProfile.sample_posts || 'N/A'}
     - First line is CRUCIAL (shows in feed)
     - 2,200 char limit but 125-150 optimal
     - Use 1-2 emojis per line
-    - 5-10 hashtags at the VERY END (after line breaks)
+    - 3-5 hashtags at the VERY END (after line breaks)
     - Include clear CTA
     - Use line breaks every 1-2 sentences`,
 
@@ -261,6 +261,7 @@ Each variation MUST:
 - Match the brand voice if provided
 - Use minimal emojis (0-2 max, only if natural)
 - Put hashtags at the END only (not inline)
+- MAXIMUM 5 hashtags per post (never more than 5)
 
 Each variation should feel DIFFERENT:
 - Variation 1: Casual and chill (like texting a friend)
@@ -270,7 +271,7 @@ Each variation should feel DIFFERENT:
 FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-haiku-4-5-20251001',
     system: systemPrompt,
     messages: [
       { role: 'user', content: `Create 3 social media posts about: ${prompt}\n\nWrite like you're sharing with a friend - comfortable, casual, real. No corporate speak. Ready to copy-paste.` }

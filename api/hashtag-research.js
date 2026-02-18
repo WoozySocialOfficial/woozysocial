@@ -83,7 +83,7 @@ Rules:
       { role: 'user', content: `Generate ${count} hashtags for: "${topic}"` }
     ],
     temperature: 0.7,
-    max_tokens: 500
+    max_tokens: 200
   }, {
     headers: {
       'Content-Type': 'application/json',
