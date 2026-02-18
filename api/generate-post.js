@@ -271,7 +271,7 @@ Each variation should feel DIFFERENT:
 FORMAT: Number each variation 1., 2., 3. with the full post text ready to use.`;
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
-    model: 'claude-haiku-4-5-20251001',
+    model: 'claude-sonnet-4-5-20250929',
     system: systemPrompt,
     messages: [
       { role: 'user', content: `Create 3 social media posts about: ${prompt}\n\nWrite like you're sharing with a friend - comfortable, casual, real. No corporate speak. Ready to copy-paste.` }
