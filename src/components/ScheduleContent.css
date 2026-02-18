@@ -1584,6 +1584,21 @@
   color: #93c5fd;
 }
 
+[data-theme="dark"] .more-posts-indicator:hover,
+.dark .more-posts-indicator:hover {
+  background: #6c63ff;
+  border-color: #6c63ff;
+  color: white;
+}
+
+/* Dark Mode - Overflow Popup */
+[data-theme="dark"] .overflow-popup,
+.dark .overflow-popup {
+  background: #1a1625;
+  border-color: #352d5e;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
 /* Dark Mode - Filter Tab Hover */
 [data-theme="dark"] .filter-tab:hover,
 .dark .filter-tab:hover {
