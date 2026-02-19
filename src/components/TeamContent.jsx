@@ -224,19 +224,28 @@ export const TeamContent = () => {
 
   const handleTogglePermission = async (memberId, permName, value) => {
     try {
+      const payload = {
+        memberId,
+        userId: user.id,
+        permissions: { [permName]: value },
+      };
+
+      console.log('🔵 [FRONTEND] handleTogglePermission called');
+      console.log('🔵 [FRONTEND] permName:', permName);
+      console.log('🔵 [FRONTEND] value:', value);
+      console.log('🔵 [FRONTEND] Full payload:', JSON.stringify(payload, null, 2));
+
       const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          memberId,
-          userId: user.id,
-          permissions: { [permName]: value },
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log('🔵 [FRONTEND] Response status:', response.status);
+      console.log('🔵 [FRONTEND] Response data:', JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update permission');
@@ -244,7 +253,7 @@ export const TeamContent = () => {
 
       fetchTeamMembers();
     } catch (error) {
-      console.error('Error toggling permission:', error);
+      console.error('🔴 [FRONTEND] Error toggling permission:', error);
       alert(error.message || 'Failed to update permission');
     }
   };
