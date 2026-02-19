@@ -701,6 +701,118 @@ async function sendPostUpdatedNotification(supabase, { postId, workspaceId, upda
   }
 }
 
+/**
+ * Send notification to final approvers when a post needs internal review
+ */
+async function sendFinalApprovalRequestNotification(supabase, { workspaceId, postId, platforms, createdByUserId }) {
+  try {
+    console.log('[sendFinalApprovalRequestNotification] Starting...', { workspaceId, postId, platforms });
+
+    // Get workspace name
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single();
+
+    const workspaceName = workspace?.name || 'Unknown Workspace';
+
+    // Get all final approvers (members with can_final_approval permission)
+    const { data: finalApprovers, error: queryError } = await supabase
+      .from('workspace_members')
+      .select('user_id, role')
+      .eq('workspace_id', workspaceId)
+      .eq('can_final_approval', true);
+
+    console.log('[sendFinalApprovalRequestNotification] Query completed. Error:', queryError, 'Data:', finalApprovers);
+
+    if (queryError) {
+      console.log('[sendFinalApprovalRequestNotification] Query error detected, returning early');
+      logError('notifications.helpers.finalApprovalRequest.query', queryError, { workspaceId, postId });
+      return;
+    }
+
+    console.log('[sendFinalApprovalRequestNotification] Final approvers found:', finalApprovers?.length || 0);
+
+    if (!finalApprovers || finalApprovers.length === 0) {
+      console.log('[sendFinalApprovalRequestNotification] No final approvers found, skipping notification');
+      return;
+    }
+
+    const platformList = platforms?.join(', ') || 'multiple platforms';
+
+    const notifications = finalApprovers.map(approver => ({
+      user_id: approver.user_id,
+      workspace_id: workspaceId,
+      post_id: postId,
+      type: 'final_approval_request',
+      title: 'New Post Needs Your Review',
+      message: `A new post for ${platformList} needs your quality review [${workspaceName}]`,
+      actor_id: createdByUserId,
+      read: false,
+      metadata: { platforms, workspaceName }
+    }));
+
+    const { data: insertedData, error: insertError } = await supabase
+      .from('notifications')
+      .insert(notifications);
+
+    if (insertError) {
+      logError('notifications.helpers.finalApprovalRequest.insert', insertError, { workspaceId, postId, count: notifications.length });
+      console.log('[sendFinalApprovalRequestNotification] Insert error:', insertError);
+    } else {
+      console.log('[sendFinalApprovalRequestNotification] Successfully created', notifications.length, 'notifications');
+    }
+  } catch (error) {
+    console.log('[sendFinalApprovalRequestNotification] Catch block error:', error);
+    logError('notifications.helpers.finalApprovalRequest', error, { workspaceId, postId });
+  }
+}
+
+/**
+ * Send notification to creator when final approver requests changes (internal rejection)
+ */
+async function sendInternalRejectionNotification(supabase, { workspaceId, postId, createdByUserId, comment }) {
+  try {
+    console.log('[sendInternalRejectionNotification] Starting...', { workspaceId, postId, createdByUserId });
+
+    // Get workspace name
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single();
+
+    const workspaceName = workspace?.name || 'Unknown Workspace';
+
+    // Get post details
+    const { data: post } = await supabase
+      .from('posts')
+      .select('caption, platforms')
+      .eq('id', postId)
+      .single();
+
+    const platformList = post?.platforms?.join(', ') || 'multiple platforms';
+
+    // Send notification to creator
+    await supabase.from('notifications').insert({
+      user_id: createdByUserId,
+      workspace_id: workspaceId,
+      post_id: postId,
+      type: 'internal_changes_requested',
+      title: 'Changes Requested on Your Post',
+      message: `A final approver has requested changes on your post for ${platformList} [${workspaceName}]`,
+      metadata: { comment, platforms: post?.platforms, workspaceName },
+      read: false
+    });
+
+    console.log('[sendInternalRejectionNotification] Notification sent to creator');
+  } catch (error) {
+    console.log('[sendInternalRejectionNotification] Error:', error);
+    logError('notifications.helpers.internalRejection', error, { workspaceId, postId, createdByUserId });
+  }
+}
+
 module.exports = {
   sendApprovalNotification,
   sendWorkspaceInviteNotification,
@@ -718,5 +830,7 @@ module.exports = {
   sendPostFailedNotification,
   sendPostPublishedNotification,
   sendApprovalRequestNotification,
-  sendPostUpdatedNotification
+  sendPostUpdatedNotification,
+  sendFinalApprovalRequestNotification,
+  sendInternalRejectionNotification
 };

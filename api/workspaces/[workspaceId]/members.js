@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
     // Get all workspace members (including owner)
     const { data: members, error: membersError } = await supabase
       .from('workspace_members')
-      .select('id, user_id, role, created_at, can_manage_team, can_manage_settings, can_delete_posts, can_approve_posts')
+      .select('id, user_id, role, created_at, can_manage_team, can_manage_settings, can_delete_posts, can_final_approval, can_approve_posts')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: true });
 
@@ -95,6 +95,7 @@ module.exports = async function handler(req, res) {
           can_manage_team: member.can_manage_team,
           can_manage_settings: member.can_manage_settings,
           can_delete_posts: member.can_delete_posts,
+          can_final_approval: member.can_final_approval,
           can_approve_posts: member.can_approve_posts
         },
         profile: {

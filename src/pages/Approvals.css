@@ -474,6 +474,28 @@
   color: #fff;
 }
 
+.btn-forward {
+  background: #fff;
+  border: 1px solid #9c27b0;
+  color: #9c27b0;
+}
+
+.btn-forward:hover:not(:disabled) {
+  background: #9c27b0;
+  color: #fff;
+}
+
+.btn-resolve {
+  background: #fff;
+  border: 1px solid #2ecc71;
+  color: #2ecc71;
+}
+
+.btn-resolve:hover:not(:disabled) {
+  background: #2ecc71;
+  color: #fff;
+}
+
 .btn-approve {
   background: #2ecc71;
   border: 1px solid #2ecc71;
@@ -754,6 +776,32 @@
 .dark .btn-changes:hover:not(:disabled) {
   background: rgba(217, 119, 6, 0.15);
   color: #fbbf24;
+}
+
+[data-theme="dark"] .btn-forward,
+.dark .btn-forward {
+  background: #0d0b1a;
+  border-color: #9c27b0;
+  color: #d8b4fe;
+}
+
+[data-theme="dark"] .btn-forward:hover:not(:disabled),
+.dark .btn-forward:hover:not(:disabled) {
+  background: rgba(156, 39, 176, 0.15);
+  color: #d8b4fe;
+}
+
+[data-theme="dark"] .btn-resolve,
+.dark .btn-resolve {
+  background: #0d0b1a;
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .btn-resolve:hover:not(:disabled),
+.dark .btn-resolve:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
 }
 
 [data-theme="dark"] .btn-approve,
