@@ -59,6 +59,8 @@ module.exports = async function handler(req, res) {
     const { workspaceId } = req.query;
     const { memberId, userId, role, permissions } = req.body;
 
+    console.log('[update-member] Request body:', { memberId, userId, role, permissions });
+
     if (!memberId || !userId || !workspaceId) {
       return sendError(res, "memberId, userId, and workspaceId are required", ErrorCodes.VALIDATION_ERROR);
     }
@@ -151,6 +153,9 @@ module.exports = async function handler(req, res) {
       if (typeof permissions.canFinalApproval === 'boolean') updateData.can_final_approval = permissions.canFinalApproval;  // NEW
       if (typeof permissions.canApprovePosts === 'boolean') updateData.can_approve_posts = permissions.canApprovePosts;
     }
+
+    console.log('[update-member] updateData before check:', updateData);
+    console.log('[update-member] permissions object:', permissions);
 
     if (Object.keys(updateData).length === 0) {
       return sendError(res, "No updates provided", ErrorCodes.VALIDATION_ERROR);
