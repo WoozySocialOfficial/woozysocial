@@ -169,20 +169,31 @@ async function workspaceHasClients(supabase, workspaceId) {
 // Helper to check if workspace has final approvers
 // Used to determine if posts need internal review before client approval
 async function workspaceHasFinalApprovers(supabase, workspaceId) {
-  if (!workspaceId) return false;
+  if (!workspaceId) {
+    console.log('[workspaceHasFinalApprovers] No workspaceId provided, returning false');
+    return false;
+  }
 
   try {
-    const { data: finalApprovers } = await supabase
+    console.log(`[workspaceHasFinalApprovers] ===== Checking workspace ${workspaceId} for final approvers =====`);
+
+    const { data: finalApprovers, error: queryError } = await supabase
       .from('workspace_members')
-      .select('id')
+      .select('id, user_id, role, can_final_approval')
       .eq('workspace_id', workspaceId)
-      .eq('can_final_approval', true)
-      .limit(1);
+      .eq('can_final_approval', true);
 
-    console.log(`[workspaceHasFinalApprovers] workspaceId: ${workspaceId}, final approvers found:`, finalApprovers?.length || 0);
+    console.log(`[workspaceHasFinalApprovers] Query completed`);
+    console.log(`[workspaceHasFinalApprovers] Error:`, queryError);
+    console.log(`[workspaceHasFinalApprovers] Data:`, JSON.stringify(finalApprovers));
+    console.log(`[workspaceHasFinalApprovers] Count:`, finalApprovers?.length || 0);
 
-    return finalApprovers && finalApprovers.length > 0;
+    const hasFinalApprovers = finalApprovers && finalApprovers.length > 0;
+    console.log(`[workspaceHasFinalApprovers] Result: ${hasFinalApprovers}`);
+
+    return hasFinalApprovers;
   } catch (error) {
+    console.log('[workspaceHasFinalApprovers] EXCEPTION:', error);
     logError('workspaceHasFinalApprovers', error, { workspaceId });
     return false;
   }
@@ -449,9 +460,17 @@ module.exports = async function handler(req, res) {
       requiresApproval = tierHasApproval || hasClients;
 
       // Check if workspace has final approvers for internal review layer
+      console.log('[post] ===== CHECKING FOR FINAL APPROVERS =====');
+      console.log('[post] workspaceId:', workspaceId);
       const hasFinalApprovers = workspaceId ? await workspaceHasFinalApprovers(supabase, workspaceId) : false;
+      console.log('[post] hasFinalApprovers result:', hasFinalApprovers);
 
-      console.log('[post] Workspace owner tier:', tier, '| Tier has approval:', tierHasApproval, '| Has clients:', hasClients, '| Has final approvers:', hasFinalApprovers, '| Requires approval:', requiresApproval);
+      console.log('[post] ===== POST CREATION SUMMARY =====');
+      console.log('[post] Workspace owner tier:', tier);
+      console.log('[post] Tier has approval:', tierHasApproval);
+      console.log('[post] Has clients:', hasClients);
+      console.log('[post] Has final approvers:', hasFinalApprovers);
+      console.log('[post] Requires approval:', requiresApproval);
 
     // If approval required, save as pending_approval
     if (requiresApproval) {
@@ -538,6 +557,10 @@ module.exports = async function handler(req, res) {
 
       // Determine initial approval status based on workspace configuration
       const initialApprovalStatus = hasFinalApprovers ? 'pending_internal' : 'pending';
+      console.log('[post] ===== APPROVAL STATUS DETERMINATION =====');
+      console.log('[post] hasFinalApprovers:', hasFinalApprovers);
+      console.log('[post] initialApprovalStatus:', initialApprovalStatus);
+      console.log('[post] Will create post with approval_status:', initialApprovalStatus);
 
       // Otherwise, CREATE a new post
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
@@ -554,7 +577,17 @@ module.exports = async function handler(req, res) {
           post_settings: settings // Phase 4: Save post settings
         }]).select().single();
 
+        console.log('[post] ===== POST INSERT RESULT =====');
+        console.log('[post] saveError:', saveError);
+        console.log('[post] savedPost:', savedPost ? {
+          id: savedPost.id,
+          approval_status: savedPost.approval_status,
+          status: savedPost.status,
+          workspace_id: savedPost.workspace_id
+        } : null);
+
         if (saveError) {
+          console.log('[post] ERROR saving post:', saveError);
           logError('post.save_pending', saveError, { userId, workspaceId });
           return sendError(res, "Failed to save post for approval", ErrorCodes.DATABASE_ERROR);
         }

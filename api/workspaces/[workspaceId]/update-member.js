@@ -59,7 +59,12 @@ module.exports = async function handler(req, res) {
     const { workspaceId } = req.query;
     const { memberId, userId, role, permissions } = req.body;
 
-    console.log('[update-member] Request body:', { memberId, userId, role, permissions });
+    console.log('[update-member] ===== START REQUEST =====');
+    console.log('[update-member] Raw req.body:', JSON.stringify(req.body));
+    console.log('[update-member] Parsed - memberId:', memberId, 'userId:', userId, 'role:', role);
+    console.log('[update-member] Parsed - permissions:', JSON.stringify(permissions));
+    console.log('[update-member] Permissions type:', typeof permissions);
+    console.log('[update-member] Permissions keys:', permissions ? Object.keys(permissions) : 'null');
 
     if (!memberId || !userId || !workspaceId) {
       return sendError(res, "memberId, userId, and workspaceId are required", ErrorCodes.VALIDATION_ERROR);
@@ -146,19 +151,37 @@ module.exports = async function handler(req, res) {
       }
     }
     // Allow explicit permission overrides if provided
-    if (permissions) {
-      if (typeof permissions.canManageTeam === 'boolean') updateData.can_manage_team = permissions.canManageTeam;
-      if (typeof permissions.canManageSettings === 'boolean') updateData.can_manage_settings = permissions.canManageSettings;
-      if (typeof permissions.canDeletePosts === 'boolean') updateData.can_delete_posts = permissions.canDeletePosts;
-      if (typeof permissions.canFinalApproval === 'boolean') updateData.can_final_approval = permissions.canFinalApproval;  // NEW
-      if (typeof permissions.canApprovePosts === 'boolean') updateData.can_approve_posts = permissions.canApprovePosts;
+    if (permissions && typeof permissions === 'object') {
+      console.log('[update-member] Processing permissions:', JSON.stringify(permissions));
+
+      if ('canManageTeam' in permissions) {
+        updateData.can_manage_team = Boolean(permissions.canManageTeam);
+        console.log('[update-member] Set can_manage_team to:', updateData.can_manage_team);
+      }
+      if ('canManageSettings' in permissions) {
+        updateData.can_manage_settings = Boolean(permissions.canManageSettings);
+        console.log('[update-member] Set can_manage_settings to:', updateData.can_manage_settings);
+      }
+      if ('canDeletePosts' in permissions) {
+        updateData.can_delete_posts = Boolean(permissions.canDeletePosts);
+        console.log('[update-member] Set can_delete_posts to:', updateData.can_delete_posts);
+      }
+      if ('canFinalApproval' in permissions) {
+        updateData.can_final_approval = Boolean(permissions.canFinalApproval);
+        console.log('[update-member] Set can_final_approval to:', updateData.can_final_approval);
+      }
+      if ('canApprovePosts' in permissions) {
+        updateData.can_approve_posts = Boolean(permissions.canApprovePosts);
+        console.log('[update-member] Set can_approve_posts to:', updateData.can_approve_posts);
+      }
     }
 
-    console.log('[update-member] updateData before check:', updateData);
-    console.log('[update-member] permissions object:', permissions);
+    console.log('[update-member] Final updateData:', JSON.stringify(updateData));
+    console.log('[update-member] updateData keys length:', Object.keys(updateData).length);
 
     if (Object.keys(updateData).length === 0) {
-      return sendError(res, "No updates provided", ErrorCodes.VALIDATION_ERROR);
+      console.log('[update-member] ERROR: No updates - permissions was:', JSON.stringify(permissions), 'role was:', role);
+      return sendError(res, "No updates provided. Check server logs for details.", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Update member
