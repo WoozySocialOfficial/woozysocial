@@ -343,8 +343,9 @@ export const WorkspaceProvider = ({ children }) => {
   // DB toggle values from workspace membership
   const canApprove = workspaceMembership
     ? (
-        // Only viewers with can_approve_posts OR owners
+        // Viewers with can_approve_posts, members with any approval permission, or owners
         (userRole === TEAM_ROLES.VIEWER && workspaceMembership.can_approve_posts === true) ||
+        (userRole === TEAM_ROLES.MEMBER && (workspaceMembership.can_approve_posts === true || workspaceMembership.can_final_approval === true)) ||
         userRole === TEAM_ROLES.OWNER
       )
     : false;
