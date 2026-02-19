@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       return sendError(res, "Post text is required", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return sendSuccess(res, {
         suggestions: getFallbackSuggestions(text, platforms, hasMedia, scoreBreakdown),
@@ -64,21 +64,13 @@ async function optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdo
   if (scoreBreakdown.length?.score < 12) weakAreas.push("text length optimization");
   if (scoreBreakdown.url?.score === 0) weakAreas.push("call-to-action with link");
 
-  // Static prompt (cached — 90% cheaper on repeat calls)
-  const staticPrompt = `Return ONLY a JSON array. Max 3 suggestions sorted by impact. Each: {"type":"rewrite"|"add_hook"|"add_cta"|"add_hashtags","title":"3-6 words","description":"1 sentence","original":"","improved":"text","impact":1-20}. No markdown. Keep original voice. Be specific with actual rewritten text.`;
+  const systemPrompt = `Return ONLY a JSON array. Max 3 suggestions sorted by impact. Each: {"type":"rewrite"|"add_hook"|"add_cta"|"add_hashtags","title":"3-6 words","description":"1 sentence","original":"","improved":"text","impact":1-20}. No markdown. Keep original voice. Be specific with actual rewritten text.
+Platforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join(", ")}` : ''}${!hasMedia ? '\nNo media attached.' : ''}`;
 
-  // Dynamic context
-  const dynamicParts = [`Platforms: ${platformList}`];
-  if (weakAreas.length > 0) dynamicParts.push(`Focus on: ${weakAreas.join(", ")}`);
-  if (!hasMedia) dynamicParts.push('No media attached.');
-
-  const response = await axios.post('https://api.anthropic.com/v1/messages', {
-    model: 'claude-haiku-4-5-20251001',
-    system: [
-      { type: 'text', text: staticPrompt, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: dynamicParts.join(' ') }
-    ],
+  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+    model: 'gpt-4o-mini',
     messages: [
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
@@ -86,12 +78,11 @@ async function optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdo
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
+      'Authorization': `Bearer ${apiKey}`
     }
   });
 
-  const content = response.data.content?.[0]?.text || '[]';
+  const content = response.data.choices[0]?.message?.content || '[]';
 
   try {
     // Strip markdown code fences if present
