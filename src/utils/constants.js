@@ -3,7 +3,9 @@ const baseURL = import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' &&
    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? "http://localhost:3001"
-    : "https://www.woozysocials.com");
+    : typeof window !== 'undefined'
+      ? `${window.location.protocol}//${window.location.hostname}`
+      : "https://www.woozysocials.com");
 
 // ===========================
 // SUBSCRIPTION TIERS
