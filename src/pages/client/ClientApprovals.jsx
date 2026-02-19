@@ -570,8 +570,10 @@ export const ClientApprovals = () => {
                 </div>
               )}
 
-              {/* Comment Input - only for pending and changes_requested */}
-              {(selectedPost.approval_status === 'pending' || selectedPost.approval_status === 'changes_requested') && (
+              {/* Comment Input - for pending, pending_client, and changes_requested */}
+              {(selectedPost.approval_status === 'pending' ||
+                selectedPost.approval_status === 'pending_client' ||
+                selectedPost.approval_status === 'changes_requested') && (
                 <>
                   <div className="detail-comment">
                     <h3>Feedback (optional for approval)</h3>

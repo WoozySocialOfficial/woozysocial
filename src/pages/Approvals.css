@@ -453,62 +453,94 @@
 }
 
 .btn-reject {
-  background: #fff;
-  border: 1px solid #e74c3c;
+  background: linear-gradient(135deg, #fff 0%, #fef5f5 100%);
+  border: 1.5px solid #e74c3c;
   color: #e74c3c;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.1);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .btn-reject:hover:not(:disabled) {
-  background: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  transform: translateY(-1px);
+  border-color: #c0392b;
 }
 
 .btn-changes {
-  background: #fff;
-  border: 1px solid #f39c12;
+  background: linear-gradient(135deg, #fff 0%, #fffbf5 100%);
+  border: 1.5px solid #f39c12;
   color: #f39c12;
+  box-shadow: 0 2px 4px rgba(243, 156, 18, 0.1);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .btn-changes:hover:not(:disabled) {
-  background: #f39c12;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+  transform: translateY(-1px);
+  border-color: #e67e22;
 }
 
 .btn-forward {
-  background: #fff;
-  border: 1px solid #9c27b0;
+  background: linear-gradient(135deg, #fff 0%, #faf5ff 100%);
+  border: 1.5px solid #9c27b0;
   color: #9c27b0;
+  box-shadow: 0 2px 4px rgba(156, 39, 176, 0.1);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .btn-forward:hover:not(:disabled) {
-  background: #9c27b0;
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+  transform: translateY(-1px);
+  border-color: #7b1fa2;
 }
 
 .btn-resolve {
-  background: #fff;
-  border: 1px solid #2ecc71;
+  background: linear-gradient(135deg, #fff 0%, #f5fef8 100%);
+  border: 1.5px solid #2ecc71;
   color: #2ecc71;
+  box-shadow: 0 2px 4px rgba(46, 204, 113, 0.1);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .btn-resolve:hover:not(:disabled) {
-  background: #2ecc71;
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  transform: translateY(-1px);
+  border-color: #27ae60;
 }
 
 .btn-approve {
-  background: #2ecc71;
-  border: 1px solid #2ecc71;
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  border: 1.5px solid #2ecc71;
   color: #fff;
+  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.25);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .btn-approve:hover:not(:disabled) {
-  background: #27ae60;
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.4);
+  transform: translateY(-1px);
+  border-color: #229954;
 }
 
 .approval-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .status-notice {
