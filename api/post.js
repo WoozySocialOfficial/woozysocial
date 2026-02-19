@@ -17,6 +17,9 @@ const {
 const { hasFeature } = require("./_utils-access-control");
 const { sendPostScheduledNotification, sendApprovalRequestNotification, sendFinalApprovalRequestNotification, sendPostUpdatedNotification, sendPostFailedNotification } = require("./notifications/helpers");
 
+// VERSION TRACKING
+const POST_VERSION = "3.0.0-BULLETPROOF-FEB19";
+
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
 /**
@@ -169,13 +172,23 @@ async function workspaceHasClients(supabase, workspaceId) {
 // Helper to check if workspace has final approvers
 // Used to determine if posts need internal review before client approval
 async function workspaceHasFinalApprovers(supabase, workspaceId) {
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('[workspaceHasFinalApprovers] START - VERSION:', POST_VERSION);
+  console.log('[workspaceHasFinalApprovers] Timestamp:', new Date().toISOString());
+  console.log('[workspaceHasFinalApprovers] workspaceId:', workspaceId);
+  console.log('[workspaceHasFinalApprovers] workspaceId type:', typeof workspaceId);
+  console.log('[workspaceHasFinalApprovers] workspaceId is null?', workspaceId === null);
+  console.log('[workspaceHasFinalApprovers] workspaceId is undefined?', workspaceId === undefined);
+  console.log('═══════════════════════════════════════════════════════');
+
   if (!workspaceId) {
-    console.log('[workspaceHasFinalApprovers] No workspaceId provided, returning false');
+    console.log('[workspaceHasFinalApprovers] ❌ No workspaceId - returning FALSE');
     return false;
   }
 
   try {
-    console.log(`[workspaceHasFinalApprovers] ===== Checking workspace ${workspaceId} for final approvers =====`);
+    console.log('[workspaceHasFinalApprovers] Executing database query...');
+    console.log('[workspaceHasFinalApprovers] Query: SELECT id, user_id, role, can_final_approval FROM workspace_members WHERE workspace_id = ? AND can_final_approval = true');
 
     const { data: finalApprovers, error: queryError } = await supabase
       .from('workspace_members')
@@ -183,18 +196,55 @@ async function workspaceHasFinalApprovers(supabase, workspaceId) {
       .eq('workspace_id', workspaceId)
       .eq('can_final_approval', true);
 
-    console.log(`[workspaceHasFinalApprovers] Query completed`);
-    console.log(`[workspaceHasFinalApprovers] Error:`, queryError);
-    console.log(`[workspaceHasFinalApprovers] Data:`, JSON.stringify(finalApprovers));
-    console.log(`[workspaceHasFinalApprovers] Count:`, finalApprovers?.length || 0);
+    console.log('[workspaceHasFinalApprovers] ─────────────────────────');
+    console.log('[workspaceHasFinalApprovers] Query completed');
+    console.log('[workspaceHasFinalApprovers] Error:', queryError ? JSON.stringify(queryError) : 'none');
+    console.log('[workspaceHasFinalApprovers] Data is null?', finalApprovers === null);
+    console.log('[workspaceHasFinalApprovers] Data is undefined?', finalApprovers === undefined);
+    console.log('[workspaceHasFinalApprovers] Data is array?', Array.isArray(finalApprovers));
 
-    const hasFinalApprovers = finalApprovers && finalApprovers.length > 0;
-    console.log(`[workspaceHasFinalApprovers] Result: ${hasFinalApprovers}`);
+    if (queryError) {
+      console.log('[workspaceHasFinalApprovers] ❌ QUERY ERROR:', queryError);
+      console.log('[workspaceHasFinalApprovers] Error code:', queryError.code);
+      console.log('[workspaceHasFinalApprovers] Error message:', queryError.message);
+      console.log('[workspaceHasFinalApprovers] Error details:', queryError.details);
+      logError('workspaceHasFinalApprovers.query', queryError, { workspaceId });
+      return false;
+    }
+
+    if (!finalApprovers) {
+      console.log('[workspaceHasFinalApprovers] Data is null/undefined - returning FALSE');
+      return false;
+    }
+
+    console.log('[workspaceHasFinalApprovers] Data count:', finalApprovers.length);
+    console.log('[workspaceHasFinalApprovers] Full data:', JSON.stringify(finalApprovers, null, 2));
+
+    // Log each final approver found
+    if (finalApprovers.length > 0) {
+      console.log('[workspaceHasFinalApprovers] ✓✓✓ FINAL APPROVERS FOUND ✓✓✓');
+      finalApprovers.forEach((approver, index) => {
+        console.log(`[workspaceHasFinalApprovers]   Approver ${index + 1}:`);
+        console.log(`[workspaceHasFinalApprovers]     - user_id: ${approver.user_id}`);
+        console.log(`[workspaceHasFinalApprovers]     - role: ${approver.role}`);
+        console.log(`[workspaceHasFinalApprovers]     - can_final_approval: ${approver.can_final_approval}`);
+      });
+    } else {
+      console.log('[workspaceHasFinalApprovers] ❌ NO FINAL APPROVERS FOUND (empty array)');
+    }
+
+    const hasFinalApprovers = finalApprovers.length > 0;
+    console.log('[workspaceHasFinalApprovers] ─────────────────────────');
+    console.log(`[workspaceHasFinalApprovers] FINAL RESULT: ${hasFinalApprovers ? '✓ TRUE' : '❌ FALSE'}`);
+    console.log('═══════════════════════════════════════════════════════');
 
     return hasFinalApprovers;
   } catch (error) {
-    console.log('[workspaceHasFinalApprovers] EXCEPTION:', error);
-    logError('workspaceHasFinalApprovers', error, { workspaceId });
+    console.log('[workspaceHasFinalApprovers] ❌❌❌ EXCEPTION CAUGHT ❌❌❌');
+    console.log('[workspaceHasFinalApprovers] Error:', error);
+    console.log('[workspaceHasFinalApprovers] Error message:', error.message);
+    console.log('[workspaceHasFinalApprovers] Error stack:', error.stack);
+    logError('workspaceHasFinalApprovers.exception', error, { workspaceId });
     return false;
   }
 }
@@ -460,17 +510,27 @@ module.exports = async function handler(req, res) {
       requiresApproval = tierHasApproval || hasClients;
 
       // Check if workspace has final approvers for internal review layer
-      console.log('[post] ===== CHECKING FOR FINAL APPROVERS =====');
+      console.log('█████████████████████████████████████████████████████████');
+      console.log('[post] POST CREATION - VERSION:', POST_VERSION);
+      console.log('[post] TIMESTAMP:', new Date().toISOString());
+      console.log('█████████████████████████████████████████████████████████');
+      console.log('[post] Checking for final approvers...');
       console.log('[post] workspaceId:', workspaceId);
-      const hasFinalApprovers = workspaceId ? await workspaceHasFinalApprovers(supabase, workspaceId) : false;
-      console.log('[post] hasFinalApprovers result:', hasFinalApprovers);
+      console.log('[post] workspaceId type:', typeof workspaceId);
 
-      console.log('[post] ===== POST CREATION SUMMARY =====');
-      console.log('[post] Workspace owner tier:', tier);
-      console.log('[post] Tier has approval:', tierHasApproval);
-      console.log('[post] Has clients:', hasClients);
-      console.log('[post] Has final approvers:', hasFinalApprovers);
-      console.log('[post] Requires approval:', requiresApproval);
+      const hasFinalApprovers = workspaceId ? await workspaceHasFinalApprovers(supabase, workspaceId) : false;
+
+      console.log('[post] ═════════════════════════════════════════════');
+      console.log('[post] hasFinalApprovers result:', hasFinalApprovers);
+      console.log('[post] hasFinalApprovers type:', typeof hasFinalApprovers);
+      console.log('[post] ═════════════════════════════════════════════');
+
+      console.log('[post] POST CREATION CONTEXT:');
+      console.log('[post]   - Workspace tier:', tier);
+      console.log('[post]   - Tier has approval:', tierHasApproval);
+      console.log('[post]   - Has clients:', hasClients);
+      console.log('[post]   - Has final approvers:', hasFinalApprovers, hasFinalApprovers ? '✓✓✓' : '❌');
+      console.log('[post]   - Requires approval:', requiresApproval);
 
     // If approval required, save as pending_approval
     if (requiresApproval) {
@@ -556,11 +616,29 @@ module.exports = async function handler(req, res) {
       }
 
       // Determine initial approval status based on workspace configuration
+      console.log('[post] ═══════════════════════════════════════════════════');
+      console.log('[post] DETERMINING INITIAL APPROVAL STATUS');
+      console.log('[post] ═══════════════════════════════════════════════════');
+      console.log('[post] hasFinalApprovers value:', hasFinalApprovers);
+      console.log('[post] hasFinalApprovers === true?', hasFinalApprovers === true);
+      console.log('[post] hasFinalApprovers is truthy?', !!hasFinalApprovers);
+
       const initialApprovalStatus = hasFinalApprovers ? 'pending_internal' : 'pending';
-      console.log('[post] ===== APPROVAL STATUS DETERMINATION =====');
-      console.log('[post] hasFinalApprovers:', hasFinalApprovers);
-      console.log('[post] initialApprovalStatus:', initialApprovalStatus);
+
+      console.log('[post] ─────────────────────────────────────────────────');
+      console.log('[post] Ternary result:', initialApprovalStatus);
+      console.log('[post] initialApprovalStatus === "pending_internal"?', initialApprovalStatus === 'pending_internal');
+      console.log('[post] initialApprovalStatus === "pending"?', initialApprovalStatus === 'pending');
+      console.log('[post] ─────────────────────────────────────────────────');
+
+      if (hasFinalApprovers) {
+        console.log('[post] ✓✓✓ FINAL APPROVERS EXIST → pending_internal ✓✓✓');
+      } else {
+        console.log('[post] ❌ NO FINAL APPROVERS → pending (legacy) ❌');
+      }
+
       console.log('[post] Will create post with approval_status:', initialApprovalStatus);
+      console.log('[post] ═══════════════════════════════════════════════════');
 
       // Otherwise, CREATE a new post
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
@@ -577,19 +655,35 @@ module.exports = async function handler(req, res) {
           post_settings: settings // Phase 4: Save post settings
         }]).select().single();
 
-        console.log('[post] ===== POST INSERT RESULT =====');
-        console.log('[post] saveError:', saveError);
-        console.log('[post] savedPost:', savedPost ? {
-          id: savedPost.id,
-          approval_status: savedPost.approval_status,
-          status: savedPost.status,
-          workspace_id: savedPost.workspace_id
-        } : null);
+        console.log('[post] ═══════════════════════════════════════════════════');
+        console.log('[post] DATABASE INSERT RESULT');
+        console.log('[post] ═══════════════════════════════════════════════════');
+        console.log('[post] saveError:', saveError ? JSON.stringify(saveError) : 'none');
 
         if (saveError) {
-          console.log('[post] ERROR saving post:', saveError);
+          console.log('[post] ❌❌❌ DATABASE INSERT FAILED ❌❌❌');
+          console.log('[post] Error code:', saveError.code);
+          console.log('[post] Error message:', saveError.message);
+          console.log('[post] Error details:', saveError.details);
           logError('post.save_pending', saveError, { userId, workspaceId });
           return sendError(res, "Failed to save post for approval", ErrorCodes.DATABASE_ERROR);
+        }
+
+        console.log('[post] ✓✓✓ DATABASE INSERT SUCCESSFUL ✓✓✓');
+        console.log('[post] Post ID:', savedPost?.id);
+        console.log('[post] Post status:', savedPost?.status);
+        console.log('[post] Post approval_status:', savedPost?.approval_status);
+        console.log('[post] Post workspace_id:', savedPost?.workspace_id);
+        console.log('[post] Full post data:', JSON.stringify(savedPost, null, 2));
+        console.log('[post] ═══════════════════════════════════════════════════');
+
+        // VERIFY: Did it save with the right approval_status?
+        if (savedPost?.approval_status === 'pending_internal') {
+          console.log('[post] ✓✓✓ VERIFIED: Post has approval_status = pending_internal ✓✓✓');
+        } else if (savedPost?.approval_status === 'pending') {
+          console.log('[post] ⚠️ WARNING: Post has approval_status = pending (legacy flow)');
+        } else {
+          console.log('[post] ❌ ERROR: Post has unexpected approval_status:', savedPost?.approval_status);
         }
 
         // Send notifications based on approval workflow
