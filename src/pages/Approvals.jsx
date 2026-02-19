@@ -42,7 +42,8 @@ export const Approvals = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const urlTab = searchParams.get('tab');
+  const [filter, setFilter] = useState(urlTab || 'pending');
   const [selectedPost, setSelectedPost] = useState(null);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +56,13 @@ export const Approvals = () => {
 
   // Get postId from URL query params
   const urlPostId = searchParams.get('postId');
+
+  // Switch tab when URL tab param changes (e.g., clicking a different notification)
+  useEffect(() => {
+    if (urlTab && urlTab !== filter) {
+      setFilter(urlTab);
+    }
+  }, [urlTab]);
 
   const fetchPosts = useCallback(async () => {
     if (!user?.id || !activeWorkspace?.id) return;

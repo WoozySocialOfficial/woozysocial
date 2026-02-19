@@ -2,6 +2,7 @@
  * TeamContent Component - Manages workspace team members, invitations, and agency roster
  */
 import React, { useState, lazy, Suspense } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useTeamMembers, usePendingInvites, useAgencyAccess, useInvalidateQueries } from "../hooks/useQueries";
@@ -34,6 +35,7 @@ export const TeamContent = () => {
   const { user, subscriptionTier } = useAuth();
   const { activeWorkspace, isOwner, canManageTeam } = useWorkspace();
   const { invalidateTeam } = useInvalidateQueries();
+  const queryClient = useQueryClient();
 
   // Use React Query for cached data fetching
   const {
@@ -223,37 +225,50 @@ export const TeamContent = () => {
   };
 
   const handleTogglePermission = async (memberId, permName, value) => {
+    // Map camelCase (API) to snake_case (cache)
+    const permMap = {
+      canFinalApproval: 'can_final_approval',
+      canManageTeam: 'can_manage_team',
+      canApprovePosts: 'can_approve_posts',
+    };
+    const snakePerm = permMap[permName];
+    const queryKey = ["teamMembers", activeWorkspace.id];
+
+    // Save previous state for rollback
+    const previousData = queryClient.getQueryData(queryKey);
+
+    // Optimistic update — flip the toggle instantly
+    if (snakePerm) {
+      queryClient.setQueryData(queryKey, (old) =>
+        (old || []).map(member =>
+          member.user_id === memberId
+            ? { ...member, permissions: { ...member.permissions, [snakePerm]: value } }
+            : member
+        )
+      );
+    }
+
+    // Fire API call in background
     try {
-      const payload = {
-        memberId,
-        userId: user.id,
-        permissions: { [permName]: value },
-      };
-
-      console.log('🔵 [FRONTEND] handleTogglePermission called');
-      console.log('🔵 [FRONTEND] permName:', permName);
-      console.log('🔵 [FRONTEND] value:', value);
-      console.log('🔵 [FRONTEND] Full payload:', JSON.stringify(payload, null, 2));
-
       const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          userId: user.id,
+          permissions: { [permName]: value },
+        }),
       });
 
       const data = await response.json();
-      console.log('🔵 [FRONTEND] Response status:', response.status);
-      console.log('🔵 [FRONTEND] Response data:', JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update permission');
       }
-
-      fetchTeamMembers();
     } catch (error) {
-      console.error('🔴 [FRONTEND] Error toggling permission:', error);
+      // Revert on failure
+      queryClient.setQueryData(queryKey, previousData);
+      console.error('Error toggling permission:', error);
       alert(error.message || 'Failed to update permission');
     }
   };

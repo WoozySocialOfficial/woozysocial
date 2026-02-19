@@ -291,7 +291,7 @@
   height: 20px;
   background-color: #d1d5db;
   border-radius: 10px;
-  transition: background-color 0.2s;
+  transition: background-color 0.1s;
   flex-shrink: 0;
 }
 
@@ -304,7 +304,7 @@
   height: 16px;
   background-color: #ffffff;
   border-radius: 50%;
-  transition: transform 0.2s;
+  transition: transform 0.1s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 

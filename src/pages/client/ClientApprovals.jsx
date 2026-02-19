@@ -19,7 +19,8 @@ export const ClientApprovals = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { invalidatePosts } = useInvalidateQueries();
   const [selectedPost, setSelectedPost] = useState(null);
-  const [activeTab, setActiveTab] = useState("pending_client");
+  const urlTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(urlTab || "pending_client");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -31,6 +32,13 @@ export const ClientApprovals = () => {
 
   // Get postId from URL query params
   const urlPostId = searchParams.get('postId');
+
+  // Switch tab when URL tab param changes (e.g., clicking a notification)
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
 
   // Use React Query for cached data fetching
   const {
