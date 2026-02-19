@@ -14,11 +14,12 @@ module.exports = async function handler(req, res) {
   const supabase = getSupabase();
   const { workspaceId, userId, canFinalApproval } = req.body;
 
-  console.log('🧪 TEST ENDPOINT - UPDATE PERMISSION');
+  console.log('🧪 TEST ENDPOINT - UPDATE PERMISSION - v2');
   console.log('  workspaceId:', workspaceId);
   console.log('  userId:', userId);
   console.log('  canFinalApproval:', canFinalApproval);
   console.log('  typeof canFinalApproval:', typeof canFinalApproval);
+  console.log('  timestamp:', new Date().toISOString());
 
   // Direct update - no complex logic
   const { data, error } = await supabase
