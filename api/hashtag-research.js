@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       return sendError(res, "Topic is required", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       // Return curated fallback hashtags
       return sendSuccess(res, {
@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Use OpenAI to generate relevant hashtags
+    // Use Claude AI to generate relevant hashtags
     const hashtags = await generateHashtagsWithAI(topic, platform, count, apiKey);
 
     return sendSuccess(res, {
@@ -55,17 +55,17 @@ module.exports = async (req, res) => {
 };
 
 /**
- * Generate hashtags using OpenAI
+ * Generate hashtags using Claude AI
  */
 async function generateHashtagsWithAI(topic, platform, count, apiKey) {
   const platformContext = platform ? getPlatformContext(platform) : "";
 
   const systemPrompt = `Return ONLY hashtags, one per line with #. Mix popular + niche. All lowercase. No explanations.${platformContext ? '\n' + platformContext : ''}`;
 
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o-mini',
+  const response = await axios.post('https://api.anthropic.com/v1/messages', {
+    model: 'claude-haiku-4-5-20251001',
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Generate ${count} hashtags for: "${topic}"` }
     ],
     temperature: 0.7,
@@ -73,11 +73,12 @@ async function generateHashtagsWithAI(topic, platform, count, apiKey) {
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
     }
   });
 
-  const content = response.data.choices[0]?.message?.content || '';
+  const content = response.data.content?.[0]?.text || '';
 
   // Parse hashtags from response
   const hashtags = content

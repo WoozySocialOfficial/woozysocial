@@ -282,7 +282,7 @@ const OPTIONAL_ENV_VARS = [
   'AYRSHARE_PROFILE_KEY',
   'AYRSHARE_PRIVATE_KEY',
   'AYRSHARE_DOMAIN',
-  'OPENAI_API_KEY',
+  'ANTHROPIC_API_KEY',
   'RESEND_API_KEY',
   'APP_URL',
   'FRONTEND_URL'
@@ -321,7 +321,7 @@ function isServiceConfigured(service) {
     supabase: ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'],
     ayrshare: ['AYRSHARE_API_KEY'],
     ayrshareJwt: ['AYRSHARE_PRIVATE_KEY', 'AYRSHARE_DOMAIN'],
-    openai: ['OPENAI_API_KEY'],
+    anthropic: ['ANTHROPIC_API_KEY'],
     resend: ['RESEND_API_KEY']
   };
 

@@ -81,7 +81,7 @@ async function getBrandProfile(workspaceId, userId) {
 
 // Generate post using OpenAI
 async function generateWithAI(prompt, websiteData, brandProfile, platforms, useEmojis = true) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     throw new Error('AI API key not configured');
@@ -129,10 +129,10 @@ ${brandContext}${websiteContext}
 Output 3 variations separated by --- on its own line. No bold, no markdown, no labels, no numbering.
 Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold take or question.`;
 
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o-mini',
+  const response = await axios.post('https://api.anthropic.com/v1/messages', {
+    model: 'claude-haiku-4-5-20251001',
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Write 3 social media posts about: ${prompt}` }
     ],
     temperature: 0.85,
@@ -140,11 +140,12 @@ Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold tak
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
     }
   });
 
-  const content = response.data.choices[0]?.message?.content || '';
+  const content = response.data.content?.[0]?.text || '';
 
   // Parse variations
   let variations;

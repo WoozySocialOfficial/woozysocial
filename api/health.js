@@ -21,7 +21,7 @@ module.exports = function handler(req, res) {
     AYRSHARE_PROFILE_KEY: !!process.env.AYRSHARE_PROFILE_KEY,
     AYRSHARE_PRIVATE_KEY: !!process.env.AYRSHARE_PRIVATE_KEY,
     AYRSHARE_DOMAIN: !!process.env.AYRSHARE_DOMAIN,
-    OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+    ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
     RESEND_API_KEY: !!process.env.RESEND_API_KEY
   };
 

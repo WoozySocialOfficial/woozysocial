@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
       return sendError(res, "Post text is required", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return sendSuccess(res, {
         suggestions: getFallbackSuggestions(text, platforms, hasMedia, scoreBreakdown),
@@ -67,10 +67,10 @@ async function optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdo
   const systemPrompt = `Return ONLY a JSON array. Max 3 suggestions sorted by impact. Each: {"type":"rewrite"|"add_hook"|"add_cta"|"add_hashtags","title":"3-6 words","description":"1 sentence","original":"","improved":"text","impact":1-20}. No markdown. Keep original voice. Be specific with actual rewritten text.
 Platforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join(", ")}` : ''}${!hasMedia ? '\nNo media attached.' : ''}`;
 
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o-mini',
+  const response = await axios.post('https://api.anthropic.com/v1/messages', {
+    model: 'claude-haiku-4-5-20251001',
+    system: systemPrompt,
     messages: [
-      { role: 'system', content: systemPrompt },
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
@@ -78,11 +78,12 @@ Platforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join
   }, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
     }
   });
 
-  const content = response.data.choices[0]?.message?.content || '[]';
+  const content = response.data.content?.[0]?.text || '[]';
 
   try {
     // Strip markdown code fences if present

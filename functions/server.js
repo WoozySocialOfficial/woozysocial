@@ -1946,16 +1946,13 @@ app.post("/api/hashtag/generate", async (req, res) => {
       return res.status(400).json({ error: "Text is required" });
     }
 
-    // Call OpenAI to generate relevant hashtags
+    // Call Claude AI to generate relevant hashtags
     const aiResponse = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      'https://api.anthropic.com/v1/messages',
       {
-        model: 'gpt-4o-mini',
+        model: 'claude-haiku-4-5-20251001',
+        system: 'You are a social media hashtag expert. Generate relevant, trending hashtags based on the content provided. Return ONLY the hashtags, one per line, without numbering or explanation.',
         messages: [
-          {
-            role: 'system',
-            content: 'You are a social media hashtag expert. Generate relevant, trending hashtags based on the content provided. Return ONLY the hashtags, one per line, without numbering or explanation.'
-          },
           {
             role: 'user',
             content: `Generate ${numHashtags || 5} relevant hashtags for this social media post:\n\n${text}`
@@ -1967,12 +1964,13 @@ app.post("/api/hashtag/generate", async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
         }
       }
     );
 
-    const hashtagText = aiResponse.data.choices[0]?.message?.content || '';
+    const hashtagText = aiResponse.data.content?.[0]?.text || '';
     const hashtags = hashtagText
       .split('\n')
       .map(tag => tag.trim())
@@ -2350,13 +2348,13 @@ app.post("/api/generate-post", async (req, res) => {
 
     systemPrompt += `\n\nGenerate 3 short variations. Separate each with "---" on a new line. Be concise. Include hashtags.`;
 
-    // Call OpenAI API
+    // Call Claude AI API
     const aiResponse = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      'https://api.anthropic.com/v1/messages',
       {
-        model: 'gpt-4o-mini',
+        model: 'claude-haiku-4-5-20251001',
+        system: systemPrompt,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
@@ -2365,12 +2363,13 @@ app.post("/api/generate-post", async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
         }
       }
     );
 
-    const generatedText = aiResponse.data.choices[0]?.message?.content || '';
+    const generatedText = aiResponse.data.content?.[0]?.text || '';
 
     // Split variations using the --- delimiter
     let variations = generatedText.split(/\n---\n|\n\n---\n\n/).map(v => v.trim()).filter(v => v.length > 0);
