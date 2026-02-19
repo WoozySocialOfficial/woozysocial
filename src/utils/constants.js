@@ -7,6 +7,10 @@ const baseURL = import.meta.env.VITE_API_URL ||
       ? `${window.location.protocol}//${window.location.hostname}`
       : "https://www.woozysocials.com");
 
+console.log('🔴 [CONSTANTS] baseURL set to:', baseURL);
+console.log('🔴 [CONSTANTS] window.location.hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+console.log('🔴 [CONSTANTS] VITE_API_URL:', import.meta.env.VITE_API_URL);
+
 // ===========================
 // SUBSCRIPTION TIERS
 // ===========================
