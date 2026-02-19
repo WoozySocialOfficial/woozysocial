@@ -248,6 +248,26 @@ export const Approvals = () => {
       const data = await res.json();
 
       if (data.success) {
+        // Show success toast with action-specific message
+        const actionMessages = {
+          'approve': 'Post approved successfully!',
+          'reject': 'Post rejected',
+          'changes_requested': 'Changes requested from creator',
+          'mark_resolved': 'Post marked as resolved and resubmitted',
+          'forward_to_client': '✓ Forwarded to client for their review'
+        };
+
+        toast({
+          title: actionMessages[action] || 'Action completed',
+          description: action === 'forward_to_client'
+            ? 'The post has been moved to the client approval queue'
+            : undefined,
+          status: 'success',
+          duration: 4000,
+          isClosable: true,
+          position: 'top'
+        });
+
         // Refresh posts
         fetchPosts();
         setSelectedPost(null);
@@ -255,6 +275,13 @@ export const Approvals = () => {
       }
     } catch (error) {
       console.error('Error updating approval:', error);
+      toast({
+        title: 'Action failed',
+        description: error.message || 'Failed to update approval status',
+        status: 'error',
+        duration: 4000,
+        isClosable: true
+      });
     } finally {
       setSubmitting(false);
     }
