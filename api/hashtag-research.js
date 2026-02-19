@@ -60,30 +60,19 @@ module.exports = async (req, res) => {
 async function generateHashtagsWithAI(topic, platform, count, apiKey) {
   const platformContext = platform ? getPlatformContext(platform) : "";
 
-  const systemPrompt = `You are a social media expert who specializes in hashtag strategy. Generate highly relevant, trending hashtags that will maximize reach and engagement.
-
-${platformContext}
-
-Rules:
-1. Return ONLY hashtags, no explanations
-2. Include a mix of:
-   - Popular/trending hashtags (high reach)
-   - Niche-specific hashtags (targeted audience)
-   - Branded/unique hashtags (differentiators)
-3. Order by relevance (most relevant first)
-4. No spaces in hashtags
-5. All lowercase
-6. Each hashtag on its own line
-7. Include the # symbol`;
+  const staticPrompt = `Return ONLY hashtags, one per line with #. Mix popular + niche. All lowercase. No explanations.`;
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
     model: 'claude-haiku-4-5-20251001',
-    system: systemPrompt,
+    system: [
+      { type: 'text', text: staticPrompt, cache_control: { type: 'ephemeral' } },
+      ...(platformContext ? [{ type: 'text', text: platformContext }] : [])
+    ],
     messages: [
       { role: 'user', content: `Generate ${count} hashtags for: "${topic}"` }
     ],
     temperature: 0.7,
-    max_tokens: 200
+    max_tokens: 150
   }, {
     headers: {
       'Content-Type': 'application/json',
