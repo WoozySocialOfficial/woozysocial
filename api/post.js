@@ -15,7 +15,7 @@ const {
   invalidateWorkspaceCache
 } = require("./_utils");
 const { hasFeature } = require("./_utils-access-control");
-const { sendPostScheduledNotification, sendApprovalRequestNotification, sendPostUpdatedNotification, sendPostFailedNotification } = require("./notifications/helpers");
+const { sendPostScheduledNotification, sendApprovalRequestNotification, sendFinalApprovalRequestNotification, sendPostUpdatedNotification, sendPostFailedNotification } = require("./notifications/helpers");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -162,6 +162,28 @@ async function workspaceHasClients(supabase, workspaceId) {
     return clients && clients.length > 0;
   } catch (error) {
     logError('workspaceHasClients', error, { workspaceId });
+    return false;
+  }
+}
+
+// Helper to check if workspace has final approvers
+// Used to determine if posts need internal review before client approval
+async function workspaceHasFinalApprovers(supabase, workspaceId) {
+  if (!workspaceId) return false;
+
+  try {
+    const { data: finalApprovers } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .eq('can_final_approval', true)
+      .limit(1);
+
+    console.log(`[workspaceHasFinalApprovers] workspaceId: ${workspaceId}, final approvers found:`, finalApprovers?.length || 0);
+
+    return finalApprovers && finalApprovers.length > 0;
+  } catch (error) {
+    logError('workspaceHasFinalApprovers', error, { workspaceId });
     return false;
   }
 }
@@ -426,7 +448,10 @@ module.exports = async function handler(req, res) {
       // Require approval if tier has the feature OR if workspace has clients
       requiresApproval = tierHasApproval || hasClients;
 
-      console.log('[post] Workspace owner tier:', tier, '| Tier has approval:', tierHasApproval, '| Has clients:', hasClients, '| Requires approval:', requiresApproval);
+      // Check if workspace has final approvers for internal review layer
+      const hasFinalApprovers = workspaceId ? await workspaceHasFinalApprovers(supabase, workspaceId) : false;
+
+      console.log('[post] Workspace owner tier:', tier, '| Tier has approval:', tierHasApproval, '| Has clients:', hasClients, '| Has final approvers:', hasFinalApprovers, '| Requires approval:', requiresApproval);
 
     // If approval required, save as pending_approval
     if (requiresApproval) {
@@ -438,6 +463,9 @@ module.exports = async function handler(req, res) {
       if (postId) {
         console.log('[post] Updating existing post:', postId);
 
+        // Determine initial approval status for update
+        const updateApprovalStatus = hasFinalApprovers ? 'pending_internal' : 'pending';
+
         const { data: updatedPost, error: updateError } = await supabase
           .from("posts")
           .update({
@@ -445,7 +473,7 @@ module.exports = async function handler(req, res) {
             media_urls: mediaUrls || [],
             scheduled_at: new Date(scheduledDate).toISOString(),
             platforms: platforms,
-            approval_status: 'pending', // Reset for re-approval
+            approval_status: updateApprovalStatus, // Reset for re-approval with correct status
             post_settings: settings, // Phase 4: Save post settings
             updated_at: new Date().toISOString()
           })
@@ -470,15 +498,25 @@ module.exports = async function handler(req, res) {
 
         const updatedByName = userProfile?.full_name || userProfile?.email || 'Someone';
 
-        // Send notifications in parallel to avoid timeout
+        // Send notifications based on approval workflow
         if (workspaceId) {
+          // Send notification to appropriate reviewers
+          const approvalNotificationPromise = hasFinalApprovers
+            ? sendFinalApprovalRequestNotification(supabase, {
+                workspaceId,
+                postId: updatedPost.id,
+                platforms,
+                createdByUserId: userId
+              }).catch(err => logError('post.notification.finalApprovalRequest', err, { postId: updatedPost.id }))
+            : sendApprovalRequestNotification(supabase, {
+                workspaceId,
+                postId: updatedPost.id,
+                platforms,
+                createdByUserId: userId
+              }).catch(err => logError('post.notification.approvalRequest', err, { postId: updatedPost.id }));
+
           await Promise.all([
-            sendApprovalRequestNotification(supabase, {
-              workspaceId,
-              postId: updatedPost.id,
-              platforms,
-              createdByUserId: userId
-            }).catch(err => logError('post.notification.approvalRequest', err, { postId: updatedPost.id })),
+            approvalNotificationPromise,
             sendPostUpdatedNotification(supabase, {
               postId: updatedPost.id,
               workspaceId,
@@ -498,6 +536,9 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      // Determine initial approval status based on workspace configuration
+      const initialApprovalStatus = hasFinalApprovers ? 'pending_internal' : 'pending';
+
       // Otherwise, CREATE a new post
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
           user_id: userId,
@@ -508,7 +549,7 @@ module.exports = async function handler(req, res) {
           status: 'pending_approval',
           scheduled_at: new Date(scheduledDate).toISOString(),
           platforms: platforms,
-          approval_status: 'pending',
+          approval_status: initialApprovalStatus,
           requires_approval: true,
           post_settings: settings // Phase 4: Save post settings
         }]).select().single();
@@ -518,15 +559,25 @@ module.exports = async function handler(req, res) {
           return sendError(res, "Failed to save post for approval", ErrorCodes.DATABASE_ERROR);
         }
 
-        // Send notifications in parallel to avoid timeout
+        // Send notifications based on approval workflow
         if (workspaceId) {
+          // Send notification to appropriate reviewers
+          const approvalNotificationPromise = hasFinalApprovers
+            ? sendFinalApprovalRequestNotification(supabase, {
+                workspaceId,
+                postId: savedPost?.id,
+                platforms,
+                createdByUserId: userId
+              }).catch(err => logError('post.notification.finalApprovalRequest', err, { postId: savedPost?.id }))
+            : sendApprovalRequestNotification(supabase, {
+                workspaceId,
+                postId: savedPost?.id,
+                platforms,
+                createdByUserId: userId
+              }).catch(err => logError('post.notification.approvalRequest', err, { postId: savedPost?.id }));
+
           await Promise.all([
-            sendApprovalRequestNotification(supabase, {
-              workspaceId,
-              postId: savedPost?.id,
-              platforms,
-              createdByUserId: userId
-            }).catch(err => logError('post.notification.approvalRequest', err, { postId: savedPost?.id })),
+            approvalNotificationPromise,
             sendPostScheduledNotification(supabase, {
               postId: savedPost?.id,
               workspaceId,
@@ -542,7 +593,10 @@ module.exports = async function handler(req, res) {
 
       return sendSuccess(res, {
         status: 'pending_approval',
-        message: 'Post scheduled and awaiting approval',
+        approval_status: initialApprovalStatus,
+        message: hasFinalApprovers
+          ? 'Post submitted for internal review'
+          : 'Post scheduled and awaiting approval',
         postId: savedPost?.id
       });
     } else {

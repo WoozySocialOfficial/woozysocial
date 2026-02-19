@@ -136,8 +136,11 @@ export const ClientCalendar = () => {
   const getStatusColor = (status, approvalStatus) => {
     if (approvalStatus === 'rejected') return '#ef4444';
     if (approvalStatus === 'approved') return '#10b981';
+    if (approvalStatus === 'pending_internal') return '#ff9800';     // Orange - pending final approver
+    if (approvalStatus === 'pending_client') return '#9c27b0';         // Purple - awaiting client
+    if (approvalStatus === 'pending') return '#f59e0b';                // Amber - legacy pending
+    if (approvalStatus === 'changes_requested') return '#f97316';      // Orange - changes requested
     if (status === 'pending_approval') return '#f59e0b';
-    if (status === 'changes_requested') return '#f97316';
     return '#6b7280';
   };
 
@@ -234,8 +237,12 @@ export const ClientCalendar = () => {
           {/* Legend */}
           <div className="calendar-legend">
             <div className="legend-item">
-              <div className="legend-dot" style={{ backgroundColor: '#f59e0b' }} />
-              <span>Pending Approval</span>
+              <div className="legend-dot" style={{ backgroundColor: '#ff9800' }} />
+              <span>Pending Final Approver</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-dot" style={{ backgroundColor: '#9c27b0' }} />
+              <span>Awaiting Client</span>
             </div>
             <div className="legend-item">
               <div className="legend-dot" style={{ backgroundColor: '#10b981' }} />

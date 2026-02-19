@@ -35,10 +35,10 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invalid ID format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Verify user is a member of the workspace
+    // Verify user is a member of the workspace and fetch all permissions
     const { data: membership, error: membershipError } = await supabase
       .from('workspace_members')
-      .select('role')
+      .select('role, can_final_approval, can_approve_posts')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
       .single();
@@ -83,8 +83,31 @@ module.exports = async function handler(req, res) {
     if (status && status !== 'all') {
       query = query.eq('approval_status', status);
     } else if (!status) {
-      // Default to showing posts that need action (pending or changes_requested)
-      query = query.in('approval_status', ['pending', 'changes_requested']);
+      // NEW: Default filter based on user permissions
+      const hasFinalApproval = membership.can_final_approval === true || membership.role === 'owner';
+      const isClientApprover = (
+        membership.role === 'viewer' &&
+        membership.can_approve_posts === true
+      ) || membership.role === 'owner';
+
+      if (hasFinalApproval && !isClientApprover) {
+        // Pure final approver: see pending_internal and changes_requested
+        query = query.in('approval_status', ['pending_internal', 'changes_requested']);
+      } else if (isClientApprover && !hasFinalApproval) {
+        // Pure client approver: see pending_client, pending, changes_requested
+        query = query.in('approval_status', ['pending_client', 'pending', 'changes_requested']);
+      } else if (hasFinalApproval && isClientApprover) {
+        // Both: see everything except final states
+        query = query.in('approval_status', [
+          'pending_internal',
+          'pending_client',
+          'pending',
+          'changes_requested'
+        ]);
+      } else {
+        // Regular team member: see nothing in default view (they just create posts)
+        query = query.eq('approval_status', 'none');  // Returns empty
+      }
     }
     // If status === 'all', don't filter by approval_status
 
@@ -145,6 +168,8 @@ module.exports = async function handler(req, res) {
 
     // Group by approval status for UI convenience
     const grouped = {
+      pending_internal: postsWithMeta.filter(p => p.approval_status === 'pending_internal'),
+      pending_client: postsWithMeta.filter(p => p.approval_status === 'pending_client'),
       pending: postsWithMeta.filter(p => p.approval_status === 'pending'),
       changes_requested: postsWithMeta.filter(p => p.approval_status === 'changes_requested'),
       approved: postsWithMeta.filter(p => p.approval_status === 'approved'),
@@ -155,13 +180,20 @@ module.exports = async function handler(req, res) {
       posts: postsWithMeta,
       grouped: grouped,
       counts: {
+        pending_internal: grouped.pending_internal.length,
+        pending_client: grouped.pending_client.length,
         pending: grouped.pending.length,
         changes_requested: grouped.changes_requested.length,
         approved: grouped.approved.length,
         rejected: grouped.rejected.length,
         total: postsWithMeta.length
       },
-      userRole: membership.role
+      userRole: membership.role,
+      hasFinalApproval: membership.can_final_approval === true || membership.role === 'owner',
+      isClientApprover: (
+        (membership.role === 'viewer' && membership.can_approve_posts === true) ||
+        membership.role === 'owner'
+      )
     });
 
   } catch (error) {

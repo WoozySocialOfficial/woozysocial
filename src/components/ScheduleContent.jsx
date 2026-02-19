@@ -680,6 +680,8 @@ export const ScheduleContent = () => {
   const scheduledPosts = posts.filter(p => p.scheduleDate);
   const approvalCounts = {
     all: scheduledPosts.length,
+    pending_internal: scheduledPosts.filter(p => p.approvalStatus === 'pending_internal').length,
+    pending_client: scheduledPosts.filter(p => p.approvalStatus === 'pending_client').length,
     pending: scheduledPosts.filter(p => p.approvalStatus === 'pending').length,
     changes_requested: scheduledPosts.filter(p => p.approvalStatus === 'changes_requested').length,
     approved: scheduledPosts.filter(p => p.approvalStatus === 'approved').length,
@@ -687,7 +689,7 @@ export const ScheduleContent = () => {
   };
 
   // Show approval filter tabs if tier has feature OR if any posts have non-approved approval status
-  const hasApprovalPosts = approvalCounts.pending > 0 || approvalCounts.changes_requested > 0 || approvalCounts.rejected > 0;
+  const hasApprovalPosts = approvalCounts.pending_internal > 0 || approvalCounts.pending_client > 0 || approvalCounts.pending > 0 || approvalCounts.changes_requested > 0 || approvalCounts.rejected > 0;
   const showApprovalFilters = hasApprovalWorkflows || hasApprovalPosts;
 
   return (
@@ -753,10 +755,22 @@ export const ScheduleContent = () => {
             All <span className="filter-count">{approvalCounts.all}</span>
           </button>
           <button
+            className={`filter-tab pending_internal ${approvalFilter === 'pending_internal' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('pending_internal')}
+          >
+            <FaClock size={12} /> Pending Final Approver <span className="filter-count">{approvalCounts.pending_internal}</span>
+          </button>
+          <button
+            className={`filter-tab pending_client ${approvalFilter === 'pending_client' ? 'active' : ''}`}
+            onClick={() => setApprovalFilter('pending_client')}
+          >
+            <FaClock size={12} /> Awaiting Client <span className="filter-count">{approvalCounts.pending_client}</span>
+          </button>
+          <button
             className={`filter-tab pending ${approvalFilter === 'pending' ? 'active' : ''}`}
             onClick={() => setApprovalFilter('pending')}
           >
-            <FaClock size={12} /> Pending <span className="filter-count">{approvalCounts.pending}</span>
+            <FaClock size={12} /> Pending (Legacy) <span className="filter-count">{approvalCounts.pending}</span>
           </button>
           <button
             className={`filter-tab changes_requested ${approvalFilter === 'changes_requested' ? 'active' : ''}`}

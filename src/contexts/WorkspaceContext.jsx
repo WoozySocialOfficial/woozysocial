@@ -342,10 +342,19 @@ export const WorkspaceProvider = ({ children }) => {
 
   // DB toggle values from workspace membership
   const canApprove = workspaceMembership
-    ? (userRole === TEAM_ROLES.OWNER || workspaceMembership.can_approve_posts === true)
+    ? (
+        // Only viewers with can_approve_posts OR owners
+        (userRole === TEAM_ROLES.VIEWER && workspaceMembership.can_approve_posts === true) ||
+        userRole === TEAM_ROLES.OWNER
+      )
     : false;
   const canManageTeam = workspaceMembership
     ? (userRole === TEAM_ROLES.OWNER || workspaceMembership.can_manage_team === true)
+    : false;
+
+  // NEW: Final Approver permission
+  const hasFinalApproval = workspaceMembership
+    ? (userRole === TEAM_ROLES.OWNER || workspaceMembership.can_final_approval === true)
     : false;
 
   // Check if user has a specific permission (toggle-aware)
@@ -355,6 +364,15 @@ export const WorkspaceProvider = ({ children }) => {
     // Toggle-based permissions — check DB columns
     if (permissionName === 'canApprovePosts') return canApprove;
     if (permissionName === 'canManageTeam') return canManageTeam;
+
+    // NEW: Final Approver permission
+    if (permissionName === 'canFinalApproval') {
+      // Only members with toggle OR owners
+      return (
+        (userRole === TEAM_ROLES.MEMBER && workspaceMembership.can_final_approval === true) ||
+        userRole === TEAM_ROLES.OWNER
+      );
+    }
 
     // All other permissions — static role lookup
     return hasPermission(userRole, permissionName);
@@ -470,6 +488,7 @@ export const WorkspaceProvider = ({ children }) => {
     // Toggle-based permissions
     canApprove,
     canManageTeam,
+    hasFinalApproval,  // NEW: Final Approver permission
 
     // Permission checks
     hasRolePermission,

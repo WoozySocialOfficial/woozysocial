@@ -19,7 +19,7 @@ export const ClientApprovals = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { invalidatePosts } = useInvalidateQueries();
   const [selectedPost, setSelectedPost] = useState(null);
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("pending_client");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -27,6 +27,7 @@ export const ClientApprovals = () => {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [highlightedPostId, setHighlightedPostId] = useState(null);
   const postRefs = useRef({});
+  const processedUrlPostIds = useRef(new Set());
 
   // Get postId from URL query params
   const urlPostId = searchParams.get('postId');
@@ -39,10 +40,33 @@ export const ClientApprovals = () => {
   } = usePendingApprovals(activeWorkspace?.id, user?.id, activeTab);
 
   const tabs = [
-    { id: "pending", label: "Pending", icon: FaClock },
-    { id: "changes_requested", label: "Changes Requested", icon: FaEdit },
-    { id: "approved", label: "Approved", icon: FaCheck },
-    { id: "rejected", label: "Rejected", icon: FaTimes }
+    {
+      id: "pending_client",
+      label: "Awaiting Approval",
+      icon: FaClock,
+      description: "Posts forwarded by final approvers"
+    },
+    {
+      id: "pending",
+      label: "Direct Pending",
+      icon: FaClock,
+      description: "Posts sent directly (no final approver)"
+    },
+    {
+      id: "changes_requested",
+      label: "Changes Requested",
+      icon: FaEdit
+    },
+    {
+      id: "approved",
+      label: "Approved",
+      icon: FaCheck
+    },
+    {
+      id: "rejected",
+      label: "Rejected",
+      icon: FaTimes
+    }
   ];
 
   // Handle deep-link from dashboard activity click
@@ -82,6 +106,10 @@ export const ClientApprovals = () => {
     const findAndSelectPost = async () => {
       if (!urlPostId || !user?.id || !activeWorkspace?.id) return;
 
+      // Prevent processing the same postId multiple times
+      if (processedUrlPostIds.current.has(urlPostId)) return;
+      processedUrlPostIds.current.add(urlPostId);
+
       // Fetch all posts to find the one with this ID across all tabs
       try {
         const res = await fetch(
@@ -110,39 +138,54 @@ export const ClientApprovals = () => {
         }
 
         if (foundPost && foundTab) {
-          // Switch to the correct tab
+          // Switch to the correct tab if needed
           if (foundTab !== activeTab) {
             setActiveTab(foundTab);
           }
 
-          // Wait for tab to load, then select and highlight
-          setTimeout(() => {
-            setSelectedPost(foundPost);
-            setHighlightedPostId(foundPost.id);
+          // Wait for React Query to fetch posts for the new tab AND for DOM to update
+          // Increased timeout to ensure posts are loaded
+          const waitTime = foundTab !== activeTab ? 800 : 300;
 
-            // Scroll to the post
-            if (postRefs.current[foundPost.id]) {
-              postRefs.current[foundPost.id].scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }
+          setTimeout(() => {
+            // Double-check the post is now in the posts array
+            // This handles the case where React Query needs time to fetch
+            const checkAndScroll = () => {
+              setSelectedPost(foundPost);
+              setHighlightedPostId(foundPost.id);
+
+              // Scroll to the post
+              if (postRefs.current[foundPost.id]) {
+                postRefs.current[foundPost.id].scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+              } else {
+                // Post not in DOM yet, try again after a short delay
+                setTimeout(checkAndScroll, 200);
+              }
+            };
+
+            checkAndScroll();
 
             // Remove highlight after animation
             setTimeout(() => {
               setHighlightedPostId(null);
               // Clear the URL param
               setSearchParams({});
+              // Clear the processed ID so same post can be navigated to again later
+              processedUrlPostIds.current.delete(urlPostId);
             }, 3000);
-          }, 300);
+          }, waitTime);
         }
       } catch (error) {
         console.error('Error finding post:', error);
+        processedUrlPostIds.current.delete(urlPostId); // Clear on error so it can retry
       }
     };
 
     findAndSelectPost();
-  }, [urlPostId, user?.id, activeWorkspace?.id, activeTab, setSearchParams]);
+  }, [urlPostId, user?.id, activeWorkspace?.id, setSearchParams]);
 
   // Refresh function that invalidates cache
   const fetchPosts = () => {
@@ -328,10 +371,14 @@ export const ClientApprovals = () => {
           ) : sortedPosts.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">✨</span>
-              <p>No {activeTab === "pending" ? "posts awaiting approval" :
-                     activeTab === "changes_requested" ? "posts with changes requested" :
-                     activeTab === "approved" ? "approved posts" :
-                     "rejected posts"}</p>
+              <p>No {
+                activeTab === "pending_client" ? "posts awaiting your approval" :
+                activeTab === "pending" ? "direct posts pending" :
+                activeTab === "changes_requested" ? "posts with changes requested" :
+                activeTab === "approved" ? "approved posts" :
+                activeTab === "rejected" ? "rejected posts" :
+                "posts"
+              }</p>
             </div>
           ) : (
             sortedPosts.map((post) => (

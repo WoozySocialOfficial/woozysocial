@@ -283,7 +283,8 @@ export const ROLE_CONFIG = {
       canManageTeam: true,
       canManageSettings: true,
       canDeletePosts: true,
-      canApprovePosts: true,
+      canFinalApproval: true,      // NEW: Owners are final approvers by default
+      canApprovePosts: true,       // Owners can still approve as clients
       canCreatePosts: true,
       canEditOwnPosts: true,
       canEditAllPosts: true,
@@ -303,10 +304,11 @@ export const ROLE_CONFIG = {
     displayName: 'Member',
     description: 'Create and manage own posts',
     permissions: {
-      canManageTeam: false,    // DB toggle overrides this
+      canManageTeam: false,       // DB toggle overrides this
       canManageSettings: false,
       canDeletePosts: false,
-      canApprovePosts: false,  // DB toggle overrides this
+      canFinalApproval: false,    // NEW: DB toggle overrides this
+      canApprovePosts: false,     // REMOVED: Members no longer approve (final approvers do)
       canCreatePosts: true,
       canEditOwnPosts: true,
       canEditAllPosts: false,
@@ -318,7 +320,7 @@ export const ROLE_CONFIG = {
       canManageConnectedAccounts: false,
       canAccessSocialInbox: true
     },
-    // Approvals tab added dynamically when can_approve_posts is true
+    // Approvals tab added dynamically when can_final_approval is true
     tabs: ['dashboard', 'brand-profile', 'compose', 'schedule', 'posts', 'assets', 'analytics', 'social-inbox', 'team']
   },
 
@@ -330,7 +332,8 @@ export const ROLE_CONFIG = {
       canManageTeam: false,
       canManageSettings: false,
       canDeletePosts: false,
-      canApprovePosts: false,  // DB toggle overrides this
+      canFinalApproval: false,    // NEW: Viewers are never final approvers
+      canApprovePosts: false,     // DB toggle overrides this (client approval)
       canCreatePosts: false,
       canEditOwnPosts: false,
       canEditAllPosts: false,

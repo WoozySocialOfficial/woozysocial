@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 import RoleGuard from '../components/roles/RoleGuard';
 import { baseURL } from '../utils/constants';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaShieldAlt, FaClock, FaEdit, FaCheck, FaTimes, FaCheckCircle, FaArrowRight, FaUser } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
 import './Approvals.css';
 
@@ -19,22 +19,26 @@ const PLATFORM_ICONS = {
 };
 
 const STATUS_LABELS = {
-  pending: 'Pending Review',
+  pending_internal: 'Pending Review',           // NEW
+  pending_client: 'Awaiting Client',              // NEW
+  pending: 'Pending Approval',                    // LEGACY
   approved: 'Approved',
   rejected: 'Rejected',
   changes_requested: 'Changes Requested'
 };
 
 const STATUS_COLORS = {
-  pending: '#afabf9',
-  approved: '#2ecc71',
-  rejected: '#e74c3c',
-  changes_requested: '#f39c12'
+  pending_internal: '#ff9800',    // Orange
+  pending_client: '#9c27b0',        // Purple
+  pending: '#afabf9',               // Light purple (legacy)
+  approved: '#2ecc71',              // Green
+  rejected: '#e74c3c',              // Red
+  changes_requested: '#f39c12'      // Amber
 };
 
 export const Approvals = () => {
   const { user } = useAuth();
-  const { activeWorkspace, workspaceMembership, canApprovePost } = useWorkspace();
+  const { activeWorkspace, workspaceMembership, canApprovePost, hasFinalApproval, canApprove } = useWorkspace();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +50,7 @@ export const Approvals = () => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [highlightedPostId, setHighlightedPostId] = useState(null);
   const postRefs = useRef({});
+  const processedUrlPostIds = useRef(new Set());
   const toast = useToast();
 
   // Get postId from URL query params
@@ -126,6 +131,10 @@ export const Approvals = () => {
     const findAndSelectPost = async () => {
       if (!urlPostId || !user?.id || !activeWorkspace?.id) return;
 
+      // Prevent processing the same postId multiple times
+      if (processedUrlPostIds.current.has(urlPostId)) return;
+      processedUrlPostIds.current.add(urlPostId);
+
       // Fetch all posts to find the one with this ID
       try {
         const res = await fetch(
@@ -154,32 +163,49 @@ export const Approvals = () => {
         }
 
         if (foundPost && foundStatus) {
-          // Switch to the correct filter
-          setFilter(foundStatus);
+          // Switch to the correct filter if needed
+          const needsTabSwitch = foundStatus !== filter;
+          if (needsTabSwitch) {
+            setFilter(foundStatus);
+          }
 
-          // Wait for posts to load, then select and highlight
+          // Wait for posts to load after filter change
+          // If we switched tabs, wait longer for fetch to complete
+          const waitTime = needsTabSwitch ? 800 : 300;
+
           setTimeout(() => {
-            setSelectedPost(foundPost);
-            setHighlightedPostId(foundPost.id);
+            // Check if post is available in posts array
+            const checkAndScroll = () => {
+              setSelectedPost(foundPost);
+              setHighlightedPostId(foundPost.id);
 
-            // Scroll to the post
-            if (postRefs.current[foundPost.id]) {
-              postRefs.current[foundPost.id].scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }
+              // Scroll to the post
+              if (postRefs.current[foundPost.id]) {
+                postRefs.current[foundPost.id].scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+              } else {
+                // Post not in DOM yet, retry
+                setTimeout(checkAndScroll, 200);
+              }
+            };
+
+            checkAndScroll();
 
             // Remove highlight after animation
             setTimeout(() => {
               setHighlightedPostId(null);
               // Clear the URL param
               setSearchParams({});
+              // Allow the same postId to be processed again later
+              processedUrlPostIds.current.delete(urlPostId);
             }, 3000);
-          }, 300);
+          }, waitTime);
         }
       } catch (error) {
         console.error('Error finding post:', error);
+        processedUrlPostIds.current.delete(urlPostId); // Clear on error
       }
     };
 
@@ -291,28 +317,74 @@ export const Approvals = () => {
 
       {/* Filter Tabs */}
       <div className="approval-filters">
-        <button
-          className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-          onClick={() => setFilter('pending')}
-        >
-          Pending
-        </button>
-        <button
-          className={`filter-tab ${filter === 'changes_requested' ? 'active' : ''}`}
-          onClick={() => setFilter('changes_requested')}
-        >
-          Changes Requested
-        </button>
+        {/* Final Approver tab - only for final approvers */}
+        {hasFinalApproval && (
+          <button
+            className={`filter-tab ${filter === 'pending_internal' ? 'active' : ''}`}
+            onClick={() => setFilter('pending_internal')}
+          >
+            <FaShieldAlt style={{ marginRight: '8px' }} />
+            Pending Review
+            {posts.filter(p => p.approval_status === 'pending_internal').length > 0 && (
+              <span className="filter-badge">{posts.filter(p => p.approval_status === 'pending_internal').length}</span>
+            )}
+          </button>
+        )}
+
+        {/* Client approval tab - only for client approvers */}
+        {canApprove && (
+          <button
+            className={`filter-tab ${filter === 'pending_client' ? 'active' : ''}`}
+            onClick={() => setFilter('pending_client')}
+          >
+            <FaClock style={{ marginRight: '8px' }} />
+            Awaiting Client
+            {posts.filter(p => p.approval_status === 'pending_client').length > 0 && (
+              <span className="filter-badge">{posts.filter(p => p.approval_status === 'pending_client').length}</span>
+            )}
+          </button>
+        )}
+
+        {/* Legacy pending tab - for backward compatibility */}
+        {(hasFinalApproval || canApprove) && (
+          <button
+            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
+            onClick={() => setFilter('pending')}
+          >
+            Pending
+            {posts.filter(p => p.approval_status === 'pending').length > 0 && (
+              <span className="filter-badge">{posts.filter(p => p.approval_status === 'pending').length}</span>
+            )}
+          </button>
+        )}
+
+        {/* Changes Requested tab - for all approvers */}
+        {(hasFinalApproval || canApprove) && (
+          <button
+            className={`filter-tab ${filter === 'changes_requested' ? 'active' : ''}`}
+            onClick={() => setFilter('changes_requested')}
+          >
+            <FaEdit style={{ marginRight: '8px' }} />
+            Changes Requested
+            {posts.filter(p => p.approval_status === 'changes_requested').length > 0 && (
+              <span className="filter-badge">{posts.filter(p => p.approval_status === 'changes_requested').length}</span>
+            )}
+          </button>
+        )}
+
         <button
           className={`filter-tab ${filter === 'approved' ? 'active' : ''}`}
           onClick={() => setFilter('approved')}
         >
+          <FaCheck style={{ marginRight: '8px' }} />
           Approved
         </button>
+
         <button
           className={`filter-tab ${filter === 'rejected' ? 'active' : ''}`}
           onClick={() => setFilter('rejected')}
         >
+          <FaTimes style={{ marginRight: '8px' }} />
           Rejected
         </button>
       </div>
@@ -324,7 +396,15 @@ export const Approvals = () => {
             <div className="loading-state">Loading posts...</div>
           ) : posts.length === 0 ? (
             <div className="empty-state">
-              <p>No {filter === 'pending' ? 'posts pending approval' : filter === 'changes_requested' ? 'posts with changes requested' : filter === 'approved' ? 'approved posts' : filter === 'rejected' ? 'rejected posts' : 'posts'}</p>
+              <p>No {
+                filter === 'pending_internal' ? 'posts pending internal review' :
+                filter === 'pending_client' ? 'posts awaiting client approval' :
+                filter === 'pending' ? 'posts pending approval' :
+                filter === 'changes_requested' ? 'posts with changes requested' :
+                filter === 'approved' ? 'approved posts' :
+                filter === 'rejected' ? 'rejected posts' :
+                'posts'
+              }</p>
             </div>
           ) : (
             posts.map((post) => (
@@ -476,19 +556,62 @@ export const Approvals = () => {
                 Status: {STATUS_LABELS[selectedPost.approval_status]}
               </div>
 
-              {/* Action Buttons - only show for pending and changes_requested */}
-              {(selectedPost.approval_status === 'pending' || selectedPost.approval_status === 'changes_requested') && (
-                <RoleGuard
-                  permission="canApprovePosts"
-                  fallbackType="message"
-                  fallbackMessage="You do not have permission to approve or reject posts. Only Admins and Clients can approve posts."
-                >
-                  <div className="approval-actions">
+              {/* Final Approver Actions - for pending_internal posts */}
+              {selectedPost.approval_status === 'pending_internal' && hasFinalApproval && (
+                <div className="approval-actions">
+                  <div className="action-section-header">
+                    <FaShieldAlt style={{ marginRight: '8px' }} />
+                    <span>Final Approver Actions</span>
+                  </div>
+                  <div className="action-buttons">
+                    <button
+                      className="btn-reject"
+                      onClick={() => handleApprovalAction('changes_requested')}
+                      disabled={submitting}
+                      title="Request changes from creator"
+                    >
+                      <FaEdit style={{ marginRight: '6px' }} />
+                      Request Changes
+                    </button>
+                    <button
+                      className="btn-forward"
+                      onClick={() => handleApprovalAction('forward_to_client')}
+                      disabled={submitting}
+                      title="Forward to client for approval"
+                    >
+                      <FaArrowRight style={{ marginRight: '6px' }} />
+                      Forward to Client
+                    </button>
+                    <button
+                      className="btn-approve"
+                      onClick={() => handleApprovalAction('approve')}
+                      disabled={submitting}
+                      title="Approve immediately (bypasses client)"
+                    >
+                      <FaCheck style={{ marginRight: '6px' }} />
+                      Approve Now
+                    </button>
+                  </div>
+                  <p className="action-help-text">
+                    ℹ️ You can approve this post directly or forward it to the client for their review.
+                  </p>
+                </div>
+              )}
+
+              {/* Client Approval Actions - for pending_client and pending posts */}
+              {(selectedPost.approval_status === 'pending_client' || selectedPost.approval_status === 'pending') && canApprove && (
+                <div className="approval-actions">
+                  <div className="action-section-header">
+                    <FaUser style={{ marginRight: '8px' }} />
+                    <span>Client Actions</span>
+                  </div>
+                  <div className="action-buttons">
                     <button
                       className="btn-reject"
                       onClick={() => handleApprovalAction('reject')}
                       disabled={submitting}
                     >
+                      <FaTimes style={{ marginRight: '6px' }} />
                       Reject
                     </button>
                     <button
@@ -496,6 +619,7 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('changes_requested')}
                       disabled={submitting}
                     >
+                      <FaEdit style={{ marginRight: '6px' }} />
                       Request Changes
                     </button>
                     <button
@@ -503,10 +627,34 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('approve')}
                       disabled={submitting}
                     >
+                      <FaCheck style={{ marginRight: '6px' }} />
                       Approve
                     </button>
                   </div>
-                </RoleGuard>
+                </div>
+              )}
+
+              {/* Mark Resolved Action - for changes_requested posts */}
+              {selectedPost.approval_status === 'changes_requested' && (
+                <div className="approval-actions">
+                  <div className="action-section-header">
+                    <FaCheckCircle style={{ marginRight: '8px' }} />
+                    <span>Resolve Changes</span>
+                  </div>
+                  <div className="action-buttons">
+                    <button
+                      className="btn-resolve"
+                      onClick={() => handleApprovalAction('mark_resolved')}
+                      disabled={submitting}
+                    >
+                      <FaCheckCircle style={{ marginRight: '6px' }} />
+                      Mark Resolved
+                    </button>
+                  </div>
+                  <p className="action-help-text">
+                    Mark this post as resolved to resubmit for approval.
+                  </p>
+                </div>
               )}
             </div>
           </div>

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { sendApprovalNotification, sendNewCommentNotification } = require("../notifications/helpers");
+const { sendApprovalNotification, sendNewCommentNotification, sendClientApprovalRequestNotification, sendInternalRejectionNotification } = require("../notifications/helpers");
 const {
   setCors,
   getSupabase,
@@ -78,7 +78,7 @@ async function sendToAyrshare(post, profileKey) {
   return response.data;
 }
 
-const VALID_ACTIONS = ['approve', 'reject', 'changes_requested', 'mark_resolved'];
+const VALID_ACTIONS = ['approve', 'reject', 'changes_requested', 'mark_resolved', 'forward_to_client'];
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -129,8 +129,6 @@ module.exports = async function handler(req, res) {
       const member = membershipCheck.member;
 
       // Check if user has permission based on the action
-      // For 'mark_resolved', editors can do it (they're just marking changes as done)
-      // For approve/reject/changes_requested, only admins and clients can do it
       if (action === 'mark_resolved') {
         // Editors, admins, and clients can mark changes as resolved
         // Use canCreatePosts since editors have this permission
@@ -138,11 +136,46 @@ module.exports = async function handler(req, res) {
         if (!canCreate.success) {
           return sendError(res, "You don't have permission to mark changes as resolved", ErrorCodes.FORBIDDEN);
         }
-      } else {
-        // For actual approval actions, only admins and clients
-        const permissionCheck = checkPermission(member, 'canApprovePosts');
-        if (!permissionCheck.success) {
-          return sendError(res, "You don't have permission to approve posts", ErrorCodes.FORBIDDEN);
+      } else if (action === 'forward_to_client') {
+        // Only final approvers can forward to client
+        const hasFinalApproval = member.can_final_approval === true || member.role === 'owner';
+        if (!hasFinalApproval) {
+          return sendError(res, "Only final approvers can forward posts to clients", ErrorCodes.FORBIDDEN);
+        }
+      } else if (action === 'approve' || action === 'reject' || action === 'changes_requested') {
+        // Permission check depends on current post status
+        const { data: post } = await supabase
+          .from('posts')
+          .select('approval_status, workspace_id')
+          .eq('id', postId)
+          .single();
+
+        if (!post) {
+          return sendError(res, "Post not found", ErrorCodes.NOT_FOUND);
+        }
+
+        let hasPermission = false;
+
+        if (post.approval_status === 'pending_internal') {
+          // Final approvers can approve/reject at this stage
+          hasPermission = member.can_final_approval === true || member.role === 'owner';
+        } else if (post.approval_status === 'pending_client' || post.approval_status === 'pending') {
+          // Clients (viewers with can_approve_posts) can approve at this stage
+          hasPermission = (
+            (member.role === 'viewer' && member.can_approve_posts === true) ||
+            member.role === 'owner'
+          );
+        } else if (post.approval_status === 'changes_requested') {
+          // Both final approvers and clients can act on changes_requested
+          hasPermission = (
+            member.can_final_approval === true ||
+            (member.role === 'viewer' && member.can_approve_posts === true) ||
+            member.role === 'owner'
+          );
+        }
+
+        if (!hasPermission) {
+          return sendError(res, "You don't have permission to perform this action", ErrorCodes.FORBIDDEN);
         }
       }
 
@@ -188,13 +221,37 @@ module.exports = async function handler(req, res) {
       }
 
       // Map action to status
-      const statusMap = {
-        'approve': 'approved',
-        'reject': 'rejected',
-        'changes_requested': 'changes_requested',
-        'mark_resolved': 'pending' // Transitions back to pending for re-approval
-      };
-      const newStatus = statusMap[action];
+      let newStatus;
+
+      if (action === 'approve') {
+        newStatus = 'approved';
+      } else if (action === 'reject') {
+        newStatus = 'rejected';
+      } else if (action === 'changes_requested') {
+        newStatus = 'changes_requested';
+      } else if (action === 'forward_to_client') {
+        newStatus = 'pending_client';
+      } else if (action === 'mark_resolved') {
+        // Check if post was in internal review or client review
+        const { data: post } = await supabase
+          .from('posts')
+          .select('approval_status, workspace_id')
+          .eq('id', postId)
+          .single();
+
+        // Check if workspace has final approvers
+        const { data: finalApprovers } = await supabase
+          .from('workspace_members')
+          .select('id')
+          .eq('workspace_id', post.workspace_id)
+          .eq('can_final_approval', true)
+          .limit(1);
+
+        const hasFinalApprovers = finalApprovers && finalApprovers.length > 0;
+
+        // If final approvers exist, go back to internal review; otherwise, go to client
+        newStatus = hasFinalApprovers ? 'pending_internal' : 'pending';
+      }
 
       // Guard: prevent re-approving a post that's already approved/scheduled/posted
       if (action === 'approve') {
@@ -262,6 +319,45 @@ module.exports = async function handler(req, res) {
 
       if (postUpdateError) {
         logError('post.approve.updatePost', postUpdateError, { postId });
+      }
+
+      // Send appropriate notifications based on action
+      if (action === 'forward_to_client' && workspaceId) {
+        // Get post details for notification
+        const { data: post } = await supabase
+          .from('posts')
+          .select('platforms, created_by')
+          .eq('id', postId)
+          .single();
+
+        // Notify clients (viewers with can_approve_posts)
+        await sendClientApprovalRequestNotification(supabase, {
+          workspaceId,
+          postId,
+          platforms: post?.platforms || [],
+          forwardedByUserId: userId
+        }).catch(err =>
+          logError('post.approve.notification.forwardToClient', err, { postId })
+        );
+      } else if (action === 'changes_requested' && workspaceId) {
+        // Get post details for notification
+        const { data: post } = await supabase
+          .from('posts')
+          .select('approval_status, created_by')
+          .eq('id', postId)
+          .single();
+
+        // If changes requested from internal review, notify creator
+        if (post && post.approval_status === 'changes_requested') {
+          await sendInternalRejectionNotification(supabase, {
+            workspaceId,
+            postId,
+            createdByUserId: post.created_by,
+            comment: comment || 'Changes requested'
+          }).catch(err =>
+            logError('post.approve.notification.internalRejection', err, { postId })
+          );
+        }
       }
 
       // If approved, send the post to Ayrshare
