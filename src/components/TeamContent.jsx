@@ -415,17 +415,28 @@ export const TeamContent = () => {
                                     </>
                                   )}
 
-                                  {/* Viewer permissions: Client Approval only */}
+                                  {/* Viewer permissions: Manage Team + Client Approval */}
                                   {memberRole === 'viewer' && (
-                                    <label className="toggle-label">
-                                      <input
-                                        type="checkbox"
-                                        checked={member.permissions?.can_approve_posts || false}
-                                        onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
-                                      />
-                                      <span className="toggle-switch"></span>
-                                      Can approve posts
-                                    </label>
+                                    <>
+                                      <label className="toggle-label">
+                                        <input
+                                          type="checkbox"
+                                          checked={member.permissions?.can_approve_posts || false}
+                                          onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
+                                        />
+                                        <span className="toggle-switch"></span>
+                                        Can approve posts
+                                      </label>
+                                      <label className="toggle-label">
+                                        <input
+                                          type="checkbox"
+                                          checked={member.permissions?.can_manage_team || false}
+                                          onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
+                                        />
+                                        <span className="toggle-switch"></span>
+                                        Can manage team
+                                      </label>
+                                    </>
                                   )}
                                 </div>
                                 <button
