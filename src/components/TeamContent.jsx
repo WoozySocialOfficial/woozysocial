@@ -391,24 +391,42 @@ export const TeamContent = () => {
                                   <option value="viewer">Viewer</option>
                                 </select>
                                 <div className="permission-toggles">
-                                  <label className="toggle-label">
-                                    <input
-                                      type="checkbox"
-                                      checked={member.permissions?.can_approve_posts || false}
-                                      onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
-                                    />
-                                    <span className="toggle-switch"></span>
-                                    Can approve posts
-                                  </label>
-                                  <label className="toggle-label">
-                                    <input
-                                      type="checkbox"
-                                      checked={member.permissions?.can_manage_team || false}
-                                      onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
-                                    />
-                                    <span className="toggle-switch"></span>
-                                    Can manage team
-                                  </label>
+                                  {/* Member permissions: Final Approval + Manage Team */}
+                                  {memberRole === 'member' && (
+                                    <>
+                                      <label className="toggle-label">
+                                        <input
+                                          type="checkbox"
+                                          checked={member.permissions?.can_final_approval || false}
+                                          onChange={(e) => handleTogglePermission(member.user_id, 'canFinalApproval', e.target.checked)}
+                                        />
+                                        <span className="toggle-switch"></span>
+                                        Can final approval
+                                      </label>
+                                      <label className="toggle-label">
+                                        <input
+                                          type="checkbox"
+                                          checked={member.permissions?.can_manage_team || false}
+                                          onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
+                                        />
+                                        <span className="toggle-switch"></span>
+                                        Can manage team
+                                      </label>
+                                    </>
+                                  )}
+
+                                  {/* Viewer permissions: Client Approval only */}
+                                  {memberRole === 'viewer' && (
+                                    <label className="toggle-label">
+                                      <input
+                                        type="checkbox"
+                                        checked={member.permissions?.can_approve_posts || false}
+                                        onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
+                                      />
+                                      <span className="toggle-switch"></span>
+                                      Can approve posts
+                                    </label>
+                                  )}
                                 </div>
                                 <button
                                   className="remove-button"

@@ -19,19 +19,22 @@ const ROLE_PERMISSIONS = {
     can_manage_team: true,
     can_manage_settings: true,
     can_delete_posts: true,
-    can_approve_posts: true
+    can_final_approval: true,      // NEW: Owners are final approvers by default
+    can_approve_posts: true        // Owners can also approve as clients
   },
   member: {
     can_manage_team: false,
     can_manage_settings: false,
     can_delete_posts: true,
-    can_approve_posts: false
+    can_final_approval: false,     // NEW: Toggle override available
+    can_approve_posts: false       // REMOVED: Members no longer approve (final approvers do)
   },
   viewer: {
     can_manage_team: false,
     can_manage_settings: false,
     can_delete_posts: false,
-    can_approve_posts: false
+    can_final_approval: false,     // NEW: Viewers are never final approvers
+    can_approve_posts: false       // Toggle override available (client approval)
   }
 };
 
@@ -136,6 +139,7 @@ module.exports = async function handler(req, res) {
         updateData.can_manage_team = rolePerms.can_manage_team;
         updateData.can_manage_settings = rolePerms.can_manage_settings;
         updateData.can_delete_posts = rolePerms.can_delete_posts;
+        updateData.can_final_approval = rolePerms.can_final_approval;     // NEW
         updateData.can_approve_posts = rolePerms.can_approve_posts;
       }
     }
@@ -144,6 +148,7 @@ module.exports = async function handler(req, res) {
       if (typeof permissions.canManageTeam === 'boolean') updateData.can_manage_team = permissions.canManageTeam;
       if (typeof permissions.canManageSettings === 'boolean') updateData.can_manage_settings = permissions.canManageSettings;
       if (typeof permissions.canDeletePosts === 'boolean') updateData.can_delete_posts = permissions.canDeletePosts;
+      if (typeof permissions.canFinalApproval === 'boolean') updateData.can_final_approval = permissions.canFinalApproval;  // NEW
       if (typeof permissions.canApprovePosts === 'boolean') updateData.can_approve_posts = permissions.canApprovePosts;
     }
 
