@@ -200,88 +200,31 @@ Writing Style Examples: ${brandProfile.sample_posts || 'N/A'}
     .filter(Boolean)
     .join('\n\n');
 
-  const systemPrompt = `You are a skilled social media writer who creates authentic, conversational content that sounds like a real person wrote it - not a marketing team or AI.
+  // Static prompt (cached by Anthropic — 90% cheaper on repeat calls)
+  const staticPrompt = `You write social media posts that sound human, casual, and real. No corporate buzzwords.
+Rules: 1-3 sentences per post. Hook first. Max 5 hashtags at end. Use contractions. Be specific.
+Never use: "excited to announce", "game-changer", "unlock", "leverage", "journey", "empower", "don't miss out".
+Output 3 variations separated by --- on its own line. No bold, no markdown, no labels, no numbering.
+Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold take or question.`;
 
-${brandContext}
-
-${websiteContext}
-
-═══ PLATFORM-SPECIFIC REQUIREMENTS ═══
-${selectedPlatformGuidelines || 'Create versatile content optimized for engagement across platforms'}
-═══════════════════════════════════════
-
-═══ WRITING STYLE: COMFORTABLE & REAL ═══
-TONE: Write like you're chatting with a friend over coffee. Relaxed, warm, genuine.
-
-BANNED (sounds robotic/corporate):
-- "Excited to announce" / "Thrilled to share" / "Proud to"
-- "Game-changer" / "Next level" / "Take it to the next level"
-- "Unlock" / "Leverage" / "Synergy" / "Optimize" / "Maximize"
-- "Journey" / "Transform" / "Empower" / "Elevate"
-- "Actionable" / "Impactful" / "Robust" / "Seamless"
-- "Passionate about" / "Dedicated to" / "Committed to"
-- "Don't miss out" / "Act now" / "Limited time"
-- Starting sentences with "So," "Well," "Look," "Honestly,"
-- Excessive punctuation!!! or ALL CAPS
-
-COMFORTABLE OPENERS (use these vibes):
-- "Just tried..." / "Finally got around to..."
-- "Can we talk about..." / "Anyone else..."
-- "Not gonna lie..." / "Real talk:"
-- "Here's what I learned..." / "Quick thought:"
-- "This one's for..." / "Y'all..."
-- Just start mid-thought like you're already in a conversation
-
-MAKE IT FEEL NATURAL:
-- Use contractions always (I'm, you're, it's, don't, can't, won't, gonna, wanna)
-- Write like you text - casual, not formal
-- Be specific, not vague corporate-speak
-- Share your actual take, not safe generic statements
-- Sound like ONE person talking to ONE person
-- It's okay to be a little messy/imperfect - that's human
-- Use "you" and "I" - make it personal
-- Throw in relatable moments people can connect with
-═══════════════════════════════════════
-
-═══ YOUR TASK ═══
-Generate 3 DISTINCT variations for: "${prompt}"
-
-KEEP IT SHORT AND CATCHY:
-- Captions should be punchy, not essays
-- 1-3 sentences max for most posts
-- Get to the point fast
-- Leave some mystery - don't over-explain
-- Less is more
-
-Each variation MUST:
-- Be SHORT and memorable (not long-winded)
-- Sound like a real human (not corporate)
-- Start with a hook that grabs attention
-- Be ready to copy-paste (no placeholders)
-- Match the brand voice if provided
-- ${useEmojis ? 'Use minimal emojis (0-2 max, only if natural)' : 'Do NOT use any emojis at all - zero emojis in the post'}
-- Put hashtags at the END only (not inline)
-- MAXIMUM 5 hashtags per post (never more than 5)
-
-Each variation should feel DIFFERENT:
-- Variation 1: Casual and chill (like texting a friend)
-- Variation 2: Slightly more polished but still warm
-- Variation 3: Bold take or relatable question
-
-FORMAT RULES:
-- Separate each variation with --- on its own line
-- Do NOT use bold, markdown, or headers
-- Do NOT write "Variation 1:" or any labels
-- Just write the post text directly, separated by ---`;
+  // Dynamic context (changes per request — not cached)
+  const dynamicParts = [];
+  if (brandContext) dynamicParts.push(brandContext);
+  if (websiteContext) dynamicParts.push(websiteContext);
+  if (selectedPlatformGuidelines) dynamicParts.push(`Platform rules:\n${selectedPlatformGuidelines}`);
+  dynamicParts.push(useEmojis ? 'Use 0-2 emojis if natural.' : 'No emojis.');
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
-    model: 'claude-sonnet-4-5-20250929',
-    system: systemPrompt,
+    model: 'claude-haiku-4-5-20251001',
+    system: [
+      { type: 'text', text: staticPrompt, cache_control: { type: 'ephemeral' } },
+      { type: 'text', text: dynamicParts.join('\n') }
+    ],
     messages: [
-      { role: 'user', content: `Create 3 social media posts about: ${prompt}\n\nWrite like you're sharing with a friend - comfortable, casual, real. No corporate speak. Ready to copy-paste.` }
+      { role: 'user', content: `Write 3 social media posts about: ${prompt}` }
     ],
     temperature: 0.85,
-    max_tokens: 800
+    max_tokens: 500
   }, {
     headers: {
       'Content-Type': 'application/json',
