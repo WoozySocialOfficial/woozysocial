@@ -9,7 +9,7 @@ import { useInboxUnreadCount } from "../../hooks/useInboxUnreadCount";
 export const Sidebar = () => {
   const location = useLocation();
   const { hasActiveProfile, hasTabAccess, subscriptionTier } = useAuth();
-  const { activeWorkspace, userWorkspaces, canAccessTab, workspaceMembership } = useWorkspace();
+  const { activeWorkspace, userWorkspaces, canAccessTab, workspaceMembership, loading: workspaceLoading } = useWorkspace();
 
   // Get unread count for Social Inbox badge
   const { unreadCount } = useInboxUnreadCount(activeWorkspace?.id, !!activeWorkspace?.id);
@@ -34,7 +34,10 @@ export const Sidebar = () => {
   ];
 
   // Filter menu items based on subscription tier, role, and team status
+  // While workspace data is loading, show all tabs to prevent pop-in delay
   const visibleMenuItems = menuItems.filter(item => {
+    if (workspaceLoading) return true;
+
     // Owner-only items (like Settings)
     if (item.ownerAdminOnly) {
       const userRole = workspaceMembership?.role;
