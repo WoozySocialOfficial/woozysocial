@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, FaTrash, FaArrowRight } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, FaTrash } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
 import { useToast } from '@chakra-ui/react';
 import { CommentThread } from './CommentThread';
@@ -422,7 +422,6 @@ export const PostDetailPanel = ({
               Request Changes
             </button>
             <button className="btn-forward" onClick={() => onForwardToClient && onForwardToClient(post.id)} disabled={actionLoading}>
-              <FaArrowRight size={13} style={{ marginRight: '5px' }} />
               {actionLoading ? 'Processing...' : 'Forward to Client'}
             </button>
             <button className="btn-approve" onClick={() => onApprove(post.id)} disabled={actionLoading}>
