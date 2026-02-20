@@ -209,7 +209,7 @@ async function verifyWorkspaceMembership(supabase, userId, workspaceId) {
 
     const { data: member, error } = await supabase
       .from('workspace_members')
-      .select('id, user_id, workspace_id, role, can_manage_team, can_manage_settings, can_delete_posts, can_approve_posts')
+      .select('id, user_id, workspace_id, role, can_manage_team, can_manage_settings, can_delete_posts, can_approve_posts, can_final_approval')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
       .single();
