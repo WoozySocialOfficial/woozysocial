@@ -399,8 +399,8 @@ export const PostDetailPanel = ({
         )}
 
         {/* Approval Actions - client approvers (pending / changes_requested) */}
-        {showApprovalActions && canApprove && (
-          post.approval_status === 'pending' || post.approval_status === 'changes_requested' || post.status === 'pending_approval'
+        {showApprovalActions && canApprove && post.approval_status !== 'pending_internal' && (
+          post.approval_status === 'pending' || post.approval_status === 'pending_client' || post.approval_status === 'changes_requested' || post.status === 'pending_approval'
         ) && (
           <div className="approval-actions">
             <button className="btn-reject" onClick={() => handleApprovalWithComment('reject')} disabled={actionLoading}>
