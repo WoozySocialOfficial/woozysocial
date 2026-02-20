@@ -78,30 +78,7 @@ export const WorkspaceProvider = ({ children }) => {
       const responseData = normalizeApiResponse(listData);
       let workspaces = responseData.workspaces || [];
 
-      // If no workspaces, auto-migrate the user
-      if (workspaces.length === 0) {
-        const { data: migrateData, error: migrateError } = await safeFetch(
-          `${baseURL}/api/workspace/migrate`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id })
-          }
-        );
-
-        // Check if this request is still current
-        if (requestId !== fetchRequestIdRef.current) return;
-
-        if (!migrateError && migrateData?.success) {
-          const migrateResponse = normalizeApiResponse(migrateData);
-          if (migrateResponse.workspace) {
-            workspaces = [{
-              ...migrateResponse.workspace,
-              membership: { role: 'owner' }
-            }];
-          }
-        }
-      }
+      // No auto-migration — user creates workspaces when ready via "Add Business"
 
       // Final race condition check before updating state
       if (requestId !== fetchRequestIdRef.current) return;
