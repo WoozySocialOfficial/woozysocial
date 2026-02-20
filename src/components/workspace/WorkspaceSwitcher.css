@@ -581,3 +581,184 @@
 .delete-modal .workspace-modal-header h3 {
   color: #dc3545;
 }
+
+/* ═══ Dark Mode ═══ */
+
+[data-theme="dark"] .workspace-trigger,
+.dark .workspace-trigger {
+  background-color: rgba(55, 48, 90, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .workspace-trigger:hover,
+.dark .workspace-trigger:hover {
+  background-color: rgba(55, 48, 90, 0.9);
+}
+
+[data-theme="dark"] .workspace-name,
+.dark .workspace-name {
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .dropdown-arrow,
+.dark .dropdown-arrow {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-dropdown,
+.dark .workspace-dropdown {
+  background-color: #1e1a2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .section-label,
+.dark .section-label {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-item:hover,
+.dark .workspace-item:hover {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+[data-theme="dark"] .workspace-item.active,
+.dark .workspace-item.active {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .workspace-item.active:hover,
+.dark .workspace-item.active:hover {
+  background-color: rgba(124, 58, 237, 0.25);
+}
+
+[data-theme="dark"] .workspace-item-name,
+.dark .workspace-item-name {
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .workspace-item-role,
+.dark .workspace-item-role {
+  background-color: rgba(124, 58, 237, 0.15);
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-item.active .workspace-item-role,
+.dark .workspace-item.active .workspace-item-role {
+  background-color: rgba(124, 58, 237, 0.25);
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .workspace-action-btn,
+.dark .workspace-action-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-action-btn:hover,
+.dark .workspace-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .dropdown-divider,
+.dark .dropdown-divider {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .dropdown-action,
+.dark .dropdown-action {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .dropdown-action:hover,
+.dark .dropdown-action:hover {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+[data-theme="dark"] .workspace-switcher-empty,
+.dark .workspace-switcher-empty {
+  background-color: rgba(55, 48, 90, 0.5);
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-switcher-skeleton,
+.dark .workspace-switcher-skeleton {
+  background-color: rgba(55, 48, 90, 0.3);
+}
+
+[data-theme="dark"] .workspace-logo-skeleton,
+.dark .workspace-logo-skeleton,
+[data-theme="dark"] .workspace-name-skeleton,
+.dark .workspace-name-skeleton {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Dark mode modal */
+[data-theme="dark"] .workspace-modal,
+.dark .workspace-modal {
+  background: #1e1a2e;
+}
+
+[data-theme="dark"] .workspace-modal-header,
+.dark .workspace-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .workspace-modal-header h3,
+.dark .workspace-modal-header h3 {
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .modal-close,
+.dark .modal-close {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .modal-close:hover,
+.dark .modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .workspace-modal-body label,
+.dark .workspace-modal-body label {
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .workspace-modal-body input,
+.dark .workspace-modal-body input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .workspace-modal-body input:focus,
+.dark .workspace-modal-body input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+[data-theme="dark"] .delete-warning,
+.dark .delete-warning {
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .delete-info,
+.dark .delete-info {
+  color: #a39dd0;
+}
+
+[data-theme="dark"] .workspace-modal-actions,
+.dark .workspace-modal-actions {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .modal-btn.secondary,
+.dark .modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0ddf5;
+}
+
+[data-theme="dark"] .modal-btn.secondary:hover,
+.dark .modal-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
