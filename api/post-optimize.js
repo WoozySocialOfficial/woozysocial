@@ -64,26 +64,8 @@ async function optimizeWithAI(text, platforms, hasMedia, mediaType, scoreBreakdo
   if (scoreBreakdown.length?.score < 12) weakAreas.push("text length optimization");
   if (scoreBreakdown.url?.score === 0) weakAreas.push("call-to-action with link");
 
-  const systemPrompt = `You are a social media copywriting expert. Analyze the user's post and suggest specific improvements to maximize engagement on ${platformList}.
-
-Return EXACTLY a JSON array of suggestion objects. Each suggestion must have:
-- "type": one of "rewrite", "add_hook", "add_cta", "add_hashtags", "add_emoji", "shorten", "lengthen"
-- "title": short title (3-6 words)
-- "description": why this improves engagement (1 sentence)
-- "original": the part of the post being improved (empty string if adding new content)
-- "improved": the suggested replacement or addition text
-- "impact": estimated score boost as a number (1-20)
-
-Rules:
-1. Keep the post's original meaning and voice
-2. Be specific - provide actual rewritten text, not vague advice
-3. Max 4 suggestions, sorted by impact (highest first)
-4. For hashtag suggestions, include the actual hashtags
-5. For emoji suggestions, place them naturally in the text
-6. Match the tone/style of the original post
-7. Return ONLY valid JSON array, no markdown, no explanation
-${weakAreas.length > 0 ? `\nFocus on these weak areas: ${weakAreas.join(", ")}` : ""}
-${!hasMedia ? "\nNote: No media attached. Consider suggesting media-related advice." : ""}`;
+  const systemPrompt = `Return ONLY a JSON array. Max 3 suggestions sorted by impact. Each: {"type":"rewrite"|"add_hook"|"add_cta"|"add_hashtags","title":"3-6 words","description":"1 sentence","original":"","improved":"text","impact":1-20}. No markdown. Keep original voice. Be specific with actual rewritten text.
+Platforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join(", ")}` : ''}${!hasMedia ? '\nNo media attached.' : ''}`;
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
     model: 'claude-haiku-4-5-20251001',
@@ -92,7 +74,7 @@ ${!hasMedia ? "\nNote: No media attached. Consider suggesting media-related advi
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
-    max_tokens: 600
+    max_tokens: 400
   }, {
     headers: {
       'Content-Type': 'application/json',

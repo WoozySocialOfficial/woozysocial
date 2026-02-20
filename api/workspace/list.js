@@ -42,6 +42,7 @@ module.exports = async function handler(req, res) {
       .select(`
         role,
         can_approve_posts,
+        can_final_approval,
         can_manage_team,
         workspace:workspaces(
           id,
@@ -85,6 +86,7 @@ module.exports = async function handler(req, res) {
         membership: {
           role: m.role,
           can_approve_posts: m.can_approve_posts || false,
+          can_final_approval: m.can_final_approval || false,
           can_manage_team: m.can_manage_team || false
         }
       }));
