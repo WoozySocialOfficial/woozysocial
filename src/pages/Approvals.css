@@ -436,17 +436,33 @@
 /* Action Buttons */
 .approval-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid #eee;
 }
 
-.approval-actions button {
+.action-section-header {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons button {
   flex: 1;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -536,7 +552,7 @@
   border-color: #229954;
 }
 
-.approval-actions button:disabled {
+.action-buttons button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
