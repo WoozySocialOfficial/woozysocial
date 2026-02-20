@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, FaTrash, FaArrowRight } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
 import { useToast } from '@chakra-ui/react';
 import { CommentThread } from './CommentThread';
@@ -25,6 +25,9 @@ const STATUS_COLORS = {
   draft: '#6b7280',
   scheduled: '#3b82f6',
   pending_approval: '#f59e0b',
+  pending_internal: '#f59e0b',
+  pending_client: '#8b5cf6',
+  pending: '#f59e0b',
   changes_requested: '#f59e0b',
   approved: '#10b981',
   rejected: '#ef4444',
@@ -38,6 +41,7 @@ export const PostDetailPanel = ({
   onApprove,
   onReject,
   onRequestChanges,
+  onForwardToClient,
   showApprovalActions = false,
   actionLoading = false,
   onEditDraft,
@@ -47,7 +51,7 @@ export const PostDetailPanel = ({
   currentIndex = 0,
   onNavigatePost
 }) => {
-  const { workspaceMembership, activeWorkspace, canApprove } = useWorkspace();
+  const { workspaceMembership, activeWorkspace, canApprove, hasFinalApproval } = useWorkspace();
   const navigate = useNavigate();
   const { invalidatePosts } = useInvalidateQueries();
   const toast = useToast();
@@ -95,6 +99,9 @@ export const PostDetailPanel = ({
       draft: 'Draft',
       scheduled: 'Scheduled',
       pending_approval: 'Pending Approval',
+      pending_internal: 'Pending Final Review',
+      pending_client: 'Awaiting Client',
+      pending: 'Pending Approval',
       changes_requested: 'Changes Requested',
       approved: 'Approved',
       rejected: 'Rejected',
@@ -391,7 +398,7 @@ export const PostDetailPanel = ({
           </div>
         )}
 
-        {/* Approval Actions */}
+        {/* Approval Actions - client approvers (pending / changes_requested) */}
         {showApprovalActions && canApprove && (
           post.approval_status === 'pending' || post.approval_status === 'changes_requested' || post.status === 'pending_approval'
         ) && (
@@ -404,6 +411,22 @@ export const PostDetailPanel = ({
             </button>
             <button className="btn-approve" onClick={() => onApprove(post.id)} disabled={actionLoading}>
               {actionLoading ? 'Processing...' : 'Approve'}
+            </button>
+          </div>
+        )}
+
+        {/* Gatekeeper Actions - final approvers reviewing pending_internal posts */}
+        {showApprovalActions && hasFinalApproval && post.approval_status === 'pending_internal' && (
+          <div className="approval-actions">
+            <button className="btn-changes" onClick={() => handleApprovalWithComment('changes_requested')} disabled={actionLoading}>
+              Request Changes
+            </button>
+            <button className="btn-forward" onClick={() => onForwardToClient && onForwardToClient(post.id)} disabled={actionLoading}>
+              <FaArrowRight size={13} style={{ marginRight: '5px' }} />
+              {actionLoading ? 'Processing...' : 'Forward to Client'}
+            </button>
+            <button className="btn-approve" onClick={() => onApprove(post.id)} disabled={actionLoading}>
+              {actionLoading ? 'Processing...' : 'Approve Now'}
             </button>
           </div>
         )}

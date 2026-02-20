@@ -368,7 +368,19 @@
   background: #a7f3d0;
 }
 
-.btn-reject:disabled, .btn-changes:disabled, .btn-approve:disabled {
+.btn-forward {
+  background: #ede9fe;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-forward:hover {
+  background: #ddd6fe;
+}
+
+.btn-reject:disabled, .btn-changes:disabled, .btn-approve:disabled, .btn-forward:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

@@ -33,7 +33,7 @@ const APPROVAL_STATUS = {
 
 export const ScheduleContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, subscriptionTier, isWhitelisted } = useAuth();
-  const { activeWorkspace, workspaceMembership, canApprove } = useWorkspace();
+  const { activeWorkspace, workspaceMembership, canApprove, hasFinalApproval } = useWorkspace();
   const toast = useToast();
 
   // Check if user has access (multi-workspace support)
@@ -108,6 +108,7 @@ export const ScheduleContent = () => {
         approve: { title: 'Post approved', description: 'The post has been approved and scheduled.' },
         reject: { title: 'Post rejected', description: 'The post has been rejected.' },
         request_changes: { title: 'Changes requested', description: 'Feedback has been sent to the author.' },
+        forward_to_client: { title: 'Forwarded to client', description: 'The post has been moved to the client approval queue.' },
       };
       const msg = successMessages[action] || { title: 'Action completed', description: '' };
       toast({
@@ -144,6 +145,10 @@ export const ScheduleContent = () => {
   const handleRequestChanges = async (postId, commentText = '') => {
     await handleApproval(postId, 'changes_requested', commentText);
     setSelectedPost(null);
+  };
+
+  const handleForwardToClient = async (postId) => {
+    await handleApproval(postId, 'forward_to_client');
   };
 
   const handleEditScheduledPost = (post) => {
@@ -842,6 +847,7 @@ export const ScheduleContent = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onRequestChanges={handleRequestChanges}
+          onForwardToClient={handleForwardToClient}
           onEditScheduledPost={handleEditScheduledPost}
           showApprovalActions={canApprove}
           actionLoading={actionLoading}
