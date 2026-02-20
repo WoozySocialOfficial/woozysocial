@@ -279,10 +279,19 @@ export const NotificationBell = () => {
         if (postId) route += `?postId=${postId}`;
         break;
       case 'post_approved':
+        route = isClientRole ? '/client/approvals' : '/approvals';
+        route += `?tab=approved`;
+        if (postId) route += `&postId=${postId}`;
+        break;
       case 'post_rejected':
+        route = isClientRole ? '/client/approvals' : '/approvals';
+        route += `?tab=rejected`;
+        if (postId) route += `&postId=${postId}`;
+        break;
       case 'changes_requested':
         route = isClientRole ? '/client/approvals' : '/approvals';
-        if (postId) route += `?postId=${postId}`;
+        route += `?tab=changes_requested`;
+        if (postId) route += `&postId=${postId}`;
         break;
       case 'workspace_invite':
         // Use invite token from metadata if available

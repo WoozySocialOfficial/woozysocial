@@ -56,7 +56,7 @@ const SORT_OPTIONS = {
 
 export const PostsContent = () => {
   const { user } = useAuth();
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, canApprove, hasFinalApproval } = useWorkspace();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("drafts");
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +64,7 @@ export const PostsContent = () => {
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.drafts[0].id);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [actionLoading, setActionLoading] = useState(false);
   const selectAllRef = useRef(null);
   const { invalidatePosts } = useInvalidateQueries();
 
@@ -90,7 +91,7 @@ export const PostsContent = () => {
     isLoading: pendingLoading,
     refetch: refetchPending
   } = usePosts(activeWorkspace?.id, user?.id, {
-    approvalStatus: ['pending', 'changes_requested'],
+    approvalStatus: ['pending', 'pending_internal', 'pending_client', 'changes_requested'],
     limit: 100,
     enabled: activeTab === "pending"
   });
@@ -226,6 +227,35 @@ export const PostsContent = () => {
       alert('Failed to delete: ' + error.message);
     }
   };
+
+  const handleApproval = async (postId, action, commentText = '') => {
+    if (!activeWorkspace || !user) return;
+    setActionLoading(true);
+    try {
+      const response = await fetch(`${baseURL}/api/post/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, workspaceId: activeWorkspace.id, userId: user.id, action, comment: commentText }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update approval');
+      }
+      invalidatePosts(activeWorkspace?.id);
+      refetchPending();
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Error updating approval:', error);
+      alert('Action failed: ' + error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApprove = (postId) => handleApproval(postId, 'approve');
+  const handleReject = (postId, comment) => handleApproval(postId, 'reject', comment);
+  const handleRequestChanges = (postId, comment) => handleApproval(postId, 'changes_requested', comment);
+  const handleForwardToClient = (postId) => handleApproval(postId, 'forward_to_client');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -530,23 +560,25 @@ export const PostsContent = () => {
                 </div>
                 <div className="posts-date-col">
                   <div>{formatTableDateTime(post.scheduleDate || post.scheduled_date || post.created_at || post.postDate)}</div>
-                  {activeTab === "pending" && post.approval_status && (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        marginTop: '4px',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        backgroundColor: post.approval_status === 'changes_requested' ? '#f59e0b' : '#afabf9',
-                        color: post.approval_status === 'changes_requested' ? '#FFFFFF' : '#114C5A'
-                      }}
-                    >
-                      {post.approval_status === 'changes_requested' ? 'Changes Requested' : 'Pending Approval'}
-                    </span>
-                  )}
+                  {activeTab === "pending" && post.approval_status && (() => {
+                    const statusConfig = {
+                      pending_internal:   { label: 'Pending Final Review', bg: '#f59e0b', color: '#fff' },
+                      pending_client:     { label: 'Awaiting Client',      bg: '#8b5cf6', color: '#fff' },
+                      pending:            { label: 'Pending Approval',     bg: '#afabf9', color: '#114C5A' },
+                      changes_requested:  { label: 'Changes Requested',    bg: '#f59e0b', color: '#fff' },
+                    };
+                    const cfg = statusConfig[post.approval_status];
+                    if (!cfg) return null;
+                    return (
+                      <span style={{
+                        display: 'inline-block', marginTop: '4px', padding: '2px 8px',
+                        borderRadius: '12px', fontSize: '11px', fontWeight: '600',
+                        textTransform: 'uppercase', backgroundColor: cfg.bg, color: cfg.color
+                      }}>
+                        {cfg.label}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="posts-content-col">
                   <div className="post-content-preview">
@@ -590,7 +622,12 @@ export const PostsContent = () => {
         <PostDetailPanel
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
-          showApprovalActions={false}
+          showApprovalActions={canApprove || hasFinalApproval}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onRequestChanges={handleRequestChanges}
+          onForwardToClient={handleForwardToClient}
+          actionLoading={actionLoading}
           onEditDraft={handleLoadDraft}
           onEditScheduledPost={handleEditScheduledPost}
         />
