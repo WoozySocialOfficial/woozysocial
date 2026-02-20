@@ -127,9 +127,9 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to verify workspace count", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Allow deleting even the last workspace — the frontend auto-creates
-    // a new default workspace when the user has 0 workspaces
-    console.log(`[WORKSPACE DELETE] User owns ${userWorkspaces?.length || 0} workspace(s), proceeding with delete`);
+    if (userWorkspaces && userWorkspaces.length <= 1) {
+      return sendError(res, "Cannot delete your only workspace", ErrorCodes.VALIDATION_ERROR);
+    }
 
     // Delete workspace members first (foreign key constraint)
     const { error: membersDeleteError } = await supabase
