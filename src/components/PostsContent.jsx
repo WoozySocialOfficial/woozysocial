@@ -56,7 +56,7 @@ const SORT_OPTIONS = {
 
 export const PostsContent = () => {
   const { user } = useAuth();
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, canApprove, hasFinalApproval } = useWorkspace();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("drafts");
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +64,7 @@ export const PostsContent = () => {
   const [sortBy, setSortBy] = useState(SORT_OPTIONS.drafts[0].id);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [actionLoading, setActionLoading] = useState(false);
   const selectAllRef = useRef(null);
   const { invalidatePosts } = useInvalidateQueries();
 
@@ -226,6 +227,35 @@ export const PostsContent = () => {
       alert('Failed to delete: ' + error.message);
     }
   };
+
+  const handleApproval = async (postId, action, commentText = '') => {
+    if (!activeWorkspace || !user) return;
+    setActionLoading(true);
+    try {
+      const response = await fetch(`${baseURL}/api/post/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, workspaceId: activeWorkspace.id, userId: user.id, action, comment: commentText }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update approval');
+      }
+      invalidatePosts(activeWorkspace?.id);
+      refetchPending();
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Error updating approval:', error);
+      alert('Action failed: ' + error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApprove = (postId) => handleApproval(postId, 'approve');
+  const handleReject = (postId, comment) => handleApproval(postId, 'reject', comment);
+  const handleRequestChanges = (postId, comment) => handleApproval(postId, 'changes_requested', comment);
+  const handleForwardToClient = (postId) => handleApproval(postId, 'forward_to_client');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -592,7 +622,12 @@ export const PostsContent = () => {
         <PostDetailPanel
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
-          showApprovalActions={false}
+          showApprovalActions={canApprove || hasFinalApproval}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onRequestChanges={handleRequestChanges}
+          onForwardToClient={handleForwardToClient}
+          actionLoading={actionLoading}
           onEditDraft={handleLoadDraft}
           onEditScheduledPost={handleEditScheduledPost}
         />
