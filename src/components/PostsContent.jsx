@@ -90,7 +90,7 @@ export const PostsContent = () => {
     isLoading: pendingLoading,
     refetch: refetchPending
   } = usePosts(activeWorkspace?.id, user?.id, {
-    approvalStatus: ['pending', 'changes_requested'],
+    approvalStatus: ['pending', 'pending_internal', 'pending_client', 'changes_requested'],
     limit: 100,
     enabled: activeTab === "pending"
   });
@@ -530,23 +530,25 @@ export const PostsContent = () => {
                 </div>
                 <div className="posts-date-col">
                   <div>{formatTableDateTime(post.scheduleDate || post.scheduled_date || post.created_at || post.postDate)}</div>
-                  {activeTab === "pending" && post.approval_status && (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        marginTop: '4px',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        backgroundColor: post.approval_status === 'changes_requested' ? '#f59e0b' : '#afabf9',
-                        color: post.approval_status === 'changes_requested' ? '#FFFFFF' : '#114C5A'
-                      }}
-                    >
-                      {post.approval_status === 'changes_requested' ? 'Changes Requested' : 'Pending Approval'}
-                    </span>
-                  )}
+                  {activeTab === "pending" && post.approval_status && (() => {
+                    const statusConfig = {
+                      pending_internal:   { label: 'Pending Final Review', bg: '#f59e0b', color: '#fff' },
+                      pending_client:     { label: 'Awaiting Client',      bg: '#8b5cf6', color: '#fff' },
+                      pending:            { label: 'Pending Approval',     bg: '#afabf9', color: '#114C5A' },
+                      changes_requested:  { label: 'Changes Requested',    bg: '#f59e0b', color: '#fff' },
+                    };
+                    const cfg = statusConfig[post.approval_status];
+                    if (!cfg) return null;
+                    return (
+                      <span style={{
+                        display: 'inline-block', marginTop: '4px', padding: '2px 8px',
+                        borderRadius: '12px', fontSize: '11px', fontWeight: '600',
+                        textTransform: 'uppercase', backgroundColor: cfg.bg, color: cfg.color
+                      }}>
+                        {cfg.label}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="posts-content-col">
                   <div className="post-content-preview">
