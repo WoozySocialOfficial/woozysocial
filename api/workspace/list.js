@@ -92,52 +92,9 @@ module.exports = async function handler(req, res) {
         }
       }));
 
-    // Sync check: verify Ayrshare profiles still exist, clean up ghosts
-    try {
-      const ayrApiKey = process.env.AYRSHARE_API_KEY;
-      if (ayrApiKey && workspaces.length > 0) {
-        const profileRes = await axios.get('https://api.ayrshare.com/api/profiles', {
-          headers: { Authorization: `Bearer ${ayrApiKey}` },
-          timeout: 10000
-        });
-
-        // Build set of active profile keys from Ayrshare
-        const activeProfiles = new Set();
-        if (Array.isArray(profileRes.data)) {
-          profileRes.data.forEach(p => {
-            if (p.profileKey) activeProfiles.add(p.profileKey);
-          });
-        }
-
-        // Find ghost workspaces (have a profile key that no longer exists in Ayrshare)
-        const ghostWorkspaces = workspaces.filter(
-          w => w.ayr_profile_key && !activeProfiles.has(w.ayr_profile_key)
-        );
-
-        if (ghostWorkspaces.length > 0) {
-          console.log(`[WORKSPACE LIST] Found ${ghostWorkspaces.length} ghost workspace(s), cleaning up`);
-
-          for (const ghost of ghostWorkspaces) {
-            console.log(`[WORKSPACE LIST] Deleting ghost workspace: ${ghost.name} (${ghost.id})`);
-            // Delete in order: members, invitations, drafts, brand profiles, then workspace
-            await supabase.from('workspace_members').delete().eq('workspace_id', ghost.id);
-            await supabase.from('workspace_invitations').delete().eq('workspace_id', ghost.id);
-            await supabase.from('post_drafts').delete().eq('workspace_id', ghost.id);
-            await supabase.from('brand_profiles').delete().eq('workspace_id', ghost.id);
-            // Clear last_workspace_id references to avoid FK violations
-            await supabase.from('user_profiles').update({ last_workspace_id: null }).eq('last_workspace_id', ghost.id);
-            await supabase.from('workspaces').delete().eq('id', ghost.id);
-          }
-
-          // Filter ghosts out of the response
-          const ghostIds = new Set(ghostWorkspaces.map(g => g.id));
-          workspaces = workspaces.filter(w => !ghostIds.has(w.id));
-        }
-      }
-    } catch (syncError) {
-      // Don't block workspace loading if Ayrshare sync fails
-      console.error('[WORKSPACE LIST] Ayrshare sync check failed (non-fatal):', syncError.message);
-    }
+    // NOTE: Ayrshare sync check removed — auto-deleting workspaces on list load
+    // was too dangerous. Ghost workspaces should be handled manually via the
+    // delete endpoint instead.
 
     return sendSuccess(res, {
       workspaces: workspaces,
