@@ -58,6 +58,11 @@ const NOTIFICATION_CONFIG = {
     route: "/team",
     color: "#3b82f6"
   },
+  permission_changed: {
+    icon: "🔑",
+    route: "/team",
+    color: "#8b5cf6"
+  },
   member_joined: {
     icon: "👋",
     route: "/team",
@@ -392,23 +397,29 @@ export const NotificationBell = () => {
     }
   }, [activeWorkspace, user, fetchNotifications]);
 
-  // Optional: Play a subtle notification sound
+  // Play a bell-like ding when a new notification arrives
   const playNotificationSound = () => {
     try {
-      // Create a subtle beep using Web Audio API
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      gainNode.gain.value = 0.1;
-
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.1);
+      // Two harmonics for a bell-like tone
+      [[1046, 0.25], [1568, 0.12]].forEach(([freq, vol]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        // Quick attack, exponential bell decay
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(vol, now + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+        osc.start(now);
+        osc.stop(now + 1.4);
+      });
     } catch (e) {
       // Silently fail if audio not supported
     }

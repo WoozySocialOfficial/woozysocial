@@ -37,7 +37,7 @@ const getInitials = (email) => {
 };
 
 // Memoized member card — only re-renders when its own data changes
-const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermission, onRemove, onLeave }) => {
+const MemberCard = memo(({ member, currentUserId, currentUserCanManageTeam, onUpdateRole, onTogglePermission, onRemove, onLeave }) => {
   const memberRole = normalizeRole(member.role);
   const isMemberOwner = memberRole === 'owner';
   const isCurrentUser = member.user_id === currentUserId;
@@ -63,12 +63,8 @@ const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermissi
         {isMemberOwner ? (
           <span className="member-role owner-role">{getRoleLabel(member.role)}</span>
         ) : isCurrentUser ? (
-          <button className="leave-workspace-button" onClick={onLeave}>
-            Leave Workspace
-          </button>
-        ) : (
           <>
-            {/* Read-only role/permission tags — visible to all users */}
+            {/* Show current user's own role/permissions so they know what they can do */}
             <div className="member-role-tags">
               <span className="member-role">{getRoleLabel(member.role)}</span>
               {member.permissions?.can_final_approval && (
@@ -78,6 +74,24 @@ const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermissi
                 <span className="member-role permission-tag approve-tag">Can Approve</span>
               )}
             </div>
+            <button className="leave-workspace-button" onClick={onLeave}>
+              Leave Workspace
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Read-only role/permission tags — only shown when viewer lacks manage-team permission */}
+            {!currentUserCanManageTeam && (
+              <div className="member-role-tags">
+                <span className="member-role">{getRoleLabel(member.role)}</span>
+                {member.permissions?.can_final_approval && (
+                  <span className="member-role permission-tag final-approver-tag">Final Approver</span>
+                )}
+                {member.permissions?.can_approve_posts && (
+                  <span className="member-role permission-tag approve-tag">Can Approve</span>
+                )}
+              </div>
+            )}
             <RoleGuard permission="canManageTeam" fallbackType="hide">
             <div className="member-controls">
               <select
@@ -488,6 +502,7 @@ export const TeamContent = () => {
                       key={member.id}
                       member={member}
                       currentUserId={user.id}
+                      currentUserCanManageTeam={canManageTeam}
                       onUpdateRole={handleUpdateRole}
                       onTogglePermission={handleTogglePermission}
                       onRemove={handleRemoveMember}
