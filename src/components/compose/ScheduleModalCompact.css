@@ -310,12 +310,31 @@
   background: #8b5cf6;
 }
 
+/* User's selected time — green */
 .hourly-bar-col.active .hourly-bar {
+  background: #059669;
+}
+
+/* Recommended best time — purple */
+.hourly-bar-col.peak .hourly-bar {
   background: #7c3aed;
 }
 
-.hourly-bar-col.peak .hourly-bar {
-  background: #7c3aed;
+/* User selected the recommended time — green wins (confirmed the suggestion) */
+.hourly-bar-col.active.peak .hourly-bar {
+  background: #059669;
+}
+
+/* Small star above the recommended bar (only when it's not also selected) */
+.hourly-bar-col.peak:not(.active) .hourly-bar-track::before {
+  content: '★';
+  display: block;
+  text-align: center;
+  font-size: 8px;
+  color: #7c3aed;
+  line-height: 1;
+  margin-bottom: 3px;
+  flex-shrink: 0;
 }
 
 /* Time label below each bar */
@@ -332,14 +351,22 @@
   color: #7b74b0;
 }
 
+/* Selected time label — green */
 .hourly-bar-col.active .hourly-bar-label {
-  color: #7c3aed;
+  color: #059669;
   font-weight: 700;
 }
 
+/* Recommended time label — purple */
 .hourly-bar-col.peak .hourly-bar-label {
   color: #7c3aed;
   font-weight: 600;
+}
+
+/* When selected = recommended, green wins */
+.hourly-bar-col.active.peak .hourly-bar-label {
+  color: #059669;
+  font-weight: 700;
 }
 
 /* Best Time Recommendation Popup (legacy) */
@@ -532,12 +559,22 @@
 
 [data-theme="dark"] .hourly-bar-col.active .hourly-bar,
 .dark .hourly-bar-col.active .hourly-bar {
-  background: #7c3aed;
+  background: #059669;
 }
 
 [data-theme="dark"] .hourly-bar-col.peak .hourly-bar,
 .dark .hourly-bar-col.peak .hourly-bar {
   background: #7c3aed;
+}
+
+[data-theme="dark"] .hourly-bar-col.active.peak .hourly-bar,
+.dark .hourly-bar-col.active.peak .hourly-bar {
+  background: #059669;
+}
+
+[data-theme="dark"] .hourly-bar-col.peak:not(.active) .hourly-bar-track::before,
+.dark .hourly-bar-col.peak:not(.active) .hourly-bar-track::before {
+  color: #a78bfa;
 }
 
 [data-theme="dark"] .hourly-bar-label,
@@ -547,12 +584,19 @@
 
 [data-theme="dark"] .hourly-bar-col.active .hourly-bar-label,
 .dark .hourly-bar-col.active .hourly-bar-label {
-  color: #c4b5fd;
+  color: #34d399;
+  font-weight: 700;
 }
 
 [data-theme="dark"] .hourly-bar-col.peak .hourly-bar-label,
 .dark .hourly-bar-col.peak .hourly-bar-label {
   color: #c4b5fd;
+}
+
+[data-theme="dark"] .hourly-bar-col.active.peak .hourly-bar-label,
+.dark .hourly-bar-col.active.peak .hourly-bar-label {
+  color: #34d399;
+  font-weight: 700;
 }
 
 /* Dark Mode - Best Time Popup */
