@@ -11,6 +11,10 @@ const ROLES = [
   { value: "viewer", label: "Viewer" }
 ];
 
+// Normalize legacy role values from the agency roster to the current model
+const LEGACY_ROLE_MAP = { admin: 'member', editor: 'member', view_only: 'viewer', client: 'viewer' };
+const normalizeRole = (role) => LEGACY_ROLE_MAP[role] || role || 'member';
+
 export const WorkspaceTeamProvisionModal = ({
   isOpen,
   onClose,
@@ -236,7 +240,7 @@ export const WorkspaceTeamProvisionModal = ({
                         </div>
                         <select
                           className="provision-role-select"
-                          value={roleOverrides[member.id] || member.default_role}
+                          value={roleOverrides[member.id] || normalizeRole(member.default_role)}
                           onChange={(e) => handleRoleChange(member.id, e.target.value)}
                           disabled={isSubmitting}
                         >
@@ -290,7 +294,7 @@ export const WorkspaceTeamProvisionModal = ({
                         </div>
                         <select
                           className="provision-role-select"
-                          value={roleOverrides[member.id] || member.default_role}
+                          value={roleOverrides[member.id] || normalizeRole(member.default_role)}
                           onChange={(e) => handleRoleChange(member.id, e.target.value)}
                           disabled={isSubmitting}
                         >

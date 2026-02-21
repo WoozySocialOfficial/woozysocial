@@ -15,7 +15,8 @@ const {
 } = require("../_utils");
 const { getAgencyAccess } = require("../_utils-access-control");
 
-const VALID_ROLES = ['admin', 'editor', 'view_only', 'client'];
+const VALID_ROLES = ['member', 'viewer'];
+const LEGACY_ROLE_MAP = { admin: 'member', editor: 'member', view_only: 'viewer', client: 'viewer' };
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -50,7 +51,8 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Invalid email format", ErrorCodes.VALIDATION_ERROR);
     }
 
-    const role = defaultRole && VALID_ROLES.includes(defaultRole) ? defaultRole : 'editor';
+    const normalizedDefault = LEGACY_ROLE_MAP[defaultRole] || defaultRole;
+    const role = normalizedDefault && VALID_ROLES.includes(normalizedDefault) ? normalizedDefault : 'member';
 
     // Verify agency access (owner or delegated manager)
     const access = await getAgencyAccess(supabase, userId);

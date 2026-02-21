@@ -457,13 +457,14 @@ module.exports = async function handler(req, res) {
 
       // Add system comment if provided or create default one
       const systemComment = comment ||
+        (action === 'forward_to_client' ? 'Forwarded Post' :
         `Post ${
           action === 'approve' ? 'approved' :
           action === 'reject' ? 'rejected' :
           action === 'changes_requested' ? 'marked for changes' :
           action === 'mark_resolved' ? 'changes resolved - ready for re-approval' :
           action
-        }`;
+        }`);
 
       // Get user info for the comment
       const { data: userProfile } = await supabase
