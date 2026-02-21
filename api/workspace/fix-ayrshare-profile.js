@@ -100,17 +100,26 @@ module.exports = async function handler(req, res) {
     });
 
     // 2. Check if workspace already has a profile key
-    if (workspace.ayr_profile_key) {
-      return res.status(200).json({
-        success: true,
-        message: 'Workspace already has Ayrshare profile',
-        workspace: {
-          id: workspace.id,
-          name: workspace.name,
-          profileKey: workspace.ayr_profile_key,
-          refId: workspace.ayr_ref_id
-        }
-      });
+    // But skip if it's the env var fallback (wrong key saved due to timeout on creation)
+    const fallbackKey = process.env.AYRSHARE_PROFILE_KEY;
+    if (workspace.ayr_profile_key && workspace.ayr_profile_key !== fallbackKey) {
+      // Has a real profile key - only skip if refId is also present
+      if (workspace.ayr_ref_id) {
+        return res.status(200).json({
+          success: true,
+          message: 'Workspace already has Ayrshare profile',
+          workspace: {
+            id: workspace.id,
+            name: workspace.name,
+            profileKey: workspace.ayr_profile_key,
+            refId: workspace.ayr_ref_id
+          }
+        });
+      }
+      // Has profileKey but missing refId - fall through to fetch it
+      console.log('[FIX-AYRSHARE] Workspace has profileKey but missing refId, will fetch it...');
+    } else if (workspace.ayr_profile_key === fallbackKey) {
+      console.log('[FIX-AYRSHARE] Workspace has env var fallback key (wrong key) - will recreate profile');
     }
 
     // 3. Check if workspace has an active subscription
@@ -123,6 +132,35 @@ module.exports = async function handler(req, res) {
           status: workspace.subscription_status
         }
       });
+    }
+
+    // 4a. If workspace has correct profileKey but missing refId, just fetch refId
+    if (workspace.ayr_profile_key && workspace.ayr_profile_key !== fallbackKey && !workspace.ayr_ref_id) {
+      console.log('[FIX-AYRSHARE] Fetching refId from Ayrshare profiles list...');
+      try {
+        const profilesRes = await axios.get(
+          'https://api.ayrshare.com/api/profiles',
+          {
+            headers: { Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}` },
+            timeout: 10000
+          }
+        );
+        const profiles = profilesRes.data.profiles || [];
+        const match = profiles.find(p => p.profileKey === workspace.ayr_profile_key);
+        if (match?.refId) {
+          await supabase.from('workspaces').update({
+            ayr_ref_id: match.refId,
+            updated_at: new Date().toISOString()
+          }).eq('id', workspaceId);
+          return res.status(200).json({
+            success: true,
+            message: 'Fetched and saved missing refId',
+            workspace: { id: workspace.id, name: workspace.name, profileKey: workspace.ayr_profile_key, refId: match.refId }
+          });
+        }
+      } catch (fetchErr) {
+        console.error('[FIX-AYRSHARE] Could not fetch profiles list:', fetchErr.message);
+      }
     }
 
     // 4. Create the Ayrshare profile

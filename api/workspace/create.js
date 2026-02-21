@@ -38,11 +38,44 @@ const createAyrshareProfile = async (title) => {
       }
     );
 
-    return {
-      profileKey: response.data.profileKey,
-      refId: response.data.refId || null
-    };
+    console.log('[workspace.create] Ayrshare profile creation response:', JSON.stringify(response.data));
+
+    const profileKey = response.data.profileKey;
+    if (!profileKey) {
+      console.error('[workspace.create] No profileKey in Ayrshare response:', response.data);
+      return null;
+    }
+
+    // refId is not returned in the creation response - fetch from profiles list
+    let refId = response.data.refId || null;
+
+    if (!refId) {
+      try {
+        const profilesRes = await axios.get(
+          `${BASE_AYRSHARE}/profiles`,
+          {
+            headers: { Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}` },
+            timeout: 10000
+          }
+        );
+        const profiles = profilesRes.data.profiles || [];
+        const match = profiles.find(p => p.profileKey === profileKey);
+        if (match?.refId) {
+          refId = match.refId;
+          console.log('[workspace.create] Fetched refId from profiles list:', refId);
+        }
+      } catch (fetchErr) {
+        console.warn('[workspace.create] Could not fetch refId:', fetchErr.message);
+      }
+    }
+
+    return { profileKey, refId };
   } catch (error) {
+    console.error('[workspace.create] Ayrshare profile creation failed:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     logError('workspace.create.ayrshareProfile', error);
     return null;
   }
