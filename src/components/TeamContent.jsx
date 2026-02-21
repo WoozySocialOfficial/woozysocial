@@ -1,7 +1,8 @@
 /**
  * TeamContent Component - Manages workspace team members, invitations, and agency roster
  */
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, useCallback, memo, lazy, Suspense } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useTeamMembers, usePendingInvites, useAgencyAccess, useInvalidateQueries } from "../hooks/useQueries";
@@ -30,10 +31,117 @@ const getRoleLabel = (role) => {
   return labels[role] || role;
 };
 
+const getInitials = (email) => {
+  if (!email) return "NA";
+  return email.substring(0, 2).toUpperCase();
+};
+
+// Memoized member card — only re-renders when its own data changes
+const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermission, onRemove, onLeave }) => {
+  const memberRole = normalizeRole(member.role);
+  const isMemberOwner = memberRole === 'owner';
+  const isCurrentUser = member.user_id === currentUserId;
+
+  return (
+    <div className="member-card">
+      <div className="member-info">
+        <div className={`member-avatar ${isMemberOwner ? 'owner' : ''}`}>{getInitials(member.profile?.email)}</div>
+        <div className="member-details">
+          <h3 className="member-name">
+            {member.profile?.full_name || member.profile?.email || "Unknown user"}
+            {isCurrentUser && !isMemberOwner && <span className="owner-badge" style={{backgroundColor: '#4CAF50'}}>You</span>}
+          </h3>
+          <p className="member-email">
+            {member.profile?.email || "Email not available"}
+          </p>
+          <p className="member-email">
+            Joined {new Date(member.joined_at || member.created_at).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+      <div className="member-actions">
+        {isMemberOwner ? (
+          <span className="member-role owner-role">{getRoleLabel(member.role)}</span>
+        ) : isCurrentUser ? (
+          <button className="leave-workspace-button" onClick={onLeave}>
+            Leave Workspace
+          </button>
+        ) : (
+          <RoleGuard permission="canManageTeam" fallbackType="hide">
+            <div className="member-controls">
+              <select
+                className="role-dropdown"
+                value={memberRole}
+                onChange={(e) => onUpdateRole(member.user_id, e.target.value)}
+              >
+                <option value="member">Member</option>
+                <option value="viewer">Viewer</option>
+              </select>
+              <div className="permission-toggles">
+                {memberRole === 'member' && (
+                  <>
+                    <label className="toggle-label">
+                      <input
+                        type="checkbox"
+                        checked={member.permissions?.can_final_approval || false}
+                        onChange={(e) => onTogglePermission(member.user_id, 'canFinalApproval', e.target.checked)}
+                      />
+                      <span className="toggle-switch"></span>
+                      Can final approval
+                    </label>
+                    <label className="toggle-label">
+                      <input
+                        type="checkbox"
+                        checked={member.permissions?.can_manage_team || false}
+                        onChange={(e) => onTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
+                      />
+                      <span className="toggle-switch"></span>
+                      Can manage team
+                    </label>
+                  </>
+                )}
+                {memberRole === 'viewer' && (
+                  <>
+                    <label className="toggle-label">
+                      <input
+                        type="checkbox"
+                        checked={member.permissions?.can_approve_posts || false}
+                        onChange={(e) => onTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
+                      />
+                      <span className="toggle-switch"></span>
+                      Can approve posts
+                    </label>
+                    <label className="toggle-label">
+                      <input
+                        type="checkbox"
+                        checked={member.permissions?.can_manage_team || false}
+                        onChange={(e) => onTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
+                      />
+                      <span className="toggle-switch"></span>
+                      Can manage team
+                    </label>
+                  </>
+                )}
+              </div>
+              <button
+                className="remove-button"
+                onClick={() => onRemove(member.user_id)}
+              >
+                Remove
+              </button>
+            </div>
+          </RoleGuard>
+        )}
+      </div>
+    </div>
+  );
+});
+
 export const TeamContent = () => {
   const { user, subscriptionTier } = useAuth();
   const { activeWorkspace, isOwner, canManageTeam } = useWorkspace();
   const { invalidateTeam } = useInvalidateQueries();
+  const queryClient = useQueryClient();
 
   // Use React Query for cached data fetching
   const {
@@ -164,7 +272,7 @@ export const TeamContent = () => {
     }
   };
 
-  const handleRemoveMember = async (memberId) => {
+  const handleRemoveMember = useCallback(async (memberId) => {
     if (!window.confirm('Are you sure you want to remove this team member?')) {
       return;
     }
@@ -193,9 +301,9 @@ export const TeamContent = () => {
       console.error('Error removing team member:', error);
       alert(error.message || 'Failed to remove team member');
     }
-  };
+  }, [activeWorkspace?.id, user?.id]);
 
-  const handleUpdateRole = async (memberId, newRole) => {
+  const handleUpdateRole = useCallback(async (memberId, newRole) => {
     try {
       const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
         method: 'POST',
@@ -220,45 +328,57 @@ export const TeamContent = () => {
       console.error('Error updating member role:', error);
       alert(error.message || 'Failed to update member role');
     }
-  };
+  }, [activeWorkspace?.id, user?.id]);
 
-  const handleTogglePermission = async (memberId, permName, value) => {
+  const handleTogglePermission = useCallback(async (memberId, permName, value) => {
+    const permMap = {
+      canFinalApproval: 'can_final_approval',
+      canManageTeam: 'can_manage_team',
+      canApprovePosts: 'can_approve_posts',
+    };
+    const snakePerm = permMap[permName];
+    const queryKey = ["teamMembers", activeWorkspace.id];
+
+    // Save previous state for rollback
+    const previousData = queryClient.getQueryData(queryKey);
+
+    // Optimistic update — flip the toggle instantly
+    if (snakePerm) {
+      queryClient.setQueryData(queryKey, (old) =>
+        (old || []).map(member =>
+          member.user_id === memberId
+            ? { ...member, permissions: { ...member.permissions, [snakePerm]: value } }
+            : member
+        )
+      );
+    }
+
+    // Fire API call in background
     try {
-      const payload = {
-        memberId,
-        userId: user.id,
-        permissions: { [permName]: value },
-      };
-
-      console.log('🔵 [FRONTEND] handleTogglePermission called');
-      console.log('🔵 [FRONTEND] permName:', permName);
-      console.log('🔵 [FRONTEND] value:', value);
-      console.log('🔵 [FRONTEND] Full payload:', JSON.stringify(payload, null, 2));
-
       const response = await fetch(`${baseURL}/api/workspaces/${activeWorkspace.id}/update-member`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          userId: user.id,
+          permissions: { [permName]: value },
+        }),
       });
 
       const data = await response.json();
-      console.log('🔵 [FRONTEND] Response status:', response.status);
-      console.log('🔵 [FRONTEND] Response data:', JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update permission');
       }
-
-      fetchTeamMembers();
     } catch (error) {
-      console.error('🔴 [FRONTEND] Error toggling permission:', error);
+      // Revert on failure
+      queryClient.setQueryData(queryKey, previousData);
+      console.error('Error toggling permission:', error);
       alert(error.message || 'Failed to update permission');
     }
-  };
+  }, [activeWorkspace?.id, user?.id, queryClient]);
 
-  const handleLeaveWorkspace = async () => {
+  const handleLeaveWorkspace = useCallback(async () => {
     if (!window.confirm('Are you sure you want to leave this workspace? You will need to be invited again to rejoin.')) {
       return;
     }
@@ -287,7 +407,7 @@ export const TeamContent = () => {
       console.error('Error leaving workspace:', error);
       alert(error.message || 'Failed to leave workspace');
     }
-  };
+  }, [activeWorkspace?.id, user?.id]);
 
   return (
     <div className="team-container">
@@ -351,116 +471,17 @@ export const TeamContent = () => {
                     </p>
                   </div>
                 ) : (
-                  teamMembers.map((member) => {
-                    const getInitials = (email) => {
-                      if (!email) return "NA";
-                      return email.substring(0, 2).toUpperCase();
-                    };
-
-                    const memberRole = normalizeRole(member.role);
-                    const isMemberOwner = memberRole === 'owner';
-                    const isCurrentUser = member.user_id === user.id;
-
-                    return (
-                      <div key={member.id} className="member-card">
-                        <div className="member-info">
-                          <div className={`member-avatar ${isMemberOwner ? 'owner' : ''}`}>{getInitials(member.profile?.email)}</div>
-                          <div className="member-details">
-                            <h3 className="member-name">
-                              {member.profile?.full_name || member.profile?.email || "Unknown user"}
-                              {isCurrentUser && !isMemberOwner && <span className="owner-badge" style={{backgroundColor: '#4CAF50'}}>You</span>}
-                            </h3>
-                            <p className="member-email">
-                              {member.profile?.email || "Email not available"}
-                            </p>
-                            <p className="member-email">
-                              Joined {new Date(member.joined_at || member.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="member-actions">
-                          {isMemberOwner ? (
-                            <span className="member-role owner-role">{getRoleLabel(member.role)}</span>
-                          ) : isCurrentUser ? (
-                            <button
-                              className="leave-workspace-button"
-                              onClick={handleLeaveWorkspace}
-                            >
-                              Leave Workspace
-                            </button>
-                          ) : (
-                            <RoleGuard permission="canManageTeam" fallbackType="hide">
-                              <div className="member-controls">
-                                <select
-                                  className="role-dropdown"
-                                  value={memberRole}
-                                  onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
-                                >
-                                  <option value="member">Member</option>
-                                  <option value="viewer">Viewer</option>
-                                </select>
-                                <div className="permission-toggles">
-                                  {/* Member permissions: Final Approval + Manage Team */}
-                                  {memberRole === 'member' && (
-                                    <>
-                                      <label className="toggle-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={member.permissions?.can_final_approval || false}
-                                          onChange={(e) => handleTogglePermission(member.user_id, 'canFinalApproval', e.target.checked)}
-                                        />
-                                        <span className="toggle-switch"></span>
-                                        Can final approval
-                                      </label>
-                                      <label className="toggle-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={member.permissions?.can_manage_team || false}
-                                          onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
-                                        />
-                                        <span className="toggle-switch"></span>
-                                        Can manage team
-                                      </label>
-                                    </>
-                                  )}
-
-                                  {/* Viewer permissions: Manage Team + Client Approval */}
-                                  {memberRole === 'viewer' && (
-                                    <>
-                                      <label className="toggle-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={member.permissions?.can_approve_posts || false}
-                                          onChange={(e) => handleTogglePermission(member.user_id, 'canApprovePosts', e.target.checked)}
-                                        />
-                                        <span className="toggle-switch"></span>
-                                        Can approve posts
-                                      </label>
-                                      <label className="toggle-label">
-                                        <input
-                                          type="checkbox"
-                                          checked={member.permissions?.can_manage_team || false}
-                                          onChange={(e) => handleTogglePermission(member.user_id, 'canManageTeam', e.target.checked)}
-                                        />
-                                        <span className="toggle-switch"></span>
-                                        Can manage team
-                                      </label>
-                                    </>
-                                  )}
-                                </div>
-                                <button
-                                  className="remove-button"
-                                  onClick={() => handleRemoveMember(member.user_id)}
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            </RoleGuard>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
+                  teamMembers.map((member) => (
+                    <MemberCard
+                      key={member.id}
+                      member={member}
+                      currentUserId={user.id}
+                      onUpdateRole={handleUpdateRole}
+                      onTogglePermission={handleTogglePermission}
+                      onRemove={handleRemoveMember}
+                      onLeave={handleLeaveWorkspace}
+                    />
+                  ))
                 )}
               </div>
             </div>

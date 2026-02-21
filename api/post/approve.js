@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { sendApprovalNotification, sendNewCommentNotification, sendClientApprovalRequestNotification, sendInternalRejectionNotification } = require("../notifications/helpers");
+const { sendApprovalNotification, sendNewCommentNotification, sendApprovalRequestNotification, sendInternalRejectionNotification } = require("../notifications/helpers");
 const {
   setCors,
   getSupabase,
@@ -331,11 +331,11 @@ module.exports = async function handler(req, res) {
           .single();
 
         // Notify clients (viewers with can_approve_posts)
-        await sendClientApprovalRequestNotification(supabase, {
+        await sendApprovalRequestNotification(supabase, {
           workspaceId,
           postId,
           platforms: post?.platforms || [],
-          forwardedByUserId: userId
+          createdByUserId: userId
         }).catch(err =>
           logError('post.approve.notification.forwardToClient', err, { postId })
         );
@@ -489,6 +489,7 @@ module.exports = async function handler(req, res) {
         'approve': 'approved',
         'reject': 'rejected',
         'changes_requested': 'marked for changes',
+        'forward_to_client': 'forwarded to client',
         'mark_resolved': 'marked as resolved and sent for re-approval'
       };
 

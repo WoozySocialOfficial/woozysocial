@@ -42,7 +42,8 @@ export const Approvals = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const urlTab = searchParams.get('tab');
+  const [filter, setFilter] = useState(urlTab || 'pending');
   const [selectedPost, setSelectedPost] = useState(null);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +56,13 @@ export const Approvals = () => {
 
   // Get postId from URL query params
   const urlPostId = searchParams.get('postId');
+
+  // Switch tab when URL tab param changes (e.g., clicking a different notification)
+  useEffect(() => {
+    if (urlTab && urlTab !== filter) {
+      setFilter(urlTab);
+    }
+  }, [urlTab]);
 
   const fetchPosts = useCallback(async () => {
     if (!user?.id || !activeWorkspace?.id) return;
@@ -587,41 +595,32 @@ export const Approvals = () => {
               {selectedPost.approval_status === 'pending_internal' && hasFinalApproval && (
                 <div className="approval-actions">
                   <div className="action-section-header">
-                    <FaShieldAlt style={{ marginRight: '8px' }} />
+                    <FaShieldAlt style={{ marginRight: '6px' }} />
                     <span>Final Approver Actions</span>
                   </div>
                   <div className="action-buttons">
                     <button
-                      className="btn-reject"
+                      className="btn-changes"
                       onClick={() => handleApprovalAction('changes_requested')}
                       disabled={submitting}
-                      title="Request changes from creator"
                     >
-                      <FaEdit style={{ marginRight: '6px' }} />
                       Request Changes
                     </button>
                     <button
                       className="btn-forward"
                       onClick={() => handleApprovalAction('forward_to_client')}
                       disabled={submitting}
-                      title="Forward to client for approval"
                     >
-                      <FaArrowRight style={{ marginRight: '6px' }} />
                       Forward to Client
                     </button>
                     <button
                       className="btn-approve"
                       onClick={() => handleApprovalAction('approve')}
                       disabled={submitting}
-                      title="Approve immediately (bypasses client)"
                     >
-                      <FaCheck style={{ marginRight: '6px' }} />
                       Approve Now
                     </button>
                   </div>
-                  <p className="action-help-text">
-                    ℹ️ You can approve this post directly or forward it to the client for their review.
-                  </p>
                 </div>
               )}
 
@@ -629,7 +628,7 @@ export const Approvals = () => {
               {(selectedPost.approval_status === 'pending_client' || selectedPost.approval_status === 'pending') && canApprove && (
                 <div className="approval-actions">
                   <div className="action-section-header">
-                    <FaUser style={{ marginRight: '8px' }} />
+                    <FaUser style={{ marginRight: '6px' }} />
                     <span>Client Actions</span>
                   </div>
                   <div className="action-buttons">
@@ -638,7 +637,6 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('reject')}
                       disabled={submitting}
                     >
-                      <FaTimes style={{ marginRight: '6px' }} />
                       Reject
                     </button>
                     <button
@@ -646,7 +644,6 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('changes_requested')}
                       disabled={submitting}
                     >
-                      <FaEdit style={{ marginRight: '6px' }} />
                       Request Changes
                     </button>
                     <button
@@ -654,7 +651,6 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('approve')}
                       disabled={submitting}
                     >
-                      <FaCheck style={{ marginRight: '6px' }} />
                       Approve
                     </button>
                   </div>
@@ -665,7 +661,7 @@ export const Approvals = () => {
               {selectedPost.approval_status === 'changes_requested' && (
                 <div className="approval-actions">
                   <div className="action-section-header">
-                    <FaCheckCircle style={{ marginRight: '8px' }} />
+                    <FaCheckCircle style={{ marginRight: '6px' }} />
                     <span>Resolve Changes</span>
                   </div>
                   <div className="action-buttons">
@@ -674,13 +670,9 @@ export const Approvals = () => {
                       onClick={() => handleApprovalAction('mark_resolved')}
                       disabled={submitting}
                     >
-                      <FaCheckCircle style={{ marginRight: '6px' }} />
                       Mark Resolved
                     </button>
                   </div>
-                  <p className="action-help-text">
-                    Mark this post as resolved to resubmit for approval.
-                  </p>
                 </div>
               )}
             </div>

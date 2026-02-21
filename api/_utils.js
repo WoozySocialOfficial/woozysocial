@@ -313,7 +313,7 @@ function validateEnv() {
 
 /**
  * Check if a specific service is configured
- * @param {string} service - Service name ('supabase', 'ayrshare', 'anthropic', 'resend')
+ * @param {string} service - Service name ('supabase', 'ayrshare', 'openai', 'resend')
  * @returns {boolean}
  */
 function isServiceConfigured(service) {

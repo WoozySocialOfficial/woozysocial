@@ -42,6 +42,7 @@ module.exports = async function handler(req, res) {
       .select(`
         role,
         can_approve_posts,
+        can_final_approval,
         can_manage_team,
         workspace:workspaces(
           id,
@@ -73,7 +74,7 @@ module.exports = async function handler(req, res) {
 
     // Transform the data and deduplicate by workspace ID
     const seen = new Set();
-    const workspaces = (memberships || [])
+    let workspaces = (memberships || [])
       .filter(m => m.workspace)
       .filter(m => {
         if (seen.has(m.workspace.id)) return false;
@@ -85,9 +86,14 @@ module.exports = async function handler(req, res) {
         membership: {
           role: m.role,
           can_approve_posts: m.can_approve_posts || false,
+          can_final_approval: m.can_final_approval || false,
           can_manage_team: m.can_manage_team || false
         }
       }));
+
+    // NOTE: Ayrshare sync check removed — auto-deleting workspaces on list load
+    // was too dangerous. Ghost workspaces should be handled manually via the
+    // delete endpoint instead.
 
     return sendSuccess(res, {
       workspaces: workspaces,
