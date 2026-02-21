@@ -82,13 +82,28 @@ const NOTIFICATION_CONFIG = {
   },
   post_published: {
     icon: "🚀",
-    route: "/posts",
+    route: "/schedule",
     color: "#10b981"
   },
   post_failed: {
     icon: "⚠️",
-    route: "/posts",
+    route: "/schedule",
     color: "#ef4444"
+  },
+  final_approval_request: {
+    icon: "🛡️",
+    route: "/approvals",
+    color: "#9c27b0"
+  },
+  internal_changes_requested: {
+    icon: "✏️",
+    route: "/schedule",
+    color: "#f39c12"
+  },
+  post_updated: {
+    icon: "🔄",
+    route: "/approvals",
+    color: "#3b82f6"
   },
   post_reminder: {
     icon: "⏰",
@@ -308,6 +323,28 @@ export const NotificationBell = () => {
       case 'comment_mention':
         // Main app → schedule page (opens PostDetailPanel), Client → approvals
         route = isClientRole ? '/client/approvals' : '/schedule';
+        if (postId) route += `?postId=${postId}`;
+        break;
+      case 'final_approval_request':
+        route = '/approvals?tab=pending_internal';
+        if (postId) route += `&postId=${postId}`;
+        break;
+      case 'internal_changes_requested':
+        // Creator needs to update the post on schedule page
+        route = '/schedule';
+        if (postId) route += `?postId=${postId}`;
+        break;
+      case 'post_updated':
+        // Approvers see updated post in internal review
+        route = '/approvals?tab=pending_internal';
+        if (postId) route += `&postId=${postId}`;
+        break;
+      case 'post_scheduled':
+        route = '/schedule';
+        if (postId) route += `?postId=${postId}`;
+        break;
+      case 'post_failed':
+        route = '/schedule';
         if (postId) route += `?postId=${postId}`;
         break;
       default:

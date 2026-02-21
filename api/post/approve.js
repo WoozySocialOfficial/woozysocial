@@ -254,6 +254,7 @@ module.exports = async function handler(req, res) {
       }
 
       // Guard: prevent re-approving a post that's already approved/scheduled/posted
+      // Allow re-approval if status is 'failed' (retry after Ayrshare failure)
       if (action === 'approve') {
         const { data: currentPost } = await supabase
           .from('posts')
@@ -261,7 +262,7 @@ module.exports = async function handler(req, res) {
           .eq('id', postId)
           .single();
 
-        if (currentPost && (currentPost.approval_status === 'approved' || currentPost.status === 'scheduled' || currentPost.status === 'posted')) {
+        if (currentPost && currentPost.status !== 'failed' && (currentPost.approval_status === 'approved' || currentPost.status === 'scheduled' || currentPost.status === 'posted')) {
           return res.status(200).json({
             success: true,
             message: 'Post already approved',
@@ -374,17 +375,20 @@ module.exports = async function handler(req, res) {
           return sendError(res, "Failed to fetch post data", ErrorCodes.DATABASE_ERROR);
         }
 
-        if (post && post.status === 'pending_approval') {
-          // Get workspace profile key with env fallback
-          let profileKey = await getWorkspaceProfileKey(workspaceId);
-          if (!profileKey && process.env.AYRSHARE_PROFILE_KEY) {
-            profileKey = process.env.AYRSHARE_PROFILE_KEY;
-          }
+        if (post && (post.status === 'pending_approval' || post.status === 'failed')) {
+          // Get workspace profile key — no env var fallback to avoid using the wrong profile
+          const profileKey = await getWorkspaceProfileKey(workspaceId);
 
           if (!profileKey) {
+            // Roll back approval_status so the post isn't stuck
+            await supabase
+              .from('posts')
+              .update({ approval_status: 'pending_client', status: 'pending_approval' })
+              .eq('id', postId);
+            await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
             return sendError(
               res,
-              "No social media profile found for this workspace",
+              "This workspace has no social media profile configured. Please connect your social accounts first.",
               ErrorCodes.VALIDATION_ERROR
             );
           }
@@ -396,7 +400,6 @@ module.exports = async function handler(req, res) {
 
             if (ayrshareResponse.status !== 'error') {
               // Update post with Ayrshare ID and new status
-              // Ayrshare returns ID in posts array
               const ayrPostId = ayrshareResponse.posts?.[0]?.id || ayrshareResponse.id || ayrshareResponse.postId;
               const scheduledTime = new Date(post.scheduled_at);
               const now = new Date();
@@ -417,37 +420,43 @@ module.exports = async function handler(req, res) {
                 })
                 .eq('id', postId);
             } else {
-              // Ayrshare returned error
+              // Ayrshare returned error — roll back approval_status so the post can be retried
+              const errorMsg = ayrshareResponse.message || 'Failed to post to Ayrshare';
               await supabase
                 .from('posts')
                 .update({
                   status: 'failed',
-                  last_error: ayrshareResponse.message || 'Failed to post to Ayrshare'
+                  approval_status: 'pending_client',
+                  last_error: errorMsg
                 })
                 .eq('id', postId);
+              await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
 
               return sendError(
                 res,
-                "Failed to post to social platforms",
+                `Failed to post to social platforms: ${errorMsg}`,
                 ErrorCodes.EXTERNAL_API_ERROR,
                 ayrshareResponse
               );
             }
           } catch (ayrError) {
             logError('post.approve.ayrshare', ayrError, { postId, workspaceId });
+            const errorMsg = ayrError.response?.data?.message || ayrError.message;
 
-            // Failed to send to Ayrshare
+            // Roll back approval_status so the post can be retried
             await supabase
               .from('posts')
               .update({
                 status: 'failed',
-                last_error: ayrError.response?.data?.message || ayrError.message
+                approval_status: 'pending_client',
+                last_error: errorMsg
               })
               .eq('id', postId);
+            await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
 
             return sendError(
               res,
-              "Failed to send post to social platforms",
+              `Failed to send post to social platforms: ${errorMsg}`,
               ErrorCodes.EXTERNAL_API_ERROR,
               ayrError.response?.data
             );

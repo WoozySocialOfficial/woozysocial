@@ -264,6 +264,17 @@
   font-size: 14px;
 }
 
+.post-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
 .post-thumbnail {
   width: 60px;
   height: 60px;

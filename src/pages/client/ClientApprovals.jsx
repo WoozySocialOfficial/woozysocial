@@ -11,6 +11,22 @@ import { SiX, SiBluesky } from "react-icons/si";
 import { CommentThread } from "../../components/comments/CommentThread";
 import "./ClientApprovals.css";
 
+const STATUS_LABELS = {
+  pending_client: 'Awaiting Approval',
+  pending: 'Pending Approval',
+  changes_requested: 'Changes Requested',
+  approved: 'Approved',
+  rejected: 'Rejected'
+};
+
+const STATUS_COLORS = {
+  pending_client: '#9c27b0',
+  pending: '#6e5ef5',
+  changes_requested: '#f39c12',
+  approved: '#2ecc71',
+  rejected: '#e74c3c'
+};
+
 export const ClientApprovals = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
@@ -42,7 +58,7 @@ export const ClientApprovals = () => {
 
   // Use React Query for cached data fetching
   const {
-    data: { posts = [], workspaceHasFinalApprovers = false } = {},
+    data: { posts = [] } = {},
     isLoading: loading,
     refetch: refetchPosts
   } = usePendingApprovals(activeWorkspace?.id, user?.id, activeTab);
@@ -53,12 +69,6 @@ export const ClientApprovals = () => {
       label: "Awaiting Approval",
       icon: FaClock,
       description: "These posts have been reviewed internally and are ready for your sign-off before they go live."
-    },
-    {
-      id: "pending",
-      label: "Direct Pending",
-      icon: FaClock,
-      description: "These posts were sent directly for your approval without going through an internal review first."
     },
     {
       id: "changes_requested",
@@ -323,7 +333,7 @@ export const ClientApprovals = () => {
       {/* Tabs + Sort */}
       <div className="approvals-tabs-row">
         <div className="approvals-tabs">
-          {tabs.filter(tab => !(tab.id === "pending" && workspaceHasFinalApprovers)).map((tab) => {
+          {tabs.map((tab) => {
             const IconComponent = tab.icon;
             return (
               <button
@@ -336,9 +346,6 @@ export const ClientApprovals = () => {
               >
                 <span className="tab-icon"><IconComponent /></span>
                 <span className="tab-label">{tab.label}</span>
-                {tab.id === "pending" && posts.length > 0 && activeTab === "pending" && (
-                  <span className="tab-badge">{posts.length}</span>
-                )}
               </button>
             );
           })}
@@ -391,7 +398,6 @@ export const ClientApprovals = () => {
               <span className="empty-icon">✨</span>
               <p>No {
                 activeTab === "pending_client" ? "posts awaiting your approval" :
-                activeTab === "pending" ? "direct posts pending" :
                 activeTab === "changes_requested" ? "posts with changes requested" :
                 activeTab === "approved" ? "approved posts" :
                 activeTab === "rejected" ? "rejected posts" :
@@ -415,6 +421,14 @@ export const ClientApprovals = () => {
                     <span className="post-date">
                       📅 {formatDate(post.scheduled_at)}
                     </span>
+                    {STATUS_LABELS[post.approval_status] && (
+                      <span
+                        className="post-status-badge"
+                        style={{ backgroundColor: STATUS_COLORS[post.approval_status] }}
+                      >
+                        {STATUS_LABELS[post.approval_status]}
+                      </span>
+                    )}
                     <div className="post-platforms">
                       {post.platforms?.map((p) => (
                         <span key={p} className="platform-badge" title={p}>
