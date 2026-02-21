@@ -81,6 +81,11 @@ export const BrandProfileContent = () => {
     }
   }, [activeWorkspace?.id, draftKey]);
 
+  // Reset hasLoadedData when workspace changes so each workspace's profile loads fresh
+  useEffect(() => {
+    hasLoadedData.current = false;
+  }, [activeWorkspace?.id]);
+
   // Populate form when data loads (from DB or draft)
   useEffect(() => {
     if (hasLoadedData.current || !draftKey) return;
