@@ -67,7 +67,18 @@ const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermissi
             Leave Workspace
           </button>
         ) : (
-          <RoleGuard permission="canManageTeam" fallbackType="hide">
+          <>
+            {/* Read-only role/permission tags — visible to all users */}
+            <div className="member-role-tags">
+              <span className="member-role">{getRoleLabel(member.role)}</span>
+              {member.permissions?.can_final_approval && (
+                <span className="member-role permission-tag final-approver-tag">Final Approver</span>
+              )}
+              {member.permissions?.can_approve_posts && (
+                <span className="member-role permission-tag approve-tag">Can Approve</span>
+              )}
+            </div>
+            <RoleGuard permission="canManageTeam" fallbackType="hide">
             <div className="member-controls">
               <select
                 className="role-dropdown"
@@ -131,6 +142,7 @@ const MemberCard = memo(({ member, currentUserId, onUpdateRole, onTogglePermissi
               </button>
             </div>
           </RoleGuard>
+          </>
         )}
       </div>
     </div>
