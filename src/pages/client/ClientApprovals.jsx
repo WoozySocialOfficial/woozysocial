@@ -42,7 +42,7 @@ export const ClientApprovals = () => {
 
   // Use React Query for cached data fetching
   const {
-    data: posts = [],
+    data: { posts = [], workspaceHasFinalApprovers = false } = {},
     isLoading: loading,
     refetch: refetchPosts
   } = usePendingApprovals(activeWorkspace?.id, user?.id, activeTab);
@@ -52,28 +52,31 @@ export const ClientApprovals = () => {
       id: "pending_client",
       label: "Awaiting Approval",
       icon: FaClock,
-      description: "Posts forwarded by final approvers"
+      description: "These posts have been reviewed internally and are ready for your sign-off before they go live."
     },
     {
       id: "pending",
       label: "Direct Pending",
       icon: FaClock,
-      description: "Posts sent directly (no final approver)"
+      description: "These posts were sent directly for your approval without going through an internal review first."
     },
     {
       id: "changes_requested",
       label: "Changes Requested",
-      icon: FaEdit
+      icon: FaEdit,
+      description: "These posts need edits based on feedback. Once updated, they'll be resubmitted for approval."
     },
     {
       id: "approved",
       label: "Approved",
-      icon: FaCheck
+      icon: FaCheck,
+      description: "These posts have been approved and are scheduled to go live on the selected platforms."
     },
     {
       id: "rejected",
       label: "Rejected",
-      icon: FaTimes
+      icon: FaTimes,
+      description: "These posts were rejected and will not be published. You can review the feedback left by your team."
     }
   ];
 
@@ -320,7 +323,7 @@ export const ClientApprovals = () => {
       {/* Tabs + Sort */}
       <div className="approvals-tabs-row">
         <div className="approvals-tabs">
-          {tabs.map((tab) => {
+          {tabs.filter(tab => !(tab.id === "pending" && workspaceHasFinalApprovers)).map((tab) => {
             const IconComponent = tab.icon;
             return (
               <button
@@ -370,6 +373,13 @@ export const ClientApprovals = () => {
           )}
         </div>
       </div>
+
+      {/* Active tab description */}
+      {tabs.find(t => t.id === activeTab)?.description && (
+        <p className="tab-description">
+          {tabs.find(t => t.id === activeTab).description}
+        </p>
+      )}
 
       <div className="approvals-content">
         {/* Posts List */}

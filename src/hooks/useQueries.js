@@ -102,7 +102,10 @@ export function usePendingApprovals(workspaceId, userId, status = "pending") {
       if (!res.ok) throw new Error("Failed to fetch pending approvals");
       const data = await res.json();
       const responseData = data.data || data;
-      return responseData.grouped?.[status] || [];
+      return {
+        posts: responseData.grouped?.[status] || [],
+        workspaceHasFinalApprovers: responseData.workspaceHasFinalApprovers ?? false
+      };
     },
     enabled: !!(workspaceId && userId),
     staleTime: 1000 * 45, // 45 seconds - approvals are time-sensitive but don't need constant refetch

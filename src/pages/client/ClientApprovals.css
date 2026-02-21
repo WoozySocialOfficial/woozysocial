@@ -25,9 +25,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.tab-description {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 20px 0;
+  padding: 0 2px;
 }
 
 /* Tabs */
