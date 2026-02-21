@@ -138,6 +138,38 @@ async function sendRoleChangedNotification(supabase, { userId, workspaceId, work
 }
 
 /**
+ * Send notification when a member's individual permission is toggled
+ */
+async function sendPermissionChangedNotification(supabase, { userId, workspaceId, workspaceName, permissionName, granted, changedByUserId }) {
+  try {
+    const permLabels = {
+      can_final_approval: 'Final Approval',
+      can_approve_posts: 'Post Approval',
+      can_manage_team: 'Team Management',
+    };
+
+    const label = permLabels[permissionName] || permissionName;
+    const title = granted ? 'Permission Granted' : 'Permission Removed';
+    const message = granted
+      ? `You have been granted ${label} permission in ${workspaceName}.`
+      : `Your ${label} permission in ${workspaceName} has been removed.`;
+
+    await supabase.from('notifications').insert({
+      user_id: userId,
+      workspace_id: workspaceId,
+      type: 'permission_changed',
+      title,
+      message,
+      actor_id: changedByUserId,
+      metadata: { permissionName, granted },
+      read: false
+    });
+  } catch (error) {
+    logError('notifications.helpers.permissionChanged', error, { userId, workspaceId });
+  }
+}
+
+/**
  * Send notification when a new member joins
  */
 async function sendMemberJoinedNotification(supabase, { workspaceId, newMemberName, newMemberId, notifyUserIds }) {
@@ -818,6 +850,7 @@ module.exports = {
   sendWorkspaceInviteNotification,
   sendInviteAcceptedNotification,
   sendRoleChangedNotification,
+  sendPermissionChangedNotification,
   sendMemberJoinedNotification,
   sendNewCommentNotification,
   sendMentionNotifications,
