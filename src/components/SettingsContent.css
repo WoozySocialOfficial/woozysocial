@@ -655,14 +655,16 @@ input:checked + .toggle-slider:before {
 
 [data-theme="dark"] .security-button,
 .dark .security-button {
-  border-color: #2a2545;
-  color: #ede9fc;
+  border-color: #afabf9;
+  color: #afabf9;
+  background-color: transparent;
 }
 
 [data-theme="dark"] .security-button:hover,
 .dark .security-button:hover {
-  background-color: #7c3aed;
-  color: #ffffff;
+  background-color: #afabf9;
+  color: #000000;
+  border-color: #afabf9;
 }
 
 [data-theme="dark"] .api-info-box,
