@@ -303,7 +303,7 @@ export const OnboardingTour = ({ onComplete }) => {
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className={`tour-tooltip ${hasSpotlight ? `tour-tooltip--${tooltipPos.placement}` : 'tour-tooltip--center'}`}
+        className={`tour-tooltip ${hasSpotlight ? `tour-tooltip--${tooltipPos.placement}` : 'tour-tooltip--center'} ${isFirstStep ? 'tour-tooltip--welcome' : ''} ${isLastStep ? 'tour-tooltip--done' : ''}`}
         style={hasSpotlight ? { top: tooltipPos.top, left: tooltipPos.left } : {}}
       >
         {/* Progress bar */}
