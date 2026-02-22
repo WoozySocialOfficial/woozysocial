@@ -11,6 +11,22 @@ import { SiX, SiBluesky } from "react-icons/si";
 import { CommentThread } from "../../components/comments/CommentThread";
 import "./ClientApprovals.css";
 
+const STATUS_LABELS = {
+  pending_client: 'Awaiting Approval',
+  pending: 'Pending Approval',
+  changes_requested: 'Changes Requested',
+  approved: 'Approved',
+  rejected: 'Rejected'
+};
+
+const STATUS_COLORS = {
+  pending_client: '#9c27b0',
+  pending: '#6e5ef5',
+  changes_requested: '#f39c12',
+  approved: '#2ecc71',
+  rejected: '#e74c3c'
+};
+
 export const ClientApprovals = () => {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
@@ -42,7 +58,7 @@ export const ClientApprovals = () => {
 
   // Use React Query for cached data fetching
   const {
-    data: posts = [],
+    data: { posts = [] } = {},
     isLoading: loading,
     refetch: refetchPosts
   } = usePendingApprovals(activeWorkspace?.id, user?.id, activeTab);
@@ -52,28 +68,25 @@ export const ClientApprovals = () => {
       id: "pending_client",
       label: "Awaiting Approval",
       icon: FaClock,
-      description: "Posts forwarded by final approvers"
-    },
-    {
-      id: "pending",
-      label: "Direct Pending",
-      icon: FaClock,
-      description: "Posts sent directly (no final approver)"
+      description: "These posts have been reviewed internally and are ready for your sign-off before they go live."
     },
     {
       id: "changes_requested",
       label: "Changes Requested",
-      icon: FaEdit
+      icon: FaEdit,
+      description: "These posts need edits based on feedback. Once updated, they'll be resubmitted for approval."
     },
     {
       id: "approved",
       label: "Approved",
-      icon: FaCheck
+      icon: FaCheck,
+      description: "These posts have been approved and are scheduled to go live on the selected platforms."
     },
     {
       id: "rejected",
       label: "Rejected",
-      icon: FaTimes
+      icon: FaTimes,
+      description: "These posts were rejected and will not be published. You can review the feedback left by your team."
     }
   ];
 
@@ -333,9 +346,6 @@ export const ClientApprovals = () => {
               >
                 <span className="tab-icon"><IconComponent /></span>
                 <span className="tab-label">{tab.label}</span>
-                {tab.id === "pending" && posts.length > 0 && activeTab === "pending" && (
-                  <span className="tab-badge">{posts.length}</span>
-                )}
               </button>
             );
           })}
@@ -371,6 +381,13 @@ export const ClientApprovals = () => {
         </div>
       </div>
 
+      {/* Active tab description */}
+      {tabs.find(t => t.id === activeTab)?.description && (
+        <p className="tab-description">
+          {tabs.find(t => t.id === activeTab).description}
+        </p>
+      )}
+
       <div className="approvals-content">
         {/* Posts List */}
         <div className="posts-list">
@@ -381,7 +398,6 @@ export const ClientApprovals = () => {
               <span className="empty-icon">✨</span>
               <p>No {
                 activeTab === "pending_client" ? "posts awaiting your approval" :
-                activeTab === "pending" ? "direct posts pending" :
                 activeTab === "changes_requested" ? "posts with changes requested" :
                 activeTab === "approved" ? "approved posts" :
                 activeTab === "rejected" ? "rejected posts" :
@@ -405,6 +421,14 @@ export const ClientApprovals = () => {
                     <span className="post-date">
                       📅 {formatDate(post.scheduled_at)}
                     </span>
+                    {STATUS_LABELS[post.approval_status] && (
+                      <span
+                        className="post-status-badge"
+                        style={{ backgroundColor: STATUS_COLORS[post.approval_status] }}
+                      >
+                        {STATUS_LABELS[post.approval_status]}
+                      </span>
+                    )}
                     <div className="post-platforms">
                       {post.platforms?.map((p) => (
                         <span key={p} className="platform-badge" title={p}>

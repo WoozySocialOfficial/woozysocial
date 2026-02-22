@@ -7,7 +7,7 @@ const {
   logError,
   isValidUUID
 } = require("../../_utils");
-const { sendRoleChangedNotification } = require("../../notifications/helpers");
+const { sendRoleChangedNotification, sendPermissionChangedNotification } = require("../../notifications/helpers");
 
 const VALID_ROLES = ['member', 'viewer'];
 
@@ -155,22 +155,46 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to update member", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Send notification if role changed (non-blocking)
-    if (role && role !== targetMember.role) {
+    // Send notifications for role/permission changes (non-blocking)
+    const permSnakeMap = {
+      canFinalApproval: 'can_final_approval',
+      canApprovePosts: 'can_approve_posts',
+      canManageTeam: 'can_manage_team',
+    };
+    const permToNotify = permissions ? Object.keys(permissions).filter(k => k in permSnakeMap) : [];
+    const roleChanged = role && role !== targetMember.role;
+
+    if (roleChanged || permToNotify.length > 0) {
       const { data: workspace } = await supabase
         .from('workspaces')
         .select('name')
         .eq('id', workspaceId)
         .single();
+      const workspaceName = workspace?.name || 'Unknown';
 
-      await sendRoleChangedNotification(supabase, {
-        userId: memberId,
-        workspaceId,
-        workspaceName: workspace?.name || 'Unknown',
-        oldRole: targetMember.role,
-        newRole: role,
-        changedByUserId: userId
-      });
+      if (roleChanged) {
+        await sendRoleChangedNotification(supabase, {
+          userId: memberId,
+          workspaceId,
+          workspaceName,
+          oldRole: targetMember.role,
+          newRole: role,
+          changedByUserId: userId
+        });
+      }
+
+      if (permToNotify.length > 0) {
+        await Promise.all(permToNotify.map(k =>
+          sendPermissionChangedNotification(supabase, {
+            userId: memberId,
+            workspaceId,
+            workspaceName,
+            permissionName: permSnakeMap[k],
+            granted: Boolean(permissions[k]),
+            changedByUserId: userId
+          })
+        ));
+      }
     }
 
     return sendSuccess(res, {

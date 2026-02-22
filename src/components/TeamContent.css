@@ -420,6 +420,24 @@
   color: #92400e;
 }
 
+/* Read-only role/permission tag row */
+.member-role-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.member-role.permission-tag.final-approver-tag {
+  background-color: #fce7f3;
+  color: #be185d;
+}
+
+.member-role.permission-tag.approve-tag {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
 .resend-button {
   padding: 6px 14px;
   border-radius: 6px;
@@ -690,6 +708,18 @@
 .dark .member-role.pending-badge {
   background-color: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
+}
+
+[data-theme="dark"] .member-role.permission-tag.final-approver-tag,
+.dark .member-role.permission-tag.final-approver-tag {
+  background-color: rgba(190, 24, 93, 0.2);
+  color: #f9a8d4;
+}
+
+[data-theme="dark"] .member-role.permission-tag.approve-tag,
+.dark .member-role.permission-tag.approve-tag {
+  background-color: rgba(5, 150, 105, 0.2);
+  color: #6ee7b7;
 }
 
 [data-theme="dark"] .role-dropdown,

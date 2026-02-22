@@ -43,7 +43,7 @@ export const Approvals = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const urlTab = searchParams.get('tab');
-  const [filter, setFilter] = useState(urlTab || 'pending');
+  const [filter, setFilter] = useState(urlTab || 'pending_internal');
   const [selectedPost, setSelectedPost] = useState(null);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -85,6 +85,11 @@ export const Approvals = () => {
         const responseData = data.data || data;
         if (filter === 'all') {
           setPosts(responseData.posts || []);
+        } else if (filter === 'pending_client') {
+          // Merge legacy 'pending' posts into pending_client
+          const pendingClient = responseData.grouped?.pending_client || [];
+          const legacyPending = responseData.grouped?.pending || [];
+          setPosts([...pendingClient, ...legacyPending]);
         } else {
           setPosts(responseData.grouped?.[filter] || []);
         }
@@ -376,19 +381,6 @@ export const Approvals = () => {
             Awaiting Client
             {posts.filter(p => p.approval_status === 'pending_client').length > 0 && (
               <span className="filter-badge">{posts.filter(p => p.approval_status === 'pending_client').length}</span>
-            )}
-          </button>
-        )}
-
-        {/* Legacy pending tab - for backward compatibility */}
-        {(hasFinalApproval || canApprove) && (
-          <button
-            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilter('pending')}
-          >
-            Pending
-            {posts.filter(p => p.approval_status === 'pending').length > 0 && (
-              <span className="filter-badge">{posts.filter(p => p.approval_status === 'pending').length}</span>
             )}
           </button>
         )}

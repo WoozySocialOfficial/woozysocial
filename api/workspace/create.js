@@ -38,11 +38,44 @@ const createAyrshareProfile = async (title) => {
       }
     );
 
-    return {
-      profileKey: response.data.profileKey,
-      refId: response.data.refId || null
-    };
+    console.log('[workspace.create] Ayrshare profile creation response:', JSON.stringify(response.data));
+
+    const profileKey = response.data.profileKey;
+    if (!profileKey) {
+      console.error('[workspace.create] No profileKey in Ayrshare response:', response.data);
+      return null;
+    }
+
+    // refId is not returned in the creation response - fetch from profiles list
+    let refId = response.data.refId || null;
+
+    if (!refId) {
+      try {
+        const profilesRes = await axios.get(
+          `${BASE_AYRSHARE}/profiles`,
+          {
+            headers: { Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}` },
+            timeout: 10000
+          }
+        );
+        const profiles = profilesRes.data.profiles || [];
+        const match = profiles.find(p => p.profileKey === profileKey);
+        if (match?.refId) {
+          refId = match.refId;
+          console.log('[workspace.create] Fetched refId from profiles list:', refId);
+        }
+      } catch (fetchErr) {
+        console.warn('[workspace.create] Could not fetch refId:', fetchErr.message);
+      }
+    }
+
+    return { profileKey, refId };
   } catch (error) {
+    console.error('[workspace.create] Ayrshare profile creation failed:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     logError('workspace.create.ayrshareProfile', error);
     return null;
   }
@@ -117,11 +150,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // If Ayrshare profile creation failed, fall back to env var
-    // NOTE: ayr_profile_key is on workspaces table, not user_profiles
+    // If Ayrshare profile creation failed, leave key as null.
+    // DO NOT fall back to the env var key - that would save the wrong profile key
+    // (shared primary key) against this workspace, silently breaking social connect.
+    // A null key is safe: generate-jwt.js has its own fallback for the JWT flow,
+    // and fix-ayrshare-profile.js will create the correct profile on demand.
     if (!ayrProfileKey) {
-      ayrProfileKey = process.env.AYRSHARE_PROFILE_KEY || null;
-      ayrRefId = null;
+      console.warn('[workspace.create] Ayrshare profile creation failed - workspace will have null ayr_profile_key. Use /api/workspace/fix-ayrshare-profile to repair.');
     }
 
     // Create workspace in database (owned by the effective owner)

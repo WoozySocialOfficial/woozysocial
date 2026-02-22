@@ -79,7 +79,7 @@ async function getBrandProfile(workspaceId, userId) {
   }
 }
 
-// Generate post using OpenAI
+// Generate post using Claude
 async function generateWithAI(prompt, websiteData, brandProfile, platforms, useEmojis = true) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -101,6 +101,7 @@ async function generateWithAI(prompt, websiteData, brandProfile, platforms, useE
     if (brandProfile.target_audience) brandContext += `\nAudience: ${brandProfile.target_audience}`;
     if (brandProfile.tone_of_voice) brandContext += `\nTone: ${brandProfile.tone_of_voice}`;
     if (brandProfile.key_topics) brandContext += `\nTopics: ${brandProfile.key_topics}`;
+    if (brandProfile.sample_posts) brandContext += `\nExample posts from this brand (match this style):\n${brandProfile.sample_posts}`;
   }
 
   // Platform guidelines
@@ -119,24 +120,48 @@ async function generateWithAI(prompt, websiteData, brandProfile, platforms, useE
     .filter(Boolean)
     .join('\n');
 
+  // Check for sample post images (vision input)
+  const sampleImages = (brandProfile?.sample_post_images || []).filter(Boolean).slice(0, 5);
+  const hasImages = sampleImages.length > 0;
+
   const systemPrompt = `You write social media posts that sound human, casual, and real. No corporate buzzwords.
 Rules: 1-3 sentences per post. Hook first. Max 5 hashtags at end. Use contractions. Be specific.
 Never use: "excited to announce", "game-changer", "unlock", "leverage", "journey", "empower", "don't miss out".
 ${useEmojis ? 'Use 0-2 emojis if natural.' : 'No emojis.'}
 ${selectedPlatformGuidelines ? `Platform rules:\n${selectedPlatformGuidelines}` : ''}
 ${brandContext}${websiteContext}
-
+${hasImages ? 'The user has provided screenshot examples of their real posts above. Study the exact writing style, formatting, line breaks, emoji usage, and tone from those images — mirror it closely.' : ''}
 Output 3 variations separated by --- on its own line. No bold, no markdown, no labels, no numbering.
 Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold take or question.`;
+
+  // Build message content — prepend sample post images if provided
+  const userMessageContent = [];
+  if (hasImages) {
+    sampleImages.forEach(url => {
+      userMessageContent.push({
+        type: 'image',
+        source: { type: 'url', url }
+      });
+    });
+    userMessageContent.push({
+      type: 'text',
+      text: `These are real posts from this brand. Study their style closely, then write 3 social media posts about: ${prompt}`
+    });
+  } else {
+    userMessageContent.push({
+      type: 'text',
+      text: `Write 3 social media posts about: ${prompt}`
+    });
+  }
 
   const response = await axios.post('https://api.anthropic.com/v1/messages', {
     model: 'claude-haiku-4-5-20251001',
     system: systemPrompt,
     messages: [
-      { role: 'user', content: `Write 3 social media posts about: ${prompt}` }
+      { role: 'user', content: hasImages ? userMessageContent : userMessageContent[0].text }
     ],
     temperature: 0.85,
-    max_tokens: 500
+    max_tokens: 600
   }, {
     headers: {
       'Content-Type': 'application/json',

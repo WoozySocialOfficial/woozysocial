@@ -114,6 +114,15 @@ module.exports = async function handler(req, res) {
     // Show posts that are pending approval, scheduled, or posted (to include approved posts)
     query = query.in('status', ['pending_approval', 'scheduled', 'posted']);
 
+    // Check if workspace has any members with can_final_approval enabled
+    const { data: finalApproverMembers } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .eq('can_final_approval', true)
+      .limit(1);
+    const workspaceHasFinalApprovers = finalApproverMembers != null && finalApproverMembers.length > 0;
+
     const { data: posts, error } = await query;
 
     if (error) {
@@ -193,7 +202,8 @@ module.exports = async function handler(req, res) {
       isClientApprover: (
         (membership.role === 'viewer' && membership.can_approve_posts === true) ||
         membership.role === 'owner'
-      )
+      ),
+      workspaceHasFinalApprovers
     });
 
   } catch (error) {

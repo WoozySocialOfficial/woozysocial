@@ -38,7 +38,7 @@ export const SocialAccounts = () => {
   const toast = useToast();
 
   const fetchActiveAccounts = useCallback(async () => {
-    if (!user || !activeWorkspace) return;
+    if (!user || !activeWorkspace) return [];
 
     try {
       // Use workspaceId for multi-workspace support
@@ -52,8 +52,10 @@ export const SocialAccounts = () => {
 
       // Sync with Supabase database
       await syncAccountsToDatabase(accounts);
+      return accounts;
     } catch (err) {
       console.warn("fetchActiveAccounts error", err);
+      return [];
     }
   }, [user, activeWorkspace]);
 
@@ -140,13 +142,15 @@ export const SocialAccounts = () => {
         `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
       );
 
+      // Snapshot which accounts are connected before the popup opens
+      const accountsBefore = new Set(activeAccounts);
+
       // Poll to detect when popup closes
       const poll = setInterval(async () => {
         if (popup && popup.closed) {
           clearInterval(poll);
-          setLoading(true);
 
-          // Get profile key and invalidate backend cache
+          // Invalidate backend cache so next fetch hits Ayrshare fresh
           try {
             const profileKeyResponse = await fetch(
               `${baseURL}/api/check-and-create-profile?workspaceId=${activeWorkspace.id}`
@@ -155,7 +159,6 @@ export const SocialAccounts = () => {
             if (profileKeyResponse.ok) {
               const data = await profileKeyResponse.json();
               if (data.profileKey) {
-                // Bust Vercel KV cache immediately
                 await fetch(`${baseURL}/api/cache/invalidate-accounts`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -167,26 +170,41 @@ export const SocialAccounts = () => {
             console.warn('Profile key fetch failed:', err);
           }
 
-          // Reduced delay: 1.5 seconds (was 2s)
+          // Poll for a new account — compare against snapshot taken before popup opened.
+          // Shows toast only if a genuinely new account appears; silently stops if user
+          // closed the popup without connecting anything.
+          const maxAttempts = 7; // ~15 seconds total (1.5s initial + 6 × 2s retries)
+          let attempts = 0;
+
+          const checkForNewAccount = async () => {
+            const currentAccounts = await fetchActiveAccounts();
+            const hasNewAccount = currentAccounts.some(a => !accountsBefore.has(a));
+
+            if (hasNewAccount) {
+              window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+              setLoading(false);
+              toast({
+                title: "Account Connected!",
+                description: "Your social account has been linked successfully.",
+                status: "success",
+                duration: 3000,
+                isClosable: true
+              });
+              return;
+            }
+
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkForNewAccount, 2000);
+            } else {
+              // User closed the popup without connecting — no toast
+              setLoading(false);
+            }
+          };
+
+          // Give Ayrshare a moment to propagate before first check
           await new Promise(r => setTimeout(r, 1500));
-          await fetchActiveAccounts();
-          window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-
-          // Single retry after 2 more seconds (was 3s)
-          setTimeout(async () => {
-            await fetchActiveAccounts();
-            window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-            setLoading(false);
-
-            // Success feedback
-            toast({
-              title: "Account Connected!",
-              description: "Your social account has been linked successfully.",
-              status: "success",
-              duration: 3000,
-              isClosable: true
-            });
-          }, 2000);
+          await checkForNewAccount();
         }
       }, 500);
     } catch (err) {

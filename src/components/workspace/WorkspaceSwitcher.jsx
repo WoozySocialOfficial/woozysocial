@@ -75,9 +75,10 @@ export const WorkspaceSwitcher = () => {
         duration: 4000,
         isClosable: true
       });
+    } else {
+      navigate('/dashboard');
     }
     setShowDropdown(false);
-    // Context switch triggers re-render of all components using workspace data
   };
 
   const handleSettingsClick = () => {

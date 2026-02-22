@@ -25,9 +25,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.tab-description {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 20px 0;
+  padding: 0 2px;
 }
 
 /* Tabs */
@@ -255,6 +262,17 @@
 
 .platform-badge {
   font-size: 14px;
+}
+
+.post-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .post-thumbnail {

@@ -16,7 +16,15 @@ const {
 } = require("../_utils");
 const { getAgencyAccess } = require("../_utils-access-control");
 
-// Role-based permissions (same as invitations/accept.js)
+// Map legacy 5-role values to the current 3-role model
+const LEGACY_ROLE_MAP = {
+  admin: 'member',
+  editor: 'member',
+  view_only: 'viewer',
+  client: 'viewer'
+};
+
+// Role-based permissions using current 3-role model (plus legacy aliases for safety)
 const ROLE_PERMISSIONS = {
   owner: {
     can_manage_team: true,
@@ -24,6 +32,19 @@ const ROLE_PERMISSIONS = {
     can_delete_posts: true,
     can_approve_posts: true
   },
+  member: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: true,
+    can_approve_posts: false
+  },
+  viewer: {
+    can_manage_team: false,
+    can_manage_settings: false,
+    can_delete_posts: false,
+    can_approve_posts: false
+  },
+  // Legacy aliases kept for fallback
   admin: {
     can_manage_team: true,
     can_manage_settings: true,
@@ -167,8 +188,9 @@ module.exports = async function handler(req, res) {
 
     for (const member of teamMembers) {
       try {
-        const effectiveRole = roleOverridesMap[member.id] || member.default_role;
-        const permissions = ROLE_PERMISSIONS[effectiveRole] || ROLE_PERMISSIONS.editor;
+        const rawRole = roleOverridesMap[member.id] || member.default_role;
+        const effectiveRole = LEGACY_ROLE_MAP[rawRole] || rawRole;
+        const permissions = ROLE_PERMISSIONS[effectiveRole] || ROLE_PERMISSIONS.member;
 
         // Check if already a member
         if (member.member_user_id && existingUserIds.has(member.member_user_id)) {
