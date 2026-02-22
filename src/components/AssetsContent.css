@@ -739,11 +739,13 @@
 .dark .refresh-button {
   color: #afabf9;
   border-color: #afabf9;
+  background-color: transparent;
 }
 
 [data-theme="dark"] .refresh-button:hover,
 .dark .refresh-button:hover {
-  background: rgba(175, 171, 249, 0.12);
+  background-color: #afabf9;
+  color: #000000;
 }
 
 [data-theme="dark"] .filter-btn,
