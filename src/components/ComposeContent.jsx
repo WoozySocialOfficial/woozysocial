@@ -1936,6 +1936,8 @@ export const ComposeContent = () => {
         }
         // Mark progress as complete
         setPostingProgress({ step: 'complete', percent: 100, estimatedTime: 0 });
+        // Invalidate cache so Posts/Drafts page reflects changes immediately
+        invalidatePosts(activeWorkspace?.id);
         // Clear auto-save timer to prevent "draft save failed" error after success
         if (autoSaveTimerRef.current) {
           clearTimeout(autoSaveTimerRef.current);
