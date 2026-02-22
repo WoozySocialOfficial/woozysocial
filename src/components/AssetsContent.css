@@ -94,8 +94,8 @@
 }
 
 .refresh-button {
-  background: #ffffff;
-  color: #7b74b0;
+  background: transparent;
+  color: #5b54a0;
   border: 2px solid #afabf9;
   display: flex;
   align-items: center;
@@ -103,9 +103,10 @@
 }
 
 .refresh-button:hover {
-  background: #f5f4ff;
+  background: #afabf9;
+  color: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(175, 171, 249, 0.2);
+  box-shadow: 0 4px 12px rgba(175, 171, 249, 0.3);
 }
 
 .upload-button:disabled {
