@@ -497,13 +497,13 @@ export const ScheduleContent = () => {
     });
 
     // Calculate dynamic height for each hour slot
-    // Compact cards are ~55px tall
+    // Compact card ~50px + 8px gap + 20px cell padding
     const getSlotHeight = (hour) => {
       const postCount = hourPostCounts[hour];
       if (postCount === 0) return 60;
       const visibleCount = Math.min(postCount, 3);
       const hasOverflow = postCount > 3;
-      return Math.max(60, 10 + (visibleCount * 58) + (hasOverflow ? 28 : 0));
+      return Math.max(60, 24 + (visibleCount * 62) + (hasOverflow ? 28 : 0));
     };
 
     return (
