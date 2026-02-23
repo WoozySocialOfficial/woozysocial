@@ -206,20 +206,19 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to fetch scheduled posts", ErrorCodes.DATABASE_ERROR);
     }
 
-    if (!duePosts || duePosts.length === 0) {
-      console.log('[Scheduler] No posts due for publishing');
-      return sendSuccess(res, { processed: 0, message: 'No posts due' });
-    }
-
-    console.log(`[Scheduler] Found ${duePosts.length} posts due for publishing`);
-
     const results = {
       success: [],
       failed: []
     };
 
-    // Process each post
-    for (const post of duePosts) {
+    if (!duePosts || duePosts.length === 0) {
+      console.log('[Scheduler] No posts due for publishing');
+    } else {
+      console.log(`[Scheduler] Found ${duePosts.length} posts due for publishing`);
+    }
+
+    // Process each due post (skip if none)
+    for (const post of (duePosts || [])) {
       try {
         console.log(`[Scheduler] Processing post ${post.id}...`);
 
@@ -643,7 +642,7 @@ module.exports = async function handler(req, res) {
     }
 
     return sendSuccess(res, {
-      processed: duePosts.length,
+      processed: (duePosts || []).length,
       successful: results.success.length,
       failed: results.failed.length,
       reconciled,
