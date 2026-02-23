@@ -588,6 +588,7 @@
 /* Ensure content appears above the overlay */
 .post-card.past-post .post-card-header,
 .post-card.past-post .post-card-content,
+.post-card.past-post .post-card-error,
 .post-card.past-post .post-card-footer {
   position: relative;
   z-index: 2;
@@ -610,6 +611,25 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   margin: 4px 0;
+}
+
+.post-card-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px 6px;
+  margin: 4px 0 2px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  color: #dc2626;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.post-card-error svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .post-card-footer {
@@ -1408,6 +1428,13 @@
 [data-theme="dark"] .post-card-content,
 .dark .post-card-content {
   color: #ede9fc;
+}
+
+[data-theme="dark"] .post-card-error,
+.dark .post-card-error {
+  background: #2d1215;
+  border-color: #7f1d1d;
+  color: #fca5a5;
 }
 
 /* Dark Mode - Time Slot Background */
