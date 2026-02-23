@@ -481,6 +481,45 @@ export const ScheduleContent = () => {
     );
   };
 
+  // Render a slim single-line post row for week view
+  const renderPostLine = (post) => {
+    const statusColor = post.status === 'failed' ? '#ef4444'
+      : (post.status === 'posted' || post.status === 'success') ? '#10b981'
+      : post.approvalStatus === 'changes_requested' ? '#f97316'
+      : post.approvalStatus === 'approved' ? '#10b981'
+      : '#3b82f6';
+    const statusLabel = post.status === 'failed' ? 'Failed'
+      : (post.status === 'posted' || post.status === 'success') ? 'Posted'
+      : (APPROVAL_STATUS[post.approvalStatus]?.label || 'Scheduled');
+
+    return (
+      <div
+        key={post.id}
+        className="post-line"
+        onClick={() => {
+          setSelectedPost({
+            ...post,
+            id: post.id,
+            workspace_id: activeWorkspace.id,
+            caption: post.content || post.post,
+            media_urls: post.mediaUrls || [],
+            platforms: post.platforms || [],
+            scheduled_at: getPostDate(post),
+            status: post.status || 'scheduled',
+            approval_status: post.approvalStatus
+          });
+        }}
+        title={`${statusLabel}: ${post.content?.substring(0, 100) || 'No content'}`}
+      >
+        <span className="post-line-dot" style={{ backgroundColor: statusColor }} />
+        <span className="post-line-title">{post.content?.substring(0, 25) || 'Untitled'}{post.content?.length > 25 ? '...' : ''}</span>
+        <span className="post-line-time">
+          {formatTimeInTimezone(getPostDate(post), activeWorkspace?.timezone || 'UTC')}
+        </span>
+      </div>
+    );
+  };
+
   // Week View
   const renderWeekView = () => {
     // Calculate the maximum number of posts for each hour across all days
@@ -496,19 +535,16 @@ export const ScheduleContent = () => {
       hourPostCounts[hour] = maxPosts;
     });
 
-    // Calculate dynamic height for each hour slot
-    // Compact card ~50px + 8px gap + 20px cell padding
+    // Dynamic height: 28px per post line + 12px cell padding
     const getSlotHeight = (hour) => {
       const postCount = hourPostCounts[hour];
-      if (postCount === 0) return 60;
-      const visibleCount = Math.min(postCount, 3);
-      const hasOverflow = postCount > 3;
-      return Math.max(60, 24 + (visibleCount * 62) + (hasOverflow ? 28 : 0));
+      if (postCount === 0) return 48;
+      return Math.max(48, 12 + (postCount * 28));
     };
 
     return (
       <div className="week-view">
-        {/* Sticky header cells - part of the same flat grid */}
+        {/* Sticky header cells */}
         <div className="time-header"></div>
         {weekDates.map((date, dayIndex) => (
           <div key={`header-${dayIndex}`} className="day-header">
@@ -519,7 +555,7 @@ export const ScheduleContent = () => {
           </div>
         ))}
 
-        {/* Body cells - time slots and schedule cells in one flat grid */}
+        {/* Body cells */}
         {timeSlots.map((hour) => {
           const slotHeight = getSlotHeight(hour);
           return (
@@ -532,29 +568,13 @@ export const ScheduleContent = () => {
               </div>
               {weekDates.map((date, dayIndex) => {
                 const slotPosts = getPostsForSlot(date, hour);
-                const visiblePosts = slotPosts.slice(0, 3);
-                const remainingCount = slotPosts.length - 3;
-
                 return (
                   <div
                     key={dayIndex}
                     className="schedule-cell"
                     style={{ height: `${slotHeight}px` }}
                   >
-                    {visiblePosts.map(p => renderPostCard(p, null, { compact: true }))}
-                    {remainingCount > 0 && (
-                      <div
-                        className="more-posts-indicator"
-                        title={`${remainingCount} more post${remainingCount !== 1 ? 's' : ''}. Click to view all.`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setOverflowPopup({ posts: slotPosts.slice(3), rect });
-                        }}
-                      >
-                        +{remainingCount} more
-                      </div>
-                    )}
+                    {slotPosts.map(renderPostLine)}
                   </div>
                 );
               })}
