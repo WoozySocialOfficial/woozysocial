@@ -535,11 +535,119 @@ module.exports = async function handler(req, res) {
       console.warn('[Scheduler] Reconciliation error (non-blocking):', reconErr.message);
     }
 
+    // ============================================================
+    // REVERSE RECONCILIATION: Check "posted" posts for delivery failures
+    // Catches posts accepted by Ayrshare but rejected by the target platform
+    // e.g. TikTok rejecting PNG images, text-only posts, etc.
+    // ============================================================
+    let reverseReconciled = 0;
+    try {
+      const recentCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: postedPosts } = await supabase
+        .from('posts')
+        .select('id, workspace_id, ayr_post_id, platforms, caption, created_by, user_id')
+        .eq('status', 'posted')
+        .not('ayr_post_id', 'is', null)
+        .gte('posted_at', recentCutoff)
+        .limit(20);
+
+      if (postedPosts && postedPosts.length > 0) {
+        console.log(`[Scheduler] Reverse reconciliation: Checking ${postedPosts.length} recently posted posts for delivery failures...`);
+
+        // Group by workspace to minimize Ayrshare API calls
+        const byWorkspace = {};
+        for (const post of postedPosts) {
+          if (!byWorkspace[post.workspace_id]) byWorkspace[post.workspace_id] = [];
+          byWorkspace[post.workspace_id].push(post);
+        }
+
+        for (const [wsId, posts] of Object.entries(byWorkspace)) {
+          const wsProfileKey = await getWorkspaceProfileKey(wsId);
+          if (!wsProfileKey) continue;
+
+          try {
+            const historyRes = await axios.get(`${BASE_AYRSHARE}/history`, {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+                "Profile-Key": wsProfileKey
+              },
+              timeout: 15000
+            });
+
+            const history = historyRes.data?.history || [];
+            const historyMap = {};
+            history.forEach(h => { historyMap[h.id] = h; });
+
+            for (const post of posts) {
+              const ayrPost = historyMap[post.ayr_post_id];
+              if (!ayrPost) continue;
+
+              // Check for platform delivery errors
+              const deliveryErrors = Array.isArray(ayrPost.errors)
+                ? ayrPost.errors.filter(e => e.status === 'error' || e.code)
+                : [];
+
+              if (deliveryErrors.length > 0 || ayrPost.status === 'error') {
+                const errorMessages = deliveryErrors.length > 0
+                  ? deliveryErrors.map(e =>
+                      `${e.platform || 'unknown'}: ${e.message || 'Delivery failed'}`
+                    ).join('; ')
+                  : 'Post delivery failed on platform';
+
+                // Check if any platform actually succeeded
+                const successfulPlatforms = Array.isArray(ayrPost.postIds)
+                  ? ayrPost.postIds.filter(p => p && (p.postUrl || p.status === 'success'))
+                  : [];
+
+                if (successfulPlatforms.length === 0) {
+                  // Complete delivery failure
+                  console.log(`[Scheduler] Reverse reconciliation: Post ${post.id} failed delivery: ${errorMessages}`);
+
+                  await supabase
+                    .from('posts')
+                    .update({ status: 'failed', last_error: errorMessages })
+                    .eq('id', post.id);
+
+                  sendPostFailedNotification(supabase, {
+                    postId: post.id,
+                    workspaceId: post.workspace_id,
+                    createdByUserId: post.created_by || post.user_id,
+                    platforms: post.platforms,
+                    errorMessage: errorMessages
+                  }).catch(err => logError('scheduler.reverseRecon.notification', err, { postId: post.id }));
+
+                  await invalidateWorkspaceCache(wsId);
+                  reverseReconciled++;
+                } else {
+                  // Partial failure — some platforms delivered, some failed
+                  console.log(`[Scheduler] Reverse reconciliation: Post ${post.id} partial failure: ${errorMessages}`);
+                  await supabase
+                    .from('posts')
+                    .update({ last_error: `Partial: ${errorMessages}` })
+                    .eq('id', post.id);
+                }
+              }
+            }
+          } catch (histErr) {
+            console.warn(`[Scheduler] Reverse reconciliation: Failed to check workspace ${wsId}:`, histErr.message);
+          }
+        }
+
+        if (reverseReconciled > 0) {
+          console.log(`[Scheduler] Reverse reconciliation: Found ${reverseReconciled} posts with delivery failures`);
+        }
+      }
+    } catch (reverseErr) {
+      console.warn('[Scheduler] Reverse reconciliation error (non-blocking):', reverseErr.message);
+    }
+
     return sendSuccess(res, {
       processed: duePosts.length,
       successful: results.success.length,
       failed: results.failed.length,
       reconciled,
+      reverseReconciled,
       results
     });
 
