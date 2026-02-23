@@ -507,6 +507,15 @@ module.exports = async function handler(req, res) {
               });
 
               if (match) {
+                // Don't reconcile if Ayrshare reports delivery errors for this post
+                const matchErrors = Array.isArray(match.errors)
+                  ? match.errors.filter(e => e.status === 'error' || e.code)
+                  : [];
+                if (matchErrors.length > 0 || match.status === 'error') {
+                  console.log(`[Scheduler] Reconciliation: Post ${post.id} found in Ayrshare (${match.id}) but has delivery errors - skipping`);
+                  continue;
+                }
+
                 console.log(`[Scheduler] Reconciliation: Post ${post.id} found in Ayrshare history (${match.id}) - updating to posted`);
                 await supabase
                   .from('posts')
