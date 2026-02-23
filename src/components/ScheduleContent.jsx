@@ -438,11 +438,13 @@ export const ScheduleContent = () => {
           {post.status === 'failed' && (
             <div className="post-status-badge post-status-failed">Failed</div>
           )}
-          {/* Always show approval badge so status is visible */}
-          <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
-            <ApprovalIcon size={11} />
-            <span>{approvalInfo.label}</span>
-          </div>
+          {/* Show approval badge only when relevant — hide when post already failed or posted */}
+          {post.status !== 'failed' && post.status !== 'posted' && post.status !== 'success' && (
+            <div className="post-approval-badge" style={{ backgroundColor: approvalInfo.color }}>
+              <ApprovalIcon size={11} />
+              <span>{approvalInfo.label}</span>
+            </div>
+          )}
           {(post.comments?.length > 0 || post.commentCount > 0) && (
             <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
               <FaComment size={10} />
