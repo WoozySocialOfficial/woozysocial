@@ -453,6 +453,13 @@ export const ScheduleContent = () => {
         <div className="post-card-content">
           {post.content.substring(0, 80)}{post.content.length > 80 && "..."}
         </div>
+        {/* Show error reason for failed/rejected posts */}
+        {(post.status === 'failed' || post.approvalStatus === 'rejected') && post.last_error && (
+          <div className="post-card-error">
+            <FaExclamationTriangle size={10} />
+            <span>{post.last_error.length > 60 ? post.last_error.substring(0, 60) + '...' : post.last_error}</span>
+          </div>
+        )}
         <div className="post-card-footer">
           <div className="post-platforms">
             {post.platforms.slice(0, 3).map((platform, idx) => {
