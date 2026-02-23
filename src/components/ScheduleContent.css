@@ -145,7 +145,7 @@
 
 /* Time slots - sticky left column */
 .time-slot {
-  min-height: 80px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,7 +175,7 @@
 }
 
 .schedule-cell {
-  min-height: 80px;
+  min-height: 60px;
   border-bottom: 1px solid #ede9fc;
   border-right: 1px solid #ede9fc;
   padding: 10px 8px;
@@ -487,6 +487,29 @@
   z-index: 1;
   flex-shrink: 0;
   min-height: 70px;
+}
+
+/* Compact card for week view — no error banner, tighter spacing */
+.post-card.post-card-compact {
+  padding: 6px 8px;
+  min-height: auto;
+  gap: 2px;
+}
+
+.post-card-compact .post-card-content {
+  font-size: 11px;
+  margin: 1px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-card-compact .post-card-header {
+  margin-bottom: 0;
+}
+
+.post-card-compact .post-card-footer {
+  margin-top: 1px;
 }
 
 .post-card:hover {

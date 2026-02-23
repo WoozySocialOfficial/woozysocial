@@ -397,9 +397,10 @@ export const ScheduleContent = () => {
     return postDate < today;
   };
 
-  // Render Post Card - Compact, click opens modal
-  // onSelect is optional; if provided it receives the normalizedPost instead of calling setSelectedPost directly
-  const renderPostCard = (post, onSelect) => {
+  // Render Post Card
+  // compact: true = week view (small, no error banner), false = full card (month/kanban)
+  // onSelect: optional callback; if provided receives normalizedPost instead of calling setSelectedPost
+  const renderPostCard = (post, onSelect, { compact = false } = {}) => {
     const selectHandler = typeof onSelect === 'function' ? onSelect : null;
     const approvalInfo = APPROVAL_STATUS[post.approvalStatus] || APPROVAL_STATUS.pending;
     const ApprovalIcon = approvalInfo.icon;
@@ -408,9 +409,8 @@ export const ScheduleContent = () => {
     return (
       <div
         key={post.id}
-        className={`post-card ${post.status === "posted" || post.status === "success" ? "published" : post.status === "failed" ? "failed" : "scheduled"} approval-${post.approvalStatus} ${isPast ? 'past-post' : ''}`}
+        className={`post-card ${compact ? 'post-card-compact' : ''} ${post.status === "posted" || post.status === "success" ? "published" : post.status === "failed" ? "failed" : "scheduled"} approval-${post.approvalStatus} ${isPast ? 'past-post' : ''}`}
         onClick={() => {
-          // Normalize post structure for PostDetailPanel
           const normalizedPost = {
             ...post,
             id: post.id,
@@ -445,7 +445,7 @@ export const ScheduleContent = () => {
               <span>{approvalInfo.label}</span>
             </div>
           )}
-          {(post.comments?.length > 0 || post.commentCount > 0) && (
+          {!compact && (post.comments?.length > 0 || post.commentCount > 0) && (
             <div className="post-comment-count" title={`${post.comments?.length || post.commentCount} comment(s)`}>
               <FaComment size={10} />
               <span>{post.comments?.length || post.commentCount}</span>
@@ -453,10 +453,13 @@ export const ScheduleContent = () => {
           )}
         </div>
         <div className="post-card-content">
-          {post.content.substring(0, 80)}{post.content.length > 80 && "..."}
+          {compact
+            ? <>{post.content.substring(0, 30)}{post.content.length > 30 && "..."}</>
+            : <>{post.content.substring(0, 80)}{post.content.length > 80 && "..."}</>
+          }
         </div>
-        {/* Show error reason for failed/rejected posts */}
-        {(post.status === 'failed' || post.approvalStatus === 'rejected') && post.last_error && (
+        {/* Show error reason — only in full mode, not compact week view */}
+        {!compact && (post.status === 'failed' || post.approvalStatus === 'rejected') && post.last_error && (
           <div className="post-card-error">
             <FaExclamationTriangle size={10} />
             <span>{post.last_error.length > 60 ? post.last_error.substring(0, 60) + '...' : post.last_error}</span>
@@ -494,14 +497,13 @@ export const ScheduleContent = () => {
     });
 
     // Calculate dynamic height for each hour slot
-    // Each post card is approximately 90-100px tall (larger for readability)
+    // Compact cards are ~55px tall
     const getSlotHeight = (hour) => {
       const postCount = hourPostCounts[hour];
-      if (postCount === 0) return 80;
-      // Only account for the 2 visible cards + 30px for "+N more" button if overflow
-      const visibleCount = Math.min(postCount, 2);
-      const hasOverflow = postCount > 2;
-      return Math.max(80, 35 + (visibleCount * 95) + (hasOverflow ? 30 : 0));
+      if (postCount === 0) return 60;
+      const visibleCount = Math.min(postCount, 3);
+      const hasOverflow = postCount > 3;
+      return Math.max(60, 10 + (visibleCount * 58) + (hasOverflow ? 28 : 0));
     };
 
     return (
@@ -530,8 +532,8 @@ export const ScheduleContent = () => {
               </div>
               {weekDates.map((date, dayIndex) => {
                 const slotPosts = getPostsForSlot(date, hour);
-                const visiblePosts = slotPosts.slice(0, 2);
-                const remainingCount = slotPosts.length - 2;
+                const visiblePosts = slotPosts.slice(0, 3);
+                const remainingCount = slotPosts.length - 3;
 
                 return (
                   <div
@@ -539,7 +541,7 @@ export const ScheduleContent = () => {
                     className="schedule-cell"
                     style={{ height: `${slotHeight}px` }}
                   >
-                    {visiblePosts.map(renderPostCard)}
+                    {visiblePosts.map(p => renderPostCard(p, null, { compact: true }))}
                     {remainingCount > 0 && (
                       <div
                         className="more-posts-indicator"
@@ -547,7 +549,7 @@ export const ScheduleContent = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           const rect = e.currentTarget.getBoundingClientRect();
-                          setOverflowPopup({ posts: slotPosts.slice(2), rect });
+                          setOverflowPopup({ posts: slotPosts.slice(3), rect });
                         }}
                       >
                         +{remainingCount} more
