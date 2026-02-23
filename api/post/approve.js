@@ -399,8 +399,14 @@ module.exports = async function handler(req, res) {
             console.log('[approve] Ayrshare response:', JSON.stringify(ayrshareResponse, null, 2));
 
             if (ayrshareResponse.status !== 'error') {
-              // Update post with Ayrshare ID and new status
-              const ayrPostId = ayrshareResponse.posts?.[0]?.id || ayrshareResponse.id || ayrshareResponse.postId;
+              // Extract ayr_post_id from Ayrshare response (handles multiple response formats)
+              const ayrPostId = ayrshareResponse.id
+                || ayrshareResponse.postId
+                || ayrshareResponse.scheduleId
+                || ayrshareResponse.refId
+                || ayrshareResponse.posts?.[0]?.id
+                || ayrshareResponse.postIds?.[0]?.id
+                || ayrshareResponse.postIds?.[0];
               const scheduledTime = new Date(post.scheduled_at);
               const now = new Date();
               const isStillFuture = scheduledTime > now;
@@ -408,7 +414,7 @@ module.exports = async function handler(req, res) {
               console.log('[approve] Extracted ayrPostId:', ayrPostId, 'isStillFuture:', isStillFuture);
 
               if (!ayrPostId) {
-                console.error('[approve] WARNING: No post ID returned from Ayrshare!', ayrshareResponse);
+                console.error('[approve] WARNING: No post ID returned from Ayrshare! Full response:', JSON.stringify(ayrshareResponse));
               }
 
               await supabase
