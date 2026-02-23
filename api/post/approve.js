@@ -66,16 +66,42 @@ async function sendToAyrshare(post, profileKey) {
 
   console.log('[sendToAyrshare] Sending post data:', JSON.stringify(postData, null, 2));
 
-  const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-      "Profile-Key": profileKey
-    },
-    timeout: 30000
-  });
+  try {
+    const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+        "Profile-Key": profileKey
+      },
+      timeout: 30000
+    });
 
-  return response.data;
+    return response.data;
+  } catch (axiosError) {
+    // IMPORTANT: Check if Ayrshare returned success data despite HTTP 400 status
+    // Ayrshare has a quirk where it returns HTTP 400 with a success response body
+    const responseData = axiosError.response?.data;
+    
+    console.log('[sendToAyrshare] HTTP error response:', {
+      status: axiosError.response?.status,
+      data: JSON.stringify(responseData)
+    });
+
+    // Check multiple indicators that the post actually succeeded
+    const isActuallySuccessful = responseData?.status === 'success'
+      || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
+      || responseData?.postIds?.length > 0
+      || (Array.isArray(responseData?.posts) && responseData.posts.length > 0);
+
+    if (isActuallySuccessful) {
+      // Post succeeded despite HTTP error - return the response data anyway
+      console.log('[sendToAyrshare] Post succeeded despite HTTP error, treating as success');
+      return responseData;
+    }
+
+    // Post actually failed - re-throw the error
+    throw axiosError;
+  }
 }
 
 const VALID_ACTIONS = ['approve', 'reject', 'changes_requested', 'mark_resolved', 'forward_to_client'];
@@ -399,8 +425,14 @@ module.exports = async function handler(req, res) {
             console.log('[approve] Ayrshare response:', JSON.stringify(ayrshareResponse, null, 2));
 
             if (ayrshareResponse.status !== 'error') {
-              // Update post with Ayrshare ID and new status
-              const ayrPostId = ayrshareResponse.posts?.[0]?.id || ayrshareResponse.id || ayrshareResponse.postId;
+              // Extract ayr_post_id from Ayrshare response (handles multiple response formats)
+              const ayrPostId = ayrshareResponse.id
+                || ayrshareResponse.postId
+                || ayrshareResponse.scheduleId
+                || ayrshareResponse.refId
+                || ayrshareResponse.posts?.[0]?.id
+                || ayrshareResponse.postIds?.[0]?.id
+                || ayrshareResponse.postIds?.[0];
               const scheduledTime = new Date(post.scheduled_at);
               const now = new Date();
               const isStillFuture = scheduledTime > now;
@@ -408,7 +440,7 @@ module.exports = async function handler(req, res) {
               console.log('[approve] Extracted ayrPostId:', ayrPostId, 'isStillFuture:', isStillFuture);
 
               if (!ayrPostId) {
-                console.error('[approve] WARNING: No post ID returned from Ayrshare!', ayrshareResponse);
+                console.error('[approve] WARNING: No post ID returned from Ayrshare! Full response:', JSON.stringify(ayrshareResponse));
               }
 
               await supabase

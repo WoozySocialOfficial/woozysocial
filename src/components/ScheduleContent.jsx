@@ -26,10 +26,15 @@ const PLATFORM_ICONS = {
 
 const APPROVAL_STATUS = {
   pending: { label: 'Pending', color: '#f59e0b', icon: FaClock },
-  changes_requested: { label: 'Changes Requested', color: '#f59e0b', icon: FaExclamationTriangle },
+  pending_internal: { label: 'Internal Review', color: '#8b5cf6', icon: FaClock },
+  pending_client: { label: 'Awaiting Client', color: '#f59e0b', icon: FaClock },
+  changes_requested: { label: 'Changes Requested', color: '#f97316', icon: FaExclamationTriangle },
   approved: { label: 'Approved', color: '#10b981', icon: FaCheck },
   rejected: { label: 'Rejected', color: '#ef4444', icon: FaTimes },
 };
+
+// Get the effective display date for a post (scheduled, posted, or created)
+const getPostDate = (post) => post.scheduleDate || post.posted_at || post.created_at;
 
 export const ScheduleContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, subscriptionTier, isWhitelisted } = useAuth();
@@ -263,8 +268,9 @@ export const ScheduleContent = () => {
   // Get posts for a specific date and time
   const getPostsForSlot = (date, hour) => {
     return filteredPosts.filter(post => {
-      if (!post.scheduleDate) return false;
-      const postDate = new Date(post.scheduleDate);
+      const effectiveDate = getPostDate(post);
+      if (!effectiveDate) return false;
+      const postDate = new Date(effectiveDate);
 
       // Compare dates in local time
       const postYear = postDate.getFullYear();
@@ -288,8 +294,9 @@ export const ScheduleContent = () => {
   // Get posts for a specific date (for month/kanban view)
   const getPostsForDate = (date) => {
     return filteredPosts.filter(post => {
-      if (!post.scheduleDate) return false;
-      const postDate = new Date(post.scheduleDate);
+      const effectiveDate = getPostDate(post);
+      if (!effectiveDate) return false;
+      const postDate = new Date(effectiveDate);
       return (
         postDate.getFullYear() === date.getFullYear() &&
         postDate.getMonth() === date.getMonth() &&
@@ -303,8 +310,9 @@ export const ScheduleContent = () => {
     const grouped = {};
 
     filteredPosts.forEach(post => {
-      if (post.scheduleDate) {
-        const dateKey = formatDateOnlyInTimezone(post.scheduleDate, activeWorkspace?.timezone || 'UTC');
+      const effectiveDate = getPostDate(post);
+      if (effectiveDate) {
+        const dateKey = formatDateOnlyInTimezone(effectiveDate, activeWorkspace?.timezone || 'UTC');
 
         if (!grouped[dateKey]) {
           grouped[dateKey] = [];
@@ -315,7 +323,7 @@ export const ScheduleContent = () => {
 
     // Sort posts within each date by time
     Object.keys(grouped).forEach(dateKey => {
-      grouped[dateKey].sort((a, b) => a.scheduleDate - b.scheduleDate);
+      grouped[dateKey].sort((a, b) => new Date(getPostDate(a)) - new Date(getPostDate(b)));
     });
 
     // Convert to array and sort by date
@@ -330,7 +338,7 @@ export const ScheduleContent = () => {
 
     // Sort by scheduled time
     const sorted = [...datePosts].sort((a, b) =>
-      new Date(a.scheduleDate || 0) - new Date(b.scheduleDate || 0)
+      new Date(getPostDate(a) || 0) - new Date(getPostDate(b) || 0)
     );
 
     // Normalize all posts for PostDetailPanel
@@ -341,7 +349,7 @@ export const ScheduleContent = () => {
       caption: post.content || post.post,
       media_urls: post.mediaUrls || [],
       platforms: post.platforms || [],
-      scheduled_at: post.scheduleDate || post.schedule_date,
+      scheduled_at: getPostDate(post),
       status: post.status || 'scheduled',
       approval_status: post.approvalStatus
     }));
@@ -395,7 +403,7 @@ export const ScheduleContent = () => {
     const selectHandler = typeof onSelect === 'function' ? onSelect : null;
     const approvalInfo = APPROVAL_STATUS[post.approvalStatus] || APPROVAL_STATUS.pending;
     const ApprovalIcon = approvalInfo.icon;
-    const isPast = isPostInPast(post.scheduleDate);
+    const isPast = isPostInPast(getPostDate(post));
 
     return (
       <div
@@ -410,7 +418,7 @@ export const ScheduleContent = () => {
             caption: post.content || post.post,
             media_urls: post.mediaUrls || [],
             platforms: post.platforms || [],
-            scheduled_at: post.scheduleDate || post.schedule_date,
+            scheduled_at: getPostDate(post),
             status: post.status || 'scheduled',
             approval_status: post.approvalStatus
           };
@@ -454,7 +462,7 @@ export const ScheduleContent = () => {
             {post.platforms.length > 3 && <span className="platform-more">+{post.platforms.length - 3}</span>}
           </div>
           <span className="post-time">
-            {formatTimeInTimezone(post.scheduleDate, activeWorkspace?.timezone || 'UTC')}
+            {formatTimeInTimezone(getPostDate(post), activeWorkspace?.timezone || 'UTC')}
           </span>
         </div>
       </div>
@@ -562,11 +570,14 @@ export const ScheduleContent = () => {
 
   // Status color for dots
   const getDotColor = (post) => {
+    if (post.status === 'posted' || post.status === 'success') return '#10b981';
+    if (post.status === 'failed') return '#ef4444';
     if (post.approvalStatus === 'rejected') return '#ef4444';
     if (post.approvalStatus === 'approved') return '#10b981';
     if (post.approvalStatus === 'changes_requested') return '#f97316';
+    if (post.approvalStatus === 'pending_internal') return '#8b5cf6';
+    if (post.approvalStatus === 'pending_client') return '#f59e0b';
     if (post.approvalStatus === 'pending') return '#f59e0b';
-    if (post.status === 'posted' || post.status === 'success') return '#10b981';
     return '#3b82f6';
   };
 
@@ -627,12 +638,20 @@ export const ScheduleContent = () => {
         </div>
         <div className="sc-legend">
           <div className="sc-legend-item">
-            <div className="sc-legend-dot" style={{ backgroundColor: '#f59e0b' }} />
-            <span>Pending</span>
+            <div className="sc-legend-dot" style={{ backgroundColor: '#10b981' }} />
+            <span>Posted</span>
           </div>
           <div className="sc-legend-item">
-            <div className="sc-legend-dot" style={{ backgroundColor: '#10b981' }} />
-            <span>Approved</span>
+            <div className="sc-legend-dot" style={{ backgroundColor: '#3b82f6' }} />
+            <span>Scheduled</span>
+          </div>
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#8b5cf6' }} />
+            <span>Internal Review</span>
+          </div>
+          <div className="sc-legend-item">
+            <div className="sc-legend-dot" style={{ backgroundColor: '#f59e0b' }} />
+            <span>Pending</span>
           </div>
           <div className="sc-legend-item">
             <div className="sc-legend-dot" style={{ backgroundColor: '#f97316' }} />
@@ -640,11 +659,7 @@ export const ScheduleContent = () => {
           </div>
           <div className="sc-legend-item">
             <div className="sc-legend-dot" style={{ backgroundColor: '#ef4444' }} />
-            <span>Rejected</span>
-          </div>
-          <div className="sc-legend-item">
-            <div className="sc-legend-dot" style={{ backgroundColor: '#3b82f6' }} />
-            <span>Scheduled</span>
+            <span>Rejected / Failed</span>
           </div>
         </div>
       </div>
@@ -658,7 +673,7 @@ export const ScheduleContent = () => {
     if (postsByDate.length === 0) {
       return (
         <div className="schedule-empty">
-          <p>No scheduled posts found.</p>
+          <p>No posts found for this period.</p>
         </div>
       );
     }
@@ -680,9 +695,8 @@ export const ScheduleContent = () => {
     );
   };
 
-  // Count posts by approval status (only posts with schedule dates)
-  // This ensures counts match what's actually displayed in the Schedule view
-  const scheduledPosts = posts.filter(p => p.scheduleDate);
+  // Count posts by approval status (all posts with a displayable date)
+  const scheduledPosts = posts.filter(p => getPostDate(p));
   const approvalCounts = {
     all: scheduledPosts.length,
     pending_internal: scheduledPosts.filter(p => p.approvalStatus === 'pending_internal').length,

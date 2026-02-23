@@ -175,6 +175,20 @@ module.exports = async function handler(req, res) {
   try {
     console.log('[Scheduler] Starting scheduled posts check...');
 
+    // Clean up posts stuck in 'processing' state from crashed/timed-out scheduler runs
+    // If scheduled_at is >3 minutes ago and still 'processing', the previous run must have failed
+    const threeMinAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const { data: stuckPosts } = await supabase
+      .from('posts')
+      .update({ status: 'scheduled', last_error: 'Reset from stuck processing state' })
+      .eq('status', 'processing')
+      .lte('scheduled_at', threeMinAgo)
+      .select('id');
+
+    if (stuckPosts && stuckPosts.length > 0) {
+      console.warn(`[Scheduler] Reset ${stuckPosts.length} posts stuck in 'processing':`, stuckPosts.map(p => p.id));
+    }
+
     // Get all scheduled posts that are due (scheduled_at <= now)
     const now = new Date().toISOString();
     const { data: duePosts, error: fetchError } = await supabase
@@ -299,16 +313,27 @@ module.exports = async function handler(req, res) {
         // Send to Ayrshare
         const ayrshareResponse = await sendToAyrshare(post, profileKey);
 
-        // Update post as posted
-        const ayrPostId = ayrshareResponse.posts?.[0]?.id || ayrshareResponse.id || ayrshareResponse.postId;
+        // Extract ayr_post_id from Ayrshare response (handles multiple response formats)
+        const ayrPostId = ayrshareResponse.id
+          || ayrshareResponse.postId
+          || ayrshareResponse.scheduleId
+          || ayrshareResponse.refId
+          || ayrshareResponse.posts?.[0]?.id
+          || ayrshareResponse.postIds?.[0]?.id
+          || ayrshareResponse.postIds?.[0];
 
+        if (!ayrPostId) {
+          console.error(`[Scheduler] WARNING: No post ID extracted from Ayrshare response for post ${post.id}. Full response:`, JSON.stringify(ayrshareResponse));
+        }
+
+        // Update post as posted (always mark as posted to prevent duplicate sends)
         const { error: updateError } = await supabase
           .from('posts')
           .update({
             status: 'posted',
-            ayr_post_id: ayrPostId,
+            ayr_post_id: ayrPostId || null,
             posted_at: new Date().toISOString(),
-            last_error: null
+            last_error: ayrPostId ? null : 'Posted but no ayr_post_id extracted from response'
           })
           .eq('id', post.id);
 
@@ -317,7 +342,7 @@ module.exports = async function handler(req, res) {
           logError('scheduler.update', updateError, { postId: post.id });
         }
 
-        console.log(`[Scheduler] Post ${post.id} published successfully`);
+        console.log(`[Scheduler] Post ${post.id} published successfully (ayr_post_id: ${ayrPostId || 'none'})`);
 
         // Invalidate cache after successful post
         await invalidateWorkspaceCache(post.workspace_id);
@@ -338,16 +363,20 @@ module.exports = async function handler(req, res) {
         // Log full response for debugging status mismatches
         console.log(`[Scheduler] Full error response for post ${post.id}:`, JSON.stringify(responseData));
 
+        // Require positive evidence of success — don't treat empty errors array as success
         const isActuallySuccessful = responseData?.status === 'success'
-          || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
           || responseData?.postIds?.length > 0
-          || (Array.isArray(responseData?.posts) && responseData.posts.length > 0);
+          || (Array.isArray(responseData?.posts) && responseData.posts.some(p => p.id || p.postUrl))
+          || !!responseData?.id
+          || !!responseData?.scheduleId;
 
-        const ayrPostId = responseData?.postIds?.[0]?.id
-          || responseData?.posts?.[0]?.id
-          || responseData?.id
+        const ayrPostId = responseData?.id
           || responseData?.postId
-          || responseData?.refId;
+          || responseData?.scheduleId
+          || responseData?.refId
+          || responseData?.postIds?.[0]?.id
+          || responseData?.postIds?.[0]
+          || responseData?.posts?.[0]?.id;
 
         if (isActuallySuccessful) {
           // Post actually succeeded despite HTTP error - save as successful
@@ -457,8 +486,25 @@ module.exports = async function handler(req, res) {
               if (!captionStart) continue;
 
               const match = history.find(h => {
+                // Match by caption content
                 const hBody = (h.body || h.post || '').substring(0, 100).trim();
-                return hBody === captionStart;
+                if (hBody !== captionStart) return false;
+
+                // Also verify at least one platform matches to avoid false positives
+                const hPlatforms = h.platforms || [];
+                const postPlatforms = post.platforms || [];
+                if (hPlatforms.length > 0 && postPlatforms.length > 0) {
+                  const platformOverlap = postPlatforms.some(p => hPlatforms.includes(p));
+                  if (!platformOverlap) return false;
+                }
+
+                // Check time proximity (within 2 hours) to avoid matching old posts
+                if (h.created && post.posted_at) {
+                  const timeDiff = Math.abs(new Date(h.created).getTime() - new Date(post.posted_at).getTime());
+                  if (timeDiff > 2 * 60 * 60 * 1000) return false;
+                }
+
+                return true;
               });
 
               if (match) {
