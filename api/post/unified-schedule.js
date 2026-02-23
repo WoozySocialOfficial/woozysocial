@@ -287,28 +287,35 @@ module.exports = async function handler(req, res) {
       return unifiedPost;
     });
 
-    // Fire-and-forget: Update DB for posts with detected delivery failures
+    // Await DB updates for posts with detected delivery failures
+    // MUST await these before returning — Vercel kills serverless functions after res.send()
     if (postsToMarkFailed.length > 0 || postsToAddError.length > 0) {
       console.log(`[UnifiedSchedule] Detected ${postsToMarkFailed.length} delivery failures, ${postsToAddError.length} partial failures`);
+      const dbUpdates = [];
       for (const fp of postsToMarkFailed) {
-        supabase
-          .from('posts')
-          .update({ status: 'failed', last_error: fp.last_error })
-          .eq('id', fp.id)
-          .then(({ error }) => {
-            if (error) logError('unified-schedule.markFailed', error, { postId: fp.id });
-            else console.log(`[UnifiedSchedule] Marked post ${fp.id} as failed: ${fp.last_error}`);
-          });
+        dbUpdates.push(
+          supabase
+            .from('posts')
+            .update({ status: 'failed', last_error: fp.last_error })
+            .eq('id', fp.id)
+            .then(({ error }) => {
+              if (error) logError('unified-schedule.markFailed', error, { postId: fp.id });
+              else console.log(`[UnifiedSchedule] Marked post ${fp.id} as failed: ${fp.last_error}`);
+            })
+        );
       }
       for (const ep of postsToAddError) {
-        supabase
-          .from('posts')
-          .update({ last_error: ep.last_error })
-          .eq('id', ep.id)
-          .then(({ error }) => {
-            if (error) logError('unified-schedule.addError', error, { postId: ep.id });
-          });
+        dbUpdates.push(
+          supabase
+            .from('posts')
+            .update({ last_error: ep.last_error })
+            .eq('id', ep.id)
+            .then(({ error }) => {
+              if (error) logError('unified-schedule.addError', error, { postId: ep.id });
+            })
+        );
       }
+      await Promise.all(dbUpdates);
     }
 
     // Step 7: Group by approval status for UI convenience
