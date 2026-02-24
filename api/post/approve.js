@@ -200,16 +200,18 @@ module.exports = async function handler(req, res) {
           // Final approvers can approve/reject at this stage
           hasPermission = member.can_final_approval === true || member.role === 'owner';
         } else if (post.approval_status === 'pending_client' || post.approval_status === 'pending') {
-          // Clients (viewers with can_approve_posts) can approve at this stage
+          // Anyone with can_approve_posts (viewers/clients OR members with the toggle) can approve
+          // Final approvers can also approve at this stage
           hasPermission = (
-            (member.role === 'viewer' && member.can_approve_posts === true) ||
+            member.can_approve_posts === true ||
+            member.can_final_approval === true ||
             member.role === 'owner'
           );
         } else if (post.approval_status === 'changes_requested') {
-          // Both final approvers and clients can act on changes_requested
+          // Both final approvers and anyone with can_approve_posts can act
           hasPermission = (
             member.can_final_approval === true ||
-            (member.role === 'viewer' && member.can_approve_posts === true) ||
+            member.can_approve_posts === true ||
             member.role === 'owner'
           );
         }
