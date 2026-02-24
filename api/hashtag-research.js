@@ -69,7 +69,7 @@ async function generateHashtagsWithAI(topic, platform, count, apiKey) {
       { role: 'user', content: `Generate ${count} hashtags for: "${topic}"` }
     ],
     temperature: 0.7,
-    max_tokens: 150
+    max_tokens: 100
   }, {
     headers: {
       'Content-Type': 'application/json',

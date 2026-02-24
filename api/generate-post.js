@@ -1,5 +1,14 @@
 const { createClient } = require("@supabase/supabase-js");
 const axios = require("axios");
+let kv;
+try {
+  kv = require("@vercel/kv").kv;
+} catch (e) {
+  kv = null;
+}
+
+const AI_RATE_LIMIT = 30; // Max AI generations per hour per workspace
+const AI_RATE_WINDOW = 3600; // 1 hour in seconds
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -121,7 +130,7 @@ async function generateWithAI(prompt, websiteData, brandProfile, platforms, useE
     .join('\n');
 
   // Check for sample post images (vision input)
-  const sampleImages = (brandProfile?.sample_post_images || []).filter(Boolean).slice(0, 5);
+  const sampleImages = (brandProfile?.sample_post_images || []).filter(Boolean).slice(0, 2);
   const hasImages = sampleImages.length > 0;
 
   const systemPrompt = `You write social media posts that sound human, casual, and real. No corporate buzzwords.
@@ -161,7 +170,7 @@ Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold tak
       { role: 'user', content: hasImages ? userMessageContent : userMessageContent[0].text }
     ],
     temperature: 0.85,
-    max_tokens: 600
+    max_tokens: 500
   }, {
     headers: {
       'Content-Type': 'application/json',
@@ -223,6 +232,25 @@ module.exports = async (req, res) => {
 
     if (!prompt || prompt.trim().length === 0) {
       return res.status(400).json({ error: "Prompt is required" });
+    }
+
+    // Rate limit check — max 30 AI generations per hour per workspace
+    if (kv && workspaceId) {
+      const rateLimitKey = `ratelimit:generate:${workspaceId}`;
+      try {
+        const currentCount = await kv.incr(rateLimitKey);
+        if (currentCount === 1) {
+          await kv.expire(rateLimitKey, AI_RATE_WINDOW);
+        }
+        if (currentCount > AI_RATE_LIMIT) {
+          return res.status(429).json({
+            error: "AI generation limit reached (30/hour). Please try again later.",
+            retryAfter: AI_RATE_WINDOW
+          });
+        }
+      } catch (rlErr) {
+        // If rate limit check fails, allow the request through
+      }
     }
 
     const brandProfile = await getBrandProfile(workspaceId, userId);
