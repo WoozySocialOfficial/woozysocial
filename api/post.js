@@ -859,6 +859,31 @@ module.exports = async function handler(req, res) {
 
     if (mediaUrls && mediaUrls.length > 0) {
       postData.mediaUrls = mediaUrls;
+
+      // Validate media format compatibility with selected platforms
+      const hasTikTok = platforms.some(p => p.toLowerCase() === 'tiktok');
+      const hasInstagramPlatform = platforms.some(p => p.toLowerCase() === 'instagram');
+
+      for (const url of mediaUrls) {
+        const urlLower = url.toLowerCase().split('?')[0]; // strip query params
+        const ext = urlLower.split('.').pop();
+        const isPNG = ext === 'png';
+        const isGIF = ext === 'gif';
+        const isWebP = ext === 'webp';
+
+        if (hasTikTok && isPNG) {
+          return sendError(res, "TikTok does not support PNG images. Please use JPG or upload a video instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasTikTok && isGIF) {
+          return sendError(res, "TikTok does not support GIF images. Please upload a video instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasTikTok && isWebP) {
+          return sendError(res, "TikTok does not support WebP images. Please use JPG instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasInstagramPlatform && isWebP) {
+          return sendError(res, "Instagram may not support WebP images. Please use JPG or PNG instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+      }
     }
 
     // Apply post settings (Phase 4)

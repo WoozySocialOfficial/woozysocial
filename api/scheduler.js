@@ -134,6 +134,19 @@ async function sendToAyrshare(post, profileKey) {
     }
   }
 
+  // Validate media format compatibility before sending
+  if (postData.mediaUrls && postData.mediaUrls.length > 0) {
+    const hasTikTok = platforms.some(p => p.toLowerCase() === 'tiktok');
+    for (const url of postData.mediaUrls) {
+      const ext = url.toLowerCase().split('?')[0].split('.').pop();
+      if (hasTikTok && (ext === 'png' || ext === 'gif' || ext === 'webp')) {
+        const errorMsg = `TikTok does not support ${ext.toUpperCase()} images`;
+        console.error(`[Scheduler] Media validation failed for post ${post.id}: ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+    }
+  }
+
   console.log('[Scheduler] Sending post to Ayrshare:', {
     postId: post.id,
     platforms: post.platforms,
