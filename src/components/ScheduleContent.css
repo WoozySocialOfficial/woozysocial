@@ -145,7 +145,7 @@
 
 /* Time slots - sticky left column */
 .time-slot {
-  min-height: 80px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,13 +175,13 @@
 }
 
 .schedule-cell {
-  min-height: 80px;
+  min-height: 48px;
   border-bottom: 1px solid #ede9fc;
   border-right: 1px solid #ede9fc;
-  padding: 10px 8px;
+  padding: 4px 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
   overflow: visible;
   background: white;
   position: relative;
@@ -487,6 +487,46 @@
   z-index: 1;
   flex-shrink: 0;
   min-height: 70px;
+}
+
+/* Slim single-line post row for week view */
+.post-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.4;
+  transition: background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.post-line:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.post-line-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.post-line-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #374151;
+  font-weight: 500;
+}
+
+.post-line-time {
+  flex-shrink: 0;
+  color: #9ca3af;
+  font-size: 10px;
 }
 
 .post-card:hover {
@@ -1435,6 +1475,21 @@
   background: #2d1215;
   border-color: #7f1d1d;
   color: #fca5a5;
+}
+
+[data-theme="dark"] .post-line:hover,
+.dark .post-line:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .post-line-title,
+.dark .post-line-title {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .post-line-time,
+.dark .post-line-time {
+  color: #6b7280;
 }
 
 /* Dark Mode - Time Slot Background */

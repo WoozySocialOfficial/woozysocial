@@ -195,6 +195,10 @@ module.exports = async function handler(req, res) {
     }
 
     // Step 6: Merge database posts with Ayrshare data (if available)
+    // Also detect delayed delivery failures from Ayrshare
+    const postsToMarkFailed = [];
+    const postsToAddError = [];
+
     const unifiedPosts = dbPosts.map(dbPost => {
       const ayrPost = dbPost.ayr_post_id ? ayrshareMap[dbPost.ayr_post_id] : null;
       const creatorId = dbPost.created_by || dbPost.user_id;
@@ -245,12 +249,74 @@ module.exports = async function handler(req, res) {
           postId: ayrPost.id,
           status: ayrPost.status,
           type: ayrPost.type,
-          // Additional Ayrshare fields can be added here if needed
         };
+
+        // Detect delayed delivery failures from Ayrshare
+        // Ayrshare accepts the post initially but the platform (e.g. TikTok) may reject it later
+        if (dbPost.status === 'posted') {
+          const deliveryErrors = Array.isArray(ayrPost.errors)
+            ? ayrPost.errors.filter(e => e.status === 'error' || e.code)
+            : [];
+
+          if (deliveryErrors.length > 0 || ayrPost.status === 'error') {
+            const errorMessages = deliveryErrors.length > 0
+              ? deliveryErrors.map(e =>
+                  `${e.platform || 'unknown'}: ${e.message || 'Delivery failed'}`
+                ).join('; ')
+              : 'Post delivery failed on platform';
+
+            // Check if ANY platform actually succeeded despite errors on others
+            const successfulPlatforms = Array.isArray(ayrPost.postIds)
+              ? ayrPost.postIds.filter(p => p && (p.postUrl || p.status === 'success'))
+              : [];
+
+            if (successfulPlatforms.length === 0) {
+              // Complete failure — no platform delivered successfully
+              unifiedPost.status = 'failed';
+              unifiedPost.last_error = errorMessages;
+              postsToMarkFailed.push({ id: dbPost.id, last_error: errorMessages });
+            } else {
+              // Partial failure — some platforms failed
+              unifiedPost.last_error = `Partial failure: ${errorMessages}`;
+              postsToAddError.push({ id: dbPost.id, last_error: `Partial failure: ${errorMessages}` });
+            }
+          }
+        }
       }
 
       return unifiedPost;
     });
+
+    // Await DB updates for posts with detected delivery failures
+    // MUST await these before returning — Vercel kills serverless functions after res.send()
+    if (postsToMarkFailed.length > 0 || postsToAddError.length > 0) {
+      console.log(`[UnifiedSchedule] Detected ${postsToMarkFailed.length} delivery failures, ${postsToAddError.length} partial failures`);
+      const dbUpdates = [];
+      for (const fp of postsToMarkFailed) {
+        dbUpdates.push(
+          supabase
+            .from('posts')
+            .update({ status: 'failed', last_error: fp.last_error })
+            .eq('id', fp.id)
+            .then(({ error }) => {
+              if (error) logError('unified-schedule.markFailed', error, { postId: fp.id });
+              else console.log(`[UnifiedSchedule] Marked post ${fp.id} as failed: ${fp.last_error}`);
+            })
+        );
+      }
+      for (const ep of postsToAddError) {
+        dbUpdates.push(
+          supabase
+            .from('posts')
+            .update({ last_error: ep.last_error })
+            .eq('id', ep.id)
+            .then(({ error }) => {
+              if (error) logError('unified-schedule.addError', error, { postId: ep.id });
+            })
+        );
+      }
+      await Promise.all(dbUpdates);
+    }
 
     // Step 7: Group by approval status for UI convenience
     const grouped = {

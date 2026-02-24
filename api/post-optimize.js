@@ -74,7 +74,7 @@ Platforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join
       { role: 'user', content: `Optimize this post:\n\n"${text}"` }
     ],
     temperature: 0.7,
-    max_tokens: 400
+    max_tokens: 300
   }, {
     headers: {
       'Content-Type': 'application/json',

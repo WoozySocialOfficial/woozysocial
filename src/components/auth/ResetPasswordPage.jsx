@@ -14,32 +14,38 @@ export const ResetPasswordPage = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Listen for the PASSWORD_RECOVERY event from Supabase
+    // Check if URL has recovery parameters (code for PKCE, hash for implicit flow)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasCode = urlParams.has('code');
+    const hasHashToken = window.location.hash.includes('access_token');
+    const hasRecoveryParams = hasCode || hasHashToken;
+
+    // Listen for auth events from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'PASSWORD_RECOVERY') {
-          // User clicked the reset link - they can now set a new password
           setIsValidSession(true);
           setChecking(false);
-        } else if (event === 'SIGNED_IN' && session) {
-          // Check if this is a recovery session (from URL hash)
+        } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+          // PKCE flow fires SIGNED_IN or INITIAL_SESSION after code exchange
           setIsValidSession(true);
           setChecking(false);
         }
       }
     );
 
-    // Also check for existing session (in case page was refreshed)
-    const checkExistingSession = async () => {
+    // Fallback: check session after a delay
+    // If URL has recovery params, give PKCE exchange more time (5s)
+    // Otherwise just check for existing session quickly (1s)
+    const fallbackDelay = hasRecoveryParams ? 5000 : 1000;
+
+    const timer = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setIsValidSession(true);
       }
       setChecking(false);
-    };
-
-    // Small delay to allow auth state change to fire first
-    const timer = setTimeout(checkExistingSession, 500);
+    }, fallbackDelay);
 
     return () => {
       subscription.unsubscribe();
