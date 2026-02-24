@@ -1,4 +1,3 @@
-const axios = require("axios");
 const { sendApprovalNotification, sendNewCommentNotification, sendApprovalRequestNotification, sendInternalRejectionNotification } = require("../notifications/helpers");
 const {
   setCors,
@@ -19,90 +18,8 @@ const {
   hasFeature
 } = require("../_utils-access-control");
 
-const BASE_AYRSHARE = "https://api.ayrshare.com/api";
-
-// Helper to send post to Ayrshare
-async function sendToAyrshare(post, profileKey) {
-  const postData = {
-    post: post.caption,
-    platforms: post.platforms
-  };
-
-  // Check if scheduled time is in the future
-  if (post.scheduled_at) {
-    const scheduledTime = new Date(post.scheduled_at);
-    const now = new Date();
-
-    console.log('[sendToAyrshare] Schedule check:', {
-      scheduled_at_raw: post.scheduled_at,
-      scheduledTime: scheduledTime.toISOString(),
-      now: now.toISOString(),
-      isInFuture: scheduledTime > now,
-      diffMs: scheduledTime.getTime() - now.getTime()
-    });
-
-    if (scheduledTime > now) {
-      // Schedule for future - MUST use ISO-8601 string format, NOT Unix timestamp!
-      postData.scheduleDate = scheduledTime.toISOString();
-      console.log('[sendToAyrshare] Adding scheduleDate:', postData.scheduleDate);
-    } else {
-      console.log('[sendToAyrshare] Scheduled time has passed, posting immediately');
-    }
-  } else {
-    console.log('[sendToAyrshare] No scheduled_at found on post');
-  }
-
-  // Handle media URLs - ensure they are valid URLs
-  if (post.media_urls && Array.isArray(post.media_urls) && post.media_urls.length > 0) {
-    // Filter out any empty/null values and ensure URLs are strings
-    const validMediaUrls = post.media_urls
-      .filter(url => url && typeof url === 'string' && url.trim() !== '')
-      .map(url => url.trim());
-
-    if (validMediaUrls.length > 0) {
-      postData.mediaUrls = validMediaUrls;
-    }
-  }
-
-  console.log('[sendToAyrshare] Sending post data:', JSON.stringify(postData, null, 2));
-
-  try {
-    const response = await axios.post(`${BASE_AYRSHARE}/post`, postData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-        "Profile-Key": profileKey
-      },
-      timeout: 55000
-    });
-
-    return response.data;
-  } catch (axiosError) {
-    // IMPORTANT: Check if Ayrshare returned success data despite HTTP 400 status
-    // Ayrshare has a quirk where it returns HTTP 400 with a success response body
-    const responseData = axiosError.response?.data;
-    
-    console.log('[sendToAyrshare] HTTP error response:', {
-      status: axiosError.response?.status,
-      data: JSON.stringify(responseData)
-    });
-
-    // Check multiple indicators that the post actually succeeded
-    const isActuallySuccessful = responseData?.status === 'success'
-      || (Array.isArray(responseData?.errors) && responseData.errors.length === 0)
-      || responseData?.postIds?.length > 0
-      || (Array.isArray(responseData?.posts) && responseData.posts.length > 0);
-
-    if (isActuallySuccessful) {
-      // Post succeeded despite HTTP error - return the response data anyway
-      console.log('[sendToAyrshare] Post succeeded despite HTTP error, treating as success');
-      return responseData;
-    }
-
-    // Post actually failed - re-throw the error
-    throw axiosError;
-  }
-}
+// NOTE: Ayrshare posting is now handled by the scheduler cron (api/scheduler.js).
+// This file no longer calls Ayrshare directly to avoid serverless timeouts.
 
 const VALID_ACTIONS = ['approve', 'reject', 'changes_requested', 'mark_resolved', 'forward_to_client'];
 
@@ -403,17 +320,15 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // If approved, send the post to Ayrshare
+      // If approved, mark the post as scheduled so the scheduler cron picks it up.
+      // The scheduler runs every minute and handles the actual Ayrshare API call,
+      // which avoids timeouts in this endpoint.
       if (action === 'approve') {
-        // Get the post data (including original approval_status for rollback)
         const { data: post, error: postError } = await supabase
           .from('posts')
-          .select('*')
+          .select('status, scheduled_at')
           .eq('id', postId)
           .single();
-
-        // Save original approval_status so rollback goes back to the right queue
-        const originalApprovalStatus = post?.approval_status || 'pending';
 
         if (postError) {
           logError('post.approve.getPost', postError, { postId });
@@ -421,16 +336,9 @@ module.exports = async function handler(req, res) {
         }
 
         if (post && (post.status === 'pending_approval' || post.status === 'failed')) {
-          // Get workspace profile key — no env var fallback to avoid using the wrong profile
+          // Verify workspace has a social profile before approving
           const profileKey = await getWorkspaceProfileKey(workspaceId);
-
           if (!profileKey) {
-            // Roll back approval_status to original queue so the post isn't stuck
-            await supabase
-              .from('posts')
-              .update({ approval_status: originalApprovalStatus, status: 'pending_approval' })
-              .eq('id', postId);
-            await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
             return sendError(
               res,
               "This workspace has no social media profile configured. Please connect your social accounts first.",
@@ -438,80 +346,16 @@ module.exports = async function handler(req, res) {
             );
           }
 
-          try {
-            const ayrshareResponse = await sendToAyrshare(post, profileKey);
+          // Mark as scheduled — the scheduler cron will send to Ayrshare
+          await supabase
+            .from('posts')
+            .update({
+              status: 'scheduled',
+              last_error: null
+            })
+            .eq('id', postId);
 
-            console.log('[approve] Ayrshare response:', JSON.stringify(ayrshareResponse, null, 2));
-
-            if (ayrshareResponse.status !== 'error') {
-              // Extract ayr_post_id from Ayrshare response (handles multiple response formats)
-              const ayrPostId = ayrshareResponse.id
-                || ayrshareResponse.postId
-                || ayrshareResponse.scheduleId
-                || ayrshareResponse.refId
-                || ayrshareResponse.posts?.[0]?.id
-                || ayrshareResponse.postIds?.[0]?.id
-                || ayrshareResponse.postIds?.[0];
-              const scheduledTime = new Date(post.scheduled_at);
-              const now = new Date();
-              const isStillFuture = scheduledTime > now;
-
-              console.log('[approve] Extracted ayrPostId:', ayrPostId, 'isStillFuture:', isStillFuture);
-
-              if (!ayrPostId) {
-                console.error('[approve] WARNING: No post ID returned from Ayrshare! Full response:', JSON.stringify(ayrshareResponse));
-              }
-
-              await supabase
-                .from('posts')
-                .update({
-                  ayr_post_id: ayrPostId || null,
-                  status: isStillFuture ? 'scheduled' : 'posted',
-                  posted_at: isStillFuture ? null : new Date().toISOString()
-                })
-                .eq('id', postId);
-            } else {
-              // Ayrshare returned error — roll back to original queue so the post can be retried
-              const errorMsg = ayrshareResponse.message || 'Failed to post to Ayrshare';
-              await supabase
-                .from('posts')
-                .update({
-                  status: 'failed',
-                  approval_status: originalApprovalStatus,
-                  last_error: errorMsg
-                })
-                .eq('id', postId);
-              await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
-
-              return sendError(
-                res,
-                `Failed to post to social platforms: ${errorMsg}`,
-                ErrorCodes.EXTERNAL_API_ERROR,
-                ayrshareResponse
-              );
-            }
-          } catch (ayrError) {
-            logError('post.approve.ayrshare', ayrError, { postId, workspaceId });
-            const errorMsg = ayrError.response?.data?.message || ayrError.message;
-
-            // Roll back to original queue so the post can be retried by the same user
-            await supabase
-              .from('posts')
-              .update({
-                status: 'failed',
-                approval_status: originalApprovalStatus,
-                last_error: errorMsg
-              })
-              .eq('id', postId);
-            await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
-
-            return sendError(
-              res,
-              `Failed to send post to social platforms: ${errorMsg}`,
-              ErrorCodes.EXTERNAL_API_ERROR,
-              ayrError.response?.data
-            );
-          }
+          console.log(`[approve] Post ${postId} approved and marked as scheduled. Scheduler will handle Ayrshare posting.`);
         }
       }
 
