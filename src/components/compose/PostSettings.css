@@ -280,3 +280,55 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Required indicator for Instagram type */
+.setting-required {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* Toggle button — highlighted when a required field is missing */
+.post-settings-toggle--required {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.06) !important;
+}
+
+.post-settings-toggle--required:hover {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Badge shown in the toggle label */
+.post-settings-required-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 4px;
+  padding: 1px 7px;
+  margin-left: 4px;
+}
+
+/* Select — highlighted when empty/unselected */
+.setting-select--empty {
+  border-color: #f59e0b;
+  color: var(--text-tertiary, #7b74b0);
+}
+
+.setting-select--empty:focus {
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="dark"] .post-settings-toggle--required,
+.dark .post-settings-toggle--required {
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+[data-theme="dark"] .post-settings-required-badge,
+.dark .post-settings-required-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}

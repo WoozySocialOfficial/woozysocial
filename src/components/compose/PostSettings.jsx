@@ -14,7 +14,8 @@ export const PostSettings = ({
   selectedPlatforms = [],
   settings = {},
   onSettingsChange,
-  className = ''
+  className = '',
+  forceExpand = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -28,7 +29,14 @@ export const PostSettings = ({
   // Settings state
   const [threadPost, setThreadPost] = useState(settings.threadPost || false);
   const [threadNumber, setThreadNumber] = useState(settings.threadNumber !== false);
-  const [instagramType, setInstagramType] = useState(settings.instagramType || 'feed');
+  const [instagramType, setInstagramType] = useState(settings.instagramType || '');
+
+  // Auto-expand when forceExpand is true (e.g. Instagram selected without a type)
+  useEffect(() => {
+    if (forceExpand) {
+      setIsExpanded(true);
+    }
+  }, [forceExpand]);
 
   // Update parent when settings change
   const handleSettingChange = (key, value) => {
@@ -48,7 +56,7 @@ export const PostSettings = ({
     <div className={`post-settings ${className}`}>
       <button
         type="button"
-        className="post-settings-toggle"
+        className={`post-settings-toggle${hasInstagram && !instagramType ? ' post-settings-toggle--required' : ''}`}
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
         aria-controls="post-settings-content"
@@ -56,6 +64,9 @@ export const PostSettings = ({
         <span className="post-settings-toggle-label">
           <FaCog className="post-settings-icon" />
           <span>Post Settings</span>
+          {hasInstagram && !instagramType && (
+            <span className="post-settings-required-badge">Instagram type required</span>
+          )}
         </span>
         {isExpanded ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
       </button>
@@ -106,23 +117,26 @@ export const PostSettings = ({
               <label className="setting-label-block">
                 <FaInstagram className="setting-icon" />
                 <span>Instagram Post Type</span>
+                <span className="setting-required">*</span>
               </label>
               <select
-                className="setting-select"
+                className={`setting-select${!instagramType ? ' setting-select--empty' : ''}`}
                 value={instagramType}
                 onChange={(e) => {
                   setInstagramType(e.target.value);
                   handleSettingChange('instagramType', e.target.value);
                 }}
               >
-                <option value="feed">Feed Post (default)</option>
+                <option value="" disabled>Select post type...</option>
+                <option value="feed">Feed Post</option>
                 <option value="story">Story (24 hours)</option>
                 <option value="reel">Reel (video)</option>
               </select>
               <p className="setting-description">
-                {instagramType === 'feed' && 'Standard Instagram post that appears in feeds'}
+                {!instagramType && 'Choose how this post will appear on Instagram.'}
+                {instagramType === 'feed' && 'Standard Instagram post that appears in feeds.'}
                 {instagramType === 'story' && 'Temporary post that disappears after 24 hours. Images must be between 320px and 1920px wide.'}
-                {instagramType === 'reel' && 'Short-form video content (requires video)'}
+                {instagramType === 'reel' && 'Short-form video content (requires video).'}
               </p>
             </div>
           )}

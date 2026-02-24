@@ -104,7 +104,7 @@ export const ComposeContent = () => {
   const [postSettings, setPostSettings] = useState({
     threadPost: false,
     threadNumber: true,
-    instagramType: 'feed'
+    instagramType: ''
   });
 
   // Use React Query for connected accounts
@@ -1038,6 +1038,18 @@ export const ComposeContent = () => {
       return; // Don't send to API yet
     }
 
+    if (networks.instagram && !postSettings.instagramType) {
+      onClose();
+      toast({
+        title: "Instagram post type required",
+        description: 'Select a post type (Feed, Story, or Reel) in "Post Settings" below before scheduling to Instagram.',
+        status: "warning",
+        duration: 5000,
+        isClosable: true
+      });
+      return;
+    }
+
     setIsLoading(true);
     setTempScheduledDate(scheduleDate); // Update state for backward compatibility
     onClose();
@@ -1748,6 +1760,17 @@ export const ComposeContent = () => {
         description: "You must be logged in to post.",
         status: "error",
         duration: 3000,
+        isClosable: true
+      });
+      return;
+    }
+
+    if (networks.instagram && !postSettings.instagramType) {
+      toast({
+        title: "Instagram post type required",
+        description: 'Select a post type (Feed, Story, or Reel) in "Post Settings" below before posting to Instagram.',
+        status: "warning",
+        duration: 5000,
         isClosable: true
       });
       return;
@@ -2600,6 +2623,7 @@ export const ComposeContent = () => {
               selectedPlatforms={Object.keys(networks).filter(k => networks[k])}
               settings={postSettings}
               onSettingsChange={setPostSettings}
+              forceExpand={networks.instagram && !postSettings.instagramType}
             />
           </div>
         </div>
