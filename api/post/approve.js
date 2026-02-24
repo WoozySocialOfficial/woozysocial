@@ -73,7 +73,7 @@ async function sendToAyrshare(post, profileKey) {
         Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
         "Profile-Key": profileKey
       },
-      timeout: 30000
+      timeout: 55000
     });
 
     return response.data;
@@ -105,6 +105,20 @@ async function sendToAyrshare(post, profileKey) {
 }
 
 const VALID_ACTIONS = ['approve', 'reject', 'changes_requested', 'mark_resolved', 'forward_to_client'];
+
+// Map posts.approval_status → post_approvals.approval_status
+// The post_approvals table constraint only allows: pending, approved, rejected, cancelled, forwarded_to_client
+const toApprovalRecordStatus = (status) => {
+  const map = {
+    'approved': 'approved',
+    'rejected': 'rejected',
+    'changes_requested': 'pending',
+    'pending_client': 'forwarded_to_client',
+    'pending_internal': 'pending',
+    'pending': 'pending'
+  };
+  return map[status] || 'pending';
+};
 
 module.exports = async function handler(req, res) {
   setCors(res);
@@ -309,7 +323,7 @@ module.exports = async function handler(req, res) {
       }
 
       const approvalData = {
-        approval_status: newStatus,
+        approval_status: toApprovalRecordStatus(newStatus),
         reviewed_by: userId,
         reviewed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -389,12 +403,15 @@ module.exports = async function handler(req, res) {
 
       // If approved, send the post to Ayrshare
       if (action === 'approve') {
-        // Get the post data
+        // Get the post data (including original approval_status for rollback)
         const { data: post, error: postError } = await supabase
           .from('posts')
           .select('*')
           .eq('id', postId)
           .single();
+
+        // Save original approval_status so rollback goes back to the right queue
+        const originalApprovalStatus = post?.approval_status || 'pending';
 
         if (postError) {
           logError('post.approve.getPost', postError, { postId });
@@ -406,12 +423,12 @@ module.exports = async function handler(req, res) {
           const profileKey = await getWorkspaceProfileKey(workspaceId);
 
           if (!profileKey) {
-            // Roll back approval_status so the post isn't stuck
+            // Roll back approval_status to original queue so the post isn't stuck
             await supabase
               .from('posts')
-              .update({ approval_status: 'pending_client', status: 'pending_approval' })
+              .update({ approval_status: originalApprovalStatus, status: 'pending_approval' })
               .eq('id', postId);
-            await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
+            await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
             return sendError(
               res,
               "This workspace has no social media profile configured. Please connect your social accounts first.",
@@ -452,17 +469,17 @@ module.exports = async function handler(req, res) {
                 })
                 .eq('id', postId);
             } else {
-              // Ayrshare returned error — roll back approval_status so the post can be retried
+              // Ayrshare returned error — roll back to original queue so the post can be retried
               const errorMsg = ayrshareResponse.message || 'Failed to post to Ayrshare';
               await supabase
                 .from('posts')
                 .update({
                   status: 'failed',
-                  approval_status: 'pending_client',
+                  approval_status: originalApprovalStatus,
                   last_error: errorMsg
                 })
                 .eq('id', postId);
-              await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
+              await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
 
               return sendError(
                 res,
@@ -475,16 +492,16 @@ module.exports = async function handler(req, res) {
             logError('post.approve.ayrshare', ayrError, { postId, workspaceId });
             const errorMsg = ayrError.response?.data?.message || ayrError.message;
 
-            // Roll back approval_status so the post can be retried
+            // Roll back to original queue so the post can be retried by the same user
             await supabase
               .from('posts')
               .update({
                 status: 'failed',
-                approval_status: 'pending_client',
+                approval_status: originalApprovalStatus,
                 last_error: errorMsg
               })
               .eq('id', postId);
-            await supabase.from('post_approvals').update({ approval_status: 'pending_client' }).eq('post_id', postId);
+            await supabase.from('post_approvals').update({ approval_status: toApprovalRecordStatus(originalApprovalStatus) }).eq('post_id', postId);
 
             return sendError(
               res,
