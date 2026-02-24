@@ -138,6 +138,41 @@ module.exports = async function handler(req, res) {
       postData.mediaUrls = mediaUrls.filter(url => url && url.startsWith('http'));
     }
 
+    // Parse postSettings (mirrors api/post.js logic)
+    let settings = {};
+    if (postSettings) {
+      if (typeof postSettings === 'string') {
+        try { settings = JSON.parse(postSettings); } catch (e) { /* ignore malformed */ }
+      } else {
+        settings = postSettings;
+      }
+    }
+
+    // Auto-shorten links
+    if (settings.shortenLinks) {
+      postData.shortenLinks = true;
+    }
+
+    // Twitter/X thread options
+    const hasTwitter = platforms.some(p => ['twitter', 'x'].includes(p.toLowerCase()));
+    if (settings.threadPost && hasTwitter) {
+      postData.twitterOptions = {
+        thread: true,
+        threadNumber: settings.threadNumber !== false
+      };
+    }
+
+    // Instagram post type options
+    const hasInstagram = platforms.some(p => p.toLowerCase() === 'instagram');
+    if (settings.instagramType && hasInstagram) {
+      if (settings.instagramType === 'story') {
+        postData.instagramOptions = { stories: true };
+      } else if (settings.instagramType === 'reel') {
+        postData.instagramOptions = { reels: true, shareReelsFeed: true };
+      }
+      // 'feed' is default — no special options needed
+    }
+
     const ayrshareResponse = await axios.post(
       `${BASE_AYRSHARE}/post`,
       postData,
