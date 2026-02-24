@@ -9,6 +9,7 @@ try {
 
 const AI_RATE_LIMIT = 30; // Max AI generations per hour per workspace
 const AI_RATE_WINDOW = 3600; // 1 hour in seconds
+const AI_CACHE_TTL = 300; // Cache AI responses for 5 minutes
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -50,7 +51,7 @@ async function fetchWebsiteContent(url) {
     const title = titleMatch ? titleMatch[1].trim() : '';
     const description = descMatch ? descMatch[1].trim() : (ogDescMatch ? ogDescMatch[1].trim() : '');
 
-    const maxLength = 3000;
+    const maxLength = 1500;
     if (text.length > maxLength) {
       text = text.substring(0, maxLength) + '...';
     }
@@ -110,7 +111,7 @@ async function generateWithAI(prompt, websiteData, brandProfile, platforms, useE
     if (brandProfile.target_audience) brandContext += `\nAudience: ${brandProfile.target_audience}`;
     if (brandProfile.tone_of_voice) brandContext += `\nTone: ${brandProfile.tone_of_voice}`;
     if (brandProfile.key_topics) brandContext += `\nTopics: ${brandProfile.key_topics}`;
-    if (brandProfile.sample_posts) brandContext += `\nExample posts from this brand (match this style):\n${brandProfile.sample_posts}`;
+    if (brandProfile.sample_posts) brandContext += `\nExample posts from this brand (match this style):\n${brandProfile.sample_posts.substring(0, 500)}`;
   }
 
   // Platform guidelines
@@ -140,8 +141,8 @@ ${useEmojis ? 'Use 0-2 emojis if natural.' : 'No emojis.'}
 ${selectedPlatformGuidelines ? `Platform rules:\n${selectedPlatformGuidelines}` : ''}
 ${brandContext}${websiteContext}
 ${hasImages ? 'The user has provided screenshot examples of their real posts above. Study the exact writing style, formatting, line breaks, emoji usage, and tone from those images — mirror it closely.' : ''}
-Output 3 variations separated by --- on its own line. No bold, no markdown, no labels, no numbering.
-Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold take or question.`;
+Output 2 variations separated by --- on its own line. No bold, no markdown, no labels, no numbering.
+Variation 1: Casual/chill. Variation 2: Slightly polished.`;
 
   // Build message content — prepend sample post images if provided
   const userMessageContent = [];
@@ -154,12 +155,12 @@ Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold tak
     });
     userMessageContent.push({
       type: 'text',
-      text: `These are real posts from this brand. Study their style closely, then write 3 social media posts about: ${prompt}`
+      text: `These are real posts from this brand. Study their style closely, then write 2 social media posts about: ${prompt}`
     });
   } else {
     userMessageContent.push({
       type: 'text',
-      text: `Write 3 social media posts about: ${prompt}`
+      text: `Write 2 social media posts about: ${prompt}`
     });
   }
 
@@ -170,7 +171,7 @@ Variation 1: Casual/chill. Variation 2: Slightly polished. Variation 3: Bold tak
       { role: 'user', content: hasImages ? userMessageContent : userMessageContent[0].text }
     ],
     temperature: 0.85,
-    max_tokens: 500
+    max_tokens: 350
   }, {
     headers: {
       'Content-Type': 'application/json',
@@ -267,7 +268,36 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Check KV cache for identical prompt (same workspace + prompt = return cached)
+    const cacheKey = kv ? `ai:generate:${workspaceId}:${Buffer.from(prompt.trim().toLowerCase()).toString('base64').substring(0, 60)}` : null;
+    if (kv && cacheKey) {
+      try {
+        const cached = await kv.get(cacheKey);
+        if (cached) {
+          return res.status(200).json({
+            success: true,
+            variations: cached,
+            brandProfileUsed: !!brandProfile,
+            websiteUsed: !!websiteData,
+            websiteTitle: websiteData?.title || null,
+            cached: true
+          });
+        }
+      } catch (cacheErr) {
+        // Ignore cache read errors
+      }
+    }
+
     const variations = await generateWithAI(prompt, websiteData, brandProfile, platforms, useEmojis);
+
+    // Cache the result for 5 minutes
+    if (kv && cacheKey && variations.length > 0) {
+      try {
+        await kv.set(cacheKey, variations, { ex: AI_CACHE_TTL });
+      } catch (cacheErr) {
+        // Ignore cache write errors
+      }
+    }
 
     return res.status(200).json({
       success: true,
