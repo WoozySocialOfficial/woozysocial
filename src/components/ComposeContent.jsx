@@ -65,6 +65,10 @@ export const ComposeContent = () => {
   });
   const [selectedPreviewPlatform, setSelectedPreviewPlatform] = useState("instagram");
   const [currentDraftId, setCurrentDraftId] = useState(null);
+  // Ref mirror of currentDraftId — always holds the latest value synchronously.
+  // saveDraft reads this instead of the state so it never gets a stale null from
+  // a re-created useCallback closure (which was causing duplicate INSERTs).
+  const currentDraftIdRef = useRef(null);
   const [isEditingScheduledPost, setIsEditingScheduledPost] = useState(false); // Track if editing a scheduled post
   const [approvalStatus, setApprovalStatus] = useState(null); // Track approval status
   const [lastSaved, setLastSaved] = useState(null);
@@ -104,7 +108,7 @@ export const ComposeContent = () => {
   const [postSettings, setPostSettings] = useState({
     threadPost: false,
     threadNumber: true,
-    instagramType: 'feed'
+    instagramType: ''
   });
 
   // Use React Query for connected accounts
@@ -297,6 +301,7 @@ export const ComposeContent = () => {
   // Helper function to load draft data into state
   const loadDraftIntoState = useCallback((draft, showToast = true) => {
     // Set the draft ID so we update instead of create new
+    currentDraftIdRef.current = draft.id;
     setCurrentDraftId(draft.id);
 
     // Check if this is editing a scheduled post
@@ -476,9 +481,12 @@ export const ComposeContent = () => {
       }
 
       // NEW: Check if editing a scheduled post
-      if (isEditingScheduledPost && currentDraftId) {
+      // Read from ref — always the latest ID without triggering re-creation of this callback
+      const draftId = currentDraftIdRef.current;
+
+      if (isEditingScheduledPost && draftId) {
         // Save to posts table (scheduled post) - AUTO-SAVE ONLY, no Ayrshare call
-        console.log('[Draft] Auto-saving scheduled post to posts table, id:', currentDraftId);
+        console.log('[Draft] Auto-saving scheduled post to posts table, id:', draftId);
 
         const { error } = await supabase
           .from('posts')
@@ -490,7 +498,7 @@ export const ComposeContent = () => {
             post_settings: postSettings,
             updated_at: new Date().toISOString()
           })
-          .eq('id', currentDraftId)
+          .eq('id', draftId)
           .eq('workspace_id', activeWorkspace.id);
 
         if (error) throw error;
@@ -508,7 +516,7 @@ export const ComposeContent = () => {
           body: JSON.stringify({
             workspaceId: activeWorkspace.id,
             userId: user.id,
-            draftId: currentDraftId || null,
+            draftId: draftId || null,
             caption: post.text,
             mediaUrls: uploadedUrls,
             platforms: selectedPlatforms,
@@ -522,12 +530,15 @@ export const ComposeContent = () => {
         }
 
         const json = await res.json();
-        if (json.data && !currentDraftId) {
+        if (json.data && !draftId) {
+          // Sync ref first (synchronous) so any save that fires before the
+          // next React render will already see the correct ID
+          currentDraftIdRef.current = json.data.id;
           setCurrentDraftId(json.data.id);
         }
 
         setLastSaved(new Date());
-        console.log("[Draft] Saved successfully, id:", json.data?.id || currentDraftId);
+        console.log("[Draft] Saved successfully, id:", json.data?.id || draftId);
 
         // Invalidate cache so Posts page shows the new/updated draft immediately
         invalidatePosts(activeWorkspace?.id);
@@ -545,7 +556,10 @@ export const ComposeContent = () => {
     } finally {
       isSavingRef.current = false;
     }
-  }, [user, activeWorkspace?.id, post.text, mediaPreviews, networks, scheduledDate, currentDraftId, isEditingScheduledPost, postSettings, toast, supabase, invalidatePosts]);
+  // currentDraftId intentionally omitted — saveDraft reads currentDraftIdRef.current
+  // directly so this callback never re-creates when the ID changes. This prevents
+  // the beforeunload cleanup from firing stale (null-ID) saves that create duplicates.
+  }, [user, activeWorkspace?.id, post.text, mediaPreviews, networks, scheduledDate, isEditingScheduledPost, postSettings, toast, supabase, invalidatePosts]);
 
   // Auto-save draft every 30 seconds when there's content
   // DISABLED for editing scheduled posts - no need to autosave existing posts
@@ -1038,6 +1052,18 @@ export const ComposeContent = () => {
       return; // Don't send to API yet
     }
 
+    if (networks.instagram && !postSettings.instagramType) {
+      onClose();
+      toast({
+        title: "Instagram post type required",
+        description: 'Select a post type (Feed, Story, or Reel) in "Post Settings" below before scheduling to Instagram.',
+        status: "warning",
+        duration: 5000,
+        isClosable: true
+      });
+      return;
+    }
+
     setIsLoading(true);
     setTempScheduledDate(scheduleDate); // Update state for backward compatibility
     onClose();
@@ -1160,6 +1186,7 @@ export const ComposeContent = () => {
         invalidatePosts(activeWorkspace?.id);
 
         // IMPORTANT: Clear currentDraftId BEFORE resetting form to prevent autosave errors
+        currentDraftIdRef.current = null;
         setCurrentDraftId(null);
 
         // Reset form completely
@@ -1753,6 +1780,17 @@ export const ComposeContent = () => {
       return;
     }
 
+    if (networks.instagram && !postSettings.instagramType) {
+      toast({
+        title: "Instagram post type required",
+        description: 'Select a post type (Feed, Story, or Reel) in "Post Settings" below before posting to Instagram.',
+        status: "warning",
+        duration: 5000,
+        isClosable: true
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     // Calculate estimated time based on media and platforms
@@ -1944,6 +1982,7 @@ export const ComposeContent = () => {
           autoSaveTimerRef.current = null;
         }
         // IMPORTANT: Clear currentDraftId BEFORE resetting form to prevent autosave errors
+        currentDraftIdRef.current = null;
         setCurrentDraftId(null);
         // Reset form completely
         setPost({ text: "", media: [] });
@@ -2600,6 +2639,7 @@ export const ComposeContent = () => {
               selectedPlatforms={Object.keys(networks).filter(k => networks[k])}
               settings={postSettings}
               onSettingsChange={setPostSettings}
+              forceExpand={networks.instagram && !postSettings.instagramType}
             />
           </div>
         </div>
