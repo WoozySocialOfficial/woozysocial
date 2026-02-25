@@ -221,7 +221,8 @@ module.exports = async function handler(req, res) {
 
     const results = {
       success: [],
-      failed: []
+      failed: [],
+      skipped: [] // Debug: track posts that were skipped (lock failed)
     };
 
     if (!duePosts || duePosts.length === 0) {
@@ -285,8 +286,16 @@ module.exports = async function handler(req, res) {
 
         // If no rows were updated, another scheduler instance already locked this post
         if (lockError || !lockData || lockData.length === 0) {
-          console.warn(`[Scheduler] Post ${post.id} already being processed by another instance - skipping`);
-          continue; // Don't add to results, just skip silently
+          console.warn(`[Scheduler] Post ${post.id} lock FAILED - lockError:`, lockError, 'lockData:', lockData);
+          results.skipped.push({
+            postId: post.id,
+            reason: lockError ? `Lock error: ${lockError.message}` : 'Lock returned empty (status may have changed)',
+            postStatus: post.status,
+            postApprovalStatus: post.approval_status,
+            scheduledAt: post.scheduled_at,
+            hasAyrPostId: !!post.ayr_post_id
+          });
+          continue;
         }
 
         console.log(`[Scheduler] Successfully locked post ${post.id} for processing`);
@@ -667,9 +676,19 @@ module.exports = async function handler(req, res) {
       processed: (duePosts || []).length,
       successful: results.success.length,
       failed: results.failed.length,
+      skipped: results.skipped.length,
       reconciled,
       reverseReconciled,
-      results
+      results,
+      // Debug: include first 3 due post summaries
+      debug_duePosts: (duePosts || []).slice(0, 3).map(p => ({
+        id: p.id,
+        status: p.status,
+        approval_status: p.approval_status,
+        scheduled_at: p.scheduled_at,
+        has_ayr_post_id: !!p.ayr_post_id,
+        workspace_id: p.workspace_id
+      }))
     });
 
   } catch (error) {
