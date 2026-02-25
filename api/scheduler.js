@@ -11,6 +11,7 @@ const {
   invalidateWorkspaceCache
 } = require("./_utils");
 const { sendPostFailedNotification } = require("./notifications/helpers");
+const { sendPostGoingOutAlert, sendPostFailedAdminAlert, sendSchedulerErrorAlert } = require("./_adminAlerts");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
@@ -343,6 +344,13 @@ module.exports = async function handler(req, res) {
             errorMessage: 'No social media accounts connected'
           }).catch(err => logError('scheduler.notification.failed', err, { postId: post.id }));
 
+          sendPostFailedAdminAlert({
+            postId: post.id,
+            workspaceName: post.workspace_id,
+            platforms: post.platforms,
+            errorMessage: 'No social media accounts connected'
+          }).catch(err => console.warn('[Scheduler] Admin alert failed:', err.message));
+
           results.failed.push({
             postId: post.id,
             error: 'No profile key'
@@ -391,6 +399,15 @@ module.exports = async function handler(req, res) {
           postId: post.id,
           ayrPostId
         });
+
+        // Admin alert: post going out
+        sendPostGoingOutAlert({
+          postId: post.id,
+          workspaceName: post.workspace_name || post.workspace_id,
+          platforms: post.platforms,
+          caption: post.caption,
+          scheduledAt: post.scheduled_at
+        }).catch(err => console.warn('[Scheduler] Admin alert failed:', err.message));
 
       } catch (postError) {
         console.error(`[Scheduler] Error processing post ${post.id}:`, postError);
@@ -474,6 +491,13 @@ module.exports = async function handler(req, res) {
           } else {
             console.log(`[Scheduler] Post ${post.id} timed out — skipping failure notification (reconciliation will re-check)`);
           }
+
+          sendPostFailedAdminAlert({
+            postId: post.id,
+            workspaceName: post.workspace_id,
+            platforms: post.platforms,
+            errorMessage: failureReason
+          }).catch(err => console.warn('[Scheduler] Admin alert failed:', err.message));
 
           results.failed.push({
             postId: post.id,

@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Busboy = require("busboy");
 const probe = require("probe-image-size");
+const { sendPostGoingOutAlert, sendPostFailedAdminAlert } = require("./_adminAlerts");
 const {
   setCors,
   getWorkspaceProfileKey,
@@ -1263,6 +1264,13 @@ module.exports = async function handler(req, res) {
           platforms,
           errorMessage: failureReason
         }).catch(err => logError('post.notification.failed', err));
+
+        sendPostFailedAdminAlert({
+          postId: savedFailedPost?.id || 'unknown',
+          workspaceName: workspaceId,
+          platforms,
+          errorMessage: failureReason
+        }).catch(err => console.warn('[POST] Admin alert failed:', err.message));
       }
 
       // Extract a clean, human-readable error from Ayrshare's response
@@ -1304,6 +1312,13 @@ module.exports = async function handler(req, res) {
           platforms,
           errorMessage: failureReason
         }).catch(err => logError('post.notification.failed', err));
+
+        sendPostFailedAdminAlert({
+          postId: savedFailedPost?.id || 'unknown',
+          workspaceName: workspaceId,
+          platforms,
+          errorMessage: failureReason
+        }).catch(err => console.warn('[POST] Admin alert failed:', err.message));
       }
 
       return sendError(
@@ -1357,6 +1372,17 @@ module.exports = async function handler(req, res) {
 
     // Invalidate cache after successful post
     await invalidateWorkspaceCache(workspaceId);
+
+    // Admin alert: post going out
+    if (!isScheduled) {
+      sendPostGoingOutAlert({
+        postId: response.data.posts?.[0]?.id || response.data.id || 'unknown',
+        workspaceName: workspaceId,
+        platforms,
+        caption: text,
+        scheduledAt: null
+      }).catch(err => console.warn('[POST] Admin alert failed:', err.message));
+    }
 
     return sendSuccess(res, {
       status: isScheduled ? 'scheduled' : 'posted',
