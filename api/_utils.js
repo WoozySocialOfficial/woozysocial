@@ -425,18 +425,24 @@ function getSupabase() {
   return _supabase;
 }
 
-// Helper function to get user's profile key
+// Helper function to get user's profile key via their workspace membership
+// Note: ayr_profile_key only exists on the workspaces table, not user_profiles
 async function getUserProfileKey(userId) {
   const supabase = getSupabase();
   if (!supabase) return null;
   try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('ayr_profile_key')
-      .eq('id', userId)
-      .single();
-    if (error) throw error;
-    return data?.ayr_profile_key || null;
+    // Find the user's workspace membership and get the workspace's profile key
+    const { data: membership, error: membershipError } = await supabase
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (membershipError || !membership || membership.length === 0) {
+      return null;
+    }
+
+    return await getWorkspaceProfileKey(membership[0].workspace_id);
   } catch (error) {
     console.error('Error fetching user profile key:', error);
     return null;
@@ -455,7 +461,11 @@ async function getWorkspaceProfileKey(workspaceId) {
       .eq('id', workspaceId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // PGRST116 = no rows found — workspace doesn't exist or has no profile key
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
     return data?.ayr_profile_key || null;
   } catch (error) {
     console.error('Error fetching workspace profile key:', error);
