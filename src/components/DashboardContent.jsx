@@ -7,10 +7,10 @@ import { useConnectedAccounts, useDashboardStats, useInvalidateQueries } from ".
 import { baseURL } from "../utils/constants";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import "./DashboardContent.css";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaGoogle } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { FaBluesky } from "react-icons/fa6";
-import { SiX, SiGooglemybusiness } from "react-icons/si";
+import { SiX } from "react-icons/si";
 
 const PLATFORM_ICONS = {
   facebook: FaFacebookF,
@@ -73,7 +73,7 @@ export const DashboardContent = () => {
     { name: "YouTube", icon: FaYoutube, key: "youtube", color: "#FF0000" },
     { name: "Pinterest", icon: FaPinterest, key: "pinterest", color: "#BD081C" },
     { name: "BlueSky", icon: FaBluesky, key: "bluesky", color: "#1185FE" },
-    { name: "Google Business", icon: SiGooglemybusiness, key: "googlebusiness", color: "#4285F4" }
+    { name: "Google Business", icon: FaGoogle, key: "googlebusiness", color: "#4285F4" }
   ];
 
   // Function to refresh connected accounts (uses React Query cache invalidation)

@@ -1,7 +1,7 @@
 import React from "react";
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaGoogle } from "react-icons/fa";
 import { FaTiktok, FaThreads, FaBluesky } from "react-icons/fa6";
-import { SiX, SiGooglemybusiness } from "react-icons/si";
+import { SiX } from "react-icons/si";
 
 /**
  * SocialNetworkSelector - Grid of social networks to post to
@@ -10,7 +10,7 @@ import { SiX, SiGooglemybusiness } from "react-icons/si";
 const SOCIAL_NETWORKS = [
   { name: "threads", displayName: "Threads", icon: FaThreads, color: "#000000" },
   { name: "twitter", displayName: "Twitter/X", icon: SiX, color: "#000000" },
-  { name: "googleBusiness", displayName: "Google", icon: SiGooglemybusiness, color: "#4285F4" },
+  { name: "googleBusiness", displayName: "Google", icon: FaGoogle, color: "#4285F4" },
   { name: "pinterest", displayName: "Pinterest", icon: FaPinterest, color: "#BD081C" },
   { name: "tiktok", displayName: "TikTok", icon: FaTiktok, color: "#000000" },
   { name: "instagram", displayName: "Instagram", icon: FaInstagram, color: "#E4405F" },
