@@ -324,14 +324,24 @@ function normalizePlatformMetrics(data, platform) {
       normalized.clicks = data.url_clicks || data.clicks || null;
       break;
 
-    case 'linkedin':
-      normalized.views = data.impressions || data.views || data.viewsCount || 0;
-      normalized.likes = data.likeCount || data.likes || getReactionsCount(data.reactions) || 0;
-      normalized.comments = data.commentsCount || data.comments || 0;
-      normalized.shares = data.sharesCount || data.shares || 0;
-      normalized.reach = data.impressions || null;
-      normalized.clicks = data.clicks || null;
+    case 'linkedin': {
+      // LinkedIn analytics from Ayrshare may come back as:
+      // { "(urn:li:activity:123...)": { totalShareStatistics: { likeCount, commentCount, ... } } }
+      // Detect this shape and unwrap it before reading metrics.
+      const linkedinKeys = Object.keys(data);
+      let ld = data; // default: flat object
+      if (linkedinKeys.length > 0 && linkedinKeys[0].toLowerCase().includes('urn:li:')) {
+        const firstActivity = data[linkedinKeys[0]];
+        ld = firstActivity.totalShareStatistics || firstActivity.analytics || firstActivity || {};
+      }
+      normalized.views    = ld.impressionCount || ld.impressions || ld.views || ld.viewsCount || 0;
+      normalized.likes    = ld.likeCount    || ld.likes    || getReactionsCount(ld.reactions) || 0;
+      normalized.comments = ld.commentCount || ld.commentsCount || ld.comments || 0;
+      normalized.shares   = ld.shareCount   || ld.sharesCount   || ld.shares  || 0;
+      normalized.reach    = ld.impressionCount || ld.impressions || null;
+      normalized.clicks   = ld.clickCount   || ld.clicks   || null;
       break;
+    }
 
     case 'tiktok':
       normalized.views = data.videoViews || data.views || data.viewsCount || 0;
@@ -360,6 +370,15 @@ function normalizePlatformMetrics(data, platform) {
       normalized.reach = data.reachCount || data.reach || null;
       normalized.clicks = data.clicks || null;
   }
+
+  // Ensure all numeric fields are actual numbers (guards against URN strings
+  // leaking in from unexpected Ayrshare response shapes)
+  ['views', 'likes', 'comments', 'shares', 'clicks', 'reach'].forEach(field => {
+    const v = normalized[field];
+    if (v !== null && typeof v !== 'number') {
+      normalized[field] = typeof v === 'string' ? (parseFloat(v) || 0) : 0;
+    }
+  });
 
   // Calculate total engagements
   normalized.totalEngagements =
