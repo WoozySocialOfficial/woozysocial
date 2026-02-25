@@ -1021,6 +1021,18 @@ export const ComposeContent = () => {
           });
         }
 
+        // GIF + TikTok: show a blocking error toast so the user knows before submitting
+        const hasGifs = files.some(f => f.type === 'image/gif' || f.name?.toLowerCase().endsWith('.gif'));
+        if (hasGifs && networks.tiktok) {
+          toast({
+            title: "TikTok doesn't support GIFs",
+            description: "You have a GIF selected and TikTok is one of your platforms. TikTok will reject this post. Remove the GIF or deselect TikTok.",
+            status: "error",
+            duration: 10000,
+            isClosable: true
+          });
+        }
+
         const baseIndex = currentPreviews.length;
         const previewPromises = files.map((file, index) => {
           return new Promise((resolve) => {
@@ -1110,11 +1122,32 @@ export const ComposeContent = () => {
 
   const handleNetworkToggle = useCallback((networkName, isLinked) => {
     if (!isLinked) return; // Can't select unlinked networks
-    setNetworks((prev) => ({
-      ...prev,
-      [networkName]: !prev[networkName]
-    }));
-  }, []);
+    setNetworks((prev) => {
+      const isTogglingOn = !prev[networkName];
+
+      // Warn when TikTok is being turned ON and there are already GIFs in the media tray
+      if (networkName === 'tiktok' && isTogglingOn && mediaPreviews.length > 0) {
+        const hasGifs = mediaPreviews.some(p => {
+          if (p.file) return p.file.type === 'image/gif' || p.file.name?.toLowerCase().endsWith('.gif');
+          if (p.dataUrl) return p.dataUrl.startsWith('data:image/gif') || p.dataUrl.toLowerCase().endsWith('.gif');
+          return false;
+        });
+        if (hasGifs) {
+          setTimeout(() => {
+            toast({
+              title: "TikTok doesn't support GIFs",
+              description: "You have a GIF in your media and you've selected TikTok. TikTok will reject this post. Remove the GIF or use a video instead.",
+              status: "error",
+              duration: 10000,
+              isClosable: true
+            });
+          }, 0);
+        }
+      }
+
+      return { ...prev, [networkName]: isTogglingOn };
+    });
+  }, [mediaPreviews, toast]);
 
   const [tempScheduledDate, setTempScheduledDate] = useState(null);
 

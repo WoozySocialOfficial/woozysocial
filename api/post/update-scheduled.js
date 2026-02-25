@@ -80,6 +80,16 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Post not found", ErrorCodes.NOT_FOUND);
     }
 
+    // Validate scheduledDate is in the future (Ayrshare rejects past dates)
+    const scheduledMs = new Date(scheduledDate).getTime();
+    if (isNaN(scheduledMs) || scheduledMs <= Date.now()) {
+      return sendError(
+        res,
+        "Scheduled date must be in the future. Please pick a new date and time.",
+        ErrorCodes.VALIDATION_ERROR
+      );
+    }
+
     // Step 1: Update post in database
     console.log('[update-scheduled] Updating post in database:', postId);
     const { error: updateError } = await supabase
@@ -89,6 +99,8 @@ module.exports = async function handler(req, res) {
         media_urls: mediaUrls || [],
         platforms,
         scheduled_at: scheduledDate,
+        status: 'scheduled',
+        last_error: null,
         post_settings: postSettings || {},
         updated_at: new Date().toISOString()
       })

@@ -445,8 +445,13 @@ module.exports = async function handler(req, res) {
             warning: 'Succeeded despite HTTP error'
           });
         } else {
-          // Post actually failed
+          // Check if this was a timeout — Ayrshare may still have processed the post.
+          // Mark as 'failed' but tag the error so the reconciliation loop can verify.
+          const isTimeout = postError.code === 'ECONNABORTED'
+            || postError.message?.toLowerCase().includes('timeout');
+
           const failureReason = responseData?.message || postError.message;
+
           await supabase
             .from('posts')
             .update({
@@ -456,13 +461,19 @@ module.exports = async function handler(req, res) {
             })
             .eq('id', post.id);
 
-          sendPostFailedNotification(supabase, {
-            postId: post.id,
-            workspaceId: post.workspace_id,
-            createdByUserId: post.created_by || post.user_id,
-            platforms: post.platforms,
-            errorMessage: failureReason
-          }).catch(err => logError('scheduler.notification.failed', err, { postId: post.id }));
+          // Only send "post failed" notification for definitive failures, not timeouts.
+          // Timeout posts get reconciled on the next run and may flip to 'posted'.
+          if (!isTimeout) {
+            sendPostFailedNotification(supabase, {
+              postId: post.id,
+              workspaceId: post.workspace_id,
+              createdByUserId: post.created_by || post.user_id,
+              platforms: post.platforms,
+              errorMessage: failureReason
+            }).catch(err => logError('scheduler.notification.failed', err, { postId: post.id }));
+          } else {
+            console.log(`[Scheduler] Post ${post.id} timed out — skipping failure notification (reconciliation will re-check)`);
+          }
 
           results.failed.push({
             postId: post.id,
@@ -486,11 +497,15 @@ module.exports = async function handler(req, res) {
     let reconciled = 0;
     try {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      // Only reconcile posts that failed due to a timeout — these are the ones where
+      // Ayrshare may have still processed the request after our side timed out.
+      // Definitive failures (auth errors, format errors, etc.) are intentionally excluded.
       const { data: failedPosts } = await supabase
         .from('posts')
-        .select('id, workspace_id, caption, platforms, media_urls, posted_at')
+        .select('id, workspace_id, caption, platforms, media_urls, posted_at, last_error')
         .eq('status', 'failed')
         .gte('posted_at', oneDayAgo)
+        .ilike('last_error', '%timeout%')
         .limit(10);
 
       if (failedPosts && failedPosts.length > 0) {
