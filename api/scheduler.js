@@ -134,6 +134,19 @@ async function sendToAyrshare(post, profileKey) {
     }
   }
 
+  // Validate media format compatibility before sending
+  if (postData.mediaUrls && postData.mediaUrls.length > 0) {
+    const hasTikTok = platforms.some(p => p.toLowerCase() === 'tiktok');
+    for (const url of postData.mediaUrls) {
+      const ext = url.toLowerCase().split('?')[0].split('.').pop();
+      if (hasTikTok && (ext === 'png' || ext === 'gif' || ext === 'webp')) {
+        const errorMsg = `TikTok does not support ${ext.toUpperCase()} images`;
+        console.error(`[Scheduler] Media validation failed for post ${post.id}: ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+    }
+  }
+
   console.log('[Scheduler] Sending post to Ayrshare:', {
     postId: post.id,
     platforms: post.platforms,
@@ -175,20 +188,6 @@ module.exports = async function handler(req, res) {
   try {
     console.log('[Scheduler] Starting scheduled posts check...');
 
-    // Clean up posts stuck in 'processing' state from crashed/timed-out scheduler runs
-    // If scheduled_at is >3 minutes ago and still 'processing', the previous run must have failed
-    const threeMinAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-    const { data: stuckPosts } = await supabase
-      .from('posts')
-      .update({ status: 'scheduled', last_error: 'Reset from stuck processing state' })
-      .eq('status', 'processing')
-      .lte('scheduled_at', threeMinAgo)
-      .select('id');
-
-    if (stuckPosts && stuckPosts.length > 0) {
-      console.warn(`[Scheduler] Reset ${stuckPosts.length} posts stuck in 'processing':`, stuckPosts.map(p => p.id));
-    }
-
     // Get all scheduled posts that are due (scheduled_at <= now)
     const now = new Date().toISOString();
     const { data: duePosts, error: fetchError } = await supabase
@@ -208,7 +207,8 @@ module.exports = async function handler(req, res) {
 
     const results = {
       success: [],
-      failed: []
+      failed: [],
+      skipped: [] // Debug: track posts that were skipped (lock failed)
     };
 
     if (!duePosts || duePosts.length === 0) {
@@ -261,22 +261,26 @@ module.exports = async function handler(req, res) {
           continue; // Skip to next post
         }
 
-        // CRITICAL: Set status to 'processing' to prevent race conditions
-        // This prevents concurrent scheduler runs from picking up the same post
-        const { data: lockData, error: lockError, count } = await supabase
+        // Use optimistic locking: stamp updated_at to claim this post.
+        // If another scheduler instance already claimed it, the WHERE won't match.
+        const lockStamp = new Date().toISOString();
+        const { data: lockData, error: lockError } = await supabase
           .from('posts')
-          .update({ status: 'processing' })
+          .update({ updated_at: lockStamp })
           .eq('id', post.id)
-          .eq('status', 'scheduled') // Only update if still scheduled
-          .select();
+          .eq('status', 'scheduled') // Only claim if still scheduled
+          .select('id');
 
-        // If no rows were updated, another scheduler instance already locked this post
         if (lockError || !lockData || lockData.length === 0) {
-          console.warn(`[Scheduler] Post ${post.id} already being processed by another instance - skipping`);
-          continue; // Don't add to results, just skip silently
+          console.warn(`[Scheduler] Post ${post.id} already being processed - skipping`);
+          results.skipped.push({
+            postId: post.id,
+            reason: lockError ? `Lock error: ${lockError.message}` : 'Post status changed before lock',
+          });
+          continue;
         }
 
-        console.log(`[Scheduler] Successfully locked post ${post.id} for processing`);
+        console.log(`[Scheduler] Claimed post ${post.id} for processing`);
 
         // Get profile key for the workspace
         const profileKey = await getWorkspaceProfileKey(post.workspace_id);
@@ -654,6 +658,7 @@ module.exports = async function handler(req, res) {
       processed: (duePosts || []).length,
       successful: results.success.length,
       failed: results.failed.length,
+      skipped: results.skipped.length,
       reconciled,
       reverseReconciled,
       results

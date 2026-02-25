@@ -1791,6 +1791,70 @@ export const ComposeContent = () => {
       return;
     }
 
+    // Validate media format compatibility with selected platforms
+    const mediaFiles = Array.isArray(post.media) ? post.media : [];
+    const mediaUrlItems = mediaPreviews.filter(p => p.dataUrl?.startsWith('http'));
+    const hasMedia = mediaFiles.length > 0 || mediaUrlItems.length > 0;
+
+    if (hasMedia) {
+      const mediaIssues = [];
+
+      // Check each media file's type against platform requirements
+      const allMediaTypes = [
+        ...mediaFiles.map(f => ({ name: f.name, type: f.type })),
+        ...mediaUrlItems.map(p => {
+          const url = p.dataUrl || '';
+          const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase() || '';
+          const typeMap = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', mp4: 'video/mp4', mov: 'video/quicktime' };
+          return { name: url.split('/').pop()?.split('?')[0] || 'media', type: typeMap[ext] || p.type || 'unknown' };
+        })
+      ];
+
+      for (const media of allMediaTypes) {
+        const ext = media.name?.split('.').pop()?.toLowerCase() || '';
+        const isImage = media.type?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'].includes(ext);
+        const isVideo = media.type?.startsWith('video/') || ['mp4', 'mov', 'webm', 'avi'].includes(ext);
+        const isPNG = media.type === 'image/png' || ext === 'png';
+        const isGIF = media.type === 'image/gif' || ext === 'gif';
+        const isWebP = media.type === 'image/webp' || ext === 'webp';
+
+        // TikTok: No PNG images, only JPG images or video
+        if (networks.tiktok && isPNG) {
+          mediaIssues.push('TikTok does not support PNG images. Use JPG or upload a video instead.');
+        }
+        if (networks.tiktok && isGIF) {
+          mediaIssues.push('TikTok does not support GIF images. Upload a video instead.');
+        }
+        if (networks.tiktok && isWebP) {
+          mediaIssues.push('TikTok does not support WebP images. Use JPG instead.');
+        }
+
+        // Instagram Reels require video
+        if (networks.instagram && postSettings.instagramType === 'reel' && isImage && !isVideo) {
+          mediaIssues.push('Instagram Reels require a video file, not an image.');
+        }
+
+        // Instagram Stories: video or image, but WebP may fail
+        if (networks.instagram && isWebP) {
+          mediaIssues.push('Instagram may not support WebP images. Use JPG or PNG instead.');
+        }
+      }
+
+      // Deduplicate issues
+      const uniqueIssues = [...new Set(mediaIssues)];
+
+      if (uniqueIssues.length > 0) {
+        toast({
+          title: "Media not compatible with selected platforms",
+          description: uniqueIssues.join(' '),
+          status: "error",
+          duration: 8000,
+          isClosable: true
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     // Calculate estimated time based on media and platforms

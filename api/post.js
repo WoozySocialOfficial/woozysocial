@@ -152,12 +152,12 @@ async function workspaceHasClients(supabase, workspaceId) {
   if (!workspaceId) return false;
 
   try {
-    // Check for both 'view_only' and 'client' roles (database may use either)
+    // Check for viewer/client roles (all naming conventions across migrations)
     const { data: clients } = await supabase
       .from('workspace_members')
       .select('id, role')
       .eq('workspace_id', workspaceId)
-      .in('role', ['client', 'view_only'])
+      .in('role', ['viewer', 'client', 'view_only'])
       .limit(1);
 
     console.log(`[workspaceHasClients] workspaceId: ${workspaceId}, clients found:`, clients?.length || 0);
@@ -769,7 +769,8 @@ module.exports = async function handler(req, res) {
       }
 
       // Otherwise, CREATE a new scheduled post
-      console.log('[post] Creating new scheduled post - NOT calling Ayrshare, scheduler will handle it');
+      // Step 1: Save to DB first - ensures the post exists even if Ayrshare call fails
+      console.log('[post] Creating new scheduled post - saving to DB then scheduling in Ayrshare');
       console.log('[post] Media URLs to save:', mediaUrls);
       const { data: savedPost, error: saveError } = await supabase.from("posts").insert([{
           user_id: userId,
@@ -792,6 +793,81 @@ module.exports = async function handler(req, res) {
         }
 
         console.log('[post] Scheduled post saved successfully:', savedPost?.id);
+
+        // Step 2: Schedule immediately in Ayrshare so it appears in the dashboard
+        // The scheduler cron remains a fallback for any posts that miss this step
+        let scheduleProfileKey;
+        if (workspaceId) {
+          scheduleProfileKey = await getWorkspaceProfileKey(workspaceId);
+        }
+        if (!scheduleProfileKey && process.env.AYRSHARE_PROFILE_KEY) {
+          scheduleProfileKey = process.env.AYRSHARE_PROFILE_KEY;
+        }
+
+        if (scheduleProfileKey && isServiceConfigured('ayrshare')) {
+          try {
+            const ayrPostData = {
+              post: text,
+              platforms,
+              scheduleDate: new Date(scheduledDate).toISOString()
+            };
+
+            if (mediaUrls && mediaUrls.length > 0) {
+              ayrPostData.mediaUrls = mediaUrls.filter(url => url && url.startsWith('http'));
+            }
+
+            // Apply post settings
+            if (settings.shortenLinks) ayrPostData.shortenLinks = true;
+
+            const hasTwitterForSchedule = platforms.some(p => ['twitter', 'x'].includes(p.toLowerCase()));
+            if (settings.threadPost && hasTwitterForSchedule) {
+              ayrPostData.twitterOptions = { thread: true, threadNumber: settings.threadNumber !== false };
+            }
+
+            const hasInstagramForSchedule = platforms.some(p => p.toLowerCase() === 'instagram');
+            if (settings.instagramType && hasInstagramForSchedule) {
+              if (settings.instagramType === 'story') {
+                ayrPostData.instagramOptions = { stories: true };
+              } else if (settings.instagramType === 'reel') {
+                ayrPostData.instagramOptions = { reels: true, shareReelsFeed: true };
+              }
+              // 'feed' is default - no special options needed
+            }
+
+            console.log('[post] Scheduling in Ayrshare with scheduleDate:', ayrPostData.scheduleDate);
+            const ayrResponse = await axios.post(`${BASE_AYRSHARE}/post`, ayrPostData, {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
+                "Profile-Key": scheduleProfileKey
+              },
+              timeout: 55000
+            });
+
+            if (ayrResponse.data.status !== 'error') {
+              const ayrPostId = ayrResponse.data.id
+                || ayrResponse.data.postId
+                || ayrResponse.data.scheduleId
+                || ayrResponse.data.posts?.[0]?.id
+                || null;
+              if (ayrPostId) {
+                console.log('[post] Ayrshare schedule successful, ayr_post_id:', ayrPostId);
+                await supabase.from('posts').update({ ayr_post_id: ayrPostId }).eq('id', savedPost.id);
+              } else {
+                console.warn('[post] Ayrshare accepted post but returned no ID');
+              }
+            } else {
+              console.warn('[post] Ayrshare returned error for scheduled post:', ayrResponse.data.message);
+              logError('post.schedule_ayrshare_error', new Error(ayrResponse.data.message), { postId: savedPost.id });
+            }
+          } catch (ayrErr) {
+            // Non-blocking: log and continue — scheduler cron will retry
+            console.warn('[post] Ayrshare schedule call failed (scheduler will retry):', ayrErr.message);
+            logError('post.schedule_ayrshare', ayrErr, { postId: savedPost?.id });
+          }
+        } else {
+          console.warn('[post] No profile key found - post saved to DB, scheduler will handle Ayrshare');
+        }
 
         // Invalidate cache after creating scheduled post
         await invalidateWorkspaceCache(workspaceId);
@@ -859,6 +935,31 @@ module.exports = async function handler(req, res) {
 
     if (mediaUrls && mediaUrls.length > 0) {
       postData.mediaUrls = mediaUrls;
+
+      // Validate media format compatibility with selected platforms
+      const hasTikTok = platforms.some(p => p.toLowerCase() === 'tiktok');
+      const hasInstagramPlatform = platforms.some(p => p.toLowerCase() === 'instagram');
+
+      for (const url of mediaUrls) {
+        const urlLower = url.toLowerCase().split('?')[0]; // strip query params
+        const ext = urlLower.split('.').pop();
+        const isPNG = ext === 'png';
+        const isGIF = ext === 'gif';
+        const isWebP = ext === 'webp';
+
+        if (hasTikTok && isPNG) {
+          return sendError(res, "TikTok does not support PNG images. Please use JPG or upload a video instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasTikTok && isGIF) {
+          return sendError(res, "TikTok does not support GIF images. Please upload a video instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasTikTok && isWebP) {
+          return sendError(res, "TikTok does not support WebP images. Please use JPG instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+        if (hasInstagramPlatform && isWebP) {
+          return sendError(res, "Instagram may not support WebP images. Please use JPG or PNG instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+      }
     }
 
     // Apply post settings (Phase 4)
