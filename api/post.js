@@ -1039,14 +1039,10 @@ module.exports = async function handler(req, res) {
         return imageExtensions.some(ext => url.toLowerCase().includes(ext));
       });
 
-      // Validate mixed media - Instagram doesn't support video + photos in same post
+      // Instagram carousels support mixed images + videos via Ayrshare (type detected by extension).
+      // Log a note for mixed media but do NOT block — Ayrshare handles the containers.
       if (hasVideo && hasImage) {
-        console.error('[POST] Mixed media detected (video + photos) - not supported by Instagram');
-        return sendError(
-          res,
-          "Instagram does not support mixing videos and photos in the same post. Please use either videos only or photos only.",
-          ErrorCodes.VALIDATION_ERROR
-        );
+        console.log('[POST] Mixed media carousel (video + photos) for Instagram — Ayrshare will handle type detection by file extension');
       }
 
       if (settings.instagramType === 'story') {

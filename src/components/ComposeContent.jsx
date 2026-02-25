@@ -1033,6 +1033,17 @@ export const ComposeContent = () => {
           });
         }
 
+        // GIF + Instagram: yellow warning — post still goes out but GIF shows as a still image
+        if (hasGifs && networks.instagram) {
+          toast({
+            title: "GIF will appear as a still image on Instagram",
+            description: "Instagram doesn't support animated GIFs — only the first frame will be shown. Your post will still go out.",
+            status: "warning",
+            duration: 8000,
+            isClosable: true
+          });
+        }
+
         const baseIndex = currentPreviews.length;
         const previewPromises = files.map((file, index) => {
           return new Promise((resolve) => {
@@ -1125,20 +1136,33 @@ export const ComposeContent = () => {
     setNetworks((prev) => {
       const isTogglingOn = !prev[networkName];
 
-      // Warn when TikTok is being turned ON and there are already GIFs in the media tray
-      if (networkName === 'tiktok' && isTogglingOn && mediaPreviews.length > 0) {
+      // Warn when TikTok or Instagram is being turned ON and there are already GIFs in the media tray
+      if (isTogglingOn && mediaPreviews.length > 0) {
         const hasGifs = mediaPreviews.some(p => {
           if (p.file) return p.file.type === 'image/gif' || p.file.name?.toLowerCase().endsWith('.gif');
           if (p.dataUrl) return p.dataUrl.startsWith('data:image/gif') || p.dataUrl.toLowerCase().endsWith('.gif');
           return false;
         });
-        if (hasGifs) {
+
+        if (hasGifs && networkName === 'tiktok') {
           setTimeout(() => {
             toast({
               title: "TikTok doesn't support GIFs",
               description: "You have a GIF in your media and you've selected TikTok. TikTok will reject this post. Remove the GIF or use a video instead.",
               status: "error",
               duration: 10000,
+              isClosable: true
+            });
+          }, 0);
+        }
+
+        if (hasGifs && networkName === 'instagram') {
+          setTimeout(() => {
+            toast({
+              title: "GIF will appear as a still image on Instagram",
+              description: "Instagram doesn't support animated GIFs — only the first frame will be shown. Your post will still go out.",
+              status: "warning",
+              duration: 8000,
               isClosable: true
             });
           }, 0);
