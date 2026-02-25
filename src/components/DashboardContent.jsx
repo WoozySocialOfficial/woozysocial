@@ -10,7 +10,7 @@ import "./DashboardContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { FaBluesky } from "react-icons/fa6";
-import { SiX } from "react-icons/si";
+import { SiX, SiGooglemybusiness } from "react-icons/si";
 
 const PLATFORM_ICONS = {
   facebook: FaFacebookF,
@@ -72,7 +72,8 @@ export const DashboardContent = () => {
     { name: "TikTok", icon: FaTiktok, key: "tiktok", color: "#000000" },
     { name: "YouTube", icon: FaYoutube, key: "youtube", color: "#FF0000" },
     { name: "Pinterest", icon: FaPinterest, key: "pinterest", color: "#BD081C" },
-    { name: "BlueSky", icon: FaBluesky, key: "bluesky", color: "#1185FE" }
+    { name: "BlueSky", icon: FaBluesky, key: "bluesky", color: "#1185FE" },
+    { name: "Google Business", icon: SiGooglemybusiness, key: "googlebusiness", color: "#4285F4" }
   ];
 
   // Function to refresh connected accounts (uses React Query cache invalidation)
@@ -412,10 +413,15 @@ export const DashboardContent = () => {
                            normalizedKey.includes(normalizedAccount);
                   });
 
+                  const isConnecting = connectingPlatform === account.name;
+
                   return (
                     <div
                       key={account.name}
                       className="social-account-item"
+                      onClick={() => handleConnectPlatform(account.name)}
+                      style={{ cursor: 'pointer' }}
+                      title={isConnected ? `Manage ${account.name} connection` : `Connect ${account.name}`}
                     >
                       <div className="account-info">
                         <div
@@ -427,7 +433,7 @@ export const DashboardContent = () => {
                         <div className="account-details">
                           <div className="account-name">{account.name}</div>
                           <div className="account-status" style={{ color: isConnected ? '#10b981' : '#999' }}>
-                            {isConnected ? 'Connected' : 'Not connected'}
+                            {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Not connected'}
                           </div>
                         </div>
                       </div>
@@ -442,7 +448,7 @@ export const DashboardContent = () => {
                           fontSize: '13px'
                         }}
                       >
-                        {isConnected ? 'ACTIVE' : 'NO CONNECTION'}
+                        {isConnecting ? 'CONNECTING...' : isConnected ? 'ACTIVE' : 'NO CONNECTION'}
                       </span>
                     </div>
                   );
