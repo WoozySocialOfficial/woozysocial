@@ -188,20 +188,6 @@ module.exports = async function handler(req, res) {
   try {
     console.log('[Scheduler] Starting scheduled posts check...');
 
-    // Clean up posts stuck in 'processing' state from crashed/timed-out scheduler runs
-    // If scheduled_at is >3 minutes ago and still 'processing', the previous run must have failed
-    const threeMinAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-    const { data: stuckPosts } = await supabase
-      .from('posts')
-      .update({ status: 'scheduled', last_error: 'Reset from stuck processing state' })
-      .eq('status', 'processing')
-      .lte('scheduled_at', threeMinAgo)
-      .select('id');
-
-    if (stuckPosts && stuckPosts.length > 0) {
-      console.warn(`[Scheduler] Reset ${stuckPosts.length} posts stuck in 'processing':`, stuckPosts.map(p => p.id));
-    }
-
     // Get all scheduled posts that are due (scheduled_at <= now)
     const now = new Date().toISOString();
     const { data: duePosts, error: fetchError } = await supabase
@@ -275,30 +261,26 @@ module.exports = async function handler(req, res) {
           continue; // Skip to next post
         }
 
-        // CRITICAL: Set status to 'processing' to prevent race conditions
-        // This prevents concurrent scheduler runs from picking up the same post
-        const { data: lockData, error: lockError, count } = await supabase
+        // Use optimistic locking: stamp updated_at to claim this post.
+        // If another scheduler instance already claimed it, the WHERE won't match.
+        const lockStamp = new Date().toISOString();
+        const { data: lockData, error: lockError } = await supabase
           .from('posts')
-          .update({ status: 'processing' })
+          .update({ updated_at: lockStamp })
           .eq('id', post.id)
-          .eq('status', 'scheduled') // Only update if still scheduled
-          .select();
+          .eq('status', 'scheduled') // Only claim if still scheduled
+          .select('id');
 
-        // If no rows were updated, another scheduler instance already locked this post
         if (lockError || !lockData || lockData.length === 0) {
-          console.warn(`[Scheduler] Post ${post.id} lock FAILED - lockError:`, lockError, 'lockData:', lockData);
+          console.warn(`[Scheduler] Post ${post.id} already being processed - skipping`);
           results.skipped.push({
             postId: post.id,
-            reason: lockError ? `Lock error: ${lockError.message}` : 'Lock returned empty (status may have changed)',
-            postStatus: post.status,
-            postApprovalStatus: post.approval_status,
-            scheduledAt: post.scheduled_at,
-            hasAyrPostId: !!post.ayr_post_id
+            reason: lockError ? `Lock error: ${lockError.message}` : 'Post status changed before lock',
           });
           continue;
         }
 
-        console.log(`[Scheduler] Successfully locked post ${post.id} for processing`);
+        console.log(`[Scheduler] Claimed post ${post.id} for processing`);
 
         // Get profile key for the workspace
         const profileKey = await getWorkspaceProfileKey(post.workspace_id);
@@ -679,16 +661,7 @@ module.exports = async function handler(req, res) {
       skipped: results.skipped.length,
       reconciled,
       reverseReconciled,
-      results,
-      // Debug: include first 3 due post summaries
-      debug_duePosts: (duePosts || []).slice(0, 3).map(p => ({
-        id: p.id,
-        status: p.status,
-        approval_status: p.approval_status,
-        scheduled_at: p.scheduled_at,
-        has_ayr_post_id: !!p.ayr_post_id,
-        workspace_id: p.workspace_id
-      }))
+      results
     });
 
   } catch (error) {
