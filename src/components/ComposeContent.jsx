@@ -193,19 +193,25 @@ export const ComposeContent = () => {
     return { width, height, duration, fileSizeMB, warnings };
   };
 
-  // Helper to get image dimensions from a File
-  const getImageDimensions = (file) => {
+  // Helper to get image dimensions from a File or URL
+  const getImageDimensions = (fileOrUrl) => {
     return new Promise((resolve) => {
       const img = new Image();
+      const isUrl = typeof fileOrUrl === 'string';
       img.onload = () => {
-        URL.revokeObjectURL(img.src);
+        if (!isUrl) URL.revokeObjectURL(img.src);
         resolve({ width: img.naturalWidth, height: img.naturalHeight });
       };
       img.onerror = () => {
-        URL.revokeObjectURL(img.src);
+        if (!isUrl) URL.revokeObjectURL(img.src);
         resolve({ width: 0, height: 0 });
       };
-      img.src = URL.createObjectURL(file);
+      if (isUrl) {
+        img.crossOrigin = 'anonymous';
+        img.src = fileOrUrl;
+      } else {
+        img.src = URL.createObjectURL(fileOrUrl);
+      }
     });
   };
 
@@ -252,6 +258,68 @@ export const ComposeContent = () => {
 
     return { width, height, aspectRatio: parseFloat(aspectRatio.toFixed(2)), warnings };
   };
+
+  // Re-validate media warnings when media or selected platforms change
+  useEffect(() => {
+    const validateAllMedia = async () => {
+      if (!mediaPreviews || mediaPreviews.length === 0) {
+        setMediaWarnings([]);
+        return;
+      }
+
+      const selectedPlatforms = Object.keys(networks).filter(k => networks[k]);
+      if (selectedPlatforms.length === 0) {
+        setMediaWarnings([]);
+        return;
+      }
+
+      let allWarnings = [];
+
+      for (const preview of mediaPreviews) {
+        const isVideo = preview.type === 'video';
+        const isImage = preview.type === 'image';
+
+        if (isVideo && preview.file) {
+          const validation = await validateVideoForPlatforms(preview.file);
+          if (validation.warnings.length > 0) {
+            allWarnings = [...allWarnings, ...validation.warnings];
+          }
+        }
+
+        if (isImage) {
+          // For File objects, use the file; for URLs, use the URL
+          const source = preview.file || (preview.dataUrl?.startsWith('http') ? preview.dataUrl : null);
+          if (!source) continue;
+
+          const { width, height } = await getImageDimensions(source);
+          if (width === 0 || height === 0) continue;
+
+          const aspectRatio = width / height;
+          for (const [platform, req] of Object.entries(imageRequirements)) {
+            const issues = [];
+            if (width < req.minWidth || height < req.minHeight) {
+              issues.push(`image too small (${width}x${height}px, needs ${req.minWidth}x${req.minHeight}px min)`);
+            }
+            if (width > req.maxWidth || height > req.maxHeight) {
+              issues.push(`image too large (${width}x${height}px, max ${req.maxWidth}x${req.maxHeight}px)`);
+            }
+            if (aspectRatio < req.minAR || aspectRatio > req.maxAR) {
+              issues.push(`aspect ratio ${aspectRatio.toFixed(2)} not supported (allowed: ${req.minAR}–${req.maxAR}). Crop or resize the image.`);
+            }
+            if (issues.length > 0) {
+              allWarnings.push({ platform, issues, width, height, aspectRatio: parseFloat(aspectRatio.toFixed(2)) });
+            }
+          }
+        }
+      }
+
+      // Filter to only selected platforms
+      const relevantWarnings = allWarnings.filter(w => selectedPlatforms.includes(w.platform));
+      setMediaWarnings(relevantWarnings);
+    };
+
+    validateAllMedia();
+  }, [mediaPreviews, networks]);
 
   // Smooth progress bar animation - advances gradually without a countdown
   useEffect(() => {
