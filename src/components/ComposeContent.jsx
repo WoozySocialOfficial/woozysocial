@@ -1021,29 +1021,6 @@ export const ComposeContent = () => {
           });
         }
 
-        // GIF + TikTok: show a blocking error toast so the user knows before submitting
-        const hasGifs = files.some(f => f.type === 'image/gif' || f.name?.toLowerCase().endsWith('.gif'));
-        if (hasGifs && networks.tiktok) {
-          toast({
-            title: "TikTok doesn't support GIFs",
-            description: "You have a GIF selected and TikTok is one of your platforms. TikTok will reject this post. Remove the GIF or deselect TikTok.",
-            status: "error",
-            duration: 10000,
-            isClosable: true
-          });
-        }
-
-        // GIF + Instagram: yellow warning — post still goes out but GIF shows as a still image
-        if (hasGifs && networks.instagram) {
-          toast({
-            title: "GIF will appear as a still image on Instagram",
-            description: "Instagram doesn't support animated GIFs — only the first frame will be shown. Your post will still go out.",
-            status: "warning",
-            duration: 8000,
-            isClosable: true
-          });
-        }
-
         const baseIndex = currentPreviews.length;
         const previewPromises = files.map((file, index) => {
           return new Promise((resolve) => {
@@ -1075,6 +1052,32 @@ export const ComposeContent = () => {
           type: item.type || 'image',
           order: baseIndex + index
         }));
+      }
+
+      // GIF platform warnings — runs after both file uploads and URL picks are processed
+      // so it catches GIFs added from any source (Upload tab, Recent, or Asset Library)
+      const hasGifsFromFiles = files.some(f => f.type === 'image/gif' || f.name?.toLowerCase().endsWith('.gif'));
+      const hasGifsFromUrls = urls.some(u => u.url?.toLowerCase().endsWith('.gif'));
+      const hasGifs = hasGifsFromFiles || hasGifsFromUrls;
+
+      if (hasGifs && networks.tiktok) {
+        toast({
+          title: "TikTok doesn't support GIFs",
+          description: "You have a GIF selected and TikTok is one of your platforms. TikTok will reject this post. Remove the GIF or deselect TikTok.",
+          status: "error",
+          duration: 10000,
+          isClosable: true
+        });
+      }
+
+      if (hasGifs && networks.instagram) {
+        toast({
+          title: "GIF will appear as a still image on Instagram",
+          description: "Instagram doesn't support animated GIFs — only the first frame will be shown. Your post will still go out.",
+          status: "warning",
+          duration: 8000,
+          isClosable: true
+        });
       }
 
       // Merge everything
