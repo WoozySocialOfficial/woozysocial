@@ -1,4 +1,5 @@
 const axios = require("axios");
+const probe = require("probe-image-size");
 const {
   setCors,
   getSupabase,
@@ -143,6 +144,42 @@ async function sendToAyrshare(post, profileKey) {
         const errorMsg = `TikTok does not support ${ext.toUpperCase()} images`;
         console.error(`[Scheduler] Media validation failed for post ${post.id}: ${errorMsg}`);
         throw new Error(errorMsg);
+      }
+    }
+
+    // Validate image aspect ratios
+    const IMAGE_AR_REQUIREMENTS = {
+      instagram: { minAR: 0.5, maxAR: 1.91, label: 'Instagram' },
+      facebook:  { minAR: 0.33, maxAR: 3.0, label: 'Facebook' },
+      twitter:   { minAR: 0.33, maxAR: 3.0, label: 'X (Twitter)' },
+      linkedin:  { minAR: 0.57, maxAR: 3.0, label: 'LinkedIn' },
+      tiktok:    { minAR: 0.5, maxAR: 0.65, label: 'TikTok' },
+      pinterest: { minAR: 0.35, maxAR: 2.8, label: 'Pinterest' },
+      threads:   { minAR: 0.5, maxAR: 1.91, label: 'Threads' },
+      bluesky:   { minAR: 0.33, maxAR: 3.0, label: 'BlueSky' },
+    };
+
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    for (const url of postData.mediaUrls) {
+      const imgExt = url.toLowerCase().split('?')[0].split('.').pop();
+      if (!imageExts.includes(imgExt)) continue;
+
+      try {
+        const result = await probe(url);
+        const ar = result.width / result.height;
+
+        for (const p of platforms) {
+          const req = IMAGE_AR_REQUIREMENTS[p.toLowerCase()];
+          if (!req) continue;
+          if (ar < req.minAR || ar > req.maxAR) {
+            const errorMsg = `Image aspect ratio ${ar.toFixed(2)} not supported by ${req.label} (needs ${req.minAR}–${req.maxAR}). Resize or crop the image.`;
+            console.error(`[Scheduler] ${errorMsg} for post ${post.id}`);
+            throw new Error(errorMsg);
+          }
+        }
+      } catch (probeErr) {
+        if (probeErr.message.includes('aspect ratio')) throw probeErr;
+        console.warn(`[Scheduler] Could not probe image dimensions for post ${post.id}:`, probeErr.message);
       }
     }
   }

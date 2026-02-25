@@ -1,5 +1,6 @@
 const axios = require("axios");
 const Busboy = require("busboy");
+const probe = require("probe-image-size");
 const {
   setCors,
   getWorkspaceProfileKey,
@@ -958,6 +959,49 @@ module.exports = async function handler(req, res) {
         }
         if (hasInstagramPlatform && isWebP) {
           return sendError(res, "Instagram may not support WebP images. Please use JPG or PNG instead.", ErrorCodes.VALIDATION_ERROR);
+        }
+      }
+
+      // Validate image aspect ratios against platform requirements
+      const IMAGE_AR_REQUIREMENTS = {
+        instagram: { minAR: 0.5, maxAR: 1.91, label: 'Instagram' },
+        facebook:  { minAR: 0.33, maxAR: 3.0, label: 'Facebook' },
+        twitter:   { minAR: 0.33, maxAR: 3.0, label: 'X (Twitter)' },
+        linkedin:  { minAR: 0.57, maxAR: 3.0, label: 'LinkedIn' },
+        tiktok:    { minAR: 0.5, maxAR: 0.65, label: 'TikTok' },
+        pinterest: { minAR: 0.35, maxAR: 2.8, label: 'Pinterest' },
+        threads:   { minAR: 0.5, maxAR: 1.91, label: 'Threads' },
+        bluesky:   { minAR: 0.33, maxAR: 3.0, label: 'BlueSky' },
+      };
+
+      const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+      for (const url of mediaUrls) {
+        const ext = url.toLowerCase().split('?')[0].split('.').pop();
+        if (!imageExts.includes(ext)) continue;
+
+        try {
+          const result = await probe(url);
+          const ar = result.width / result.height;
+
+          const arIssues = [];
+          for (const p of platforms) {
+            const req = IMAGE_AR_REQUIREMENTS[p.toLowerCase()];
+            if (!req) continue;
+            if (ar < req.minAR || ar > req.maxAR) {
+              arIssues.push(`${req.label} requires aspect ratio ${req.minAR}–${req.maxAR} (yours is ${ar.toFixed(2)})`);
+            }
+          }
+
+          if (arIssues.length > 0) {
+            return sendError(
+              res,
+              `Image dimension issue: ${arIssues.join('. ')}. Please resize or crop the image.`,
+              ErrorCodes.VALIDATION_ERROR
+            );
+          }
+        } catch (probeErr) {
+          console.warn('[POST] Could not probe image dimensions:', probeErr.message);
+          // Don't block posting if probe fails — let Ayrshare handle it
         }
       }
     }

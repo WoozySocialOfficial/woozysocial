@@ -193,6 +193,66 @@ export const ComposeContent = () => {
     return { width, height, duration, fileSizeMB, warnings };
   };
 
+  // Helper to get image dimensions from a File
+  const getImageDimensions = (file) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({ width: 0, height: 0 });
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Platform image dimension/aspect ratio requirements
+  const imageRequirements = {
+    instagram: { minWidth: 320, minHeight: 320, maxWidth: 1440, maxHeight: 1440, minAR: 0.5, maxAR: 1.91, label: 'Instagram' },
+    facebook:  { minWidth: 200, minHeight: 200, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'Facebook' },
+    twitter:   { minWidth: 4, minHeight: 4, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'X (Twitter)' },
+    linkedin:  { minWidth: 552, minHeight: 276, maxWidth: 8192, maxHeight: 8192, minAR: 0.57, maxAR: 3.0, label: 'LinkedIn' },
+    tiktok:    { minWidth: 720, minHeight: 720, maxWidth: 1920, maxHeight: 1920, minAR: 0.5, maxAR: 0.65, label: 'TikTok' },
+    pinterest: { minWidth: 100, minHeight: 100, maxWidth: 6000, maxHeight: 6000, minAR: 0.35, maxAR: 2.8, label: 'Pinterest' },
+    threads:   { minWidth: 320, minHeight: 320, maxWidth: 1440, maxHeight: 1440, minAR: 0.5, maxAR: 1.91, label: 'Threads' },
+    bluesky:   { minWidth: 100, minHeight: 100, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'BlueSky' },
+  };
+
+  // Validate image for platform requirements (aspect ratio + dimensions)
+  const validateImageForPlatforms = async (file) => {
+    const warnings = [];
+    const { width, height } = await getImageDimensions(file);
+
+    if (width === 0 || height === 0) {
+      return { width: 0, height: 0, aspectRatio: 0, warnings: [] };
+    }
+
+    const aspectRatio = width / height;
+
+    for (const [platform, req] of Object.entries(imageRequirements)) {
+      const issues = [];
+
+      if (width < req.minWidth || height < req.minHeight) {
+        issues.push(`image too small (${width}x${height}px, needs ${req.minWidth}x${req.minHeight}px min)`);
+      }
+      if (width > req.maxWidth || height > req.maxHeight) {
+        issues.push(`image too large (${width}x${height}px, max ${req.maxWidth}x${req.maxHeight}px)`);
+      }
+      if (aspectRatio < req.minAR || aspectRatio > req.maxAR) {
+        issues.push(`aspect ratio ${aspectRatio.toFixed(2)} not supported (allowed: ${req.minAR}–${req.maxAR}). Crop or resize the image.`);
+      }
+
+      if (issues.length > 0) {
+        warnings.push({ platform, issues, width, height, aspectRatio: parseFloat(aspectRatio.toFixed(2)) });
+      }
+    }
+
+    return { width, height, aspectRatio: parseFloat(aspectRatio.toFixed(2)), warnings };
+  };
+
   // Smooth progress bar animation - advances gradually without a countdown
   useEffect(() => {
     if (isLoading && postingProgress.step && postingProgress.step !== 'complete') {
@@ -868,12 +928,24 @@ export const ComposeContent = () => {
           }
         }
 
-        setMediaWarnings(allWarnings);
+        // Validate image files for dimension/aspect ratio
+        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        for (const imageFile of imageFiles) {
+          const validation = await validateImageForPlatforms(imageFile);
+          if (validation.warnings.length > 0) {
+            allWarnings = [...allWarnings, ...validation.warnings];
+          }
+        }
 
-        if (allWarnings.length > 0) {
-          const affectedPlatforms = [...new Set(allWarnings.map(w => w.platform))];
+        // Filter warnings to only selected platforms
+        const selectedPlatforms = Object.keys(networks).filter(k => networks[k]);
+        const relevantWarnings = allWarnings.filter(w => selectedPlatforms.includes(w.platform));
+        setMediaWarnings(relevantWarnings);
+
+        if (relevantWarnings.length > 0) {
+          const affectedPlatforms = [...new Set(relevantWarnings.map(w => w.platform))];
           toast({
-            title: "Video may not work on some platforms",
+            title: "Media may not work on some platforms",
             description: `Issues detected for: ${affectedPlatforms.join(', ')}. Check the warning below the media.`,
             status: "warning",
             duration: 5000,
@@ -955,9 +1027,8 @@ export const ComposeContent = () => {
       media: prev.media.filter((_, idx) => idx !== mediaIndex)
     }));
 
-    // Clear warnings if no videos left
-    const hasVideosLeft = newPreviews.some(p => p.type === 'video');
-    if (!hasVideosLeft) {
+    // Clear warnings if no media left
+    if (newPreviews.length === 0) {
       setMediaWarnings([]);
     }
   };
@@ -1840,6 +1911,36 @@ export const ComposeContent = () => {
         }
       }
 
+      // Check image dimensions/aspect ratio against selected platforms
+      const selectedPlatforms = Object.keys(networks).filter(k => networks[k]);
+      for (const media of allMediaTypes) {
+        const isImage = media.type?.startsWith('image/');
+        if (!isImage) continue;
+
+        // For File objects, read dimensions directly
+        const fileObj = mediaFiles.find(f => f.name === media.name && f.type === media.type);
+        if (!fileObj) continue; // URL-based media — backend will validate
+
+        const { width, height } = await getImageDimensions(fileObj);
+        if (width === 0 || height === 0) continue;
+
+        const ar = width / height;
+        for (const platform of selectedPlatforms) {
+          const req = imageRequirements[platform];
+          if (!req) continue;
+          if (ar < req.minAR || ar > req.maxAR) {
+            mediaIssues.push(
+              `${req.label}: Image aspect ratio ${ar.toFixed(2)} is outside the allowed range (${req.minAR}–${req.maxAR}). Crop or resize the image.`
+            );
+          }
+          if (width < req.minWidth || height < req.minHeight) {
+            mediaIssues.push(
+              `${req.label}: Image too small (${width}x${height}px, needs ${req.minWidth}x${req.minHeight}px min).`
+            );
+          }
+        }
+      }
+
       // Deduplicate issues
       const uniqueIssues = [...new Set(mediaIssues)];
 
@@ -2545,12 +2646,12 @@ export const ComposeContent = () => {
                   </button>
                 </div>
 
-                {/* Video validation warnings */}
+                {/* Media validation warnings */}
                 {mediaWarnings.length > 0 && (
                   <div className="media-warnings">
                     <div className="warning-header">
                       <span className="warning-icon">⚠️</span>
-                      <span>Video may not work on these platforms:</span>
+                      <span>Media may not work on these platforms:</span>
                     </div>
                     <ul className="warning-list">
                       {mediaWarnings.map((warning, idx) => (
