@@ -24,7 +24,10 @@ export const MetricCard = ({
     }
 
     if (typeof val === 'string') {
-      return val;
+      // Parse numeric strings (e.g. "1.2K"); guard against URN IDs or other
+      // non-numeric strings leaking in from unexpected API response shapes.
+      const numVal = parseFloat(val.replace(/,/g, ''));
+      return !isNaN(numVal) ? numVal.toLocaleString() : '—';
     }
 
     if (val >= 1000000) {

@@ -162,6 +162,16 @@ module.exports = async function handler(req, res) {
     // Create workspace in database (owned by the effective owner)
     const slug = generateSlug(businessName);
 
+    // Inherit subscription tier from the effective owner's profile
+    const { data: ownerProfile } = await supabase
+      .from('user_profiles')
+      .select('subscription_tier, subscription_status')
+      .eq('id', effectiveOwnerId)
+      .single();
+
+    const ownerTier = ownerProfile?.subscription_tier || 'free';
+    const ownerStatus = ownerProfile?.subscription_status || 'active';
+
     const { data: workspace, error: workspaceError } = await supabase
       .from('workspaces')
       .insert({
@@ -171,8 +181,9 @@ module.exports = async function handler(req, res) {
         ayr_profile_key: ayrProfileKey,
         ayr_ref_id: ayrRefId,
         onboarding_status: 'completed',
-        subscription_status: 'active',
-        subscription_tier: 'free'
+        subscription_status: ownerStatus,
+        subscription_tier: ownerTier,
+        plan_type: ownerTier
       })
       .select()
       .single();

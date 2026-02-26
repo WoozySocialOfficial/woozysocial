@@ -28,7 +28,7 @@ export const AddAgencyTeamMemberModal = ({
   const [formData, setFormData] = useState({
     email: "",
     fullName: "",
-    defaultRole: "editor",
+    defaultRole: "member",
     department: "",
     notes: ""
   });
@@ -43,7 +43,7 @@ export const AddAgencyTeamMemberModal = ({
       setFormData({
         email: editingMember.email || "",
         fullName: editingMember.full_name || "",
-        defaultRole: editingMember.default_role || "editor",
+        defaultRole: editingMember.default_role || "member",
         department: editingMember.department || "",
         notes: editingMember.notes || ""
       });
@@ -51,7 +51,7 @@ export const AddAgencyTeamMemberModal = ({
       setFormData({
         email: "",
         fullName: "",
-        defaultRole: "editor",
+        defaultRole: "member",
         department: "",
         notes: ""
       });

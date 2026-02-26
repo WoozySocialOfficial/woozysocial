@@ -918,7 +918,8 @@ export const ComposeContent = () => {
     'pinterest': 'pinterest',
     'bluesky': 'bluesky',
     'threads': 'threads',
-    'google business': 'googleBusiness'
+    'google business': 'googleBusiness',
+    'gmb': 'googleBusiness'
   };
 
   // Check if a platform is linked
