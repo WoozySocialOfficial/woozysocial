@@ -406,7 +406,9 @@ export const DashboardContent = () => {
                   const Icon = account.icon;
                   // More flexible matching to handle variations in platform names
                   const isConnected = connectedAccounts.some(ca => {
-                    const normalizedAccount = ca.toLowerCase().replace(/[^a-z]/g, '');
+                    let normalizedAccount = ca.toLowerCase().replace(/[^a-z]/g, '');
+                    // Ayrshare uses 'gmb' as the identifier for Google Business Profile
+                    if (normalizedAccount === 'gmb') normalizedAccount = 'googlebusiness';
                     const normalizedKey = account.key.toLowerCase().replace(/[^a-z]/g, '');
                     return normalizedAccount === normalizedKey ||
                            normalizedAccount.includes(normalizedKey) ||

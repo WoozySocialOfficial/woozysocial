@@ -51,7 +51,8 @@ module.exports = async function handler(req, res) {
           logo_url,
           timezone,
           ayr_profile_key,
-          created_at
+          created_at,
+          owner_id
         )
       `)
       .eq('user_id', userId);
@@ -72,24 +73,49 @@ module.exports = async function handler(req, res) {
       logError('workspace.list.getProfile', profileError, { userId });
     }
 
-    // Transform the data and deduplicate by workspace ID
+    // Deduplicate memberships by workspace ID
     const seen = new Set();
-    let workspaces = (memberships || [])
+    const uniqueMemberships = (memberships || [])
       .filter(m => m.workspace)
       .filter(m => {
         if (seen.has(m.workspace.id)) return false;
         seen.add(m.workspace.id);
         return true;
-      })
-      .map(m => ({
+      });
+
+    // Batch-fetch owner subscription tiers
+    const ownerIds = [...new Set(uniqueMemberships.map(m => m.workspace.owner_id).filter(Boolean))];
+    let ownerSubscriptionMap = {};
+    if (ownerIds.length > 0) {
+      const { data: ownerProfiles } = await supabase
+        .from('user_profiles')
+        .select('id, subscription_tier, subscription_status')
+        .in('id', ownerIds);
+      if (ownerProfiles) {
+        ownerProfiles.forEach(p => {
+          ownerSubscriptionMap[p.id] = {
+            tier: p.subscription_tier || 'free',
+            status: p.subscription_status || 'inactive'
+          };
+        });
+      }
+    }
+
+    // Transform the data
+    let workspaces = uniqueMemberships.map(m => {
+      const ownerSub = ownerSubscriptionMap[m.workspace.owner_id] || { tier: 'free', status: 'inactive' };
+      return {
         ...m.workspace,
+        ownerSubscriptionTier: ownerSub.tier,
+        ownerSubscriptionStatus: ownerSub.status,
         membership: {
           role: m.role,
           can_approve_posts: m.can_approve_posts || false,
           can_final_approval: m.can_final_approval || false,
           can_manage_team: m.can_manage_team || false
         }
-      }));
+      };
+    });
 
     // NOTE: Ayrshare sync check removed — auto-deleting workspaces on list load
     // was too dangerous. Ghost workspaces should be handled manually via the
