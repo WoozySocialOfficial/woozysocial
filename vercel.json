@@ -103,21 +103,28 @@
     }
   ],
   "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    },
     "api/post.js": {
       "maxDuration": 60,
-      "memory": 3008
+      "memory": 3008,
+      "runtime": "nodejs20.x"
     },
     "api/post/approve.js": {
       "maxDuration": 60,
-      "memory": 1024
+      "memory": 1024,
+      "runtime": "nodejs20.x"
     },
     "api/scheduler.js": {
       "maxDuration": 60,
-      "memory": 1024
+      "memory": 1024,
+      "runtime": "nodejs20.x"
     },
     "api/stripe/webhook.js": {
       "maxDuration": 30,
-      "memory": 1024
+      "memory": 1024,
+      "runtime": "nodejs20.x"
     }
   },
   "crons": [
