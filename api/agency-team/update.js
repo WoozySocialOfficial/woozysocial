@@ -14,7 +14,8 @@ const {
 } = require("../_utils");
 const { getAgencyAccess } = require("../_utils-access-control");
 
-const VALID_ROLES = ['admin', 'editor', 'view_only', 'client'];
+const VALID_ROLES = ['member', 'viewer'];
+const LEGACY_ROLE_MAP = { admin: 'member', editor: 'member', view_only: 'viewer', client: 'viewer' };
 const VALID_STATUSES = ['active', 'inactive'];
 
 module.exports = async function handler(req, res) {
@@ -72,7 +73,10 @@ module.exports = async function handler(req, res) {
     // Build update object
     const updates = {};
     if (fullName !== undefined) updates.full_name = fullName?.trim() || null;
-    if (defaultRole && VALID_ROLES.includes(defaultRole)) updates.default_role = defaultRole;
+    if (defaultRole) {
+      const normalizedRole = LEGACY_ROLE_MAP[defaultRole] || defaultRole;
+      if (VALID_ROLES.includes(normalizedRole)) updates.default_role = normalizedRole;
+    }
     if (department !== undefined) updates.department = department?.trim() || null;
     if (notes !== undefined) updates.notes = notes?.trim() || null;
     if (status && VALID_STATUSES.includes(status)) updates.status = status;
