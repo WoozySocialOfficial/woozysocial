@@ -16,6 +16,9 @@
     "stress-test:full": "node stress-test/full-stress-test.js",
     "stress-test:k6": "k6 run stress-test/api-load-test.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
