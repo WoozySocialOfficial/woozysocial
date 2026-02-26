@@ -40,13 +40,18 @@ const TeamMemberLimitGate = ({ children, onAllowed }) => {
   // For non-owner members with can_manage_team permission, check the workspace
   // owner's subscription tier — not the current user's own tier.
   const isOwner = workspaceMembership?.role === 'owner';
+  const hasManageTeamPerm = workspaceMembership?.can_manage_team === true;
   const effectiveTier = (!isOwner && activeWorkspace?.ownerSubscriptionTier)
     ? activeWorkspace.ownerSubscriptionTier
     : subscriptionTier;
   const effectiveTierConfig = getTierConfig(effectiveTier);
   const effectiveTeamMemberLimit = getTeamMemberLimit(effectiveTier);
 
-  const canInvite = isWhitelisted || canInviteTeamMember(effectiveTier, currentMemberCount);
+  // Non-owner with can_manage_team should always be allowed to invite
+  // (the owner's tier was already validated when granting the permission)
+  const canInvite = isWhitelisted
+    || (hasManageTeamPerm && !isOwner)
+    || canInviteTeamMember(effectiveTier, currentMemberCount);
 
   const handleClick = () => {
     if (canInvite) {

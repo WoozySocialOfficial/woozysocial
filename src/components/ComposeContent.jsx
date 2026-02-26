@@ -214,13 +214,13 @@ export const ComposeContent = () => {
 
   // Platform image dimension/aspect ratio requirements
   const imageRequirements = {
-    instagram: { minWidth: 320, minHeight: 320, maxWidth: 1440, maxHeight: 1440, minAR: 0.5, maxAR: 1.91, label: 'Instagram' },
+    instagram: { minWidth: 320, minHeight: 320, maxWidth: 8192, maxHeight: 8192, minAR: 0.8, maxAR: 1.91, label: 'Instagram' },
     facebook:  { minWidth: 200, minHeight: 200, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'Facebook' },
     twitter:   { minWidth: 4, minHeight: 4, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'X (Twitter)' },
     linkedin:  { minWidth: 552, minHeight: 276, maxWidth: 8192, maxHeight: 8192, minAR: 0.57, maxAR: 3.0, label: 'LinkedIn' },
-    tiktok:    { minWidth: 720, minHeight: 720, maxWidth: 1920, maxHeight: 1920, minAR: 0.5, maxAR: 0.65, label: 'TikTok' },
+    tiktok:    { minWidth: 720, minHeight: 720, maxWidth: 8192, maxHeight: 8192, minAR: 0.5, maxAR: 0.65, label: 'TikTok' },
     pinterest: { minWidth: 100, minHeight: 100, maxWidth: 6000, maxHeight: 6000, minAR: 0.35, maxAR: 2.8, label: 'Pinterest' },
-    threads:   { minWidth: 320, minHeight: 320, maxWidth: 1440, maxHeight: 1440, minAR: 0.5, maxAR: 1.91, label: 'Threads' },
+    threads:   { minWidth: 320, minHeight: 320, maxWidth: 8192, maxHeight: 8192, minAR: 0.8, maxAR: 1.91, label: 'Threads' },
     bluesky:   { minWidth: 100, minHeight: 100, maxWidth: 8192, maxHeight: 8192, minAR: 0.33, maxAR: 3.0, label: 'BlueSky' },
   };
 

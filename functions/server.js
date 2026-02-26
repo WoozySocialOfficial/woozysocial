@@ -3363,13 +3363,17 @@ app.get("/api/workspace/list", async (req, res) => {
       .from('workspace_members')
       .select(`
         role,
+        can_approve_posts,
+        can_final_approval,
+        can_manage_team,
         workspace:workspaces(
           id,
           name,
           slug,
           logo_url,
           ayr_profile_key,
-          created_at
+          created_at,
+          owner_id
         )
       `)
       .eq('user_id', userId);
@@ -3386,13 +3390,49 @@ app.get("/api/workspace/list", async (req, res) => {
       .eq('id', userId)
       .single();
 
-    // Transform the data
-    const workspaces = (memberships || [])
+    // Deduplicate memberships by workspace ID
+    const seen = new Set();
+    const uniqueMemberships = (memberships || [])
       .filter(m => m.workspace)
-      .map(m => ({
+      .filter(m => {
+        if (seen.has(m.workspace.id)) return false;
+        seen.add(m.workspace.id);
+        return true;
+      });
+
+    // Batch-fetch owner subscription tiers
+    const ownerIds = [...new Set(uniqueMemberships.map(m => m.workspace.owner_id).filter(Boolean))];
+    let ownerSubscriptionMap = {};
+    if (ownerIds.length > 0) {
+      const { data: ownerProfiles } = await supabase
+        .from('user_profiles')
+        .select('id, subscription_tier, subscription_status')
+        .in('id', ownerIds);
+      if (ownerProfiles) {
+        ownerProfiles.forEach(p => {
+          ownerSubscriptionMap[p.id] = {
+            tier: p.subscription_tier || 'free',
+            status: p.subscription_status || 'inactive'
+          };
+        });
+      }
+    }
+
+    // Transform the data
+    const workspaces = uniqueMemberships.map(m => {
+      const ownerSub = ownerSubscriptionMap[m.workspace.owner_id] || { tier: 'free', status: 'inactive' };
+      return {
         ...m.workspace,
-        membership: { role: m.role }
-      }));
+        ownerSubscriptionTier: ownerSub.tier,
+        ownerSubscriptionStatus: ownerSub.status,
+        membership: {
+          role: m.role,
+          can_approve_posts: m.can_approve_posts || false,
+          can_final_approval: m.can_final_approval || false,
+          can_manage_team: m.can_manage_team || false
+        }
+      };
+    });
 
     res.json({
       success: true,
@@ -3987,6 +4027,137 @@ app.post("/api/stripe/webhook", express.raw({ type: 'application/json' }), async
   } catch (error) {
     console.error("Webhook error:", error);
     return res.status(500).json({ error: "Webhook handler failed" });
+  }
+});
+
+// =============================================
+// NOTIFICATION PREFERENCES
+// =============================================
+
+// GET notification preferences
+app.get("/api/notifications/preferences", async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId required" });
+    }
+
+    const { data: preferences, error } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching notification preferences:', error);
+      return res.status(500).json({ success: false, error: "Failed to fetch preferences" });
+    }
+
+    // If no preferences exist, create defaults
+    if (!preferences) {
+      const defaults = {
+        user_id: userId,
+        email_approval_requests: true,
+        email_post_approved: true,
+        email_post_rejected: true,
+        email_workspace_invites: true,
+        email_new_comments: true,
+        email_inbox_messages: true,
+        app_approval_requests: true,
+        app_post_approved: true,
+        app_post_rejected: true,
+        app_workspace_invites: true,
+        app_new_comments: true,
+        app_inbox_messages: true
+      };
+
+      const { error: insertError } = await supabase
+        .from('notification_preferences')
+        .insert(defaults);
+
+      if (insertError) {
+        console.error('Error creating default preferences:', insertError);
+      }
+
+      return res.json({ success: true, data: { preferences: defaults } });
+    }
+
+    return res.json({ success: true, data: { preferences } });
+  } catch (error) {
+    console.error('Error in notification preferences GET:', error);
+    return res.status(500).json({ success: false, error: "Failed to fetch preferences" });
+  }
+});
+
+// POST update notification preferences
+app.post("/api/notifications/preferences", async (req, res) => {
+  try {
+    const { userId, preferences } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "userId required" });
+    }
+
+    if (!preferences || typeof preferences !== 'object') {
+      return res.status(400).json({ success: false, error: "Invalid preferences" });
+    }
+
+    const allowedFields = [
+      'email_approval_requests', 'email_post_approved', 'email_post_rejected',
+      'email_workspace_invites', 'email_new_comments', 'email_inbox_messages',
+      'app_approval_requests', 'app_post_approved', 'app_post_rejected',
+      'app_workspace_invites', 'app_new_comments', 'app_inbox_messages'
+    ];
+
+    const updates = {};
+    for (const field of allowedFields) {
+      if (field in preferences) {
+        updates[field] = preferences[field];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, error: "No valid preferences" });
+    }
+
+    // Check if preferences exist
+    const { data: existing } = await supabase
+      .from('notification_preferences')
+      .select('user_id')
+      .eq('user_id', userId)
+      .single();
+
+    let result;
+    if (!existing) {
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .insert({ user_id: userId, ...updates })
+        .select()
+        .single();
+      if (error) {
+        console.error('Error creating preferences:', error);
+        return res.status(500).json({ success: false, error: "Failed to create preferences" });
+      }
+      result = data;
+    } else {
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .update(updates)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      if (error) {
+        console.error('Error updating preferences:', error);
+        return res.status(500).json({ success: false, error: "Failed to update preferences" });
+      }
+      result = data;
+    }
+
+    return res.json({ success: true, data: { preferences: result } });
+  } catch (error) {
+    console.error('Error in notification preferences POST:', error);
+    return res.status(500).json({ success: false, error: "Failed to update preferences" });
   }
 });
 

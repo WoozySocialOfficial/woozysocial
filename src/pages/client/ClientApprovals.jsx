@@ -9,6 +9,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaCheck
 import { FaTiktok, FaThreads } from "react-icons/fa6";
 import { SiX, SiBluesky } from "react-icons/si";
 import { CommentThread } from "../../components/comments/CommentThread";
+import { CommentInput } from "../../components/comments/CommentInput";
 import "./ClientApprovals.css";
 
 const STATUS_LABELS = {
@@ -590,6 +591,12 @@ export const ClientApprovals = () => {
                     enableRealtime={true}
                   />
                 </div>
+                <CommentInput
+                  postId={selectedPost.id}
+                  workspaceId={activeWorkspace?.id}
+                  showPrioritySelector={false}
+                  placeholder="Add a comment..."
+                />
               </div>
 
               {/* Show status badge for approved/rejected posts */}

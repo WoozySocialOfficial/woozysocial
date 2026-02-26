@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useConnectedAccounts, useDashboardStats, useInvalidateQueries } from "../hooks/useQueries";
+import { baseURL } from "../utils/constants";
 
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import "./DashboardContent.css";
@@ -40,6 +41,7 @@ export const DashboardContent = () => {
   const navigate = useNavigate();
   const { invalidateAccounts } = useInvalidateQueries();
   const [popupBlockedDialog, setPopupBlockedDialog] = useState({ isOpen: false, url: null });
+  const [connectingPlatform, setConnectingPlatform] = useState(null);
 
   // Use React Query for connected accounts (cached!)
   const {
@@ -78,6 +80,44 @@ export const DashboardContent = () => {
   const refreshAccounts = () => {
     invalidateAccounts(activeWorkspace?.id || user?.id);
     refetchAccounts();
+  };
+
+  const handleConnectPlatform = async (platformName) => {
+    if (!activeWorkspace?.id || connectingPlatform) return;
+    setConnectingPlatform(platformName);
+    try {
+      const r = await fetch(`${baseURL}/api/generate-jwt?workspaceId=${activeWorkspace.id}`);
+      if (!r.ok) throw new Error("Failed to generate link");
+      const d = await r.json();
+      const url = d.data?.url || d.url;
+
+      const width = 900, height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+      const popup = window.open(
+        url, "AyrshareLink",
+        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+      );
+
+      if (!popup || popup.closed) {
+        setPopupBlockedDialog({ isOpen: true, url });
+        setConnectingPlatform(null);
+        return;
+      }
+
+      const pollTimer = setInterval(() => {
+        try {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            setConnectingPlatform(null);
+            refreshAccounts();
+          }
+        } catch { clearInterval(pollTimer); setConnectingPlatform(null); }
+      }, 500);
+    } catch (error) {
+      console.error("Error connecting platform:", error);
+      setConnectingPlatform(null);
+    }
   };
 
   const handleOpenInNewTab = () => {

@@ -10,11 +10,11 @@ export const ProfileSettings = () => {
   const [loading, setLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [settings, setSettings] = useState({
     fullName: "",
-    email: "",
-    twoFactorEnabled: false
+    email: ""
   });
 
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -31,8 +31,7 @@ export const ProfileSettings = () => {
     if (profile) {
       setSettings({
         fullName: profile.full_name || "",
-        email: profile.email || user?.email || "",
-        twoFactorEnabled: false
+        email: profile.email || user?.email || ""
       });
     }
   }, [profile, user]);
@@ -104,7 +103,8 @@ export const ProfileSettings = () => {
         return;
       }
 
-      setSaveMessage("Profile settings saved successfully!");
+      setHasUnsavedChanges(false);
+      setSaveMessage("Settings saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error saving settings");
@@ -138,8 +138,10 @@ export const ProfileSettings = () => {
     }
   };
 
+  // 2FA is not yet implemented via Supabase — placeholder for future
   const handleToggle2FA = () => {
-    setSettings({ ...settings, twoFactorEnabled: !settings.twoFactorEnabled });
+    setSaveMessage("Two-factor authentication is coming soon.");
+    setTimeout(() => setSaveMessage(""), 3000);
   };
 
   const handleToggleNotificationPref = (key) => {
@@ -147,6 +149,7 @@ export const ProfileSettings = () => {
       ...notificationPreferences,
       [key]: !notificationPreferences[key]
     });
+    setHasUnsavedChanges(true);
   };
 
   return (
@@ -216,7 +219,7 @@ export const ProfileSettings = () => {
                 type="text"
                 className="form-input"
                 value={settings.fullName}
-                onChange={(e) => setSettings({ ...settings, fullName: e.target.value })}
+                onChange={(e) => { setSettings({ ...settings, fullName: e.target.value }); setHasUnsavedChanges(true); }}
                 placeholder="Enter your full name"
               />
             </div>
@@ -238,13 +241,6 @@ export const ProfileSettings = () => {
                 {saveMessage}
               </div>
             )}
-            <button
-              className="save-button"
-              onClick={handleSaveAll}
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : 'Save Profile'}
-            </button>
           </div>
         </div>
 
@@ -363,6 +359,29 @@ export const ProfileSettings = () => {
           </div>
         </div>
 
+        {/* Save Button - Full Width */}
+        <div className="settings-section full-width" style={{ padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            {saveMessage && (
+              <div className={`save-message ${saveMessage.includes('Error') ? 'error' : 'success'}`} style={{ margin: 0 }}>
+                {saveMessage}
+              </div>
+            )}
+            {hasUnsavedChanges && !saveMessage && (
+              <p className="form-helper-text" style={{ margin: 0, color: '#d97706', opacity: 1, fontWeight: 500 }}>
+                You have unsaved changes
+              </p>
+            )}
+          </div>
+          <button
+            className="save-button"
+            onClick={handleSaveAll}
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+
         {/* Security Section */}
         <div className="settings-section">
           <div className="section-header">
@@ -387,14 +406,15 @@ export const ProfileSettings = () => {
               <div>
                 <h3 className="security-item-title">Two-Factor Authentication</h3>
                 <p className="security-item-text">
-                  {settings.twoFactorEnabled ? "Enabled" : "Add an extra layer of security"}
+                  Add an extra layer of security (coming soon)
                 </p>
               </div>
               <button
-                className={`security-button ${settings.twoFactorEnabled ? "enabled" : ""}`}
+                className="security-button"
                 onClick={handleToggle2FA}
+                style={{ opacity: 0.5, cursor: 'default' }}
               >
-                {settings.twoFactorEnabled ? "Disable" : "Enable"}
+                Coming Soon
               </button>
             </div>
           </div>

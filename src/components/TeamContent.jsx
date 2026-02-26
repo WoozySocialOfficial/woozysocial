@@ -477,11 +477,13 @@ export const TeamContent = () => {
                 <p className="section-subtitle">Invite and manage your team collaborators</p>
               </div>
               <div className="header-buttons">
-                <TeamMemberLimitGate onAllowed={handleAddMember}>
-                  <button className="add-member-button">
-                    + Add Member
-                  </button>
-                </TeamMemberLimitGate>
+                {(isOwner || canManageTeam) && (
+                  <TeamMemberLimitGate onAllowed={handleAddMember}>
+                    <button className="add-member-button">
+                      + Add Member
+                    </button>
+                  </TeamMemberLimitGate>
+                )}
               </div>
             </div>
 

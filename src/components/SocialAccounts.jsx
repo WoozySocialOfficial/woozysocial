@@ -19,13 +19,13 @@ import "./SocialAccounts.css";
 const PLATFORMS = [
   { name: "BlueSky", icon: SiBluesky, color: "#1185FE" },
   { name: "Facebook", icon: FaFacebookF, color: "#1877F2" },
-  { name: "Google Business", icon: null, color: "#4285F4" },
+  { name: "Google Business", icon: null, color: "#4285F4", apiName: "gmb" },
   { name: "Instagram", icon: FaInstagram, color: "#E4405F" },
   { name: "LinkedIn", icon: FaLinkedinIn, color: "#0A66C2" },
   { name: "Pinterest", icon: FaPinterest, color: "#BD081C" },
   { name: "TikTok", icon: FaTiktok, color: "#000000" },
   { name: "Youtube", icon: FaYoutube, color: "#FF0000" },
-  { name: "X/Twitter", icon: SiX, color: "#000000" }
+  { name: "X/Twitter", icon: SiX, color: "#000000", apiName: "twitter" }
 ];
 
 export const SocialAccounts = () => {
@@ -219,14 +219,20 @@ export const SocialAccounts = () => {
     }
   };
 
-  const isLinked = (platName) => {
+  const isLinked = (platform) => {
     // Handle both string array ['instagram', 'facebook'] and object array [{name: 'instagram'}]
     return activeAccounts.some((a) => {
       const accountName = typeof a === 'string' ? a : a.name;
       if (!accountName) return false;
-      // Normalize names for comparison
       const normalizedAccount = accountName.toLowerCase().replace(/[^a-z]/g, '');
-      const normalizedPlatform = platName.toLowerCase().replace(/[^a-z]/g, '');
+
+      // Check apiName first (e.g., "gmb" for Google Business, "twitter" for X/Twitter)
+      if (platform.apiName && normalizedAccount === platform.apiName.toLowerCase()) {
+        return true;
+      }
+
+      // Normalize display name for comparison
+      const normalizedPlatform = platform.name.toLowerCase().replace(/[^a-z]/g, '');
       return normalizedAccount === normalizedPlatform ||
              normalizedAccount.includes(normalizedPlatform) ||
              normalizedPlatform.includes(normalizedAccount);
@@ -243,7 +249,7 @@ export const SocialAccounts = () => {
       <div className="social-accounts-grid">
         {PLATFORMS.map((platform) => {
           const Icon = platform.icon;
-          const linked = isLinked(platform.name);
+          const linked = isLinked(platform);
 
           return (
             <div
