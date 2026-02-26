@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseURL } from '../../utils/constants';
 import { useToast } from '@chakra-ui/react';
@@ -349,3 +349,5 @@ export const CommentInput = forwardRef(({
     </div>
   );
 });
+
+CommentInput.displayName = 'CommentInput';

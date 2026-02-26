@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button } from "@chakra-ui/react";
 import "./ScheduleModal.css";
 import "./ScheduleModalCompact.css";
@@ -20,7 +20,7 @@ export const ScheduleModal = ({
   isOpen,
   onClose,
   onConfirm,
-  timezone = 'UTC',
+  timezone: _timezone = 'UTC',
   bestTimes = [],
   hasRealData = false,
   initialDate = null
@@ -48,6 +48,7 @@ export const ScheduleModal = ({
         setSelectedTime('09:00');
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialDate]);
 
   // Build lookup: day name → best time from API data
@@ -329,7 +330,7 @@ export const ScheduleModal = ({
                 </button>
               </div>
               <div className="hourly-graph-chart">
-                {hourlyGraph.data.map(({ hour, score, label }) => {
+                {hourlyGraph.data.map(({ hour, score }) => {
                   const currentHour = parseInt(selectedTime.split(':')[0]);
                   const isActive = hour === currentHour;
                   const isPeak = hour === hourlyGraph.peakHour;

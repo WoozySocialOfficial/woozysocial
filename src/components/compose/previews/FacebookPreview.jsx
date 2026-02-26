@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { linkifyText } from '../../../utils/linkifyText';
 import { StatusBarIcons } from '../PlatformIcons';
 import {
-  AiOutlineHeart,
-  AiFillHeart,
   AiOutlineComment,
   AiOutlineShareAlt
 } from 'react-icons/ai';

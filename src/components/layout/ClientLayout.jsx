@@ -1,4 +1,3 @@
-import React from "react";
 import { ClientSidebar } from "./ClientSidebar";
 import { ClientHeader } from "./ClientHeader";
 import "./ClientLayout.css";

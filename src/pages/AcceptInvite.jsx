@@ -16,7 +16,7 @@
  *
  * Last Stable: January 13, 2026
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
@@ -42,6 +42,7 @@ export const AcceptInvite = () => {
       setError('Invalid invitation link');
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Check for pending invite after login

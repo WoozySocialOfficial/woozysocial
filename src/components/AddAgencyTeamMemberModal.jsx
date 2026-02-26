@@ -1,7 +1,7 @@
 /**
  * AddAgencyTeamMemberModal - Add/Edit team members to agency roster
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { baseURL } from "../utils/constants";
 import "./AddAgencyTeamMemberModal.css";
 

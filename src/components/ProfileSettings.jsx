@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { baseURL } from "../utils/constants";
@@ -42,6 +42,7 @@ export const ProfileSettings = () => {
     if (user) {
       fetchNotificationPreferences();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchNotificationPreferences = async () => {

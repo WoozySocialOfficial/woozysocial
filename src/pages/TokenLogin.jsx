@@ -17,6 +17,7 @@ export default function TokenLogin() {
     }
 
     validateTokenAndLogin(token);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   async function validateTokenAndLogin(token) {

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 
@@ -10,7 +9,6 @@ import { baseURL } from "../utils/constants";
  * in the Engagement page. This will test the entire data flow.
  */
 export const CommentsDiagnostic = () => {
-  const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);

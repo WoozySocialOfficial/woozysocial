@@ -1,20 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
-import { baseURL, SUBSCRIPTION_TIERS, hasTabAccess } from "../../utils/constants";
+import { baseURL, hasTabAccess } from "../../utils/constants";
 import { NotificationBell } from "../NotificationBell";
 import "./TopHeader.css";
 
 export const TopHeader = () => {
-  const { user, profile, signOut, hasActiveProfile, subscriptionTier } = useAuth();
-  const { activeWorkspace, workspaceMembership, userWorkspaces } = useWorkspace();
+  const { user, profile, signOut, subscriptionTier } = useAuth();
+  const { activeWorkspace, workspaceMembership } = useWorkspace();
   const navigate = useNavigate();
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   const profileRef = useRef(null);
 
   // Allow owners and members to connect social accounts

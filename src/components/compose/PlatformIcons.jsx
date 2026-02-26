@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FaInstagram,
   FaFacebookF,
@@ -10,11 +9,7 @@ import {
   FaSearch,
   FaPlus,
   FaUser,
-  FaHeart,
-  FaComment,
   FaShare,
-  FaBookmark,
-  FaEllipsisH,
   FaBell,
   FaEnvelope,
   FaBars

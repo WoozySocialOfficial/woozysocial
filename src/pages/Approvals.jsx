@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import RoleGuard from '../components/roles/RoleGuard';
+
 import { baseURL } from '../utils/constants';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaShieldAlt, FaClock, FaEdit, FaCheck, FaTimes, FaCheckCircle, FaArrowRight, FaUser } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaShieldAlt, FaClock, FaEdit, FaCheck, FaTimes, FaCheckCircle, FaUser } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
 import './Approvals.css';
 
@@ -38,7 +38,7 @@ const STATUS_COLORS = {
 
 export const Approvals = () => {
   const { user } = useAuth();
-  const { activeWorkspace, workspaceMembership, canApprovePost, hasFinalApproval, canApprove } = useWorkspace();
+  const { activeWorkspace, hasFinalApproval, canApprove } = useWorkspace();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,9 @@ export const Approvals = () => {
     if (urlTab && urlTab !== filter) {
       setFilter(urlTab);
     }
+  // filter intentionally omitted — adding it would re-run the effect every time
+  // filter changes, potentially creating a sync loop with the setFilter call.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTab]);
 
   const fetchPosts = useCallback(async () => {
@@ -223,6 +226,9 @@ export const Approvals = () => {
     };
 
     findAndSelectPost();
+  // filter intentionally omitted — the effect should only re-run when the post ID
+  // or workspace changes, not whenever the filter tab changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlPostId, user?.id, activeWorkspace?.id, setSearchParams]);
 
   const handleApprovalAction = async (action) => {

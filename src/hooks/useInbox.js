@@ -148,7 +148,7 @@ export function useInbox(workspaceId, options = {}) {
     } else {
       setMessages([]);
     }
-  }, [fetchMessages]);
+  }, [fetchMessages, markAsRead]);
 
   /**
    * Send a message in the current conversation
@@ -276,6 +276,7 @@ export function useInbox(workspaceId, options = {}) {
         clearInterval(pollIntervalRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, enablePolling, pollInterval]);
 
   // Re-fetch when platform filter changes
@@ -283,6 +284,7 @@ export function useInbox(workspaceId, options = {}) {
     if (workspaceId) {
       fetchConversations(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlatform, workspaceId]);
 
   return {

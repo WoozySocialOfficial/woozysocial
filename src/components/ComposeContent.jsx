@@ -1,18 +1,15 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ComposeContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaGoogle } from "react-icons/fa";
 import { FaTiktok, FaThreads, FaBluesky } from "react-icons/fa6";
 import { SiX } from "react-icons/si";
 import { useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure } from "@chakra-ui/react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { baseURL } from "../utils/constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useConnectedAccounts, useInvalidateQueries } from "../hooks/useQueries";
 import { supabase, uploadMediaDirect } from "../utils/supabaseClient";
-import { formatDateInTimezone } from "../utils/timezones";
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import FeatureGate from "./subscription/FeatureGate";
 import { CommentThread } from "./comments/CommentThread";
@@ -319,6 +316,7 @@ export const ComposeContent = () => {
     };
 
     validateAllMedia();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mediaPreviews, networks]);
 
   // Smooth progress bar animation - advances gradually without a countdown
@@ -687,6 +685,7 @@ export const ComposeContent = () => {
   // currentDraftId intentionally omitted — saveDraft reads currentDraftIdRef.current
   // directly so this callback never re-creates when the ID changes. This prevents
   // the beforeunload cleanup from firing stale (null-ID) saves that create duplicates.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeWorkspace?.id, post.text, mediaPreviews, networks, scheduledDate, isEditingScheduledPost, postSettings, toast, supabase, invalidatePosts]);
 
   // Auto-save draft every 30 seconds when there's content
@@ -898,12 +897,14 @@ export const ComposeContent = () => {
   };
 
   // Reset prediction when content changes significantly
+  const activeNetworkCount = Object.keys(networks).filter(k => networks[k]).length;
   useEffect(() => {
     if (predictionRun) {
       setPredictionRun(false);
       setEngagementScore(0);
     }
-  }, [post.text, mediaPreviews.length, Object.keys(networks).filter(k => networks[k]).length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.text, mediaPreviews.length, activeNetworkCount]);
 
   // Map Ayrshare platform names to our internal names
   const platformNameMap = {
@@ -1177,53 +1178,6 @@ export const ComposeContent = () => {
   }, [mediaPreviews, toast]);
 
   const [tempScheduledDate, setTempScheduledDate] = useState(null);
-
-  const handleDateSelect = (date) => {
-    setTempScheduledDate(date);
-  };
-
-  // Helper to get best time score for a given hour
-  const getBestTimeScore = (hour) => {
-    if (!bestTimes || bestTimes.length === 0) return 0;
-
-    const selectedDay = tempScheduledDate ? tempScheduledDate.toLocaleDateString('en-US', { weekday: 'long' }) : null;
-
-    // Find matching best time entries for this hour
-    const matchingTimes = bestTimes.filter(bt => {
-      const timeHour = parseInt(bt.time.split(':')[0]);
-      const isPM = bt.time.includes('PM');
-      const is12Hour = timeHour === 12;
-      let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
-
-      // Check if this hour matches and day matches (if selected)
-      return hour24 === hour && (!selectedDay || bt.day === selectedDay);
-    });
-
-    return matchingTimes.length > 0 ? matchingTimes[0].score : 0;
-  };
-
-  // Quick select a best time
-  const handleQuickSelectBestTime = (bestTime) => {
-    const timeHour = parseInt(bestTime.time.split(':')[0]);
-    const isPM = bestTime.time.includes('PM');
-    const is12Hour = timeHour === 12;
-    let hour24 = isPM ? (is12Hour ? 12 : timeHour + 12) : (is12Hour ? 0 : timeHour);
-
-    // Find the next occurrence of this day
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const targetDayIndex = dayNames.indexOf(bestTime.day);
-    const today = new Date();
-    const currentDayIndex = today.getDay();
-
-    let daysUntilTarget = targetDayIndex - currentDayIndex;
-    if (daysUntilTarget <= 0) daysUntilTarget += 7; // Next week if today or past
-
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysUntilTarget);
-    targetDate.setHours(hour24, 0, 0, 0);
-
-    setTempScheduledDate(targetDate);
-  };
 
   const handleConfirmSchedule = async (selectedDate) => {
     const scheduleDate = selectedDate || tempScheduledDate;
@@ -2300,25 +2254,18 @@ export const ComposeContent = () => {
 
         // More specific error messages based on error codes
         let errorMessage = errorData.error || "Failed to submit post";
-        let errorTitle = "An error occurred";
 
         if (errorData.code === 'SUBSCRIPTION_REQUIRED') {
-          errorTitle = "Subscription Required";
           errorMessage = "Please subscribe to post to social media platforms.";
         } else if (errorData.code === 'CONFIG_ERROR') {
-          errorTitle = "Configuration Error";
           errorMessage = errorData.error || "Social media service is not properly configured. Please contact support.";
         } else if (errorData.code === 'VALIDATION_ERROR') {
-          errorTitle = "Validation Error";
           errorMessage = errorData.error || "Please check your post content and try again.";
         } else if (errorData.error && errorData.error.includes('No social media accounts')) {
-          errorTitle = "No Social Accounts";
           errorMessage = "Please connect your social media accounts in the Social Accounts tab before posting.";
         } else if (errorData.error && errorData.error.includes('upload media')) {
-          errorTitle = "Media Upload Failed";
           errorMessage = errorData.error || "Failed to upload your media file. Please try again.";
         } else if (errorData.code === 'EXTERNAL_API_ERROR') {
-          errorTitle = "Posting Failed";
           // Clean up error message - if it looks like raw JSON, extract readable part
           let rawError = errorData.error || "";
           if (rawError.startsWith('{') || rawError.startsWith('[')) {
@@ -2990,14 +2937,11 @@ export const ComposeContent = () => {
               value={selectedPreviewPlatform}
               onChange={(e) => setSelectedPreviewPlatform(e.target.value)}
             >
-              {platformPreviewOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                );
-              })}
+              {platformPreviewOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
           <div className="preview-container">

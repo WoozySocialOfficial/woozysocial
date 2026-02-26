@@ -38,7 +38,7 @@ const getPostDate = (post) => post.scheduleDate || post.posted_at || post.create
 
 export const ScheduleContent = () => {
   const { user, profile, hasActiveProfile, subscriptionStatus, subscriptionTier, isWhitelisted } = useAuth();
-  const { activeWorkspace, workspaceMembership, canApprove, hasFinalApproval } = useWorkspace();
+  const { activeWorkspace, canApprove } = useWorkspace();
   const toast = useToast();
 
   // Check if user has access (multi-workspace support)
@@ -197,7 +197,7 @@ export const ScheduleContent = () => {
 
     // Clear the postId from URL to avoid re-opening on navigation
     setSearchParams({}, { replace: true });
-  }, [postIdFromUrl, loading, posts, activeWorkspace]);
+  }, [postIdFromUrl, loading, posts, activeWorkspace, setSearchParams]);
 
   // Filter posts by approval status AND auto-remove rejected posts older than 7 days
   const filteredPosts = posts.filter(post => {
@@ -229,26 +229,6 @@ export const ScheduleContent = () => {
       date.setDate(startOfWeek.getDate() + i);
       dates.push(date);
     }
-    return dates;
-  };
-
-  // Get month dates
-  const getMonthDates = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
-
-    const dates = [];
-    const currentDateIter = new Date(startDate);
-
-    while (currentDateIter <= lastDay || dates.length < 35) {
-      dates.push(new Date(currentDateIter));
-      currentDateIter.setDate(currentDateIter.getDate() + 1);
-    }
-
     return dates;
   };
 
@@ -383,7 +363,6 @@ export const ScheduleContent = () => {
   }, [view, loading, activeWorkspace?.timezone]);
 
   const weekDates = getWeekDates();
-  const monthDates = getMonthDates();
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const timeSlots = Array.from({ length: 18 }, (_, i) => i + 6); // 6 AM to 11 PM
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { BrandProfileContent } from "../../components/BrandProfileContent";
 import "./ClientBrandProfile.css";
 

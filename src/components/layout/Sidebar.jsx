@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { WorkspaceSwitcher } from "../workspace/WorkspaceSwitcher";
@@ -8,7 +7,7 @@ import { useInboxUnreadCount } from "../../hooks/useInboxUnreadCount";
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { hasActiveProfile, hasTabAccess, subscriptionTier } = useAuth();
+  const { hasActiveProfile, hasTabAccess } = useAuth();
   const { activeWorkspace, userWorkspaces, canAccessTab, workspaceMembership, loading: workspaceLoading } = useWorkspace();
 
   // Get unread count for Social Inbox badge

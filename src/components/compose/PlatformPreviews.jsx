@@ -1,4 +1,3 @@
-import React from "react";
 
 /**
  * Platform Preview Components
@@ -6,7 +5,7 @@ import React from "react";
  */
 
 // Instagram Preview
-export const InstagramPreview = ({ post, mediaPreview, mediaType, accountInfo, profileName }) => (
+export const InstagramPreview = ({ post, mediaPreview, mediaType, accountInfo, profileName: _profileName }) => (
   <div className="platform-preview instagram-preview">
     <div className="status-bar">
       <span className="status-time">9:41</span>
@@ -82,7 +81,7 @@ export const InstagramPreview = ({ post, mediaPreview, mediaType, accountInfo, p
 );
 
 // Facebook Preview
-export const FacebookPreview = ({ post, mediaPreview, mediaType, accountInfo, profileName }) => (
+export const FacebookPreview = ({ post, mediaPreview, mediaType, accountInfo, profileName: _profileName }) => (
   <div className="platform-preview facebook-preview">
     <div className="status-bar">
       <span className="status-time">9:41</span>

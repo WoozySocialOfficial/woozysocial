@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -47,7 +47,6 @@ const ScheduleContent = lazyRetry(() => import("./components/ScheduleContent").t
 const AssetsContent = lazyRetry(() => import("./components/AssetsContent").then(m => ({ default: m.AssetsContent })));
 const UnifiedInboxContent = lazyRetry(() => import("./components/inbox/UnifiedInboxContent").then(m => ({ default: m.UnifiedInboxContent })));
 const TeamContent = lazyRetry(() => import("./components/TeamContent").then(m => ({ default: m.TeamContent })));
-const AgencyTeamContent = lazyRetry(() => import("./components/AgencyTeamContent").then(m => ({ default: m.AgencyTeamContent })));
 const SettingsContent = lazyRetry(() => import("./components/SettingsContent").then(m => ({ default: m.SettingsContent })));
 const ProfileSettings = lazyRetry(() => import("./components/ProfileSettings").then(m => ({ default: m.ProfileSettings })));
 const Approvals = lazyRetry(() => import("./pages/Approvals").then(m => ({ default: m.Approvals })));

@@ -1,4 +1,3 @@
-import React from "react";
 import { UnifiedInboxContent } from "../../components/inbox/UnifiedInboxContent";
 import "./ClientInbox.css";
 

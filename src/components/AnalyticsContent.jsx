@@ -1,13 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -45,10 +42,7 @@ const PLATFORM_COLORS = {
   bluesky: "#1185FE"
 };
 
-const CHART_COLORS = ["#afabf9", "#7c3aed", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];
-
 export const AnalyticsContent = () => {
-  const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [period, setPeriod] = useState("30");
 

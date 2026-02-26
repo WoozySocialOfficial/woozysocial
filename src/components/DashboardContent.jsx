@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@chakra-ui/react";
+
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useConnectedAccounts, useDashboardStats, useInvalidateQueries } from "../hooks/useQueries";
-import { baseURL } from "../utils/constants";
+
 import { ConfirmDialog } from "./ui/ConfirmDialog";
 import "./DashboardContent.css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest } from "react-icons/fa";
@@ -36,11 +36,9 @@ const STATUS_CONFIG = {
 
 export const DashboardContent = () => {
   const { user } = useAuth();
-  const { activeWorkspace, workspaceMembership, canApprovePost } = useWorkspace();
+  const { activeWorkspace, canApprovePost } = useWorkspace();
   const navigate = useNavigate();
-  const toast = useToast();
   const { invalidateAccounts } = useInvalidateQueries();
-  const [connectingPlatform, setConnectingPlatform] = useState(null);
   const [popupBlockedDialog, setPopupBlockedDialog] = useState({ isOpen: false, url: null });
 
   // Use React Query for connected accounts (cached!)
@@ -81,98 +79,6 @@ export const DashboardContent = () => {
     refetchAccounts();
   };
 
-  // Detect if on mobile/tablet (iOS blocks popups after async calls)
-  const isMobileOrTablet = () => {
-    return /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) ||
-      (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-  };
-
-  // Function to handle connecting a platform
-  const handleConnectPlatform = async (platformName) => {
-    if (!user) return;
-    if (connectingPlatform) return;
-
-    const queryParam = activeWorkspace?.id
-      ? `workspaceId=${activeWorkspace.id}`
-      : `userId=${user.id}`;
-
-    setConnectingPlatform(platformName);
-
-    // On mobile/tablet, open window IMMEDIATELY to avoid popup blocker
-    // iOS Safari blocks popups if there's an async call before window.open
-    let popup = null;
-    if (isMobileOrTablet()) {
-      popup = window.open('about:blank', '_blank');
-    }
-
-    try {
-      const res = await fetch(`${baseURL}/api/generate-jwt?${queryParam}`);
-      const data = await res.json();
-      const url = data.data?.url || data.url;
-
-      if (!res.ok || !url) {
-        if (popup) popup.close();
-        toast({
-          title: "Connection failed",
-          description: data.error || "Failed to connect. Please try again.",
-          status: "error",
-          duration: 4000,
-          isClosable: true
-        });
-        setConnectingPlatform(null);
-        return;
-      }
-
-      // If we already have a popup (mobile), navigate it to the URL
-      if (popup) {
-        popup.location.href = url;
-      } else {
-        // Desktop: open popup normally
-        const width = 600;
-        const height = 700;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-
-        popup = window.open(
-          url,
-          'Connect Social Account',
-          `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-        );
-      }
-
-      if (!popup || popup.closed) {
-        setPopupBlockedDialog({ isOpen: true, url });
-        setConnectingPlatform(null);
-        return;
-      }
-
-      const pollTimer = setInterval(() => {
-        try {
-          if (popup.closed) {
-            clearInterval(pollTimer);
-            setConnectingPlatform(null);
-            setTimeout(() => {
-              refreshAccounts();
-              window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
-            }, 1000);
-          }
-        } catch (e) {
-          // Cross-origin error when checking popup.closed - popup is still open
-        }
-      }, 500);
-    } catch (error) {
-      if (popup) popup.close();
-      toast({
-        title: "Connection failed",
-        description: "Failed to connect. Please try again.",
-        status: "error",
-        duration: 4000,
-        isClosable: true
-      });
-      setConnectingPlatform(null);
-    }
-  };
-
   const handleOpenInNewTab = () => {
     if (popupBlockedDialog.url) {
       window.open(popupBlockedDialog.url, '_blank');
@@ -188,6 +94,7 @@ export const DashboardContent = () => {
 
     window.addEventListener('socialAccountsUpdated', handleAccountsUpdated);
     return () => window.removeEventListener('socialAccountsUpdated', handleAccountsUpdated);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Helper function to handle post click navigation

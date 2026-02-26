@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiCopy, FiTrash2, FiCheck, FiImage, FiVideo } from 'react-icons/fi';
 import { useToast } from '@chakra-ui/react';
 import { AssetTagEditor } from './AssetTagEditor';
@@ -31,11 +31,12 @@ export const AssetDetailsPanel = ({ asset, onClose, onDelete, onUpdate, workspac
   const [localTags, setLocalTags] = useState(asset?.tags || []);
   const [localDescription, setLocalDescription] = useState(asset?.description || '');
 
-  // Reset local state when asset changes
+  // Reset local state when asset changes (intentionally keyed on asset.id only)
   useEffect(() => {
     setLocalTags(asset?.tags || []);
     setLocalDescription(asset?.description || '');
     setCopied(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset?.id]);
 
   // Close on Escape

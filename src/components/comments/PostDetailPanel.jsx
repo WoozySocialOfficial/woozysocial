@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok, FaEdit, FaTrash } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
 import { useToast } from '@chakra-ui/react';
@@ -6,7 +6,6 @@ import { CommentThread } from './CommentThread';
 import { CommentInput } from './CommentInput';
 import { AnalyticsSection } from '../analytics/AnalyticsSection';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
-import { useNavigate } from 'react-router-dom';
 import { DeleteConfirmationModal } from '../modals/DeleteConfirmationModal';
 import { useInvalidateQueries } from '../../hooks/useQueries';
 import { baseURL } from '../../utils/constants';
@@ -52,7 +51,6 @@ export const PostDetailPanel = ({
   onNavigatePost
 }) => {
   const { workspaceMembership, activeWorkspace, canApprove, hasFinalApproval } = useWorkspace();
-  const navigate = useNavigate();
   const { invalidatePosts } = useInvalidateQueries();
   const toast = useToast();
   const commentInputRef = useRef(null);
@@ -111,7 +109,7 @@ export const PostDetailPanel = ({
     return labels[status] || status;
   };
 
-  const handleDelete = async (postToDelete, deleteFromPlatforms) => {
+  const handleDelete = async (postToDelete, _deleteFromPlatforms) => {
     setIsDeleting(true);
 
     try {

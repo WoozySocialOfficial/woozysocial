@@ -64,6 +64,7 @@ export function useInboxUnreadCount(workspaceId, enabled = true) {
         clearInterval(pollIntervalRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, enabled]);
 
   return {

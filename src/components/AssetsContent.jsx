@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useToast } from "@chakra-ui/react";
 import { FiGrid, FiList, FiCheck, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
@@ -59,6 +59,7 @@ export const AssetsContent = () => {
   // Fetch assets on mount
   useEffect(() => {
     fetchAssets();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeWorkspace]);
 
   // Exit bulk mode when no items selected

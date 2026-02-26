@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useState, useEffect } from "react";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { TIMEZONES_BY_REGION, getBrowserTimezone } from "../utils/timezones";
 import "./SettingsContent.css";
 
 export const SettingsContent = () => {
-  const { user } = useAuth();
   const { activeWorkspace, updateWorkspace } = useWorkspace();
-  const { theme, isDark, setLightTheme, setDarkTheme } = useTheme();
+  const { isDark, setLightTheme, setDarkTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 

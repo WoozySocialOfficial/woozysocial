@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
@@ -11,7 +11,7 @@ import './WorkspaceSwitcher.css';
 
 export const WorkspaceSwitcher = () => {
   const { activeWorkspace, userWorkspaces, switchWorkspace, loading, refreshWorkspaces } = useWorkspace();
-  const { user, profile, hasActiveProfile } = useAuth();
+  const { user, profile } = useAuth();
   const { data: agencyAccess } = useAgencyAccess(user?.id);
   const isAgencyManager = agencyAccess?.isManager || false;
   const toast = useToast();
@@ -175,7 +175,6 @@ export const WorkspaceSwitcher = () => {
 
   // Use activeWorkspace if available, otherwise fall back to personal workspace
   const displayWorkspace = activeWorkspace || personalWorkspace;
-  const hasMultipleWorkspaces = userWorkspaces.length > 1;
 
   return (
     <div className="workspace-switcher" ref={dropdownRef}>

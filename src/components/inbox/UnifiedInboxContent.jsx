@@ -1,4 +1,3 @@
-import React from "react";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { CommentsPanel } from "./CommentsPanel";
 import "./UnifiedInboxContent.css";

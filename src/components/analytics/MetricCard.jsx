@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * MetricCard - Display a single analytics metric with icon, value, and label
