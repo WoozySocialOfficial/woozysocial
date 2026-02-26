@@ -1,5 +1,6 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { canInviteTeamMember, getTeamMemberLimit, getTierConfig } from '../../utils/constants';
 import {
   Modal,
   ModalOverlay,
@@ -29,13 +30,23 @@ import { SUBSCRIPTION_TIERS } from '../../utils/constants';
  * @param {Function} onAllowed - Callback to execute when team member invite is allowed
  */
 const TeamMemberLimitGate = ({ children, onAllowed }) => {
-  const { subscriptionTier, canInviteNewMember, teamMemberLimit, tierConfig } = useAuth();
-  const { workspaceMembers } = useWorkspace();
+  const { subscriptionTier, canInviteNewMember, teamMemberLimit, tierConfig, isWhitelisted } = useAuth();
+  const { workspaceMembers, activeWorkspace, workspaceMembership } = useWorkspace();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
 
   const currentMemberCount = workspaceMembers?.length || 0;
-  const canInvite = canInviteNewMember(currentMemberCount);
+
+  // For non-owner members with can_manage_team permission, check the workspace
+  // owner's subscription tier — not the current user's own tier.
+  const isOwner = workspaceMembership?.role === 'owner';
+  const effectiveTier = (!isOwner && activeWorkspace?.ownerSubscriptionTier)
+    ? activeWorkspace.ownerSubscriptionTier
+    : subscriptionTier;
+  const effectiveTierConfig = getTierConfig(effectiveTier);
+  const effectiveTeamMemberLimit = getTeamMemberLimit(effectiveTier);
+
+  const canInvite = isWhitelisted || canInviteTeamMember(effectiveTier, currentMemberCount);
 
   const handleClick = () => {
     if (canInvite) {
@@ -55,7 +66,7 @@ const TeamMemberLimitGate = ({ children, onAllowed }) => {
       : children;
 
   const getUpgradeRecommendation = () => {
-    switch (subscriptionTier) {
+    switch (effectiveTier) {
       case SUBSCRIPTION_TIERS.FREE:
         return {
           tier: 'Pro',
@@ -72,7 +83,7 @@ const TeamMemberLimitGate = ({ children, onAllowed }) => {
         return {
           tier: 'Pro Plus',
           limit: Infinity,
-          message: `You've reached your team member limit (${teamMemberLimit}). Upgrade to Pro Plus for unlimited team members.`
+          message: `You've reached your team member limit (${effectiveTeamMemberLimit}). Upgrade to Pro Plus for unlimited team members.`
         };
       case SUBSCRIPTION_TIERS.PRO_PLUS:
       case SUBSCRIPTION_TIERS.AGENCY:
@@ -109,10 +120,10 @@ const TeamMemberLimitGate = ({ children, onAllowed }) => {
             <VStack spacing={4} align="start">
               <Box>
                 <Text fontWeight="semibold" mb={2}>
-                  Current Plan: {tierConfig.displayName}
+                  Current Plan: {effectiveTierConfig.displayName}
                 </Text>
                 <Text fontSize="sm" color="gray.600">
-                  Team Members: {currentMemberCount} / {teamMemberLimit === Infinity ? '∞' : teamMemberLimit}
+                  Team Members: {currentMemberCount} / {effectiveTeamMemberLimit === Infinity ? '∞' : effectiveTeamMemberLimit}
                 </Text>
               </Box>
 
