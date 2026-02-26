@@ -160,7 +160,6 @@ const SocialPostingForm = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
         toast({
           title: scheduledDate ? "Post scheduled." : "Post submitted.",
           description: scheduledDate

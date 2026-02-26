@@ -107,6 +107,7 @@ export const ClientCalendar = () => {
     }
 
     window.history.replaceState({}, document.title);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, posts, loading]);
 
   // ─── Month view helpers ───────────────────────────────────────────
@@ -418,7 +419,7 @@ export const ClientCalendar = () => {
                           <span className="day-number">{date.getDate()}</span>
                           {datePosts.length > 0 && (
                             <div className="day-posts">
-                              {datePosts.slice(0, 3).map((post, i) => (
+                              {datePosts.slice(0, 3).map((post, _i) => (
                                 <div
                                   key={post.id}
                                   className="post-dot"

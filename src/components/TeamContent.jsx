@@ -1,7 +1,7 @@
 /**
  * TeamContent Component - Manages workspace team members, invitations, and agency roster
  */
-import React, { useState, useCallback, memo, lazy, Suspense } from "react";
+import { useState, useCallback, memo, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
@@ -163,6 +163,8 @@ const MemberCard = memo(({ member, currentUserId, currentUserCanManageTeam, onUp
   );
 });
 
+MemberCard.displayName = 'MemberCard';
+
 export const TeamContent = () => {
   const { user, subscriptionTier } = useAuth();
   const { activeWorkspace, isOwner, canManageTeam } = useWorkspace();
@@ -193,10 +195,10 @@ export const TeamContent = () => {
     || agencyAccess?.isManager;
 
   // Refresh functions that invalidate cache
-  const fetchTeamMembers = () => {
+  const fetchTeamMembers = useCallback(() => {
     invalidateTeam(activeWorkspace?.id);
     refetchTeamMembers();
-  };
+  }, [invalidateTeam, activeWorkspace?.id, refetchTeamMembers]);
 
   const fetchPendingInvites = () => {
     invalidateTeam(activeWorkspace?.id);
@@ -327,7 +329,7 @@ export const TeamContent = () => {
       console.error('Error removing team member:', error);
       alert(error.message || 'Failed to remove team member');
     }
-  }, [activeWorkspace?.id, user?.id]);
+  }, [activeWorkspace?.id, user?.id, fetchTeamMembers]);
 
   const handleUpdateRole = useCallback(async (memberId, newRole) => {
     try {
@@ -354,7 +356,7 @@ export const TeamContent = () => {
       console.error('Error updating member role:', error);
       alert(error.message || 'Failed to update member role');
     }
-  }, [activeWorkspace?.id, user?.id]);
+  }, [activeWorkspace?.id, user?.id, fetchTeamMembers]);
 
   const handleTogglePermission = useCallback(async (memberId, permName, value) => {
     const permMap = {

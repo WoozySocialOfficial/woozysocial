@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { RecentMediaGrid } from './RecentMediaGrid';
 import { AssetLibraryGrid } from './AssetLibraryGrid';
 import './MediaUploadModal.css';
@@ -43,6 +43,7 @@ export const MediaUploadModal = ({
         processFiles(existingFiles);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Keyboard navigation

@@ -144,6 +144,9 @@ export const WorkspaceProvider = ({ children }) => {
         setLoading(false);
       }
     }
+  // cachedData intentionally omitted — it's a sessionStorage IIFE that creates a new
+  // reference each render; adding it would invalidate the callback on every render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Fetch workspaces when user changes

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
   Heading,
@@ -49,7 +48,6 @@ const socialColors = {
 
 const RightSideNav = () => {
   const toast = useToast();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [activeAccounts, setActiveAccounts] = useState([]);

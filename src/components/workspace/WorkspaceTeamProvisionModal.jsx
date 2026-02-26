@@ -2,7 +2,7 @@
  * WorkspaceTeamProvisionModal - Provision agency team members to a workspace
  * Shown after workspace creation for agency users
  */
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { baseURL } from "../../utils/constants";
 import "./WorkspaceTeamProvisionModal.css";
 

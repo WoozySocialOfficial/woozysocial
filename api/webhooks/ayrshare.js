@@ -44,16 +44,33 @@ module.exports = async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
 
-    // Get workspace_id (first workspace for now - TODO: map from platform account)
-    const { data: workspace } = await supabase
-      .from('workspaces')
-      .select('id')
-      .limit(1)
-      .single();
+    // Resolve workspace from the profileKey in the payload.
+    // Ayrshare includes profileKey on every webhook so we can route to the right workspace.
+    const payloadProfileKey = payload.profileKey || payload.profile_key || payload.profile;
+    let workspaceId = null;
+
+    if (payloadProfileKey) {
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('id')
+        .eq('ayr_profile_key', payloadProfileKey)
+        .single();
+      workspaceId = ws?.id;
+    }
+
+    // Fall back to first workspace if no profile key was provided in the payload
+    if (!workspaceId) {
+      const { data: ws } = await supabase
+        .from('workspaces')
+        .select('id')
+        .limit(1)
+        .single();
+      workspaceId = ws?.id;
+    }
 
     // Store raw webhook event for debugging
     await supabase.from('inbox_webhook_events').insert({
-      workspace_id: workspace?.id,
+      workspace_id: workspaceId,
       event_type: payload.type || payload.action,
       platform: payload.platform,
       payload: payload,
@@ -65,18 +82,33 @@ module.exports = async function handler(req, res) {
     switch (payload.type || payload.action) {
       case 'comment':
       case 'new_comment':
-        await handleComment(payload, supabase);
+        await handleComment(payload, supabase, workspaceId);
         break;
 
       case 'message':
       case 'new_message':
       case 'direct_message':
-        await handleMessage(payload, supabase);
+        await handleMessage(payload, supabase, workspaceId);
         break;
 
       case 'post_analytics':
       case 'analytics':
         await handleAnalytics(payload, supabase);
+        break;
+
+      // Ayrshare fires this when a user disconnects a social account from their profile.
+      // Payload includes: platform, profileKey
+      case 'social_disconnected':
+      case 'unlink':
+      case 'disconnect':
+        await handleSocialDisconnected(payload, supabase, workspaceId);
+        break;
+
+      // Ayrshare fires this when a profile is deleted (e.g. from their dashboard).
+      // We null out the stored key so the scheduler skips the workspace cleanly.
+      case 'profile_deleted':
+      case 'delete_profile':
+        await handleProfileDeleted(payload, supabase, workspaceId, payloadProfileKey);
         break;
 
       default:
@@ -100,7 +132,7 @@ module.exports = async function handler(req, res) {
   }
 };
 
-async function handleComment(payload, supabase) {
+async function handleComment(payload, supabase, workspaceId) {
   console.log('[WEBHOOK] Processing comment:', {
     platform: payload.platform,
     postId: payload.postId,
@@ -164,7 +196,7 @@ async function handleComment(payload, supabase) {
     .eq('platform', platform);
 }
 
-async function handleMessage(payload, supabase) {
+async function handleMessage(payload, supabase, workspaceId) {
   console.log('[WEBHOOK] Processing message:', {
     platform: payload.platform,
     messageId: payload.messageId || payload.id,
@@ -186,16 +218,6 @@ async function handleMessage(payload, supabase) {
     conversationId,
     threadId
   } = payload;
-
-  // Find workspace_id from the payload or first available workspace
-  // TODO: Map platform account to workspace_id properly
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id')
-    .limit(1)
-    .single();
-
-  const workspaceId = workspace?.id;
 
   if (!workspaceId) {
     console.error('[WEBHOOK] No workspace found for message');
@@ -282,6 +304,55 @@ async function handleMessage(payload, supabase) {
     })
     .eq('payload->>messageId', messageId || id)
     .eq('platform', platform);
+}
+
+// Called when a social account is disconnected from an Ayrshare profile
+// (e.g. the user disconnects directly in the Ayrshare dashboard).
+// We just log it — the workspace's connected platforms will update naturally
+// when the user next visits their settings. No DB change needed beyond logging.
+async function handleSocialDisconnected(payload, supabase, workspaceId) {
+  console.log('[WEBHOOK] Social account disconnected:', {
+    platform: payload.platform,
+    workspaceId
+  });
+
+  if (!workspaceId) {
+    console.warn('[WEBHOOK] handleSocialDisconnected: no workspace resolved from profileKey');
+    return;
+  }
+
+  // Mark the webhook as processed — the scheduler will naturally stop sending
+  // to this platform once Ayrshare stops including it in history.
+  await supabase
+    .from('inbox_webhook_events')
+    .update({ processed: true, processed_at: new Date().toISOString() })
+    .eq('workspace_id', workspaceId)
+    .eq('event_type', payload.type || payload.action)
+    .eq('platform', payload.platform);
+}
+
+// Called when an Ayrshare profile is deleted (from the dashboard or externally).
+// We null out the stored keys so the scheduler skips this workspace cleanly.
+async function handleProfileDeleted(payload, supabase, workspaceId, profileKey) {
+  console.log('[WEBHOOK] Ayrshare profile deleted:', { workspaceId, profileKey });
+
+  if (!workspaceId && !profileKey) {
+    console.warn('[WEBHOOK] handleProfileDeleted: no workspace or profileKey to act on');
+    return;
+  }
+
+  // Use workspaceId if we have it; otherwise find by profileKey directly.
+  const query = workspaceId
+    ? supabase.from('workspaces').update({ ayr_profile_key: null, ayr_ref_id: null, updated_at: new Date().toISOString() }).eq('id', workspaceId)
+    : supabase.from('workspaces').update({ ayr_profile_key: null, ayr_ref_id: null, updated_at: new Date().toISOString() }).eq('ayr_profile_key', profileKey);
+
+  const { error } = await query;
+  if (error) {
+    console.error('[WEBHOOK] Failed to nullify profile key after deletion:', error);
+    logError('webhook.profileDeleted', error, { workspaceId, profileKey });
+  } else {
+    console.log('[WEBHOOK] Profile key nullified — scheduler will skip this workspace going forward');
+  }
 }
 
 async function handleAnalytics(payload, supabase) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { baseURL } from '../../utils/constants';
 import { supabase } from '../../utils/supabaseClient';
@@ -103,6 +103,7 @@ export const CommentThread = ({
 
   useEffect(() => {
     fetchComments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, draftId, workspaceId]);
 
   // Real-time subscription
@@ -181,6 +182,7 @@ export const CommentThread = ({
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, enableRealtime]);
 
   const getPriorityConfig = (priority) => {

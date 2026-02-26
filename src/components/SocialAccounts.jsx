@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import {
   FaFacebookF,
   FaInstagram,
@@ -32,7 +31,6 @@ const PLATFORMS = [
 export const SocialAccounts = () => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
-  const navigate = useNavigate();
   const [activeAccounts, setActiveAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -57,6 +55,7 @@ export const SocialAccounts = () => {
       console.warn("fetchActiveAccounts error", err);
       return [];
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeWorkspace]);
 
   const syncAccountsToDatabase = async (accounts) => {

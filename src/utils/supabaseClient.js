@@ -33,14 +33,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
  * @param {function} onProgress - Optional callback for upload progress (0-100)
  * @returns {Promise<{success: boolean, publicUrl?: string, error?: string}>}
  */
-export async function uploadMediaDirect(file, userId, workspaceId, onProgress) {
+export async function uploadMediaDirect(file, userId, workspaceId, _onProgress) {
   try {
     const timestamp = Date.now();
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const storagePath = `${workspaceId || userId}/${timestamp}-${sanitizedFilename}`;
 
     // Upload to Supabase Storage bucket 'post-media'
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from('post-media')
       .upload(storagePath, file, {
         contentType: file.type,

@@ -1,4 +1,3 @@
-import React from "react";
 import { AnalyticsContent } from "../../components/AnalyticsContent";
 import "./ClientAnalytics.css";
 

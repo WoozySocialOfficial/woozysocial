@@ -1,4 +1,3 @@
-import React from "react";
 
 /**
  * EngagementScorePanel - Displays post engagement score and best posting time

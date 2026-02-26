@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAssetLibrary } from '../../hooks/useQueries';
 import './AssetLibraryGrid.css';
 

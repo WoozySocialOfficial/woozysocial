@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { linkifyText } from '../../../utils/linkifyText';
 import { MediaCarousel } from '../MediaCarousel';
-import { StatusBarIcons, ActionIcons, NavIcons, VerifiedBadge } from '../PlatformIcons';
+import { StatusBarIcons, VerifiedBadge } from '../PlatformIcons';
 import {
   AiFillHeart,
   AiOutlineHeart,

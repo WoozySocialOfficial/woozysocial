@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import './GetStarted.css';
 
@@ -68,7 +68,6 @@ const PRICING_TIERS = [
 ];
 
 const GetStarted = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [currentStep, setCurrentStep] = useState(1);

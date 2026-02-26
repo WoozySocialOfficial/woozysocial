@@ -1135,6 +1135,165 @@ app.get("/api/analytics/best-time", requireActiveProfile, async (req, res) => {
 });
 
 // ============================================================
+// BEST TIME TO POST (production-compatible path)
+// ============================================================
+
+app.get("/api/best-time", async (req, res) => {
+  try {
+    const { workspaceId, platform, timezone } = req.query;
+    const userTimezone = timezone || 'UTC';
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const getDefaultBestTimes = (p) => {
+      const defaults = {
+        twitter: [
+          { day: "Tuesday", time: "9:00 AM", score: 95 },
+          { day: "Wednesday", time: "9:00 AM", score: 93 },
+          { day: "Thursday", time: "9:00 AM", score: 90 },
+          { day: "Tuesday", time: "12:00 PM", score: 88 },
+          { day: "Wednesday", time: "12:00 PM", score: 85 }
+        ],
+        instagram: [
+          { day: "Tuesday", time: "11:00 AM", score: 95 },
+          { day: "Wednesday", time: "11:00 AM", score: 93 },
+          { day: "Friday", time: "10:00 AM", score: 90 },
+          { day: "Thursday", time: "2:00 PM", score: 88 },
+          { day: "Monday", time: "11:00 AM", score: 85 }
+        ],
+        facebook: [
+          { day: "Wednesday", time: "11:00 AM", score: 95 },
+          { day: "Tuesday", time: "1:00 PM", score: 93 },
+          { day: "Thursday", time: "2:00 PM", score: 90 },
+          { day: "Friday", time: "9:00 AM", score: 88 },
+          { day: "Monday", time: "9:00 AM", score: 85 }
+        ],
+        linkedin: [
+          { day: "Tuesday", time: "10:00 AM", score: 95 },
+          { day: "Wednesday", time: "12:00 PM", score: 93 },
+          { day: "Thursday", time: "9:00 AM", score: 90 },
+          { day: "Tuesday", time: "8:00 AM", score: 88 },
+          { day: "Wednesday", time: "8:00 AM", score: 85 }
+        ],
+        tiktok: [
+          { day: "Tuesday", time: "7:00 PM", score: 95 },
+          { day: "Thursday", time: "7:00 PM", score: 93 },
+          { day: "Friday", time: "5:00 PM", score: 90 },
+          { day: "Saturday", time: "11:00 AM", score: 88 },
+          { day: "Sunday", time: "4:00 PM", score: 85 }
+        ],
+        pinterest: [
+          { day: "Friday", time: "3:00 PM", score: 95 },
+          { day: "Saturday", time: "8:00 PM", score: 93 },
+          { day: "Sunday", time: "8:00 PM", score: 90 },
+          { day: "Thursday", time: "3:00 PM", score: 88 },
+          { day: "Tuesday", time: "3:00 PM", score: 85 }
+        ]
+      };
+      const general = [
+        { day: "Tuesday", time: "10:00 AM", score: 95 },
+        { day: "Wednesday", time: "11:00 AM", score: 93 },
+        { day: "Thursday", time: "10:00 AM", score: 90 },
+        { day: "Tuesday", time: "2:00 PM", score: 88 },
+        { day: "Wednesday", time: "2:00 PM", score: 85 }
+      ];
+      return p ? (defaults[p.toLowerCase()] || general) : general;
+    };
+
+    const formatHour = (hour) => {
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:00 ${period}`;
+    };
+
+    if (!workspaceId) {
+      return res.json({ success: true, data: { recommendations: getDefaultBestTimes(platform), source: "industry_default", timezone: userTimezone } });
+    }
+
+    // Get workspace profile key
+    let profileKey = env.AYRSHARE_PROFILE_KEY;
+    const workspaceProfileKey = await getWorkspaceProfileKey(workspaceId);
+    if (workspaceProfileKey) profileKey = workspaceProfileKey;
+
+    if (!profileKey || !env.AYRSHARE_API_KEY) {
+      return res.json({ success: true, data: { recommendations: getDefaultBestTimes(platform), source: "industry_default", timezone: userTimezone } });
+    }
+
+    // Fetch 90 days of post history from Ayrshare
+    let posts = [];
+    try {
+      const response = await axios.get(`${BASE_AYRSHARE}/history`, {
+        headers: {
+          Authorization: `Bearer ${env.AYRSHARE_API_KEY}`,
+          "Profile-Key": profileKey
+        },
+        params: { lastDays: 90, status: "success" },
+        timeout: 15000
+      });
+      posts = Array.isArray(response.data) ? response.data : (response.data.posts || []);
+    } catch (err) {
+      console.log("Best-time: history fetch failed, using defaults:", err.message);
+    }
+
+    if (posts.length < 10) {
+      return res.json({ success: true, data: { recommendations: getDefaultBestTimes(platform), source: "industry_default", message: "Not enough posting history." } });
+    }
+
+    // Analyse engagement by day/hour in user's timezone
+    const engagementBySlot = {};
+    posts.forEach(post => {
+      const postDate = new Date(post.created || post.publishDate);
+      let day, hour;
+      try {
+        const formatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', hour: 'numeric', hour12: false, timeZone: userTimezone });
+        const parts = formatter.formatToParts(postDate);
+        day = parts.find(p => p.type === 'weekday')?.value || dayNames[postDate.getUTCDay()];
+        hour = parseInt(parts.find(p => p.type === 'hour')?.value || postDate.getUTCHours());
+      } catch {
+        day = dayNames[postDate.getUTCDay()];
+        hour = postDate.getUTCHours();
+      }
+      const platforms = post.platforms || [];
+      if (platform && !platforms.some(p => p.toLowerCase() === platform.toLowerCase())) return;
+      let engagement = 0;
+      platforms.forEach(plt => {
+        const a = post.analytics?.[plt.toLowerCase()] || post[plt.toLowerCase()] || {};
+        engagement += (a.likes || 0) + (a.comments || 0) + (a.shares || 0);
+      });
+      const key = `${day}-${hour}`;
+      if (!engagementBySlot[key]) engagementBySlot[key] = { day, hour, totalEngagement: 0, postCount: 0 };
+      engagementBySlot[key].totalEngagement += engagement;
+      engagementBySlot[key].postCount++;
+    });
+
+    const slots = Object.values(engagementBySlot)
+      .map(s => ({ ...s, avgEngagement: s.postCount > 0 ? s.totalEngagement / s.postCount : 0 }))
+      .sort((a, b) => b.avgEngagement - a.avgEngagement);
+
+    const bestTimes = slots.slice(0, 5).map((slot, i) => ({
+      day: slot.day,
+      time: formatHour(slot.hour),
+      score: 95 - (i * 5),
+      avgEngagement: Math.round(slot.avgEngagement * 10) / 10
+    }));
+
+    return res.json({
+      success: true,
+      data: {
+        recommendations: bestTimes.length > 0 ? bestTimes : getDefaultBestTimes(platform),
+        source: "personalized",
+        timezone: userTimezone,
+        stats: { postsAnalyzed: posts.length }
+      }
+    });
+
+  } catch (error) {
+    console.error("Best-time endpoint error:", error.message);
+    res.json({ success: true, data: { recommendations: [{ day: "Tuesday", time: "10:00 AM", score: 95 }, { day: "Wednesday", time: "11:00 AM", score: 90 }], source: "industry_default" } });
+  }
+});
+
+// ============================================================
 // AYRSHARE POST MANAGEMENT ENDPOINTS
 // ============================================================
 
@@ -2398,6 +2557,151 @@ app.post("/api/generate-post", async (req, res) => {
       error: "Failed to generate post",
       details: error.response?.data || error.message
     });
+  }
+});
+
+// ============================================================
+// AI POST OPTIMIZER
+// ============================================================
+
+app.post("/api/post-optimize", async (req, res) => {
+  try {
+    const { text, platforms = [], hasMedia = false, mediaType = null, scoreBreakdown = {} } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: "Post text is required" });
+    }
+
+    const apiKey = env.ANTHROPIC_API_KEY;
+
+    // Rule-based fallback
+    const getFallbackSuggestions = () => {
+      const suggestions = [];
+      const b = scoreBreakdown;
+      if (!b.firstLine || b.firstLine.score < 8) {
+        const firstLine = text.split('\n')[0] || text.substring(0, 60);
+        if (!/\?|!/.test(firstLine) && firstLine.length > 10) {
+          suggestions.push({ type: 'add_hook', title: 'Stronger opening hook', description: 'Posts with strong openers get 3x more engagement.', original: firstLine, improved: `🔥 ${firstLine}${firstLine.endsWith('?') || firstLine.endsWith('!') ? '' : ' — here\'s why 👇'}`, impact: 12 });
+        }
+      }
+      if (!b.hooks || !b.hooks.hasQuestion) {
+        suggestions.push({ type: 'add_cta', title: 'Add engagement question', description: 'Questions drive 2x more comments.', original: '', improved: '\n\nWhat do you think? Drop your thoughts below 👇', impact: 8 });
+      }
+      if (!b.hooks || !b.hooks.hasCTA) {
+        suggestions.push({ type: 'add_cta', title: 'Add call-to-action', description: 'CTAs increase engagement by up to 285%.', original: '', improved: '\n\nSave this for later and share with someone who needs it!', impact: 7 });
+      }
+      if (!b.hashtags || b.hashtags.count === 0) {
+        const tags = text.split(/\s+/).filter(w => w.length > 4).slice(0, 3).map(w => `#${w.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+        if (tags.length > 0) suggestions.push({ type: 'add_hashtags', title: 'Add relevant hashtags', description: 'Hashtags increase discoverability by up to 40%.', original: '', improved: `\n\n${tags.join(' ')} #socialmedia #content`, impact: 10 });
+      }
+      if (!b.emoji || b.emoji.count === 0) {
+        suggestions.push({ type: 'add_emoji', title: 'Add emojis for engagement', description: 'Posts with emojis get 25% more engagement.', original: text.substring(0, 40), improved: `✨ ${text.substring(0, 40)}`, impact: 6 });
+      }
+      return suggestions.sort((a, c) => c.impact - a.impact).slice(0, 4);
+    };
+
+    if (!apiKey) {
+      return res.json({ success: true, data: { suggestions: getFallbackSuggestions(), source: "rule_based" } });
+    }
+
+    const platformList = platforms.length > 0 ? platforms.join(", ") : "general social media";
+    const weakAreas = [];
+    if (scoreBreakdown.hooks?.score < 10) weakAreas.push("engagement hooks (questions, CTAs, urgency)");
+    if (scoreBreakdown.firstLine?.score < 8) weakAreas.push("opening hook / first line");
+    if (scoreBreakdown.hashtags?.score < 10) weakAreas.push("hashtag strategy");
+    if (scoreBreakdown.emoji?.score < 8) weakAreas.push("emoji usage");
+    if (scoreBreakdown.length?.score < 12) weakAreas.push("text length optimization");
+    if (scoreBreakdown.url?.score === 0) weakAreas.push("call-to-action with link");
+
+    const systemPrompt = `Return ONLY a JSON array. Max 3 suggestions sorted by impact. Each: {"type":"rewrite"|"add_hook"|"add_cta"|"add_hashtags","title":"3-6 words","description":"1 sentence","original":"","improved":"text","impact":1-20}. No markdown. Keep original voice. Be specific with actual rewritten text.\nPlatforms: ${platformList}${weakAreas.length > 0 ? `\nFocus on: ${weakAreas.join(", ")}` : ''}${!hasMedia ? '\nNo media attached.' : ''}`;
+
+    const aiResponse = await axios.post('https://api.anthropic.com/v1/messages', {
+      model: 'claude-haiku-4-5-20251001',
+      system: systemPrompt,
+      messages: [{ role: 'user', content: `Optimize this post:\n\n"${text}"` }],
+      temperature: 0.7,
+      max_tokens: 300
+    }, {
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' }
+    });
+
+    const content = aiResponse.data.content?.[0]?.text || '[]';
+    try {
+      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed)) return res.json({ success: true, data: { suggestions: getFallbackSuggestions(), source: "rule_based" } });
+      const suggestions = parsed.filter(s => s.title && s.improved).slice(0, 4).map(s => ({
+        type: s.type || 'rewrite', title: s.title, description: s.description || '',
+        original: s.original || '', improved: s.improved,
+        impact: Math.min(Math.max(Number(s.impact) || 5, 1), 20)
+      }));
+      return res.json({ success: true, data: { suggestions, source: "ai_generated" } });
+    } catch {
+      return res.json({ success: true, data: { suggestions: getFallbackSuggestions(), source: "rule_based" } });
+    }
+  } catch (error) {
+    console.error("Post optimize error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to optimize post" });
+  }
+});
+
+// ============================================================
+// AI HASHTAG RESEARCH
+// ============================================================
+
+app.post("/api/hashtag-research", async (req, res) => {
+  try {
+    const { topic, platform, count = 5 } = req.body;
+
+    if (!topic || topic.trim().length === 0) {
+      return res.status(400).json({ error: "Topic is required" });
+    }
+
+    const apiKey = env.ANTHROPIC_API_KEY;
+
+    const getCuratedHashtags = () => {
+      const base = topic.toLowerCase().split(/\s+/).filter(w => w.length > 2).slice(0, 3).map(w => ({ tag: w, display: `#${w}`, category: 'general' }));
+      return [...base, { tag: 'socialmedia', display: '#socialmedia', category: 'general' }, { tag: 'content', display: '#content', category: 'general' }].slice(0, count);
+    };
+
+    if (!apiKey) {
+      return res.json({ success: true, data: { hashtags: getCuratedHashtags(), source: "curated", topic, platform } });
+    }
+
+    const platformGuidelines = {
+      instagram: `10-15 hashtags, mix popular (1M+ posts) and niche (<500k posts), include location tags`,
+      twitter: `1-2 hashtags max, focus on trending topics`,
+      linkedin: `3-5 hashtags, professional/industry focused`,
+      tiktok: `3-5 hashtags, include trending challenges, avoid overusing #fyp`,
+      facebook: `1-3 hashtags max, prefer branded hashtags`,
+      pinterest: `2-5 hashtags, keyword/SEO focused`
+    };
+
+    const systemPrompt = `Return ONLY a JSON array of ${count} hashtags (no # symbol). Each: {"tag":"tagname","display":"#tagname","category":"trending"|"niche"|"industry"|"general"}. No markdown. No explanation.${platform ? `\nPlatform guidelines for ${platform}: ${platformGuidelines[platform.toLowerCase()] || 'general best practices'}` : ''}`;
+
+    const aiResponse = await axios.post('https://api.anthropic.com/v1/messages', {
+      model: 'claude-haiku-4-5-20251001',
+      system: systemPrompt,
+      messages: [{ role: 'user', content: `Generate hashtags for: "${topic}"${platform ? ` on ${platform}` : ''}` }],
+      temperature: 0.5,
+      max_tokens: 200
+    }, {
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' }
+    });
+
+    const content = aiResponse.data.content?.[0]?.text || '[]';
+    try {
+      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed)) return res.json({ success: true, data: { hashtags: getCuratedHashtags(), source: "curated", topic, platform } });
+      const hashtags = parsed.filter(h => h.tag).map(h => ({ tag: h.tag.replace(/^#/, ''), display: `#${h.tag.replace(/^#/, '')}`, category: h.category || 'general' }));
+      return res.json({ success: true, data: { hashtags, source: "ai_generated", topic, platform } });
+    } catch {
+      return res.json({ success: true, data: { hashtags: getCuratedHashtags(), source: "curated", topic, platform } });
+    }
+  } catch (error) {
+    console.error("Hashtag research error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to research hashtags" });
   }
 });
 

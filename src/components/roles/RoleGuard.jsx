@@ -1,7 +1,6 @@
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { Box, VStack, Text, Icon } from '@chakra-ui/react';
 import { FiLock } from 'react-icons/fi';
-import { TEAM_ROLES } from '../../utils/constants';
 
 /**
  * RoleGuard Component

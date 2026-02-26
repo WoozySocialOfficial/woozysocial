@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FaListUl, FaInstagram, FaChevronDown, FaChevronUp, FaCog } from 'react-icons/fa';
 import './PostSettings.css';
 

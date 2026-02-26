@@ -22,7 +22,7 @@ const FeatureGate = ({
   upgradeMessage = null,
   requiredTier = 'Pro'
 }) => {
-  const { hasFeatureAccess, subscriptionTier } = useAuth();
+  const { hasFeatureAccess } = useAuth();
   const navigate = useNavigate();
 
   const hasAccess = hasFeatureAccess(feature);

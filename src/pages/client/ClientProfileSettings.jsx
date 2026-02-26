@@ -1,4 +1,3 @@
-import React from "react";
 import { ProfileSettings } from "../../components/ProfileSettings";
 import "./ClientProfileSettings.css";
 

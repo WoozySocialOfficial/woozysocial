@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { linkifyText } from '../../../utils/linkifyText';
 import { MediaCarousel } from '../MediaCarousel';
 import { StatusBarIcons } from '../PlatformIcons';

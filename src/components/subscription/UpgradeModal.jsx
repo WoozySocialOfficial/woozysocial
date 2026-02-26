@@ -41,7 +41,7 @@ const UpgradeModal = ({
   requiredTier = SUBSCRIPTION_TIERS.PRO,
   message = null
 }) => {
-  const { subscriptionTier, tierConfig } = useAuth();
+  const { tierConfig } = useAuth();
   const navigate = useNavigate();
 
   const requiredTierConfig = getTierConfig(requiredTier);
@@ -57,11 +57,11 @@ const UpgradeModal = ({
   // Get feature differences between current and required tier
   const getNewFeatures = () => {
     const currentFeatures = Object.entries(currentTierConfig.features)
-      .filter(([key, value]) => value === true)
+      .filter(([_key, value]) => value === true)
       .map(([key]) => key);
 
     const requiredFeatures = Object.entries(requiredTierConfig.features)
-      .filter(([key, value]) => value === true)
+      .filter(([_key, value]) => value === true)
       .map(([key]) => key);
 
     // Features in required tier but not in current tier

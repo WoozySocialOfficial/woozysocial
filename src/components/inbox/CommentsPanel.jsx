@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { baseURL } from "../../utils/constants";
@@ -40,7 +40,7 @@ const COMMENT_SORT_OPTIONS = [
   { id: "oldest", label: "Oldest first", field: "created_time", dir: "asc" },
 ];
 
-export const CommentsPanel = ({ onRefresh }) => {
+export const CommentsPanel = ({ onRefresh: _onRefresh }) => {
   const { user } = useAuth();
   const { activeWorkspace } = useWorkspace();
   const [loading, setLoading] = useState(false);
@@ -243,7 +243,7 @@ export const CommentsPanel = ({ onRefresh }) => {
     } finally {
       setCommentsLoading(false);
     }
-  }, [selectedPost, activeWorkspace, syncComments]);
+  }, [selectedPost, activeWorkspace, syncComments, getAyrPostId]);
 
   useEffect(() => {
     fetchPosts();

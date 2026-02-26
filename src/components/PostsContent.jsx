@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { baseURL } from "../utils/constants";
@@ -299,58 +299,6 @@ export const PostsContent = () => {
         )}
       </div>
     );
-  };
-
-  const handleDeleteDraft = async (e, draftId) => {
-    e.stopPropagation(); // Prevent row click
-
-    if (!window.confirm("Delete this draft?")) return;
-
-    try {
-      const { error } = await supabase
-        .from("post_drafts")
-        .delete()
-        .eq("id", draftId)
-        .eq("workspace_id", activeWorkspace.id);
-
-      if (error) throw error;
-
-      // Refresh drafts
-      invalidatePosts(activeWorkspace?.id);
-      refetchDrafts();
-    } catch (error) {
-      console.error("Error deleting draft:", error);
-    }
-  };
-
-  const handleDeletePost = async (e, post) => {
-    e.stopPropagation(); // Prevent row click
-
-    if (!window.confirm("Delete this post from all platforms? This cannot be undone.")) return;
-
-    try {
-      const response = await fetch(`${baseURL}/api/post/delete`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: post.ayr_post_id || null,
-          databaseId: post.id,
-          workspaceId: activeWorkspace.id
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || error.error || "Failed to delete post");
-      }
-
-      // Invalidate cache and refresh
-      invalidatePosts(activeWorkspace?.id);
-      refetchPosts();
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      alert("Failed to delete post: " + error.message);
-    }
   };
 
   const handleRetryPost = async (e, postId) => {

@@ -2,13 +2,12 @@
  * AgencyTeamContent Component - Manages agency-level team roster
  * Visible to agency owners AND delegated managers (can_manage_agency = true)
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAgencyAccess, useInvalidateQueries } from "../hooks/useQueries";
 import { AddAgencyTeamMemberModal } from "./AddAgencyTeamMemberModal";
 import { ConfirmDialog } from "./ui/ConfirmDialog";
-import { supabase } from "../utils/supabaseClient";
 import { baseURL, SUBSCRIPTION_TIERS } from "../utils/constants";
 import "./AgencyTeamContent.css";
 
@@ -219,19 +218,6 @@ export const AgencyTeamContent = () => {
     }
     if (!email) return "NA";
     return email.substring(0, 2).toUpperCase();
-  };
-
-  const getRoleLabel = (role) => {
-    const labels = {
-      member: 'Member',
-      viewer: 'Viewer',
-      // Legacy fallbacks
-      admin: 'Member',
-      editor: 'Member',
-      view_only: 'Viewer',
-      client: 'Viewer'
-    };
-    return labels[role] || role;
   };
 
   const getStatusBadge = (status, isRegistered) => {

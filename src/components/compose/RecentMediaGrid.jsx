@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useRecentMedia, useInvalidateQueries } from '../../hooks/useQueries';
 import { baseURL } from '../../utils/constants';
 import './RecentMediaGrid.css';

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { baseURL } from "../utils/constants";
 import { supabase } from "../utils/supabaseClient";
 
@@ -73,7 +73,7 @@ export function usePosts(workspaceId, userId, options = {}) {
   });
 }
 
-export function useScheduledPosts(workspaceId, userId) {
+export function useScheduledPosts(workspaceId, _userId) {
   return useQuery({
     queryKey: ["scheduledPosts", workspaceId],
     queryFn: async () => {

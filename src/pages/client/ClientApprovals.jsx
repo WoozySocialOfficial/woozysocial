@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -54,6 +54,7 @@ export const ClientApprovals = () => {
     if (urlTab && urlTab !== activeTab) {
       setActiveTab(urlTab);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTab]);
 
   // Use React Query for cached data fetching
@@ -206,6 +207,7 @@ export const ClientApprovals = () => {
     };
 
     findAndSelectPost();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlPostId, user?.id, activeWorkspace?.id, setSearchParams]);
 
   // Refresh function that invalidates cache

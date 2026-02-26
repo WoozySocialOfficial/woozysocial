@@ -1,4 +1,3 @@
-import React from "react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPinterest, FaGoogle } from "react-icons/fa";
 import { FaTiktok, FaThreads, FaBluesky } from "react-icons/fa6";
 import { SiX } from "react-icons/si";

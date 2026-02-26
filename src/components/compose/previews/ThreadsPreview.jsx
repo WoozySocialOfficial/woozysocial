@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { linkifyText } from '../../../utils/linkifyText';
 import { StatusBarIcons } from '../PlatformIcons';
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai';
@@ -10,7 +10,6 @@ import './ThreadsPreview.css';
 
 export const ThreadsPreview = ({ post, mediaPreviews = [], accountInfo }) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
     <div className="threads-preview-v2">

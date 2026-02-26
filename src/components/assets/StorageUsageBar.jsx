@@ -1,4 +1,3 @@
-import React from 'react';
 import './StorageUsageBar.css';
 
 const formatBytes = (bytes) => {

@@ -15,6 +15,34 @@ const { sendPostGoingOutAlert, sendPostFailedAdminAlert, sendSchedulerErrorAlert
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
 
+// Returns true when an Ayrshare error indicates the Profile-Key no longer exists.
+// Our main API key is always valid, so a 401/403 on a specific profile-keyed call
+// means that profile was deleted on Ayrshare's side.
+function isInvalidProfileKeyError(error) {
+  const status = error.response?.status;
+  if (status !== 401 && status !== 403 && status !== 404) return false;
+  const msg = (error.response?.data?.message || error.message || '').toLowerCase();
+  // Ayrshare returns messages like "Profile key not found" or "Invalid profile key"
+  return msg.includes('profile') || msg.includes('key') || msg.includes('not found');
+}
+
+// Nulls out the profile key for a workspace so the scheduler skips it cleanly going forward.
+async function nullifyWorkspaceProfileKey(workspaceId, supabase) {
+  try {
+    await supabase
+      .from('workspaces')
+      .update({
+        ayr_profile_key: null,
+        ayr_ref_id: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', workspaceId);
+    console.log(`[Scheduler] Nullified invalid Ayrshare profile key for workspace ${workspaceId}`);
+  } catch (err) {
+    console.error(`[Scheduler] Failed to nullify profile key for workspace ${workspaceId}:`, err.message);
+  }
+}
+
 // Helper to send post to Ayrshare
 async function sendToAyrshare(post, profileKey) {
   const postData = {
@@ -469,6 +497,12 @@ module.exports = async function handler(req, res) {
 
           const failureReason = responseData?.message || postError.message;
 
+          // If the profile key no longer exists on Ayrshare, null it out so future
+          // runs skip this workspace cleanly instead of accumulating invalid calls.
+          if (isInvalidProfileKeyError(postError)) {
+            await nullifyWorkspaceProfileKey(post.workspace_id, supabase);
+          }
+
           await supabase
             .from('posts')
             .update({
@@ -611,6 +645,9 @@ module.exports = async function handler(req, res) {
               }
             }
           } catch (histErr) {
+            if (isInvalidProfileKeyError(histErr)) {
+              await nullifyWorkspaceProfileKey(wsId, supabase);
+            }
             console.warn(`[Scheduler] Reconciliation: Failed to fetch history for workspace ${wsId}:`, histErr.message);
           }
         }
@@ -718,6 +755,9 @@ module.exports = async function handler(req, res) {
               }
             }
           } catch (histErr) {
+            if (isInvalidProfileKeyError(histErr)) {
+              await nullifyWorkspaceProfileKey(wsId, supabase);
+            }
             console.warn(`[Scheduler] Reverse reconciliation: Failed to check workspace ${wsId}:`, histErr.message);
           }
         }

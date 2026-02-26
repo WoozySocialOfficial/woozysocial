@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FaEye, FaHeart, FaComment, FaShare, FaSyncAlt, FaChartLine, FaUsers } from 'react-icons/fa';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok } from 'react-icons/fa';
 import { SiX } from 'react-icons/si';
@@ -24,7 +24,7 @@ const PLATFORM_ICONS = {
  * @param {string} workspaceId - Workspace ID
  * @param {string[]} platforms - Array of platform names (e.g., ["facebook", "instagram"])
  */
-export const AnalyticsSection = ({ postId, workspaceId, platforms = [] }) => {
+export const AnalyticsSection = ({ postId, workspaceId, platforms: _platforms = [] }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [analytics, setAnalytics] = useState(null);
@@ -35,6 +35,7 @@ export const AnalyticsSection = ({ postId, workspaceId, platforms = [] }) => {
     if (postId && workspaceId) {
       fetchAnalytics();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, workspaceId]);
 
   const fetchAnalytics = async () => {
