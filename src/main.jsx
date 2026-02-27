@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import ReactDOM from "react-dom/client";
 import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -5,6 +6,12 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import App from "./App";
 import "./styles/theme.css";
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: "production",
+  tracesSampleRate: 0.1,
+});
 
 // Configure React Query with sensible defaults and better error handling
 const queryClient = new QueryClient({
