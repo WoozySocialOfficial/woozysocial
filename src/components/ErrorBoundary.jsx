@@ -1,4 +1,5 @@
 import React from "react";
+import * as Sentry from "@sentry/react";
 
 /**
  * ErrorBoundary - Catches JavaScript errors in child component tree
@@ -20,8 +21,8 @@ class ErrorBoundary extends React.Component {
     // Log to console in development
     console.error('ErrorBoundary caught an error:', error, errorInfo);
 
-    // You could also send this to an error reporting service like Sentry
-    // logErrorToService(error, errorInfo);
+    // Report error to Sentry
+    Sentry.captureException(error);
   }
 
   handleReload = () => {
