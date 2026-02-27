@@ -553,8 +553,12 @@ export const ComposeContent = () => {
       // Upload local media files to storage if any exist
       if (dataUrlPreviews.length > 0 && post.media && post.media.length > 0) {
         const MAX_VERCEL_SIZE = 4 * 1024 * 1024; // 4MB
-        const largeFiles = post.media.filter(f => f instanceof File && f.size > MAX_VERCEL_SIZE);
-        const smallFiles = post.media.filter(f => f instanceof File && f.size <= MAX_VERCEL_SIZE);
+        const allFileObjs = post.media.filter(f => f instanceof File);
+        const totalFileSize = allFileObjs.reduce((sum, f) => sum + f.size, 0);
+        // Route all files to direct upload if total exceeds Vercel's ~4.5MB body limit
+        const routeAllDirect = totalFileSize > MAX_VERCEL_SIZE;
+        const largeFiles = routeAllDirect ? allFileObjs : allFileObjs.filter(f => f.size > MAX_VERCEL_SIZE);
+        const smallFiles = routeAllDirect ? [] : allFileObjs.filter(f => f.size <= MAX_VERCEL_SIZE);
 
         // Upload large files directly to Supabase (bypass Vercel limit)
         if (largeFiles.length > 0) {
@@ -1086,7 +1090,7 @@ export const ComposeContent = () => {
       const allFiles = [...currentFiles, ...files];
       const allPreviews = [...currentPreviews, ...newFilePreviews, ...newUrlPreviews];
 
-      setPost({ ...post, media: allFiles });
+      setPost(prev => ({ ...prev, media: allFiles }));
       setMediaPreviews(allPreviews);
       setIsMediaModalOpen(false);
 
@@ -1113,15 +1117,20 @@ export const ComposeContent = () => {
 
   // Remove single media item
   const handleRemoveMedia = (mediaId) => {
-    const mediaIndex = mediaPreviews.findIndex(p => p.id === mediaId);
-    if (mediaIndex === -1) return;
+    const preview = mediaPreviews.find(p => p.id === mediaId);
+    if (!preview) return;
 
     const newPreviews = mediaPreviews.filter(p => p.id !== mediaId);
     setMediaPreviews(newPreviews);
-    setPost(prev => ({
-      ...prev,
-      media: prev.media.filter((_, idx) => idx !== mediaIndex)
-    }));
+
+    // Only remove from post.media if this was a file-based preview (has .file property).
+    // URL-based previews (from Recent/Library) are not stored in post.media.
+    if (preview.file) {
+      setPost(prev => ({
+        ...prev,
+        media: prev.media.filter(f => f !== preview.file)
+      }));
+    }
 
     // Clear warnings if no media left
     if (newPreviews.length === 0) {
@@ -1131,7 +1140,7 @@ export const ComposeContent = () => {
 
   // Clear all media
   const handleClearAllMedia = () => {
-    setPost({ ...post, media: [] });
+    setPost(prev => ({ ...prev, media: [] }));
     setMediaPreviews([]);
     setMediaWarnings([]);
   };
@@ -1229,9 +1238,11 @@ export const ComposeContent = () => {
       let response;
 
       if (hasFileUpload) {
-        // Check if any file exceeds 4MB (Vercel limit) - upload directly to Supabase
+        // Upload directly to Supabase if any single file > 4MB OR total exceeds 4MB.
+        // Vercel's serverless body limit is ~4.5MB — multiple small images can exceed it.
         const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB
-        const hasLargeFile = post.media.some(file => file.size > VERCEL_LIMIT);
+        const totalSize = post.media.reduce((sum, f) => sum + f.size, 0);
+        const hasLargeFile = totalSize > VERCEL_LIMIT || post.media.some(file => file.size > VERCEL_LIMIT);
 
         if (hasLargeFile) {
           // Upload all files directly to Supabase (bypasses Vercel limit)
@@ -1605,8 +1616,12 @@ export const ComposeContent = () => {
         setPostingProgress({ step: 'uploading', percent: 30, estimatedTime: 8 });
 
         const MAX_VERCEL_SIZE = 4 * 1024 * 1024; // 4MB
-        const largeFiles = post.media.filter(f => f instanceof File && f.size > MAX_VERCEL_SIZE);
-        const smallFiles = post.media.filter(f => f instanceof File && f.size <= MAX_VERCEL_SIZE);
+        const allFileObjs = post.media.filter(f => f instanceof File);
+        const totalFileSize = allFileObjs.reduce((sum, f) => sum + f.size, 0);
+        // Route all files to direct upload if total exceeds Vercel's ~4.5MB body limit
+        const routeAllDirect = totalFileSize > MAX_VERCEL_SIZE;
+        const largeFiles = routeAllDirect ? allFileObjs : allFileObjs.filter(f => f.size > MAX_VERCEL_SIZE);
+        const smallFiles = routeAllDirect ? [] : allFileObjs.filter(f => f.size <= MAX_VERCEL_SIZE);
 
         // Upload large files directly
         if (largeFiles.length > 0) {
@@ -1793,8 +1808,12 @@ export const ComposeContent = () => {
         setPostingProgress({ step: 'uploading', percent: 30, estimatedTime: 8 });
 
         const MAX_VERCEL_SIZE = 4 * 1024 * 1024; // 4MB
-        const largeFiles = post.media.filter(f => f instanceof File && f.size > MAX_VERCEL_SIZE);
-        const smallFiles = post.media.filter(f => f instanceof File && f.size <= MAX_VERCEL_SIZE);
+        const allFileObjs = post.media.filter(f => f instanceof File);
+        const totalFileSize = allFileObjs.reduce((sum, f) => sum + f.size, 0);
+        // Route all files to direct upload if total exceeds Vercel's ~4.5MB body limit
+        const routeAllDirect = totalFileSize > MAX_VERCEL_SIZE;
+        const largeFiles = routeAllDirect ? allFileObjs : allFileObjs.filter(f => f.size > MAX_VERCEL_SIZE);
+        const smallFiles = routeAllDirect ? [] : allFileObjs.filter(f => f.size <= MAX_VERCEL_SIZE);
 
         // Upload large files directly
         if (largeFiles.length > 0) {
@@ -2075,9 +2094,11 @@ export const ComposeContent = () => {
       let response;
 
       if (hasFileUpload) {
-        // Check if any file exceeds 4MB (Vercel limit) - upload directly to Supabase
+        // Upload directly to Supabase if any single file > 4MB OR total exceeds 4MB.
+        // Vercel's serverless body limit is ~4.5MB — multiple small images can exceed it.
         const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB
-        const hasLargeFile = post.media.some(file => file.size > VERCEL_LIMIT);
+        const totalSize = post.media.reduce((sum, f) => sum + f.size, 0);
+        const hasLargeFile = totalSize > VERCEL_LIMIT || post.media.some(file => file.size > VERCEL_LIMIT);
 
         if (hasLargeFile) {
           // Upload all files directly to Supabase (bypasses Vercel limit)
