@@ -131,47 +131,23 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Cannot delete your only workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
-    // Delete workspace members first (foreign key constraint)
-    const { error: membersDeleteError } = await supabase
+    // Capture all member user IDs BEFORE deleting anything (CASCADE will remove them)
+    const { data: allMembers } = await supabase
       .from('workspace_members')
-      .delete()
+      .select('user_id')
       .eq('workspace_id', workspaceId);
 
-    if (membersDeleteError) {
-      logError('workspace.delete.members', membersDeleteError, { workspaceId });
-    }
+    const memberUserIds = (allMembers || []).map(m => m.user_id);
 
-    // Delete workspace invitations
-    const { error: invitesDeleteError } = await supabase
-      .from('workspace_invitations')
-      .delete()
-      .eq('workspace_id', workspaceId);
+    // Capture which users had this as their active workspace so we can redirect them
+    const { data: affectedProfiles } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('last_workspace_id', workspaceId);
 
-    if (invitesDeleteError) {
-      logError('workspace.delete.invitations', invitesDeleteError, { workspaceId });
-    }
+    const affectedUserIds = new Set((affectedProfiles || []).map(u => u.id));
 
-    // Delete post drafts for this workspace
-    const { error: draftsDeleteError } = await supabase
-      .from('post_drafts')
-      .delete()
-      .eq('workspace_id', workspaceId);
-
-    if (draftsDeleteError) {
-      logError('workspace.delete.drafts', draftsDeleteError, { workspaceId });
-    }
-
-    // Delete brand profiles for this workspace
-    const { error: brandDeleteError } = await supabase
-      .from('brand_profiles')
-      .delete()
-      .eq('workspace_id', workspaceId);
-
-    if (brandDeleteError) {
-      logError('workspace.delete.brandProfiles', brandDeleteError, { workspaceId });
-    }
-
-    // Get workspace data to retrieve Ayrshare profile key before deletion
+    // Get workspace data (name + Ayrshare key) before deletion
     const { data: workspace, error: workspaceError } = await supabase
       .from('workspaces')
       .select('ayr_profile_key, name')
@@ -180,24 +156,23 @@ module.exports = async function handler(req, res) {
 
     if (workspaceError) {
       logError('workspace.delete.getWorkspace', workspaceError, { workspaceId });
-      // Continue anyway - deletion should still proceed
     }
 
-    // Delete Ayrshare profile BEFORE deleting workspace
-    // This frees up your Ayrshare quota
+    const workspaceName = workspace?.name || 'Workspace';
+
+    // Delete Ayrshare profile BEFORE deleting workspace (frees up Ayrshare quota)
     if (workspace?.ayr_profile_key) {
-      console.log(`[WORKSPACE DELETE] Attempting to delete Ayrshare profile for workspace: ${workspace.name}`);
+      console.log(`[WORKSPACE DELETE] Deleting Ayrshare profile for: ${workspaceName}`);
       const ayrDeleted = await deleteAyrshareProfile(workspace.ayr_profile_key);
       if (ayrDeleted) {
         console.log(`[WORKSPACE DELETE] ✅ Ayrshare profile deleted successfully`);
       } else {
-        console.log(`[WORKSPACE DELETE] ⚠️ Ayrshare profile deletion failed - continuing with workspace deletion`);
-        console.log(`[WORKSPACE DELETE] You may need to manually delete profile key: ${workspace.ayr_profile_key} from Ayrshare dashboard`);
+        console.log(`[WORKSPACE DELETE] ⚠️ Ayrshare deletion failed - continuing. Manual cleanup may be needed for key: ${workspace.ayr_profile_key}`);
       }
     }
 
-    // Clear ALL user_profiles.last_workspace_id references to this workspace
-    // This MUST happen before workspace deletion to avoid FK constraint violation
+    // Clear last_workspace_id FK references BEFORE deleting the workspace
+    // (FK constraint is NO ACTION — deletion will fail if any user_profiles still reference it)
     const { error: clearRefsError } = await supabase
       .from('user_profiles')
       .update({ last_workspace_id: null })
@@ -205,10 +180,9 @@ module.exports = async function handler(req, res) {
 
     if (clearRefsError) {
       logError('workspace.delete.clearLastWorkspaceRefs', clearRefsError, { workspaceId });
-      // Continue anyway - we'll handle setting new active workspace for current user later
     }
 
-    // Delete the workspace
+    // Delete the workspace — CASCADE handles all child tables automatically
     const { error: deleteError } = await supabase
       .from('workspaces')
       .delete()
@@ -219,27 +193,72 @@ module.exports = async function handler(req, res) {
       return sendError(res, "Failed to delete workspace", ErrorCodes.DATABASE_ERROR);
     }
 
-    // Set current user's last_workspace_id to one of their remaining workspaces
-    // (We cleared it to null earlier to avoid FK constraint violation)
-    const { data: remainingWorkspaces } = await supabase
-      .from('workspace_members')
-      .select('workspace_id')
-      .eq('user_id', userId)
-      .limit(1);
+    // Redirect every affected user to their next available workspace
+    // and notify all members (except the deleter) that the workspace was deleted
+    const notificationsToInsert = [];
 
-    const newActiveId = remainingWorkspaces?.[0]?.workspace_id || null;
+    for (const memberId of memberUserIds) {
+      // Find this member's next available workspace
+      const { data: nextWorkspaces } = await supabase
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', memberId)
+        .limit(1);
 
-    const { error: updateProfileError } = await supabase
-      .from('user_profiles')
-      .update({ last_workspace_id: newActiveId })
-      .eq('id', userId);
+      const nextWorkspaceId = nextWorkspaces?.[0]?.workspace_id || null;
 
-    if (updateProfileError) {
-      logError('workspace.delete.updateUserProfile', updateProfileError, { userId, newActiveId });
-      // Don't fail the request - workspace is already deleted successfully
+      // Update last_workspace_id for any member who had this as their active workspace
+      if (affectedUserIds.has(memberId)) {
+        await supabase
+          .from('user_profiles')
+          .update({ last_workspace_id: nextWorkspaceId })
+          .eq('id', memberId);
+      }
+
+      // Notify everyone except the owner who triggered the deletion
+      if (memberId !== userId) {
+        notificationsToInsert.push({
+          user_id: memberId,
+          workspace_id: nextWorkspaceId,
+          type: 'workspace_deleted',
+          title: 'Workspace Deleted',
+          message: `"${workspaceName}" has been deleted.`,
+          actor_id: userId,
+          metadata: { deletedWorkspaceName: workspaceName },
+          read: false
+        });
+      }
     }
 
-    return sendSuccess(res, { message: "Workspace deleted successfully" });
+    if (notificationsToInsert.length > 0) {
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert(notificationsToInsert);
+
+      if (notifError) {
+        logError('workspace.delete.notifications', notifError, { workspaceId, count: notificationsToInsert.length });
+      }
+    }
+
+    // Also redirect the deleting owner to their next workspace
+    if (affectedUserIds.has(userId)) {
+      const { data: ownerNext } = await supabase
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', userId)
+        .limit(1);
+
+      const ownerNextId = ownerNext?.[0]?.workspace_id || null;
+      await supabase
+        .from('user_profiles')
+        .update({ last_workspace_id: ownerNextId })
+        .eq('id', userId);
+    }
+
+    return sendSuccess(res, {
+      message: "Workspace deleted successfully",
+      workspaceName
+    });
 
   } catch (error) {
     logError('workspace.delete.handler', error);
