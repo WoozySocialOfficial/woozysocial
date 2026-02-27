@@ -688,6 +688,13 @@ async function sendMentionNotifications(supabase, {
 }
 
 /**
+ * Send notification to all members when a workspace is deleted
+ * Called inline from workspace/delete.js
+ * type: 'workspace_deleted'
+ * Redirects affected users to their next available workspace automatically.
+ */
+
+/**
  * Send notification when a post is updated after a change request
  * Notifies approvers (especially those who requested changes) that the post has been updated
  */
