@@ -19,7 +19,7 @@ const {
 } = require("./_utils");
 
 const BASE_AYRSHARE = "https://api.ayrshare.com/api";
-const AYRSHARE_CACHE_TTL = 300; // Cache user accounts for 5 minutes (rarely changes)
+const AYRSHARE_CACHE_TTL = 60; // Cache user accounts for 1 minute (invalidated on connect)
 
 module.exports = async function handler(req, res) {
   setCors(res, req);

@@ -82,6 +82,26 @@ export const DashboardContent = () => {
     refetchAccounts();
   };
 
+  // Invalidate backend KV cache so next fetch hits Ayrshare fresh
+  const invalidateServerCache = async () => {
+    try {
+      const res = await fetch(
+        `${baseURL}/api/user-accounts?workspaceId=${activeWorkspace.id}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        // The profile key is used as the KV cache key — fetch it to invalidate
+        await fetch(`${baseURL}/api/cache/invalidate-accounts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileKey: activeWorkspace.ayr_profile_key })
+        }).catch(() => {});
+      }
+    } catch {
+      // Ignore — best effort
+    }
+  };
+
   const handleConnectPlatform = async (platformName) => {
     if (!activeWorkspace?.id || connectingPlatform) return;
     setConnectingPlatform(platformName);
@@ -105,12 +125,43 @@ export const DashboardContent = () => {
         return;
       }
 
-      const pollTimer = setInterval(() => {
+      // Snapshot current accounts before popup
+      const accountsBefore = new Set(connectedAccounts);
+
+      const pollTimer = setInterval(async () => {
         try {
           if (popup.closed) {
             clearInterval(pollTimer);
-            setConnectingPlatform(null);
-            refreshAccounts();
+
+            // Invalidate server-side KV cache first
+            await invalidateServerCache();
+
+            // Poll for new account with retries (like SocialAccounts page)
+            let attempts = 0;
+            const maxAttempts = 6;
+
+            const checkForNewAccount = async () => {
+              invalidateAccounts(activeWorkspace.id);
+              const { data } = await refetchAccounts();
+              const currentAccounts = data?.accounts || [];
+              const hasNew = currentAccounts.some(a => !accountsBefore.has(a));
+
+              if (hasNew) {
+                setConnectingPlatform(null);
+                window.dispatchEvent(new CustomEvent('socialAccountsUpdated'));
+                return;
+              }
+
+              attempts++;
+              if (attempts < maxAttempts) {
+                setTimeout(checkForNewAccount, 2000);
+              } else {
+                setConnectingPlatform(null);
+              }
+            };
+
+            // Give Ayrshare a moment to propagate
+            setTimeout(checkForNewAccount, 1500);
           }
         } catch { clearInterval(pollTimer); setConnectingPlatform(null); }
       }, 500);
