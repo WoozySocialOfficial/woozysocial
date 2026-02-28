@@ -15,18 +15,37 @@ import { OnboardingWrapper } from "./components/OnboardingWrapper";
 import { getOrganizationSchema, getWebSiteSchema } from "./utils/seoConfig";
 import "./App.css";
 
-// Retry wrapper for lazy imports - retries once on chunk load failure
+// Helper: detect chunk/module load failures (stale hashes after deploy)
+function isChunkLoadError(error) {
+  const msg = (error?.message || '').toLowerCase();
+  return (
+    msg.includes('failed to fetch dynamically imported module') ||
+    msg.includes('loading chunk') ||
+    msg.includes('loading css chunk') ||
+    msg.includes('dynamically imported module')
+  );
+}
+
+// Retry wrapper for lazy imports — reloads the page once on chunk load failure.
+// Uses a timestamp (not a boolean) so the flag expires after 10 seconds,
+// preventing the "stuck flag" bug where a successful reload leaves the flag set
+// and the *next* deploy skips the reload entirely.
 const lazyRetry = (importFn) =>
-  lazy(() => importFn().catch(() => {
-    // If chunk fails to load (e.g. after a deploy), reload the page once
-    const hasReloaded = sessionStorage.getItem('chunk_reload');
-    if (!hasReloaded) {
-      sessionStorage.setItem('chunk_reload', 'true');
+  lazy(() => importFn().catch((error) => {
+    if (!isChunkLoadError(error)) throw error; // not a chunk error, propagate
+
+    const reloadedAt = sessionStorage.getItem('chunk_reload_at');
+    const recentlyReloaded = reloadedAt && (Date.now() - Number(reloadedAt)) < 10000;
+
+    if (!recentlyReloaded) {
+      sessionStorage.setItem('chunk_reload_at', String(Date.now()));
       window.location.reload();
       return new Promise(() => {}); // never resolves, page is reloading
     }
-    sessionStorage.removeItem('chunk_reload');
-    return importFn(); // retry once more, will throw if still fails
+
+    // Already reloaded within the last 10s and still failing — give up cleanly
+    sessionStorage.removeItem('chunk_reload_at');
+    throw error;
   }));
 
 // Lazy load all page components - only loaded when user navigates to them

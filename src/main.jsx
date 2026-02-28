@@ -11,6 +11,20 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: "production",
   tracesSampleRate: 0.1,
+  beforeSend(event, hint) {
+    const error = hint?.originalException;
+    const msg = (error?.message || event?.message || '').toLowerCase();
+    // Suppress chunk load errors — lazyRetry in App.jsx handles these with a page reload
+    if (
+      msg.includes('failed to fetch dynamically imported module') ||
+      msg.includes('loading chunk') ||
+      msg.includes('loading css chunk') ||
+      msg.includes('dynamically imported module')
+    ) {
+      return null; // drop the event
+    }
+    return event;
+  },
 });
 
 // Configure React Query with sensible defaults and better error handling

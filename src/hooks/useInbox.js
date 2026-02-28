@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { baseURL } from '../utils/constants';
 
 const SUPPORTED_PLATFORMS = ['facebook', 'instagram', 'twitter'];
@@ -31,63 +32,103 @@ export function useInbox(workspaceId, options = {}) {
   const [totalUnread, setTotalUnread] = useState(0);
   const [selectedPlatform, setSelectedPlatform] = useState('all');
 
-  // Refs for polling
-  const pollIntervalRef = useRef(null);
+  // Refs
   const isMountedRef = useRef(true);
+  const queryClient = useQueryClient();
 
-  /**
-   * Fetch all conversations
-   */
-  const fetchConversations = useCallback(async (refresh = false) => {
-    if (!workspaceId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
+  // Use React Query for conversation fetching.
+  // Query key matches useInboxUnreadCount when selectedPlatform='all',
+  // so React Query deduplicates and only one request hits the server.
+  const { data: queryData, isLoading: queryLoading, refetch: refetchQuery } = useQuery({
+    queryKey: ['inboxConversations', workspaceId, selectedPlatform],
+    queryFn: async () => {
       const params = new URLSearchParams({
         workspaceId,
         platform: selectedPlatform,
-        refresh: refresh.toString()
+        refresh: 'false'
       });
 
       const response = await fetch(`${baseURL}/api/inbox/conversations?${params}`);
       const raw = await response.json();
+      if (!response.ok) throw new Error(raw.error || 'Failed to fetch conversations');
+      return raw.data || raw;
+    },
+    enabled: !!workspaceId,
+    staleTime: 1000 * 20,
+    refetchInterval: enablePolling ? pollInterval : false,
+  });
 
-      if (!response.ok) {
-        throw new Error(raw.error || 'Failed to fetch conversations');
-      }
+  // Sync React Query data into local state (preserves existing component interface)
+  useEffect(() => {
+    if (queryData) {
+      setConversations(queryData.conversations || []);
+      setPlatformStats(queryData.platformStats || {});
+      setTotalUnread(queryData.totalUnread || 0);
 
-      // API wraps response in { success, data: { ... } }
-      const data = raw.data || raw;
-
-      if (isMountedRef.current) {
-        setConversations(data.conversations || []);
-        setPlatformStats(data.platformStats || {});
-        setTotalUnread(data.totalUnread || 0);
-
-        // Capture sync diagnostics if present (only on refresh=true responses)
-        if (data.syncDiagnostics?.platforms) {
-          const errors = {};
-          for (const [platform, diag] of Object.entries(data.syncDiagnostics.platforms)) {
-            if (diag.status === 'error' && diag.error) {
-              errors[platform] = diag.error;
-            }
+      if (queryData.syncDiagnostics?.platforms) {
+        const errors = {};
+        for (const [platform, diag] of Object.entries(queryData.syncDiagnostics.platforms)) {
+          if (diag.status === 'error' && diag.error) {
+            errors[platform] = diag.error;
           }
-          setSyncErrors(errors);
         }
-      }
-    } catch (err) {
-      console.error('Error fetching conversations:', err);
-      if (isMountedRef.current) {
-        setError(err.message);
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
+        setSyncErrors(errors);
       }
     }
-  }, [workspaceId, selectedPlatform]);
+  }, [queryData]);
+
+  // Sync loading state
+  useEffect(() => {
+    setLoading(queryLoading);
+  }, [queryLoading]);
+
+  /**
+   * Fetch conversations — wraps React Query refetch + supports force refresh from Ayrshare
+   */
+  const fetchConversations = useCallback(async (refresh = false) => {
+    if (!workspaceId) return;
+
+    if (refresh) {
+      // Force refresh bypasses cache and syncs from Ayrshare
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({
+          workspaceId,
+          platform: selectedPlatform,
+          refresh: 'true'
+        });
+        const response = await fetch(`${baseURL}/api/inbox/conversations?${params}`);
+        const raw = await response.json();
+        if (!response.ok) throw new Error(raw.error || 'Failed to fetch conversations');
+        const data = raw.data || raw;
+        if (isMountedRef.current) {
+          setConversations(data.conversations || []);
+          setPlatformStats(data.platformStats || {});
+          setTotalUnread(data.totalUnread || 0);
+          if (data.syncDiagnostics?.platforms) {
+            const errors = {};
+            for (const [platform, diag] of Object.entries(data.syncDiagnostics.platforms)) {
+              if (diag.status === 'error' && diag.error) {
+                errors[platform] = diag.error;
+              }
+            }
+            setSyncErrors(errors);
+          }
+        }
+        // Update React Query cache so sidebar picks up new data too
+        queryClient.setQueryData(['inboxConversations', workspaceId, selectedPlatform], data);
+      } catch (err) {
+        console.error('Error fetching conversations:', err);
+        if (isMountedRef.current) setError(err.message);
+      } finally {
+        if (isMountedRef.current) setLoading(false);
+      }
+    } else {
+      // Non-refresh: let React Query handle it (deduplicates with sidebar)
+      refetchQuery();
+    }
+  }, [workspaceId, selectedPlatform, refetchQuery, queryClient]);
 
   /**
    * Fetch messages for a specific conversation
@@ -131,6 +172,36 @@ export function useInbox(workspaceId, options = {}) {
       }
     }
   }, [workspaceId]);
+
+  /**
+   * Mark a conversation as read
+   */
+  const markAsRead = useCallback(async (conversationId, userId) => {
+    try {
+      const response = await fetch(`${baseURL}/api/inbox/mark-read`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          userId: userId || 'current-user' // Will be replaced with actual user ID
+        })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setConversations(prev => prev.map(conv =>
+          conv.id === conversationId
+            ? { ...conv, unread_count: 0 }
+            : conv
+        ));
+
+        // Update total unread count
+        setTotalUnread(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Error marking as read:', err);
+    }
+  }, []);
 
   /**
    * Select a conversation and load its messages
@@ -211,36 +282,6 @@ export function useInbox(workspaceId, options = {}) {
   }, [workspaceId, currentConversation]);
 
   /**
-   * Mark a conversation as read
-   */
-  const markAsRead = useCallback(async (conversationId, userId) => {
-    try {
-      const response = await fetch(`${baseURL}/api/inbox/mark-read`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          userId: userId || 'current-user' // Will be replaced with actual user ID
-        })
-      });
-
-      if (response.ok) {
-        // Update local state
-        setConversations(prev => prev.map(conv =>
-          conv.id === conversationId
-            ? { ...conv, unread_count: 0 }
-            : conv
-        ));
-
-        // Update total unread count
-        setTotalUnread(prev => Math.max(0, prev - 1));
-      }
-    } catch (err) {
-      console.error('Error marking as read:', err);
-    }
-  }, []);
-
-  /**
    * Refresh conversations from Ayrshare API
    */
   const refresh = useCallback(() => {
@@ -254,38 +295,20 @@ export function useInbox(workspaceId, options = {}) {
     setSelectedPlatform(platform);
   }, []);
 
-  // Initial fetch and polling setup
+  // Initial Ayrshare sync on mount + cleanup
   useEffect(() => {
     isMountedRef.current = true;
 
     if (workspaceId) {
-      // Initial fetch with refresh to sync from Ayrshare
+      // One-time refresh to sync from Ayrshare on mount
       fetchConversations(true);
-
-      // Setup polling for real-time updates
-      if (enablePolling) {
-        pollIntervalRef.current = setInterval(() => {
-          fetchConversations(false); // Use cache for polling, refresh periodically
-        }, pollInterval);
-      }
     }
 
     return () => {
       isMountedRef.current = false;
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, enablePolling, pollInterval]);
-
-  // Re-fetch when platform filter changes
-  useEffect(() => {
-    if (workspaceId) {
-      fetchConversations(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPlatform, workspaceId]);
+  }, [workspaceId]);
 
   return {
     // State
