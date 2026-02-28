@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
+      return sendError(res, "No social accounts connected for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Determine the webhook URL

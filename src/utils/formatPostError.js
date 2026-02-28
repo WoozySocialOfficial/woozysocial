@@ -10,7 +10,7 @@ const ERROR_RULES = [
   // Instagram media issues
   {
     test: (msg) => /instagram.*incorrect media/i.test(msg),
-    friendly: 'Instagram does not support this media format. Videos must be under 60s, and only one video per post is allowed.',
+    friendly: 'Instagram post failed due to media issues. Only one video is allowed per post, and it must be MP4/MOV format (3s–15min, under 300 MB).',
   },
   {
     test: (msg) => /instagram.*image or video could not be processed/i.test(msg),
