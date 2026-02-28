@@ -417,12 +417,8 @@ export const NotificationBell = () => {
         )
         .subscribe();
 
-      // Fallback polling every 30 seconds in case real-time fails
-      const interval = setInterval(fetchNotifications, 30000);
-
       return () => {
         supabase.removeChannel(channel);
-        clearInterval(interval);
       };
     }
   }, [user, fetchNotifications]);
