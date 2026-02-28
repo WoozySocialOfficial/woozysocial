@@ -8,6 +8,7 @@ import { AnalyticsSection } from '../analytics/AnalyticsSection';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { DeleteConfirmationModal } from '../modals/DeleteConfirmationModal';
 import { useInvalidateQueries } from '../../hooks/useQueries';
+import { formatPostError } from '../../utils/formatPostError';
 import { baseURL } from '../../utils/constants';
 import './PostDetailPanel.css';
 
@@ -274,7 +275,7 @@ export const PostDetailPanel = ({
         {post.status === 'failed' && (post.last_error || post.lastError) && (
           <div className="failure-reason-box">
             <div className="failure-reason-label">Failure reason</div>
-            <div className="failure-reason-message">{post.last_error || post.lastError}</div>
+            <div className="failure-reason-message">{formatPostError(post.last_error || post.lastError)}</div>
           </div>
         )}
 
