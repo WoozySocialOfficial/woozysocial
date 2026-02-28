@@ -432,22 +432,12 @@ export const DashboardContent = () => {
                         </div>
                         <div className="account-details">
                           <div className="account-name">{account.name}</div>
-                          <div className="account-status" style={{ color: isConnected ? '#10b981' : '#999' }}>
+                          <div className={`account-status ${isConnected ? 'connected' : ''}`}>
                             {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Not connected'}
                           </div>
                         </div>
                       </div>
-                      <span
-                        className={`status-badge ${isConnected ? 'active' : 'inactive'}`}
-                        style={{
-                          backgroundColor: isConnected ? '#afabf9' : '#fee2e2',
-                          color: isConnected ? '#114C5A' : '#dc2626',
-                          padding: '6px 16px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          fontSize: '13px'
-                        }}
-                      >
+                      <span className={`status-badge ${isConnected ? 'active' : isConnecting ? 'connecting' : 'inactive'}`}>
                         {isConnecting ? 'CONNECTING...' : isConnected ? 'ACTIVE' : 'NO CONNECTION'}
                       </span>
                     </div>
