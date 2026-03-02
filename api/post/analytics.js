@@ -52,7 +52,7 @@ module.exports = async function handler(req, res) {
     if (!profileKey) {
       return sendError(
         res,
-        "No Ayrshare profile found for this workspace",
+        "No social accounts connected for this workspace",
         ErrorCodes.VALIDATION_ERROR
       );
     }
@@ -105,7 +105,7 @@ module.exports = async function handler(req, res) {
       if (!response.data) {
         return sendError(
           res,
-          "No analytics data returned from Ayrshare",
+          "No analytics data available for this post",
           ErrorCodes.EXTERNAL_API_ERROR
         );
       }
@@ -171,7 +171,7 @@ module.exports = async function handler(req, res) {
       // Generic error
       return sendError(
         res,
-        "Failed to fetch analytics from Ayrshare",
+        "Failed to fetch analytics",
         ErrorCodes.EXTERNAL_API_ERROR,
         {
           statusCode,

@@ -70,7 +70,7 @@ async function handleGetMessages(req, res, supabase) {
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
+      return sendError(res, "No social accounts connected for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get the local conversation record
@@ -162,7 +162,7 @@ async function handleSendMessage(req, res, supabase) {
 
     const profileKey = await getWorkspaceProfileKey(workspaceId);
     if (!profileKey) {
-      return sendError(res, "No Ayrshare profile found for this workspace", ErrorCodes.VALIDATION_ERROR);
+      return sendError(res, "No social accounts connected for this workspace", ErrorCodes.VALIDATION_ERROR);
     }
 
     // Get the conversation to check if we can reply and get Ayrshare conversation ID

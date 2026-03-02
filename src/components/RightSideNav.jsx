@@ -158,13 +158,13 @@ const RightSideNav = () => {
           • Schedule posts for optimal times
           <br />• Learn more at{" "}
           <Link
-            href="https://www.ayrshare.com"
+            href="https://woozysocial.com"
             isExternal
             color="blue.500"
             textDecoration="none"
             _hover={{ textDecoration: "underline" }}
           >
-            Ayrshare
+            Woozy Social
           </Link>
         </Text>
       </Box>

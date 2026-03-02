@@ -228,13 +228,13 @@ export const CommentsDiagnostic = () => {
                 comments. This is normal if the post is new or hasn't received engagement.
               </li>
               <li>
-                <strong>Comments API failed (404):</strong> Ayrshare couldn't find the post
-                ID or platform doesn't support comment API.
+                <strong>Comments API failed (404):</strong> The post could not be found
+                or this platform doesn't support the comments API.
               </li>
               <li>
-                <strong>Comments API failed (403):</strong> Missing permissions. Check
-                Ayrshare dashboard → Profile Settings → ensure comment read permissions
-                are granted.
+                <strong>Comments API failed (403):</strong> Missing permissions. Go to
+                Social Accounts → reconnect the platform and ensure comment read
+                permissions are granted.
               </li>
               <li>
                 <strong>Comments API passed + comments present:</strong> Everything is

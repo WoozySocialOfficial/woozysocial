@@ -12,6 +12,7 @@ import { formatTimeInTimezone, formatDateOnlyInTimezone } from "../utils/timezon
 import { SubscriptionGuard } from "./subscription/SubscriptionGuard";
 import { PostDetailPanel } from "./comments/PostDetailPanel";
 import { LoadingContainer } from "./ui/LoadingSpinner";
+import { formatPostError } from "../utils/formatPostError";
 import "./ScheduleContent.css";
 
 const PLATFORM_ICONS = {
@@ -441,7 +442,7 @@ export const ScheduleContent = () => {
         {!compact && (post.status === 'failed' || post.approvalStatus === 'rejected') && post.last_error && (
           <div className="post-card-error">
             <FaExclamationTriangle size={10} />
-            <span>{post.last_error.length > 60 ? post.last_error.substring(0, 60) + '...' : post.last_error}</span>
+            <span>{(() => { const msg = formatPostError(post.last_error); return msg.length > 60 ? msg.substring(0, 60) + '...' : msg; })()}</span>
           </div>
         )}
         <div className="post-card-footer">

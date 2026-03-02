@@ -11,6 +11,7 @@ import { SiX, SiBluesky } from "react-icons/si";
 import { PostDetailPanel } from "./comments/PostDetailPanel";
 import { LoadingContainer } from "./ui/LoadingSpinner";
 import { formatTableDateTime } from "../utils/timezones";
+import { formatPostError } from "../utils/formatPostError";
 import "./PostsContent.css";
 
 const PLATFORM_ICONS = {
@@ -535,8 +536,8 @@ export const PostsContent = () => {
                   </div>
                   {activeTab === 'failed' && (post.last_error || post.lastError) && (
                     <div className="post-failure-reason">
-                      {(post.last_error || post.lastError).substring(0, 120)}
-                      {(post.last_error || post.lastError).length > 120 && '...'}
+                      {formatPostError(post.last_error || post.lastError).substring(0, 120)}
+                      {formatPostError(post.last_error || post.lastError).length > 120 && '...'}
                     </div>
                   )}
                 </div>
